@@ -67,6 +67,15 @@ void end_inline_status() {
     }
 }
 
+void initialize_global_logger(AsyncLogger& logger) {
+    logger.start();
+    set_async_logger(&logger);
+}
+
+void shutdown_global_logger(AsyncLogger& logger) {
+    logger.stop();
+}
+
 // AsyncLogger implementation
 void AsyncLogger::run() {
     std::ofstream log_file(file_path, std::ios::app);

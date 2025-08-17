@@ -6,14 +6,14 @@
 #include "../configs/timing_config.hpp"
 #include "../configs/target_config.hpp"
 #include "../api/alpaca_client.hpp"
+#include "../configs/component_configs.hpp"
 #include "../data/data_structures.hpp"
 #include <atomic>
-#include <thread>
 #include <mutex>
 #include <condition_variable>
 
-class MarketDataWorker {
-private:
+// Task object to be run on a std::thread from main
+struct MarketDataTask {
     const StrategyConfig& strategy;
     const TimingConfig& timing;
     const TargetConfig& target;
@@ -24,25 +24,28 @@ private:
     std::atomic<bool>& has_market;
     std::atomic<bool>& running;
     std::atomic<bool>* allow_fetch_ptr {nullptr};
-    std::thread worker;
 
-public:
-    MarketDataWorker(const StrategyConfig& strategyCfg,
-                     const TimingConfig& timingCfg,
-                     const TargetConfig& targetCfg,
-                     AlpacaClient& cli,
-                     std::mutex& mtx,
-                     std::condition_variable& cv,
-                     MarketSnapshot& snapshot,
-                     std::atomic<bool>& has_market_flag,
-                     std::atomic<bool>& running_flag);
+    MarketDataTask(const MarketDataTaskConfig& cfg,
+                   AlpacaClient& cli,
+                   std::mutex& mtx,
+                   std::condition_variable& cv,
+                   MarketSnapshot& snapshot,
+                   std::atomic<bool>& has_market_flag,
+                   std::atomic<bool>& running_flag)
+        : strategy(cfg.strategy), timing(cfg.timing), target(cfg.target), client(cli),
+          state_mtx(mtx), data_cv(cv), market_snapshot(snapshot), has_market(has_market_flag),
+          running(running_flag) {}
 
-    void start();
-    void stop();
-    void join();
-
-    // External gate: when set, worker will fetch; otherwise it sleeps
+    // External gate: when set, task will fetch; otherwise it sleeps
     void set_allow_fetch_flag(std::atomic<bool>& allow_flag) { allow_fetch_ptr = &allow_flag; }
+
+    // Thread entrypoint
+    void operator()();
 };
+
+// Forward declare SystemState to avoid circular include of main.hpp
+struct SystemState;
+// Market gate task (loop deciding allow_fetch)
+void run_market_gate(SystemState& state, AlpacaClient& client);
 
 #endif // MARKET_DATA_WORKER_HPP

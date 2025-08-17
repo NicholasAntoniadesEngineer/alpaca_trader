@@ -42,4 +42,8 @@ void set_log_thread_tag(const std::string& tag6);
 // Main logging function
 void log_message(const std::string& message, const std::string& log_file_path);
 
+// Global lifecycle helpers
+void initialize_global_logger(AsyncLogger& logger);
+void shutdown_global_logger(AsyncLogger& logger);
+
 #endif // ASYNC_LOGGER_HPP

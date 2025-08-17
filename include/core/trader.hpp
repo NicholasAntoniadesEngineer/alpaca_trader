@@ -13,7 +13,7 @@
 
 class Trader {
 private:
-    const TraderConfig& config;
+    const TraderConfig* config_ptr{nullptr};
     AlpacaClient& client;
     AccountManager& account_manager;
     double initial_equity;

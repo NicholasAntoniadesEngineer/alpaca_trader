@@ -5,13 +5,13 @@
 #include "../configs/timing_config.hpp"
 #include "../data/account_manager.hpp"
 #include "../data/data_structures.hpp"
+#include "../configs/component_configs.hpp"
 #include <atomic>
-#include <thread>
 #include <mutex>
 #include <condition_variable>
 
-class AccountDataWorker {
-private:
+// Task object to be run on a std::thread from main
+struct AccountDataTask {
     const TimingConfig& timing;
     AccountManager& account_manager;
     std::mutex& state_mtx;
@@ -20,22 +20,22 @@ private:
     std::atomic<bool>& has_account;
     std::atomic<bool>& running;
     std::atomic<bool>* allow_fetch_ptr {nullptr};
-    std::thread worker;
 
-public:
-    AccountDataWorker(const TimingConfig& timingCfg,
-                      AccountManager& accountMgr,
-                      std::mutex& mtx,
-                      std::condition_variable& cv,
-                      AccountSnapshot& snapshot,
-                      std::atomic<bool>& has_account_flag,
-                      std::atomic<bool>& running_flag);
-
-    void start();
-    void stop();
-    void join();
+    AccountDataTask(const AccountDataTaskConfig& cfg,
+                    AccountManager& accountMgr,
+                    std::mutex& mtx,
+                    std::condition_variable& cv,
+                    AccountSnapshot& snapshot,
+                    std::atomic<bool>& has_account_flag,
+                    std::atomic<bool>& running_flag)
+        : timing(cfg.timing), account_manager(accountMgr), state_mtx(mtx),
+          data_cv(cv), account_snapshot(snapshot), has_account(has_account_flag),
+          running(running_flag) {}
 
     void set_allow_fetch_flag(std::atomic<bool>& allow_flag) { allow_fetch_ptr = &allow_flag; }
+
+    // Thread entrypoint
+    void operator()();
 };
 
 #endif // ACCOUNT_DATA_WORKER_HPP

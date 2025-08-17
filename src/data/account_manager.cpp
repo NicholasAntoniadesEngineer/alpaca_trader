@@ -7,8 +7,8 @@
 
 using json = nlohmann::json;
 
-AccountManager::AccountManager(const ApiConfig& apiCfg, const LoggingConfig& loggingCfg, const TargetConfig& targetCfg)
-    : api(apiCfg), logging(loggingCfg), target(targetCfg) {}
+AccountManager::AccountManager(const AccountManagerConfig& cfg)
+    : api(cfg.api), logging(cfg.logging), target(cfg.target) {}
 
 double AccountManager::get_equity() const {
     HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 3);

@@ -7,6 +7,7 @@
 #include "../configs/logging_config.hpp"
 #include "../configs/target_config.hpp"
 #include "../configs/timing_config.hpp"
+#include "../configs/component_configs.hpp"
 #include "../data/data_structures.hpp"
 
 class AlpacaClient {
@@ -18,12 +19,8 @@ private:
     const TargetConfig& target;
 
 public:
-    AlpacaClient(const ApiConfig& apiCfg,
-                 const SessionConfig& sessionCfg,
-                 const LoggingConfig& loggingCfg,
-                 const TargetConfig& targetCfg,
-                 const TimingConfig& timingCfg)
-        : api(apiCfg), session(sessionCfg), timing(timingCfg), logging(loggingCfg), target(targetCfg) {}
+    explicit AlpacaClient(const AlpacaClientConfig& cfg)
+        : api(cfg.api), session(cfg.session), timing(cfg.timing), logging(cfg.logging), target(cfg.target) {}
 
     // Pure API Interface Functions
     bool is_core_trading_hours() const;

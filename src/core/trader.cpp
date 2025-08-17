@@ -5,20 +5,24 @@
 #include <thread>
 #include <cmath>
 #include <chrono>
+#include <sstream>
 
-Trader::Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr) : config(cfg), client(clientRef), account_manager(accountMgr), initial_equity(0.0) {
+Trader::Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr)
+    : config_ptr(&cfg), client(clientRef), account_manager(accountMgr), initial_equity(0.0) {
     initial_equity = initialize_trader();
 }
 
 Trader::~Trader() {}
 
 double Trader::initialize_trader() {
+    const TraderConfig& config = *config_ptr;
     double eq = account_manager.get_equity();
     log_message("Starting advanced momentum trader for " + config.target.symbol + ". Initial equity: " + std::to_string(eq), config.logging.log_file);
     return eq;
 }
 
 bool Trader::can_trade(double exposure_pct) {
+    const TraderConfig& config = *config_ptr;
     log_message("   ┌─ TRADING CONDITIONS", config.logging.log_file);
 
     if (!client.is_core_trading_hours()) {
@@ -54,6 +58,7 @@ bool Trader::can_trade(double exposure_pct) {
 }
 
 ProcessedData Trader::fetch_and_process_data() {
+    const TraderConfig& config = *config_ptr;
     ProcessedData data;
     log_message("   ┌─ MARKET DATA", config.logging.log_file);
 
@@ -116,6 +121,7 @@ ProcessedData Trader::fetch_and_process_data() {
 }
 
 void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equity) {
+    const TraderConfig& config = *config_ptr;
     log_message("   ┌─ SIGNAL ANALYSIS (per-lap decisions)", config.logging.log_file);
 
     int current_qty = data.pos_details.qty;
@@ -298,6 +304,7 @@ std::pair<MarketSnapshot, AccountSnapshot> Trader::get_current_snapshots() {
 }
 
 void Trader::display_loop_header() {
+    const TraderConfig& config = *config_ptr;
     loop_counter.fetch_add(1);
     std::string loop_line = "╔══════════════════════════════════════════════════════════════════════════════════╗";
     log_message("", config.logging.log_file);
@@ -307,6 +314,7 @@ void Trader::display_loop_header() {
 }
 
 void Trader::handle_trading_halt() {
+    const TraderConfig& config = *config_ptr;
     log_message("", config.logging.log_file);
     log_message("╔══════════════════════════════════════════════════════════════════════════════════╗", config.logging.log_file);
     log_message("║                              MARKET CLOSED / HALTED                              ║", config.logging.log_file);
@@ -323,6 +331,7 @@ void Trader::handle_trading_halt() {
 }
 
 void Trader::display_equity_status(double equity) {
+    const TraderConfig& config = *config_ptr;
     log_message("Current Equity: $" + std::to_string(static_cast<int>(equity)) +
                 " (acct poll=" + std::to_string(config.timing.account_poll_sec) + "s)", config.logging.log_file);
 }
@@ -343,6 +352,7 @@ void Trader::process_trading_cycle(const MarketSnapshot& market, const AccountSn
 }
 
 void Trader::countdown_to_next_cycle() {
+    const TraderConfig& config = *config_ptr;
     // Per-loop countdown to next cycle (visual heartbeat)
     int sleep_secs = config.timing.sleep_interval_sec;
     for (int s = sleep_secs; s > 0 && running_ptr->load(); --s) {
@@ -354,6 +364,7 @@ void Trader::countdown_to_next_cycle() {
 
 void Trader::run() {
     // Header (unchanged)
+    const TraderConfig& config = *config_ptr;
     log_message("", config.logging.log_file);
     log_message("╔══════════════════════════════════════════════════════════════════════════════════╗", config.logging.log_file);
     log_message("║                                   ALPACA TRADER                                 ║", config.logging.log_file);
@@ -362,10 +373,26 @@ void Trader::run() {
     log_message("", config.logging.log_file);
     
     log_message("CONFIGURATION:", config.logging.log_file);
-    log_message("   • Symbol: " + config.target.symbol, config.logging.log_file);
-    log_message("   • Risk per Trade: " + std::to_string(config.risk.risk_per_trade * 100) + "%", config.logging.log_file);
-    log_message("   • Risk/Reward Ratio: 1:" + std::to_string(config.strategy.rr_ratio), config.logging.log_file);
-    log_message("   • Loop Interval: " + std::to_string(config.timing.sleep_interval_sec) + " seconds", config.logging.log_file);
+    {
+        std::ostringstream oss;
+        oss << "   • Symbol: " << config.target.symbol;
+        log_message(oss.str(), config.logging.log_file);
+    }
+    {
+        std::ostringstream oss;
+        oss << "   • Risk per Trade: " << (config.risk.risk_per_trade * 100) << "%";
+        log_message(oss.str(), config.logging.log_file);
+    }
+    {
+        std::ostringstream oss;
+        oss << "   • Risk/Reward Ratio: 1:" << config.strategy.rr_ratio;
+        log_message(oss.str(), config.logging.log_file);
+    }
+    {
+        std::ostringstream oss;
+        oss << "   • Loop Interval: " << config.timing.sleep_interval_sec << " seconds";
+        log_message(oss.str(), config.logging.log_file);
+    }
     log_message("", config.logging.log_file);
     
     // In new design, main() owns market/account threads and running flag.

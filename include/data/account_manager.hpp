@@ -5,6 +5,7 @@
 #include "../configs/api_config.hpp"
 #include "../configs/logging_config.hpp"
 #include "../configs/target_config.hpp"
+#include "../configs/component_configs.hpp"
 #include "../data/data_structures.hpp"
 #include <string>
 
@@ -15,7 +16,7 @@ private:
     const TargetConfig& target;
 
 public:
-    AccountManager(const ApiConfig& apiCfg, const LoggingConfig& loggingCfg, const TargetConfig& targetCfg);
+    explicit AccountManager(const AccountManagerConfig& cfg);
 
     // Account data operations (moved from AlpacaClient)
     double get_equity() const;
