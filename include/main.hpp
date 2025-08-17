@@ -66,7 +66,7 @@ struct ComponentInstances {
 ComponentConfigBundle build_core_configs(const SystemState& state);
 ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs);
 SystemThreads boot_system(SystemState& system_state, ComponentInstances& comp);
-void run_and_shutdown_system(SystemState& system_state, Trader& trader, SystemThreads& handles);
+void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles);
 void initialize_application(const Config& config, AsyncLogger& logger);
 void run_market_gate(SystemState& state, AlpacaClient& client);
 

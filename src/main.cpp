@@ -94,7 +94,7 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
     return handles;
 }
 
-void run_and_shutdown_system(SystemState& system_state, Trader& trader, SystemThreads& handles) 
+void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles) 
 {
     run_until_shutdown(system_state);
     system_state.cv.notify_all();
@@ -121,7 +121,7 @@ int main()
 
     SystemThreads thread_handles = boot_system(system_state, core_components);
 
-    run_and_shutdown_system(system_state, *core_components.trader, thread_handles);
+    run_and_shutdown_system(system_state, thread_handles);
 
     shutdown_global_logger(logger);
 
