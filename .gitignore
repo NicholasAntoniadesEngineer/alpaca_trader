@@ -2,3 +2,4 @@ bin/trade_log.txt
 .cache
 trade_log.txt
 bin
+obj
