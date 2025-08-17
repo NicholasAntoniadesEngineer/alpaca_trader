@@ -18,6 +18,10 @@ TARGET = $(BIN_DIR)/alpaca_trader
 SOURCES = $(SRC_DIR)/main.cpp \
           $(SRC_DIR)/api/alpaca_client.cpp \
           $(SRC_DIR)/core/trader.cpp \
+          $(SRC_DIR)/core/strategy_logic.cpp \
+          $(SRC_DIR)/core/risk_logic.cpp \
+          $(SRC_DIR)/core/market_processing.cpp \
+          $(SRC_DIR)/core/trader_logging.cpp \
           $(SRC_DIR)/data/account_manager.cpp \
           $(SRC_DIR)/ui/account_display.cpp \
           $(SRC_DIR)/utils/async_logger.cpp \
@@ -69,8 +73,9 @@ distclean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 	@echo "Distribution clean complete"
 
-# Build and then clean object files
-build-and-clean: $(TARGET) clean-obj
+# Build and then clean object files (sequential to avoid race with -j)
+build-and-clean: $(TARGET)
+	$(MAKE) clean-obj
 	@echo "Build completed and object files cleaned"
 
 # Rebuild everything
