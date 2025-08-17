@@ -10,6 +10,7 @@
 
 // Named constants
 constexpr int LOG_TAG_WIDTH = 6;
+static_assert(LOG_TAG_WIDTH > 0, "LOG_TAG_WIDTH must be positive");
 
 class AsyncLogger {
 private:

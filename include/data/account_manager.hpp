@@ -1,4 +1,3 @@
-// account_manager.hpp - Handles account data operations
 #ifndef ACCOUNT_MANAGER_HPP
 #define ACCOUNT_MANAGER_HPP
 

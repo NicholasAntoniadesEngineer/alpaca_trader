@@ -22,6 +22,7 @@ SOURCES = $(SRC_DIR)/main.cpp \
           $(SRC_DIR)/core/risk_logic.cpp \
           $(SRC_DIR)/core/market_processing.cpp \
           $(SRC_DIR)/core/trader_logging.cpp \
+          $(SRC_DIR)/utils/config_loader.cpp \
           $(SRC_DIR)/data/account_manager.cpp \
           $(SRC_DIR)/ui/account_display.cpp \
           $(SRC_DIR)/utils/async_logger.cpp \

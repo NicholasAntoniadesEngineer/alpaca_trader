@@ -4,6 +4,8 @@
 #include <chrono>
 #include <csignal>
 #include <string>
+#include <cstdlib>
+#include "utils/config_loader.hpp"
 
 static std::atomic<bool>* g_running_ptr;
 
@@ -13,22 +15,42 @@ static void setup_signal_handlers(std::atomic<bool>& running) {
     std::signal(SIGTERM, [](int){ g_running_ptr->store(false); });
 }
 
-// Config validation function moved here from Utils
+// Config validation
 static bool validate_config(const Config& config, std::string& errorMessage) {
-    if (config.logging.log_file.empty()) {
-        errorMessage = "Logging path is empty";
-        return false;
-    }
     if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        errorMessage = "API credentials missing";
+        errorMessage = "API credentials missing (provide via CONFIG_CSV)";
         return false;
     }
     if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        errorMessage = "API URLs missing";
+        errorMessage = "API URLs missing (provide via CONFIG_CSV)";
         return false;
     }
     if (config.target.symbol.empty()) {
-        errorMessage = "Symbol is missing";
+        errorMessage = "Symbol is missing (provide via CONFIG_CSV)";
+        return false;
+    }
+    if (config.logging.log_file.empty()) {
+        errorMessage = "Logging path is empty (provide via CONFIG_CSV)";
+        return false;
+    }
+    if (config.strategy.atr_period < 2) {
+        errorMessage = "strategy.atr_period must be >= 2";
+        return false;
+    }
+    if (config.strategy.rr_ratio <= 0.0) {
+        errorMessage = "strategy.rr_ratio must be > 0";
+        return false;
+    }
+    if (config.risk.risk_per_trade <= 0.0 || config.risk.risk_per_trade >= 1.0) {
+        errorMessage = "risk.risk_per_trade must be between 0 and 1";
+        return false;
+    }
+    if (config.risk.max_exposure_pct < 0.0 || config.risk.max_exposure_pct > 100.0) {
+        errorMessage = "risk.max_exposure_pct must be between 0 and 100";
+        return false;
+    }
+    if (config.timing.sleep_interval_sec <= 0 || config.timing.account_poll_sec <= 0) {
+        errorMessage = "timing.* seconds must be > 0";
         return false;
     }
     return true;
@@ -53,8 +75,7 @@ void initialize_application(const Config& config, AsyncLogger& logger) {
     set_log_thread_tag("MAIN  ");
 }
 
-ComponentConfigBundle build_core_configs(const SystemState& state) 
-{
+ComponentConfigBundle build_core_configs(const SystemState& state) {
     return ComponentConfigBundle{
         AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing},
         AccountManagerConfig{state.config.api, state.config.logging, state.config.target},
@@ -63,10 +84,8 @@ ComponentConfigBundle build_core_configs(const SystemState& state)
     };
 }
 
-ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs) 
-{
+ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs) {
     ComponentInstances core_components;
-
     core_components.client = std::make_unique<AlpacaClient>(cfgs.client);
     core_components.account_manager = std::make_unique<AccountManager>(cfgs.account_mgr);
     core_components.account_display = std::make_unique<AccountDisplay>(state.config.logging, *core_components.account_manager);
@@ -74,7 +93,6 @@ ComponentInstances build_core_components(SystemState& state, const ComponentConf
     core_components.market_task = std::make_unique<MarketDataTask>(cfgs.market_task, *core_components.client, state.mtx, state.cv, state.market, state.has_market, state.running);
     core_components.account_task = std::make_unique<AccountDataTask>(cfgs.account_task, *core_components.account_manager, state.mtx, state.cv, state.account, state.has_account, state.running);
     core_components.market_gate_task = std::make_unique<MarketGateTask>(state.config.timing, state.config.logging, state.allow_fetch, state.running,*core_components.client);
-    
     return core_components;
 }
 
@@ -110,24 +128,26 @@ void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles)
 
 int main() 
 {
-
     Config initial_config;
 
-    SystemState system_state(initial_config);
-    
-    AsyncLogger logger(system_state.config.logging.log_file);
+    // Bootstrap config from env or default path
+    const char* csv_env = std::getenv("CONFIG_CSV");
+    std::string csv_path = csv_env ? std::string(csv_env) : std::string("config/runtime_config.csv");
+    if (!load_config_from_csv(initial_config, csv_path)) {
+        fprintf(stderr, "Failed to load config CSV from %s\n", csv_path.c_str());
+        return 1;
+    }
 
+    SystemState system_state(initial_config);
+
+    // Initialize logger with configured log file
+    AsyncLogger logger(system_state.config.logging.log_file);
     initialize_application(system_state.config, logger);
 
     ComponentConfigBundle core_configs = build_core_configs(system_state);
-
     ComponentInstances core_components = build_core_components(system_state, core_configs);
-
     SystemThreads thread_handles = boot_system(system_state, core_components);
-
     run_and_shutdown_system(system_state, thread_handles);
-
     shutdown_global_logger(logger);
-
     return 0;
 }

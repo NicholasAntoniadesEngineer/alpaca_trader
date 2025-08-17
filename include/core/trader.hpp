@@ -15,22 +15,31 @@
 
 class Trader {
 private:
-    const TraderConfig* config_ptr{nullptr};
-    AlpacaClient& client;
-    AccountManager& account_manager;
-    double initial_equity;
+    struct TraderServices {
+        const TraderConfig& config;
+        AlpacaClient& client;
+        AccountManager& account_manager;
+    };
 
-    std::mutex* state_mtx_ptr = nullptr;
-    std::condition_variable* data_cv_ptr = nullptr;
-    MarketSnapshot* market_snapshot_ptr = nullptr;
-    AccountSnapshot* account_snapshot_ptr = nullptr;
-    std::atomic<bool>* has_fresh_market_ptr = nullptr;
-    std::atomic<bool>* has_fresh_account_ptr = nullptr;
-    std::atomic<bool>* running_ptr = nullptr;
+    struct SharedStateRefs {
+        std::mutex* mtx = nullptr;
+        std::condition_variable* cv = nullptr;
+        MarketSnapshot* market = nullptr;
+        AccountSnapshot* account = nullptr;
+        std::atomic<bool>* has_market = nullptr;
+        std::atomic<bool>* has_account = nullptr;
+        std::atomic<bool>* running = nullptr;
+    };
 
-    // Decision thread handle
-    std::thread decision_thread;
-    std::atomic<unsigned long> loop_counter{0};
+    struct RuntimeState {
+        double initial_equity = 0.0;
+        std::thread decision_thread;
+        std::atomic<unsigned long> loop_counter{0};
+    };
+
+    TraderServices services;
+    SharedStateRefs shared;
+    RuntimeState runtime;
 
     // Initialization and single-shot helpers
     double initialize_trader();
@@ -69,13 +78,7 @@ public:
     void run_decision_loop();
 
     // Configure shared state pointers from main
-    void attach_shared_state(std::mutex& mtx,
-                             std::condition_variable& cv,
-                             MarketSnapshot& market,
-                             AccountSnapshot& account,
-                             std::atomic<bool>& has_market,
-                             std::atomic<bool>& has_account,
-                             std::atomic<bool>& running_flag);
+    void attach_shared_state(std::mutex& mtx, std::condition_variable& cv,  MarketSnapshot& market, AccountSnapshot& account, std::atomic<bool>& has_market, std::atomic<bool>& has_account, std::atomic<bool>& running_flag);
 
     // Start only the decision thread
     void start_decision_thread();

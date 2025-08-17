@@ -36,6 +36,10 @@ void log_computing_indicators_start(const TraderConfig& cfg);
 void log_getting_position_and_account(const TraderConfig& cfg);
 void log_market_data_collection_failed(const TraderConfig& cfg);
 void log_missing_bracket_warning(const TraderConfig& cfg);
+void log_computing_indicators_start(const TraderConfig& cfg);
+void log_getting_position_and_account(const TraderConfig& cfg);
+void log_market_data_collection_failed(const TraderConfig& cfg);
+void log_missing_bracket_warning(const TraderConfig& cfg);
 
 // Signal analysis
 void log_signal_analysis_start(const TraderConfig& cfg);
