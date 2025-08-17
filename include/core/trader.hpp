@@ -6,6 +6,10 @@
 #include "../api/alpaca_client.hpp"
 #include "../data/account_manager.hpp"
 #include "../data/data_structures.hpp"
+#include "strategy_logic.hpp"
+#include "risk_logic.hpp"
+#include "market_processing.hpp"
+#include "trader_logging.hpp"
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -18,7 +22,6 @@ private:
     AccountManager& account_manager;
     double initial_equity;
 
-    // Shared state (owned externally by main in new design)
     std::mutex* state_mtx_ptr = nullptr;
     std::condition_variable* data_cv_ptr = nullptr;
     MarketSnapshot* market_snapshot_ptr = nullptr;
@@ -51,12 +54,21 @@ private:
     void process_trading_cycle(const MarketSnapshot& market, const AccountSnapshot& account);
     void countdown_to_next_cycle();
 
+    // Signal evaluation breakdown
+    StrategyLogic::SignalDecision detect_signals(const ProcessedData& data) const;
+    StrategyLogic::FilterResult evaluate_filters(const ProcessedData& data) const;
+    StrategyLogic::PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty) const;
+    void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
+
 public:
     Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr);
     ~Trader();
 
     // Print header/config only
     void run();
+
+    // Expose decision loop for external thread management
+    void run_decision_loop();
 
     // Configure shared state pointers from main
     void attach_shared_state(std::mutex& mtx,

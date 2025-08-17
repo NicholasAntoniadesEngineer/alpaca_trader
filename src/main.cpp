@@ -89,8 +89,7 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
     handles.market = std::thread(std::ref(*system_components.market_task));
     handles.account = std::thread(std::ref(*system_components.account_task));
     handles.gate = std::thread(std::ref(*system_components.market_gate_task));
-
-    system_components.trader->start_decision_thread();
+    handles.trader = std::thread(&Trader::run_decision_loop, system_components.trader.get());
 
     return handles;
 }
@@ -102,7 +101,7 @@ void run_and_shutdown_system(SystemState& system_state, Trader& trader, SystemTh
     if (handles.market.joinable()) handles.market.join();
     if (handles.account.joinable()) handles.account.join();
     if (handles.gate.joinable()) handles.gate.join();
-    trader.join_decision_thread();
+    if (handles.trader.joinable()) handles.trader.join();
 }
 
 int main() 

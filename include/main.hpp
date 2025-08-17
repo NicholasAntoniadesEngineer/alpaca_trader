@@ -43,6 +43,7 @@ struct SystemThreads {
     std::thread market;
     std::thread account;
     std::thread gate;
+    std::thread trader;
 };
 
 struct ComponentConfigBundle {
