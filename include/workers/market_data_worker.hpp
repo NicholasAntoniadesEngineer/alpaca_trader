@@ -43,7 +43,6 @@ struct MarketDataTask {
     void operator()();
 };
 
-// Market gate task (loop deciding allow_fetch) – receives only needed state
 void run_market_gate(std::atomic<bool>& running,
                      std::atomic<bool>& allow_fetch,
                      const TimingConfig& timing,

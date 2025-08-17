@@ -1,11 +1,11 @@
 // Trader.cpp
 #include "core/trader.hpp"
-#include "utils/indicators.hpp"
+#include "core/risk_logic.hpp"
+#include "core/market_processing.hpp"
 #include "utils/async_logger.hpp"
 #include <thread>
 #include <cmath>
 #include <chrono>
-#include <sstream>
 
 Trader::Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr)
     : config_ptr(&cfg), client(clientRef), account_manager(accountMgr), initial_equity(0.0) {
@@ -203,24 +203,31 @@ void Trader::run_decision_loop() {
 
 void Trader::decision_loop() {
     while (running_ptr && running_ptr->load()) {
+        // Wait for fresh data
         wait_for_fresh_data();
         if (!running_ptr->load()) break;
         
+        // Get current market and account snapshots
         auto snapshots = get_current_snapshots();
         MarketSnapshot market = snapshots.first;
         AccountSnapshot account = snapshots.second;
         
+        // Display loop header
         display_loop_header();
         
+        // Check if we can trade
         if (!can_trade(account.exposure_pct)) {
             handle_trading_halt();
             continue;
         }
         
+        // Display current equity status
         display_equity_status(account.equity);
         
+        // Process data and execute signals
         process_trading_cycle(market, account);
         
+        // Countdown to next cycle
         countdown_to_next_cycle();
     }
 }

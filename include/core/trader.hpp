@@ -7,8 +7,6 @@
 #include "../data/account_manager.hpp"
 #include "../data/data_structures.hpp"
 #include "strategy_logic.hpp"
-#include "risk_logic.hpp"
-#include "market_processing.hpp"
 #include "trader_logging.hpp"
 #include <thread>
 #include <mutex>

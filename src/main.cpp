@@ -53,7 +53,8 @@ void initialize_application(const Config& config, AsyncLogger& logger) {
     set_log_thread_tag("MAIN  ");
 }
 
-ComponentConfigBundle build_core_configs(const SystemState& state) {
+ComponentConfigBundle build_core_configs(const SystemState& state) 
+{
     return ComponentConfigBundle{
         AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing},
         AccountManagerConfig{state.config.api, state.config.logging, state.config.target},
@@ -62,8 +63,10 @@ ComponentConfigBundle build_core_configs(const SystemState& state) {
     };
 }
 
-ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs) {
+ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs) 
+{
     ComponentInstances core_components;
+
     core_components.client = std::make_unique<AlpacaClient>(cfgs.client);
     core_components.account_manager = std::make_unique<AccountManager>(cfgs.account_mgr);
     core_components.account_display = std::make_unique<AccountDisplay>(state.config.logging, *core_components.account_manager);
@@ -71,6 +74,7 @@ ComponentInstances build_core_components(SystemState& state, const ComponentConf
     core_components.market_task = std::make_unique<MarketDataTask>(cfgs.market_task, *core_components.client, state.mtx, state.cv, state.market, state.has_market, state.running);
     core_components.account_task = std::make_unique<AccountDataTask>(cfgs.account_task, *core_components.account_manager, state.mtx, state.cv, state.account, state.has_account, state.running);
     core_components.market_gate_task = std::make_unique<MarketGateTask>(state.config.timing, state.config.logging, state.allow_fetch, state.running,*core_components.client);
+    
     return core_components;
 }
 
