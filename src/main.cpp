@@ -71,6 +71,7 @@ ComponentInstances build_core_components(SystemState& state, const ComponentConf
     core_components.trader = std::make_unique<Trader>(state.trader_view, *core_components.client, *core_components.account_manager);
     core_components.market_task = std::make_unique<MarketDataTask>(cfgs.market_task, *core_components.client, state.mtx, state.cv, state.market, state.has_market, state.running);
     core_components.account_task = std::make_unique<AccountDataTask>(cfgs.account_task, *core_components.account_manager, state.mtx, state.cv, state.account, state.has_account, state.running);
+    core_components.market_gate_task = std::make_unique<MarketGateTask>(state, *core_components.client);
     return core_components;
 }
 
@@ -90,7 +91,7 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
     SystemThreads handles;
     handles.market = std::thread(std::ref(*system_components.market_task));
     handles.account = std::thread(std::ref(*system_components.account_task));
-    handles.gate = std::thread([&]{ run_market_gate(system_state, *system_components.client); });
+    handles.gate = std::thread(std::ref(*system_components.market_gate_task));
     system_components.trader->start_decision_thread();
     return handles;
 }

@@ -59,6 +59,7 @@ struct ComponentInstances {
     std::unique_ptr<Trader> trader;
     std::unique_ptr<MarketDataTask> market_task;
     std::unique_ptr<AccountDataTask> account_task;
+    std::unique_ptr<MarketGateTask> market_gate_task;
 };
 
 ComponentConfigBundle build_core_configs(const SystemState& state);

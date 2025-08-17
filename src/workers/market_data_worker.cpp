@@ -54,3 +54,7 @@ void run_market_gate(SystemState& state, AlpacaClient& client) {
         std::this_thread::sleep_for(std::chrono::seconds(state.config.timing.market_open_check_sec));
     }
 }
+
+void MarketGateTask::operator()() {
+    run_market_gate(state, client);
+}

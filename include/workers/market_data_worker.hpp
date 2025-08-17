@@ -48,4 +48,13 @@ struct SystemState;
 // Market gate task (loop deciding allow_fetch)
 void run_market_gate(SystemState& state, AlpacaClient& client);
 
+// Task object to run the market gate loop on a std::thread
+struct MarketGateTask {
+    SystemState& state;
+    AlpacaClient& client;
+
+    MarketGateTask(SystemState& s, AlpacaClient& c) : state(s), client(c) {}
+    void operator()();
+};
+
 #endif // MARKET_DATA_WORKER_HPP
