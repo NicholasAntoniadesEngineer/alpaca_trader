@@ -1,0 +1,74 @@
+2025-08-17 15:34:50 [MAIN  ] - Starting advanced momentum trader for TSLA. Initial equity: 107463.210000
+2025-08-17 15:34:50 [MAIN  ] - 
+2025-08-17 15:34:50 [MAIN  ] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:34:50 [MAIN  ] - ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-17 15:34:50 [MAIN  ] - ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-17 15:34:50 [MAIN  ] - ┌─ ACCOUNT OVERVIEW
+2025-08-17 15:34:50 [MAIN  ] - │  Account Number: PA38WQNR60QX
+2025-08-17 15:34:50 [MAIN  ] - │  Status: ACTIVE
+2025-08-17 15:34:50 [MAIN  ] - │  Currency: USD
+2025-08-17 15:34:50 [MAIN  ] - │  Pattern Day Trader: NO
+2025-08-17 15:34:50 [MAIN  ] - │  Created: 2024-04-19T12:51:14.81408Z
+2025-08-17 15:34:50 [MAIN  ] - │
+2025-08-17 15:34:51 [MAIN  ] - ┌─ FINANCIAL SUMMARY
+2025-08-17 15:34:51 [MAIN  ] - │  Equity: $107463.21
+2025-08-17 15:34:51 [MAIN  ] - │  Last Equity: $107463.21
+2025-08-17 15:34:51 [MAIN  ] - │  Cash: $108124.33
+2025-08-17 15:34:51 [MAIN  ] - │  Buying Power: $214265.30
+2025-08-17 15:34:51 [MAIN  ] - │  Long Market Value: $0.00
+2025-08-17 15:34:51 [MAIN  ] - │  Short Market Value: $-661.12
+2025-08-17 15:34:51 [MAIN  ] - │  Initial Margin: $330.56
+2025-08-17 15:34:51 [MAIN  ] - │  Maintenance Margin: $264.45
+2025-08-17 15:34:51 [MAIN  ] - │  SMA: $107453.17
+2025-08-17 15:34:51 [MAIN  ] - │  Day Trade Count: 0
+2025-08-17 15:34:51 [MAIN  ] - │  RegT Buying Power: $214265.30
+2025-08-17 15:34:51 [MAIN  ] - │  Day Trading Buying Power: $0.00
+2025-08-17 15:34:51 [MAIN  ] - │
+2025-08-17 15:34:52 [MAIN  ] - ┌─ CURRENT POSITIONS
+2025-08-17 15:34:52 [MAIN  ] - │  Position: SHORT 2 shares
+2025-08-17 15:34:52 [MAIN  ] - │  Current Value: $-661.12
+2025-08-17 15:34:52 [MAIN  ] - │  Unrealized P/L: $21.04
+2025-08-17 15:34:52 [MAIN  ] - │  Exposure: 0.6%
+2025-08-17 15:34:52 [MAIN  ] - │
+2025-08-17 15:34:52 [MAIN  ] - └─────────────────────────────────────────────────────────────────────────────────
+2025-08-17 15:34:52 [MAIN  ] - 
+2025-08-17 15:34:52 [MAIN  ] - 
+2025-08-17 15:34:52 [MAIN  ] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:34:52 [MAIN  ] - ║                                   ALPACA TRADER                                  ║
+2025-08-17 15:34:52 [MAIN  ] - ║                            Advanced Momentum Trading Bot                         ║
+2025-08-17 15:34:52 [MAIN  ] - ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-17 15:34:52 [MAIN  ] - 
+2025-08-17 15:34:52 [MAIN  ] - CONFIGURATION:
+2025-08-17 15:34:52 [MAIN  ] -    • Symbol: TSLA
+2025-08-17 15:34:52 [MAIN  ] -    • Risk per Trade: 5%
+2025-08-17 15:34:52 [MAIN  ] -    • Risk/Reward Ratio: 1:3
+2025-08-17 15:34:52 [MAIN  ] -    • Loop Interval: 15 seconds
+2025-08-17 15:34:52 [MAIN  ] - 
+2025-08-17 15:34:53 [GATE  ] - Market fetch gate DISABLED (pre/post window applied)
+2025-08-17 15:34:53 [GATE  ] - Market fetch gate CHECK: DISABLED | interval=30s | buffers=5m/5m
+2025-08-17 15:34:53 [DECIDE] - 
+2025-08-17 15:34:53 [DECIDE] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:34:53 [DECIDE] - ║                              TRADING LOOP #1                                     ║
+2025-08-17 15:34:53 [DECIDE] - ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-17 15:34:53 [DECIDE] -    ┌─ TRADING CONDITIONS
+2025-08-17 15:34:54 [DECIDE] -    │ FAIL: Market closed or outside trading hours
+2025-08-17 15:34:54 [DECIDE] -    └─ Trading halted
+2025-08-17 15:34:54 [DECIDE] - 
+2025-08-17 15:34:54 [DECIDE] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:34:54 [DECIDE] - ║                              MARKET CLOSED / HALTED                              ║
+2025-08-17 15:34:54 [DECIDE] - ║    Conditions not met. Countdown to next check will display in the console.      ║
+2025-08-17 15:34:54 [DECIDE] - ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-17 15:35:23 [GATE  ] - Market fetch gate CHECK: DISABLED | interval=30s | buffers=5m/5m
+2025-08-17 15:35:54 [GATE  ] - Market fetch gate CHECK: DISABLED | interval=30s | buffers=5m/5m
+2025-08-17 15:35:55 [DECIDE] - 
+2025-08-17 15:35:55 [DECIDE] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:35:55 [DECIDE] - ║                              TRADING LOOP #2                                     ║
+2025-08-17 15:35:55 [DECIDE] - ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-17 15:35:55 [DECIDE] -    ┌─ TRADING CONDITIONS
+2025-08-17 15:35:57 [DECIDE] -    │ FAIL: Market closed or outside trading hours
+2025-08-17 15:35:57 [DECIDE] -    └─ Trading halted
+2025-08-17 15:35:57 [DECIDE] - 
+2025-08-17 15:35:57 [DECIDE] - ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-17 15:35:57 [DECIDE] - ║                              MARKET CLOSED / HALTED                              ║
+2025-08-17 15:35:57 [DECIDE] - ║    Conditions not met. Countdown to next check will display in the console.      ║
+2025-08-17 15:35:57 [DECIDE] - ╚══════════════════════════════════════════════════════════════════════════════════╝
