@@ -1,4 +1,3 @@
-// http_utils.hpp
 #ifndef HTTP_UTILS_HPP
 #define HTTP_UTILS_HPP
 

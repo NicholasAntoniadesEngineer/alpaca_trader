@@ -1,4 +1,3 @@
-// account_data_worker.hpp
 #ifndef ACCOUNT_DATA_WORKER_HPP
 #define ACCOUNT_DATA_WORKER_HPP
 
@@ -10,7 +9,6 @@
 #include <mutex>
 #include <condition_variable>
 
-// Task object to be run on a std::thread from main
 struct AccountDataTask {
     const TimingConfig& timing;
     AccountManager& account_manager;

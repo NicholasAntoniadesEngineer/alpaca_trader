@@ -1,4 +1,3 @@
-// main.hpp
 #ifndef MAIN_HPP
 #define MAIN_HPP
 

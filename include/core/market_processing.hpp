@@ -1,4 +1,3 @@
-// market_processing.hpp
 #ifndef MARKET_PROCESSING_HPP
 #define MARKET_PROCESSING_HPP
 

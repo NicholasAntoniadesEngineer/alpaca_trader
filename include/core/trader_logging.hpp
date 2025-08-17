@@ -1,4 +1,3 @@
-// trader_logging.hpp
 #ifndef TRADER_LOGGING_HPP
 #define TRADER_LOGGING_HPP
 

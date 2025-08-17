@@ -1,4 +1,3 @@
-// async_logger.hpp
 #ifndef ASYNC_LOGGER_HPP
 #define ASYNC_LOGGER_HPP
 

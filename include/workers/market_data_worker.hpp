@@ -1,4 +1,3 @@
-// market_data_worker.hpp
 #ifndef MARKET_DATA_WORKER_HPP
 #define MARKET_DATA_WORKER_HPP
 
@@ -12,7 +11,6 @@
 #include <mutex>
 #include <condition_variable>
 
-// Task object to be run on a std::thread from main
 struct MarketDataTask {
     const StrategyConfig& strategy;
     const TimingConfig& timing;
@@ -49,7 +47,6 @@ void run_market_gate(std::atomic<bool>& running,
                      const LoggingConfig& logging,
                      AlpacaClient& client);
 
-// Task object to run the market gate loop on a std::thread
 struct MarketGateTask {
     const TimingConfig& timing;
     const LoggingConfig& logging;

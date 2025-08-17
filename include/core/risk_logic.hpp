@@ -1,4 +1,3 @@
-// risk_logic.hpp
 #ifndef RISK_LOGIC_HPP
 #define RISK_LOGIC_HPP
 
