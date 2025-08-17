@@ -79,9 +79,6 @@ bool AlpacaClient::is_within_fetch_window() const {
     return false;
 }
 
-// Note: Account management functions moved to AccountManager class
-
-// Implement get_recent_bars
 std::vector<Bar> AlpacaClient::get_recent_bars(const BarRequest& reqBars) const {
     std::string start = get_iso_time_minus(timing.bar_fetch_minutes);
     auto now = std::chrono::system_clock::now();
@@ -143,7 +140,6 @@ std::vector<Bar> AlpacaClient::get_recent_bars(const BarRequest& reqBars) const 
     return bars;
 }
 
-// Implement place_bracket_order
 void AlpacaClient::place_bracket_order(const OrderRequest& oreq) const {
     if (oreq.qty <= 0) return;
     json order = {
@@ -181,7 +177,6 @@ void AlpacaClient::place_bracket_order(const OrderRequest& oreq) const {
     log_message(log_msg, logging.log_file);
 }
 
-// Implement close_position
 void AlpacaClient::close_position(const ClosePositionRequest& creq) const {
     if (creq.currentQty == 0) return;
     std::string side = (creq.currentQty > 0) ? "sell" : "buy";
@@ -212,5 +207,3 @@ void AlpacaClient::close_position(const ClosePositionRequest& creq) const {
     }
     log_message(log_msg, logging.log_file);
 }
-
-// Note: Account display functions moved to AccountDisplay class

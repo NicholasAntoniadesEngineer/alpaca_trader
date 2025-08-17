@@ -34,7 +34,6 @@ std::string http_get(const HttpRequest& req) {
         for (int i = 0; i < req.retries; ++i) {
             res = curl_easy_perform(curl);
             if (res == CURLE_OK) break;
-            // Note: We'll need to handle logging differently since this is now separate
             std::cerr << "HTTP retry failed: " << curl_easy_strerror(res) << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
