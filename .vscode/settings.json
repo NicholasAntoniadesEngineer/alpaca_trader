@@ -1,0 +1,28 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/include/api",
+        "${workspaceFolder}/include/configs",
+        "${workspaceFolder}/include/core",
+        "${workspaceFolder}/include/data",
+        "${workspaceFolder}/include/external",
+        "${workspaceFolder}/include/ui",
+        "${workspaceFolder}/include/utils",
+        "${workspaceFolder}/include/workers"
+    ],
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.intelliSenseMode": "macos-clang-x64",
+    "C_Cpp.default.compilerArgs": [
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-O2",
+        "-I${workspaceFolder}/include"
+    ],
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.autocomplete": "default",
+    "C_Cpp.enhancedColorization": "enabled"
+}

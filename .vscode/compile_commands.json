@@ -1,0 +1,52 @@
+[
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/main.cpp -o obj/main.o",
+    "file": "src/main.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/api/alpaca_client.cpp -o obj/api/alpaca_client.o",
+    "file": "src/api/alpaca_client.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/core/trader.cpp -o obj/core/trader.o",
+    "file": "src/core/trader.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/data/account_manager.cpp -o obj/data/account_manager.o",
+    "file": "src/data/account_manager.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/ui/account_display.cpp -o obj/ui/account_display.o",
+    "file": "src/ui/account_display.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/utils/async_logger.cpp -o obj/utils/async_logger.o",
+    "file": "src/utils/async_logger.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/utils/http_utils.cpp -o obj/utils/http_utils.o",
+    "file": "src/utils/http_utils.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/utils/indicators.cpp -o obj/utils/indicators.o",
+    "file": "src/utils/indicators.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/workers/account_data_worker.cpp -o obj/workers/account_data_worker.o",
+    "file": "src/workers/account_data_worker.cpp"
+  },
+  {
+    "directory": "/Users/nicholasantoniades/Documents/GitHub/alpaca_trader",
+    "command": "/usr/bin/g++ -std=c++17 -Wall -Wextra -O2 -I./include -c src/workers/market_data_worker.cpp -o obj/workers/market_data_worker.o",
+    "file": "src/workers/market_data_worker.cpp"
+  }
+]

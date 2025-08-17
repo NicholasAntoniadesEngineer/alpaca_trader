@@ -12,7 +12,7 @@ BIN_DIR = bin
 OBJ_DIR = obj
 
 # Target binary
-TARGET = $(BIN_DIR)/trader
+TARGET = $(BIN_DIR)/alpaca_trader
 
 # Source files
 SOURCES = $(SRC_DIR)/main.cpp \
@@ -30,7 +30,7 @@ SOURCES = $(SRC_DIR)/main.cpp \
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Default target
-all: $(TARGET)
+all: build-and-clean
 
 # Create directories if they don't exist
 $(BIN_DIR):
@@ -56,13 +56,22 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 
 # Clean build artifacts
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)/trader
+	rm -rf $(OBJ_DIR) $(BIN_DIR)/alpaca_trader
 	@echo "Clean complete"
+
+# Clean object files only (keep binary)
+clean-obj:
+	rm -rf $(OBJ_DIR)
+	@echo "Object files cleaned"
 
 # Clean everything including directories
 distclean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 	@echo "Distribution clean complete"
+
+# Build and then clean object files
+build-and-clean: $(TARGET) clean-obj
+	@echo "Build completed and object files cleaned"
 
 # Rebuild everything
 rebuild: clean all
@@ -74,15 +83,17 @@ run: $(TARGET)
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  all      - Build the program (default)"
-	@echo "  clean    - Remove object files and binary"
-	@echo "  distclean- Remove all build directories"
-	@echo "  rebuild  - Clean and build"
-	@echo "  run      - Build and run the program"
-	@echo "  help     - Show this help message"
+	@echo "  all            - Build the program (default)"
+	@echo "  clean          - Remove object files and binary"
+	@echo "  clean-obj      - Remove object files only (keep binary)"
+	@echo "  build-and-clean- Build and then clean object files"
+	@echo "  distclean      - Remove all build directories"
+	@echo "  rebuild        - Clean and build"
+	@echo "  run            - Build and run the program"
+	@echo "  help           - Show this help message"
 
 # Declare phony targets
-.PHONY: all clean distclean rebuild run help
+.PHONY: all clean clean-obj build-and-clean distclean rebuild run help
 
 # Include dependency files if they exist
 -include $(OBJECTS:.o=.d)
