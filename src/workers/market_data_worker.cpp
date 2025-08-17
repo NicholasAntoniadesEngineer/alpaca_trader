@@ -2,7 +2,7 @@
 #include "workers/market_data_worker.hpp"
 #include "utils/async_logger.hpp"
 #include "utils/indicators.hpp"
-#include "main.hpp" // for SystemState
+#include <atomic>
 #include <chrono>
 
 void MarketDataTask::operator()() {
@@ -36,25 +36,29 @@ void MarketDataTask::operator()() {
     }
 }
 
-void run_market_gate(SystemState& state, AlpacaClient& client) {
+void run_market_gate(std::atomic<bool>& running,
+                     std::atomic<bool>& allow_fetch,
+                     const TimingConfig& timing,
+                     const LoggingConfig& logging,
+                     AlpacaClient& client) {
     set_log_thread_tag("GATE  ");
-    while (state.running.load()) {
+    while (running.load()) {
         bool within = client.is_within_fetch_window();
-        bool prev = state.allow_fetch.load();
-        state.allow_fetch.store(within);
+        bool prev = allow_fetch.load();
+        allow_fetch.store(within);
         if (within != prev) {
             log_message(std::string("Market fetch gate ") + (within ? "ENABLED" : "DISABLED") +
-                        " (pre/post window applied)", state.config.logging.log_file);
+                        " (pre/post window applied)", logging.log_file);
         }
         log_message(std::string("Market fetch gate CHECK: ") + (within ? "ENABLED" : "DISABLED") +
-                    " | interval=" + std::to_string(state.config.timing.market_open_check_sec) + "s" +
-                    " | buffers=" + std::to_string(state.config.timing.pre_open_buffer_min) + "m/" +
-                    std::to_string(state.config.timing.post_close_buffer_min) + "m",
-                    state.config.logging.log_file);
-        std::this_thread::sleep_for(std::chrono::seconds(state.config.timing.market_open_check_sec));
+                    " | interval=" + std::to_string(timing.market_open_check_sec) + "s" +
+                    " | buffers=" + std::to_string(timing.pre_open_buffer_min) + "m/" +
+                    std::to_string(timing.post_close_buffer_min) + "m",
+                    logging.log_file);
+        std::this_thread::sleep_for(std::chrono::seconds(timing.market_open_check_sec));
     }
 }
 
 void MarketGateTask::operator()() {
-    run_market_gate(state, client);
+    run_market_gate(running, allow_fetch, timing, logging, client);
 }

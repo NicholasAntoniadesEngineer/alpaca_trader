@@ -43,17 +43,27 @@ struct MarketDataTask {
     void operator()();
 };
 
-// Forward declare SystemState to avoid circular include of main.hpp
-struct SystemState;
-// Market gate task (loop deciding allow_fetch)
-void run_market_gate(SystemState& state, AlpacaClient& client);
+// Market gate task (loop deciding allow_fetch) – receives only needed state
+void run_market_gate(std::atomic<bool>& running,
+                     std::atomic<bool>& allow_fetch,
+                     const TimingConfig& timing,
+                     const LoggingConfig& logging,
+                     AlpacaClient& client);
 
 // Task object to run the market gate loop on a std::thread
 struct MarketGateTask {
-    SystemState& state;
+    const TimingConfig& timing;
+    const LoggingConfig& logging;
+    std::atomic<bool>& allow_fetch;
+    std::atomic<bool>& running;
     AlpacaClient& client;
 
-    MarketGateTask(SystemState& s, AlpacaClient& c) : state(s), client(c) {}
+    MarketGateTask(const TimingConfig& timingCfg,
+                   const LoggingConfig& loggingCfg,
+                   std::atomic<bool>& allow,
+                   std::atomic<bool>& running_flag,
+                   AlpacaClient& cli)
+        : timing(timingCfg), logging(loggingCfg), allow_fetch(allow), running(running_flag), client(cli) {}
     void operator()();
 };
 

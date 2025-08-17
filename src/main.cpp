@@ -1,6 +1,5 @@
 // main.cpp
 #include "main.hpp"
-// main.hpp already includes component headers; keep only what we need here
 #include <thread>
 #include <chrono>
 #include <csignal>
@@ -71,35 +70,33 @@ ComponentInstances build_core_components(SystemState& state, const ComponentConf
     core_components.trader = std::make_unique<Trader>(state.trader_view, *core_components.client, *core_components.account_manager);
     core_components.market_task = std::make_unique<MarketDataTask>(cfgs.market_task, *core_components.client, state.mtx, state.cv, state.market, state.has_market, state.running);
     core_components.account_task = std::make_unique<AccountDataTask>(cfgs.account_task, *core_components.account_manager, state.mtx, state.cv, state.account, state.has_account, state.running);
-    core_components.market_gate_task = std::make_unique<MarketGateTask>(state, *core_components.client);
+    core_components.market_gate_task = std::make_unique<MarketGateTask>(state.config.timing, state.config.logging, state.allow_fetch, state.running,*core_components.client);
     return core_components;
 }
 
-// Boot: initialize components and start all threads
-SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_components) {
+SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_components) 
+{
     show_startup_account_status(*system_components.account_display);
-    system_components.trader->attach_shared_state(system_state.mtx, system_state.cv,
-                                     system_state.market, system_state.account,
-                                     system_state.has_market, system_state.has_account,
-                                     system_state.running);
-    system_components.trader->run();
 
+    system_components.trader->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, system_state.account,system_state.has_market, system_state.has_account, system_state.running);
+    system_components.trader->run();
     system_components.market_task->set_allow_fetch_flag(system_state.allow_fetch);
     system_components.account_task->set_allow_fetch_flag(system_state.allow_fetch);
+
     setup_signal_handlers(system_state.running);
 
     SystemThreads handles;
     handles.market = std::thread(std::ref(*system_components.market_task));
     handles.account = std::thread(std::ref(*system_components.account_task));
     handles.gate = std::thread(std::ref(*system_components.market_gate_task));
+
     system_components.trader->start_decision_thread();
+
     return handles;
 }
 
-// Run loop and then shutdown (join all threads)
-void run_and_shutdown_system(SystemState& system_state,
-                             Trader& trader,
-                             SystemThreads& handles) {
+void run_and_shutdown_system(SystemState& system_state, Trader& trader, SystemThreads& handles) 
+{
     run_until_shutdown(system_state);
     system_state.cv.notify_all();
     if (handles.market.joinable()) handles.market.join();
@@ -108,26 +105,26 @@ void run_and_shutdown_system(SystemState& system_state,
     trader.join_decision_thread();
 }
 
-int main() {
-    // Create base config and logger
+int main() 
+{
+
     Config initial_config;
 
-    // System-wide state 
     SystemState system_state(initial_config);
     
     AsyncLogger logger(system_state.config.logging.log_file);
 
-    // Initialize app (validates and sets up logging)
     initialize_application(system_state.config, logger);
 
-    // Grouped configs and components to reduce main verbosity
     ComponentConfigBundle core_configs = build_core_configs(system_state);
+
     ComponentInstances core_components = build_core_components(system_state, core_configs);
 
-    // Boot, run, shutdown in two clear calls
     SystemThreads thread_handles = boot_system(system_state, core_components);
+
     run_and_shutdown_system(system_state, *core_components.trader, thread_handles);
 
     shutdown_global_logger(logger);
+
     return 0;
 }
