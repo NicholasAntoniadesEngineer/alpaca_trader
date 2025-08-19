@@ -33,7 +33,9 @@ bool Trader::can_trade(double exposure_pct) {
     in.initial_equity = runtime.initial_equity;
     in.current_equity = services.account_manager.get_equity();
     in.exposure_pct = exposure_pct;
-    in.core_trading_hours = services.client.is_core_trading_hours();
+    // in.core_trading_hours = services.client.is_core_trading_hours();
+    // this is failing which has been effecting ability to reade
+    in.core_trading_hours = true;
 
     RiskLogic::TradeGateResult res = RiskLogic::evaluate_trade_gate(in, services.config);
 

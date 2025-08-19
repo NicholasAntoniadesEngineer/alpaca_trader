@@ -27,27 +27,27 @@ void AccountDisplay::display_account_overview() const {
     
     log_message("┌─ ACCOUNT OVERVIEW", logging.log_file);
     if (!account_info.account_number.empty()) {
-        log_message("│  Account Number: " + account_info.account_number, logging.log_file);
+        log_message("│  • Account Number: " + account_info.account_number, logging.log_file);
     }
     if (!account_info.status.empty()) {
-        log_message("│  Status: " + account_info.status, logging.log_file);
+        log_message("│  • Status: " + account_info.status, logging.log_file);
     }
     if (!account_info.currency.empty()) {
-        log_message("│  Currency: " + account_info.currency, logging.log_file);
+        log_message("│  • Currency: " + account_info.currency, logging.log_file);
     }
-    log_message("│  Pattern Day Trader: " + std::string(account_info.pattern_day_trader ? "YES" : "NO"), logging.log_file);
+    log_message("│  • Pattern Day Trader: " + std::string(account_info.pattern_day_trader ? "YES" : "NO"), logging.log_file);
     
     if (!account_info.trading_blocked_reason.empty()) {
-        log_message("│  Trading Blocked: " + account_info.trading_blocked_reason, logging.log_file);
+        log_message("│  • Trading Blocked: " + account_info.trading_blocked_reason, logging.log_file);
     }
     if (!account_info.transfers_blocked_reason.empty()) {
-        log_message("│  Transfers Blocked: " + account_info.transfers_blocked_reason, logging.log_file);
+        log_message("│  • Transfers Blocked: " + account_info.transfers_blocked_reason, logging.log_file);
     }
     if (!account_info.account_blocked_reason.empty()) {
-        log_message("│  Account Blocked: " + account_info.account_blocked_reason, logging.log_file);
+        log_message("│  • Account Blocked: " + account_info.account_blocked_reason, logging.log_file);
     }
     if (!account_info.created_at.empty()) {
-        log_message("│  Created: " + account_info.created_at, logging.log_file);
+        log_message("│  • Created: " + account_info.created_at, logging.log_file);
     }
     log_message("│", logging.log_file);
 }
@@ -64,18 +64,18 @@ void AccountDisplay::display_financial_summary() const {
         return oss.str();
     };
     
-    log_message("│  Equity: " + format_currency(account_info.equity), logging.log_file);
-    log_message("│  Last Equity: " + format_currency(account_info.last_equity), logging.log_file);
-    log_message("│  Cash: " + format_currency(account_info.cash), logging.log_file);
-    log_message("│  Buying Power: " + format_currency(account_info.buying_power), logging.log_file);
-    log_message("│  Long Market Value: " + format_currency(account_info.long_market_value), logging.log_file);
-    log_message("│  Short Market Value: " + format_currency(account_info.short_market_value), logging.log_file);
-    log_message("│  Initial Margin: " + format_currency(account_info.initial_margin), logging.log_file);
-    log_message("│  Maintenance Margin: " + format_currency(account_info.maintenance_margin), logging.log_file);
-    log_message("│  SMA: " + format_currency(account_info.sma), logging.log_file);
-    log_message("│  Day Trade Count: " + std::to_string(static_cast<int>(account_info.day_trade_count)), logging.log_file);
-    log_message("│  RegT Buying Power: " + format_currency(account_info.regt_buying_power), logging.log_file);
-    log_message("│  Day Trading Buying Power: " + format_currency(account_info.daytrading_buying_power), logging.log_file);
+    log_message("│  • Equity: " + format_currency(account_info.equity), logging.log_file);
+    log_message("│  • Last Equity: " + format_currency(account_info.last_equity), logging.log_file);
+    log_message("│  • Cash: " + format_currency(account_info.cash), logging.log_file);
+    log_message("│  • Buying Power: " + format_currency(account_info.buying_power), logging.log_file);
+    log_message("│  • Long Market Value: " + format_currency(account_info.long_market_value), logging.log_file);
+    log_message("│  • Short Market Value: " + format_currency(account_info.short_market_value), logging.log_file);
+    log_message("│  • Initial Margin: " + format_currency(account_info.initial_margin), logging.log_file);
+    log_message("│  • Maintenance Margin: " + format_currency(account_info.maintenance_margin), logging.log_file);
+    log_message("│  • SMA: " + format_currency(account_info.sma), logging.log_file);
+    log_message("│  • Day Trade Count: " + std::to_string(static_cast<int>(account_info.day_trade_count)), logging.log_file);
+    log_message("│  • RegT Buying Power: " + format_currency(account_info.regt_buying_power), logging.log_file);
+    log_message("│  • Day Trading Buying Power: " + format_currency(account_info.daytrading_buying_power), logging.log_file);
     log_message("│", logging.log_file);
 }
 
@@ -85,7 +85,7 @@ void AccountDisplay::display_positions() const {
     log_message("┌─ CURRENT POSITIONS", logging.log_file);
     
     if (snapshot.pos_details.qty == 0) {
-        log_message("│  No positions held", logging.log_file);
+        log_message("│  •No positions held", logging.log_file);
     } else {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);

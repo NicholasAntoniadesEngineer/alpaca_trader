@@ -130,9 +130,7 @@ int main()
 {
     Config initial_config;
 
-    // Bootstrap config from env or default path
-    const char* csv_env = std::getenv("CONFIG_CSV");
-    std::string csv_path = csv_env ? std::string(csv_env) : std::string("config/runtime_config.csv");
+    std::string csv_path = std::string("config/runtime_config.csv");
     if (!load_config_from_csv(initial_config, csv_path)) {
         fprintf(stderr, "Failed to load config CSV from %s\n", csv_path.c_str());
         return 1;
@@ -140,14 +138,17 @@ int main()
 
     SystemState system_state(initial_config);
 
-    // Initialize logger with configured log file
     AsyncLogger logger(system_state.config.logging.log_file);
     initialize_application(system_state.config, logger);
 
     ComponentConfigBundle core_configs = build_core_configs(system_state);
     ComponentInstances core_components = build_core_components(system_state, core_configs);
+
     SystemThreads thread_handles = boot_system(system_state, core_components);
+
     run_and_shutdown_system(system_state, thread_handles);
+    
     shutdown_global_logger(logger);
+
     return 0;
 }

@@ -14,20 +14,20 @@ void log_header_and_config(const TraderConfig& config) {
     log_message("╚══════════════════════════════════════════════════════════════════════════════════╝", config.logging.log_file);
     log_message("", config.logging.log_file);
 
-    log_message("CONFIGURATION:", config.logging.log_file);
+    log_message("   ┌─ CONFIGURATION:", config.logging.log_file);
     {
-        std::ostringstream oss; oss << "   • Symbol: " << config.target.symbol; log_message(oss.str(), config.logging.log_file);
+        std::ostringstream oss; oss << "   |  • Symbol: " << config.target.symbol; log_message(oss.str(), config.logging.log_file);
     }
     {
-        std::ostringstream oss; oss << "   • Risk per Trade: " << (config.risk.risk_per_trade * 100) << "%"; log_message(oss.str(), config.logging.log_file);
+        std::ostringstream oss; oss << "   |  • Risk per Trade: " << (config.risk.risk_per_trade * 100) << "%"; log_message(oss.str(), config.logging.log_file);
     }
     {
-        std::ostringstream oss; oss << "   • Risk/Reward Ratio: 1:" << config.strategy.rr_ratio; log_message(oss.str(), config.logging.log_file);
+        std::ostringstream oss; oss << "   |  • Risk/Reward Ratio: 1:" << config.strategy.rr_ratio; log_message(oss.str(), config.logging.log_file);
     }
     {
-        std::ostringstream oss; oss << "   • Loop Interval: " << config.timing.sleep_interval_sec << " seconds"; log_message(oss.str(), config.logging.log_file);
+        std::ostringstream oss; oss << "   |  • Loop Interval: " << config.timing.sleep_interval_sec << " seconds"; log_message(oss.str(), config.logging.log_file);
     }
-    log_message("", config.logging.log_file);
+    log_message("   └─ ", config.logging.log_file);
 }
 
 void log_trader_started(const TraderConfig& config, double initial_equity) {
@@ -39,6 +39,7 @@ void log_loop_header(unsigned long loop_number, const TraderConfig& cfg) {
     log_message("╔══════════════════════════════════════════════════════════════════════════════════╗", cfg.logging.log_file);
     log_message("║                              TRADING LOOP #" + std::to_string(loop_number) + "                                     ║", cfg.logging.log_file);
     log_message("╚══════════════════════════════════════════════════════════════════════════════════╝", cfg.logging.log_file);
+    log_message("", cfg.logging.log_file);
 }
 
 void log_halted_header(const TraderConfig& cfg) {
@@ -49,9 +50,12 @@ void log_halted_header(const TraderConfig& cfg) {
     log_message("╚══════════════════════════════════════════════════════════════════════════════════╝", cfg.logging.log_file);
 }
 
-void log_equity_status(double equity, const TraderConfig& cfg) {
-    log_message("Current Equity: $" + std::to_string(static_cast<int>(equity)) +
+void log_equity_status(double equity, const TraderConfig& cfg)
+ {
+    log_message("   ┌─ ", cfg.logging.log_file);
+    log_message("   │ Current Equity: $" + std::to_string(static_cast<int>(equity)) +
                 " (acct poll=" + std::to_string(cfg.timing.account_poll_sec) + "s)", cfg.logging.log_file);
+    log_message("   └─ ", cfg.logging.log_file);
 }
 
 void log_trading_conditions_start(const TraderConfig& cfg) { log_message("   ┌─ TRADING CONDITIONS", cfg.logging.log_file); }
@@ -67,7 +71,11 @@ void log_exposure_line(double exposure_pct, const TraderConfig& cfg) {
                 std::to_string(static_cast<int>(cfg.risk.max_exposure_pct)) + "%)", cfg.logging.log_file);
 }
 void log_exposure_limit_reached(const TraderConfig& cfg) { log_message("   │ FAIL: Exposure limit exceeded", cfg.logging.log_file); }
-void log_trading_allowed(const TraderConfig& cfg) { log_message("   │ PASS: All conditions met", cfg.logging.log_file); log_message("   └─ Trading allowed", cfg.logging.log_file); }
+void log_trading_allowed(const TraderConfig& cfg) 
+{ 
+    log_message("   │ PASS: All conditions met", cfg.logging.log_file); 
+    log_message("   └─ Trading allowed", cfg.logging.log_file); 
+}
 void log_trading_halted_tail(const TraderConfig& cfg) { log_message("   └─ Trading halted", cfg.logging.log_file); }
 
 void log_market_data_header(const TraderConfig& cfg) { log_message("   ┌─ MARKET DATA", cfg.logging.log_file); }
@@ -98,6 +106,7 @@ void log_position_market_summary(const ProcessedData& data, const TraderConfig& 
 
 void log_signal_analysis_start(const TraderConfig& cfg) { log_message("   ┌─ SIGNAL ANALYSIS (per-lap decisions)", cfg.logging.log_file); }
 void log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& sd, const TraderConfig& cfg) {
+    log_message("   │", cfg.logging.log_file);
     log_message("   │ Candle: O=$" + std::to_string(static_cast<int>(data.curr.o)) +
                 " H=$" + std::to_string(static_cast<int>(data.curr.h)) +
                 " L=$" + std::to_string(static_cast<int>(data.curr.l)) +
@@ -118,7 +127,7 @@ void log_filters(const StrategyLogic::FilterResult& fr, const TraderConfig& cfg)
 void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& sd, const StrategyLogic::FilterResult& fr, const TraderConfig& cfg) {
     std::ostringstream oss;
     oss.setf(std::ios::fixed);
-    oss << "   │ SUMMARY: C=" << static_cast<int>(data.curr.c)
+    oss << "   | Summary: C=" << static_cast<int>(data.curr.c)
         << " | SIG: B=" << (sd.buy ? "YES" : "NO")
         << " S=" << (sd.sell ? "YES" : "NO")
         << " | FIL: ATR" << (fr.atr_pass ? "+" : "-")
@@ -127,18 +136,22 @@ void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision&
         << " | ATRx=" << std::setprecision(cfg.ux.log_float_chars) << fr.atr_ratio
         << " VOLx=" << std::setprecision(cfg.ux.log_float_chars) << fr.vol_ratio
         << " | EXP=" << static_cast<int>(data.exposure_pct) << "%";
+    log_message("   │", cfg.logging.log_file);
     log_message(oss.str(), cfg.logging.log_file);
+    log_message("   │ ", cfg.logging.log_file);
 }
 void log_filters_not_met_preview(double risk_prev, int qty_prev, const TraderConfig& cfg) {
-    log_message("   │ RESULT: Signal filters not met", cfg.logging.log_file);
+    log_message("   │ Filters Not Met", cfg.logging.log_file);
     std::ostringstream oss;
     oss.setf(std::ios::fixed);
     oss << "   │ Preview Sizing: Risk=$" << std::setprecision(cfg.ux.log_float_chars) << risk_prev
         << " | Qty~" << qty_prev;
     log_message(oss.str(), cfg.logging.log_file);
-    log_message("   └─ No trade executed", cfg.logging.log_file);
+    log_message("   │-----------------------------------", cfg.logging.log_file);
+    log_message("   │ No trade executed", cfg.logging.log_file); 
+    log_message("   └─----------------------------------- ", cfg.logging.log_file);
 }
-void log_filters_pass(const TraderConfig& cfg) { log_message("   │ PASS: All filters passed", cfg.logging.log_file); }
+void log_filters_pass(const TraderConfig& cfg) { log_message("   │ Filters Passed ", cfg.logging.log_file); }
 void log_current_position(int current_qty, const TraderConfig& cfg) { if (current_qty != 0) log_message("   │ Current position: " + std::to_string(current_qty) + " shares", cfg.logging.log_file); }
 void log_position_size(double risk_amount, int qty, const TraderConfig& cfg) {
     std::ostringstream oss;
@@ -146,7 +159,13 @@ void log_position_size(double risk_amount, int qty, const TraderConfig& cfg) {
     oss << "   │ Position Size: Risk=$" << std::setprecision(2) << risk_amount << " | Qty=" << qty << " shares";
     log_message(oss.str(), cfg.logging.log_file);
 }
-void log_qty_too_small(const TraderConfig& cfg) { log_message("   │ FAIL: Calculated quantity too small", cfg.logging.log_file); log_message("   └─ No trade executed", cfg.logging.log_file); }
+void log_qty_too_small(const TraderConfig& cfg) 
+{ 
+    log_message("   │ FAIL: Calculated quantity too small", cfg.logging.log_file); 
+    log_message("   │-----------------------------------", cfg.logging.log_file);
+    log_message("   │ No trade executed", cfg.logging.log_file); 
+    log_message("   └─----------------------------------- ", cfg.logging.log_file);
+}
 void log_buy_triggered(const TraderConfig& cfg) { log_message("   │ BUY SIGNAL TRIGGERED", cfg.logging.log_file); }
 void log_sell_triggered(const TraderConfig& cfg) { log_message("   │ SELL SIGNAL TRIGGERED", cfg.logging.log_file); }
 void log_close_position_first(const char* side, const TraderConfig& cfg) { log_message(std::string("   │ Closing ") + side + " position first...", cfg.logging.log_file); }
@@ -164,7 +183,11 @@ void log_open_position_details(const char* label, double entry, double sl, doubl
 }
 void log_position_limits_reached(const char* side, const TraderConfig& cfg) { log_message(std::string("   │ ") + side + " signal but position limits reached", cfg.logging.log_file); }
 void log_no_valid_pattern(const TraderConfig& cfg) { log_message("   │ No valid breakout pattern", cfg.logging.log_file); }
-void log_signal_analysis_complete(const TraderConfig& cfg) { log_message("   └─ Signal analysis complete", cfg.logging.log_file); }
+void log_signal_analysis_complete(const TraderConfig& cfg) 
+{ 
+    log_message("   │", cfg.logging.log_file);
+    log_message("   └─ Signal analysis complete", cfg.logging.log_file);
+}
 
 } // namespace TraderLogging
 

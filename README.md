@@ -149,3 +149,12 @@ Alpaca Trader/
         ├── account_data_worker.hpp  # Account data worker interface
         └── market_data_worker.hpp   # Market data worker interface
 ```
+
+
+TODO:
+- The delayed data results in invalid bracket orders as share price value chaneges such that the stop loss and take profit are not in the correct position.
+- Better handling and logging of trader gate and risk logic.
+  - this logic needs to looked at evaluate_trade_gate and can_trade.
+- Need to add thread priority to the threads. 
+- in.core_trading_hours = services.client.is_core_trading_hours();
+    - this is failing which has been effecting ability to trade

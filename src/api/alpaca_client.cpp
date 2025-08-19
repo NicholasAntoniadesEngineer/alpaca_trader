@@ -87,7 +87,8 @@ std::vector<Bar> AlpacaClient::get_recent_bars(const BarRequest& reqBars) const 
     ss << std::put_time(std::gmtime(&in_time_t), "%Y-%m-%dT%H:%M:%SZ");
     std::string end = ss.str();
 
-    log_message("   │ : Fetching live market data for " + reqBars.symbol, logging.log_file);
+    log_message("   ┌─ ", logging.log_file);
+    log_message("   │ Fetching live market data for " + reqBars.symbol, logging.log_file);
 
     std::vector<std::string> urls = {
         api.data_url + "/v2/stocks/" + reqBars.symbol + "/bars?start=" + start + "&end=" + end + "&timeframe=1Min&limit=" + std::to_string(reqBars.limit) + "&adjustment=raw&feed=iex",
@@ -120,6 +121,7 @@ std::vector<Bar> AlpacaClient::get_recent_bars(const BarRequest& reqBars) const 
                 }
                 if (!bars.empty()) {
                     log_message("   │ PASS: Retrieved " + std::to_string(bars.size()) + " bars from " + descriptions[i], logging.log_file);
+                    log_message("   └─ ", logging.log_file);
                     return bars;
                 }
             } else if (j.contains("message")) {
@@ -133,10 +135,12 @@ std::vector<Bar> AlpacaClient::get_recent_bars(const BarRequest& reqBars) const 
     }
 
     log_message("   │", logging.log_file);
-    log_message("   │ FAIL: Market data endpoints failed", logging.log_file);
-    log_message("   │   - Market may be closed (weekend/holiday)", logging.log_file);
-    log_message("   │   - Subscription may be required for selected feed", logging.log_file);
-    log_message("   │   - Check API key permissions and validity", logging.log_file);
+    log_message("   │ FAIL: ", logging.log_file);
+    log_message("   │      - Market data endpoints failed", logging.log_file);
+    log_message("   │      - Market may be closed (weekend/holiday)", logging.log_file);
+    log_message("   │      - Subscription may be required for selected feed", logging.log_file);
+    log_message("   │      - Check API key permissions and validity", logging.log_file);
+    log_message("   └─ ", logging.log_file);
     return bars;
 }
 
@@ -164,15 +168,15 @@ void AlpacaClient::place_bracket_order(const OrderRequest& oreq) const {
         try {
             json j = json::parse(response);
             if (j.contains("id")) {
-                log_msg += " - Success: ID " + j["id"].get<std::string>();
+                log_msg += "   Success: ID " + j["id"].get<std::string>();
             } else {
-                log_msg += " - Response: " + response;
+                log_msg += "   Response: " + response;
             }
         } catch (...) {
-            log_msg += " - Response: " + response;
+            log_msg += "   Response: " + response;
         }
     } else {
-        log_msg += " - Failed";
+        log_msg += "   Failed";
     }
     log_message(log_msg, logging.log_file);
 }
@@ -195,15 +199,15 @@ void AlpacaClient::close_position(const ClosePositionRequest& creq) const {
         try {
             json j = json::parse(response);
             if (j.contains("id")) {
-                log_msg += " - Success: ID " + j["id"].get<std::string>();
+                log_msg += "   Success: ID " + j["id"].get<std::string>();
             } else {
-                log_msg += " - Response: " + response;
+                log_msg += "   Response: " + response;
             }
         } catch (...) {
-            log_msg += " - Response: " + response;
+            log_msg += "   Response: " + response;
         }
     } else {
-        log_msg += " - Failed";
+        log_msg += "   Failed";
     }
     log_message(log_msg, logging.log_file);
 }

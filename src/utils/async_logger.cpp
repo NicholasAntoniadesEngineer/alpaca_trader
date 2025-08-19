@@ -29,7 +29,7 @@ void log_message(const std::string& message, const std::string& log_file_path) {
     std::time_t now = std::time(nullptr);
     std::tm* local_tm = std::localtime(&now);
     std::stringstream ss;
-    ss << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S") << " [" << t_log_tag << "] - " << message << std::endl;
+    ss << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S") << " [" << t_log_tag << "]   " << message << std::endl;
     std::string log_str = ss.str();
 
     if (g_async_logger) {
