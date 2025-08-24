@@ -1,5 +1,6 @@
 // main.cpp
 #include "main.hpp"
+#include "utils/thread_manager.hpp"
 #include <thread>
 #include <chrono>
 #include <csignal>
@@ -107,11 +108,20 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
 
     setup_signal_handlers(system_state.running);
 
+    // Log thread priority configuration
+    ThreadManager::log_thread_startup_info(system_state.config.timing);
+
     SystemThreads handles;
     handles.market = std::thread(std::ref(*system_components.market_task));
     handles.account = std::thread(std::ref(*system_components.account_task));
     handles.gate = std::thread(std::ref(*system_components.market_gate_task));
     handles.trader = std::thread(&Trader::run_decision_loop, system_components.trader.get());
+
+    // Give threads time to initialize and log their startup messages
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Setup thread priorities after all threads have started
+    ThreadManager::setup_thread_priorities(handles, system_state.config.timing);
 
     return handles;
 }
@@ -147,6 +157,9 @@ int main()
     SystemThreads thread_handles = boot_system(system_state, core_components);
 
     run_and_shutdown_system(system_state, thread_handles);
+    
+
+    ThreadManager::log_thread_monitoring_stats(thread_handles);
     
     shutdown_global_logger(logger);
 

@@ -3,6 +3,7 @@
 #include "core/risk_logic.hpp"
 #include "core/market_processing.hpp"
 #include "utils/async_logger.hpp"
+#include "utils/thread_utils.hpp"
 #include <thread>
 #include <cmath>
 #include <chrono>
@@ -199,6 +200,11 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
 
 void Trader::run_decision_loop() {
     set_log_thread_tag("DECIDE");
+    log_message("   |  • Trader decision thread started: " + ThreadUtils::get_thread_info(), "");
+    
+    // Wait for main thread to complete priority setup
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    
     decision_loop();
 }
 

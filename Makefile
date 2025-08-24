@@ -28,6 +28,9 @@ SOURCES = $(SRC_DIR)/main.cpp \
           $(SRC_DIR)/utils/async_logger.cpp \
           $(SRC_DIR)/utils/http_utils.cpp \
           $(SRC_DIR)/utils/indicators.cpp \
+          $(SRC_DIR)/utils/thread_utils.cpp \
+          $(SRC_DIR)/utils/thread_manager.cpp \
+          $(SRC_DIR)/utils/thread_logging.cpp \
           $(SRC_DIR)/workers/account_data_worker.cpp \
           $(SRC_DIR)/workers/market_data_worker.cpp
 

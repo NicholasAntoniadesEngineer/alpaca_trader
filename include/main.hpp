@@ -17,6 +17,7 @@
 #include <condition_variable>
 #include <thread>
 #include <memory>
+#include <chrono>
 
 struct SystemState {
     std::mutex mtx;
@@ -43,6 +44,46 @@ struct SystemThreads {
     std::thread account;
     std::thread gate;
     std::thread trader;
+    
+    // Thread monitoring
+    std::chrono::steady_clock::time_point start_time;
+    std::atomic<unsigned long> market_iterations{0};
+    std::atomic<unsigned long> account_iterations{0};
+    std::atomic<unsigned long> gate_iterations{0};
+    std::atomic<unsigned long> trader_iterations{0};
+    
+    SystemThreads() : start_time(std::chrono::steady_clock::now()) {}
+    
+    // Delete copy constructor and copy assignment
+    SystemThreads(const SystemThreads&) = delete;
+    SystemThreads& operator=(const SystemThreads&) = delete;
+    
+    // Define move constructor and move assignment
+    SystemThreads(SystemThreads&& other) noexcept
+        : market(std::move(other.market)),
+          account(std::move(other.account)),
+          gate(std::move(other.gate)),
+          trader(std::move(other.trader)),
+          start_time(other.start_time),
+          market_iterations(other.market_iterations.load()),
+          account_iterations(other.account_iterations.load()),
+          gate_iterations(other.gate_iterations.load()),
+          trader_iterations(other.trader_iterations.load()) {}
+    
+    SystemThreads& operator=(SystemThreads&& other) noexcept {
+        if (this != &other) {
+            market = std::move(other.market);
+            account = std::move(other.account);
+            gate = std::move(other.gate);
+            trader = std::move(other.trader);
+            start_time = other.start_time;
+            market_iterations.store(other.market_iterations.load());
+            account_iterations.store(other.account_iterations.load());
+            gate_iterations.store(other.gate_iterations.load());
+            trader_iterations.store(other.trader_iterations.load());
+        }
+        return *this;
+    }
 };
 
 struct ComponentConfigBundle {

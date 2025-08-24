@@ -1,5 +1,6 @@
 // AsyncLogger.cpp
 #include "utils/async_logger.hpp"
+#include "utils/thread_utils.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -78,6 +79,10 @@ void shutdown_global_logger(AsyncLogger& logger) {
 
 // AsyncLogger implementation
 void AsyncLogger::run() {
+    // Set thread priority for logging thread
+    ThreadConfig config = ThreadUtils::get_default_config(ThreadType::LOGGING);
+    ThreadUtils::set_current_thread_priority(config);
+    
     std::ofstream log_file(file_path, std::ios::app);
     running.store(true);
     while (running.load()) {
