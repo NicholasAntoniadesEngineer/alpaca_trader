@@ -1,41 +1,45 @@
-# Using modern C++ best practices with snake_case naming
+# Modern C++ Trading System Build Configuration
+# Consolidated project structure - no more include/src duplication!
 
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
-INCLUDES = -I./include
+INCLUDES = -I.
 LIBS = -lcurl -pthread
 
 # Directories
-SRC_DIR = src
-BIN_DIR = bin
 OBJ_DIR = obj
-
-# Target binary
+BIN_DIR = bin
 TARGET = $(BIN_DIR)/alpaca_trader
 
-# Source files
-SOURCES = $(SRC_DIR)/main.cpp \
-          $(SRC_DIR)/api/alpaca_client.cpp \
-          $(SRC_DIR)/core/trader.cpp \
-          $(SRC_DIR)/core/strategy_logic.cpp \
-          $(SRC_DIR)/core/risk_logic.cpp \
-          $(SRC_DIR)/core/market_processing.cpp \
-          $(SRC_DIR)/core/trader_logging.cpp \
-          $(SRC_DIR)/utils/config_loader.cpp \
-          $(SRC_DIR)/data/account_manager.cpp \
-          $(SRC_DIR)/ui/account_display.cpp \
-          $(SRC_DIR)/utils/async_logger.cpp \
-          $(SRC_DIR)/utils/http_utils.cpp \
-          $(SRC_DIR)/utils/indicators.cpp \
-          $(SRC_DIR)/utils/thread_utils.cpp \
-          $(SRC_DIR)/utils/thread_manager.cpp \
-          $(SRC_DIR)/utils/thread_logging.cpp \
-          $(SRC_DIR)/workers/account_data_worker.cpp \
-          $(SRC_DIR)/workers/market_data_worker.cpp
+# Source files (now in consolidated structure)
+SOURCES = main.cpp \
+          api/alpaca_client.cpp \
+          core/trader.cpp \
+          core/strategy_logic.cpp \
+          core/risk_logic.cpp \
+          core/market_processing.cpp \
+          core/trader_logging.cpp \
+          utils/config_loader.cpp \
+          data/account_manager.cpp \
+          ui/account_display.cpp \
+          utils/async_logger.cpp \
+          utils/http_utils.cpp \
+          utils/indicators.cpp \
+          utils/thread_logging.cpp \
+          threads/config/thread_config.cpp \
+          threads/platform/thread_control.cpp \
+          threads/platform/linux/linux_thread_control.cpp \
+          threads/platform/macos/macos_thread_control.cpp \
+          threads/platform/windows/windows_thread_control.cpp \
+          threads/thread_manager.cpp \
+          threads/account_data_thread.cpp \
+          threads/market_data_thread.cpp \
+          threads/logging_thread.cpp \
+          threads/trader_thread.cpp
 
 # Object files
-OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
 
 # Default target
 all: build-and-clean
@@ -51,7 +55,12 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/data
 	mkdir -p $(OBJ_DIR)/ui
 	mkdir -p $(OBJ_DIR)/utils
-	mkdir -p $(OBJ_DIR)/workers
+	mkdir -p $(OBJ_DIR)/threads
+	mkdir -p $(OBJ_DIR)/threads/config
+	mkdir -p $(OBJ_DIR)/threads/platform
+	mkdir -p $(OBJ_DIR)/threads/platform/linux
+	mkdir -p $(OBJ_DIR)/threads/platform/macos
+	mkdir -p $(OBJ_DIR)/threads/platform/windows
 
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
@@ -59,7 +68,7 @@ $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	@echo "Build successful: $(TARGET)"
 
 # Compile source files to object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Clean build artifacts
@@ -67,47 +76,31 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)/alpaca_trader
 	@echo "Clean complete"
 
-# Clean object files only (keep binary)
+# Build and then clean object files
+build-and-clean: $(TARGET) clean-obj
+
+# Clean only object files (keep binary)
 clean-obj:
 	rm -rf $(OBJ_DIR)
 	@echo "Object files cleaned"
 
-# Clean everything including directories
-distclean:
+# Clean everything including binary
+clean-all:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
-	@echo "Distribution clean complete"
+	@echo "All build artifacts cleaned"
 
-# Build and then clean object files (sequential to avoid race with -j)
-build-and-clean: $(TARGET)
-	$(MAKE) clean-obj
-	@echo "Build completed and object files cleaned"
-
-# Rebuild everything
+# Force rebuild
 rebuild: clean all
 
-# Run the program
-run: $(TARGET)
-	./$(TARGET)
-
-# Show help
+# Help target
 help:
 	@echo "Available targets:"
-	@echo "  all            - Build the program (default)"
-	@echo "  clean          - Remove object files and binary"
-	@echo "  clean-obj      - Remove object files only (keep binary)"
-	@echo "  build-and-clean- Build and then clean object files"
-	@echo "  distclean      - Remove all build directories"
-	@echo "  rebuild        - Clean and build"
-	@echo "  run            - Build and run the program"
+	@echo "  all (default)  - Build the project and clean object files"
+	@echo "  clean          - Remove binary and object files"
+	@echo "  clean-obj      - Remove only object files"
+	@echo "  clean-all      - Remove all build artifacts"
+	@echo "  rebuild        - Clean and build from scratch"
 	@echo "  help           - Show this help message"
 
-# Declare phony targets
-.PHONY: all clean clean-obj build-and-clean distclean rebuild run help
-
-# Include dependency files if they exist
--include $(OBJECTS:.o=.d)
-
-# Generate dependency files
-$(OBJ_DIR)/%.d: $(SRC_DIR)/%.cpp
-	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MM -MT $(@:.d=.o) $< > $@
+# Prevent make from treating file names as targets
+.PHONY: all clean clean-obj clean-all rebuild help build-and-clean

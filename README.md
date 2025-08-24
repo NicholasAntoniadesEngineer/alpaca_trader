@@ -151,12 +151,45 @@ Alpaca Trader/
 ```
 
 
-TODO:
+## Thread Prioritization
+
+The system now implements comprehensive thread prioritization for optimal performance:
+
+### Priority Levels
+- **TRADER thread**: `HIGHEST` priority - Critical trading decisions
+- **MARKET thread**: `HIGH` priority - Real-time market data processing  
+- **ACCOUNT thread**: `NORMAL` priority - Account monitoring
+- **GATE thread**: `LOW` priority - Market hours validation
+- **LOGGER thread**: `LOWEST` priority - Background logging
+
+### Configuration
+Thread priorities are configurable via `TimingConfig`:
+```cpp
+struct ThreadPriorityConfig {
+    bool enable_thread_priorities = true;
+    bool enable_cpu_affinity = false;
+    int trader_cpu_affinity = 0;       // Pin trader to CPU 0
+    int market_data_cpu_affinity = 1;  // Pin market data to CPU 1
+    bool log_thread_info = true;       // Log thread priority info
+};
+```
+
+### Cross-Platform Support
+- **Linux**: SCHED_FIFO for high priority, CPU affinity support
+- **macOS**: Time constraint policies, thread affinity tags  
+- **Windows**: Thread priority classes, CPU affinity masks
+
+### Verification
+The system logs thread startup information and performance statistics, demonstrating true multithreaded operation with proper priority scheduling.
+
+---
+
+## TODO:
 - Add a generated 32 bit app key that expires regularily
 - The delayed data results in invalid bracket orders as share price value chaneges such that the stop loss and take profit are not in the correct position.
 - Better handling and logging of trader gate and risk logic.
   - this logic needs to looked at evaluate_trade_gate and can_trade.
-- Need to add thread priority to the threads. 
+- ✅ ~~Need to add thread priority to the threads.~~ **COMPLETED**
 - in.core_trading_hours = services.client.is_core_trading_hours();
     - this is failing which has been effecting ability to trade
 - go through current order types and look to increase decision performance
