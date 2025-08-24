@@ -3,10 +3,10 @@
 
 #include <string>
 
-struct Config;
+struct SystemConfig;
 
-// Load key,value CSV into Config. Unknown keys are ignored. Returns true on success.
-bool load_config_from_csv(Config& cfg, const std::string& csv_path);
+// Load key,value CSV into SystemConfig. Unknown keys are ignored. Returns true on success.
+bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path);
 
 #endif // CONFIG_LOADER_HPP
 

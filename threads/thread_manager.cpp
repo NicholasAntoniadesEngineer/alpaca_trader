@@ -1,7 +1,7 @@
 #include "thread_manager.hpp"
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
-#include "../utils/thread_logging.hpp"
+#include "../logging/thread_logger.hpp"
 #include "../main.hpp"  // For SystemThreads definition
 #include <vector>
 
@@ -25,24 +25,21 @@ void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConf
     bool success = (actual_priority == requested_priority) || (thread_config.cpu_affinity < 0);
     
     // Log the result using the generic logging function
-    ThreadLogging::log_priority_result(
-        setup.name, 
-        setup.priority_tag,
+    ThreadLogger::log_priority_assignment(
+        setup.name,
         ConfigProvider::priority_to_string(requested_priority),
         ConfigProvider::priority_to_string(actual_priority),
-        success,
-        thread_config.cpu_affinity >= 0,
-        thread_config.cpu_affinity
+        success
     );
 }
 
 void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig& config) {
     if (!config.thread_priorities.enable_thread_priorities) {
-        ThreadLogging::log_prioritization_disabled();
+        // Thread prioritization disabled - logged by system startup
         return;
     }
     
-    ThreadLogging::log_priority_setup_header();
+    // Priority setup header logged by centralized system
     
     // ╔═══════════════════════════════════════════════════════════════════════════════════╗
     // ║                           THREAD CONFIGURATION TABLE                             ║
@@ -69,15 +66,16 @@ void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig
         configure_single_thread(setup, config);
     }
     
-    ThreadLogging::log_priority_setup_footer();
+    // Priority setup footer logged by centralized system
 }
 
 void Manager::log_thread_startup_info(const TimingConfig& config) {
-    ThreadLogging::log_startup_configuration(config);
+    ThreadLogger::log_system_startup(config);
 }
 
 void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
-    ThreadLogging::log_performance_summary(handles);
+    // Performance summary will be calculated and logged by centralized system
+    // ThreadLogger::log_system_performance_summary(total_iterations);
 }
 
 } // namespace ThreadSystem

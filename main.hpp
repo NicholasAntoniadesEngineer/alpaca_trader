@@ -1,7 +1,7 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
-#include "Config.hpp"
+#include "configs/system_config.hpp"
 #include "data/data_structures.hpp"
 #include "configs/component_configs.hpp"
 #include "configs/trader_config.hpp"
@@ -14,7 +14,7 @@
 #include "threads/logging_thread.hpp"
 #include "threads/trader_thread.hpp"
 #include "threads/thread_manager.hpp"
-#include "utils/async_logger.hpp"
+#include "logging/async_logger.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
@@ -31,12 +31,12 @@ struct SystemState {
     std::atomic<bool> has_account{false};
     std::atomic<bool> running{true};
     std::atomic<bool> allow_fetch{true};
-    Config config; 
+    SystemConfig config; 
     TraderConfig trader_view;
 
     SystemState() : trader_view(config.strategy, config.risk, config.timing,
                                 config.flags, config.ux, config.logging, config.target) {}
-    explicit SystemState(const Config& initial)
+    explicit SystemState(const SystemConfig& initial)
         : config(initial),
           trader_view(config.strategy, config.risk, config.timing,
                       config.flags, config.ux, config.logging, config.target) {}
@@ -118,7 +118,7 @@ ComponentConfigBundle build_core_configs(const SystemState& state);
 ComponentInstances build_core_components(SystemState& state, const ComponentConfigBundle& cfgs);
 SystemThreads boot_system(SystemState& system_state, ComponentInstances& comp, AsyncLogger& logger);
 void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles);
-void initialize_application(const Config& config, AsyncLogger& logger);
+void initialize_application(const SystemConfig& config, AsyncLogger& logger);
 void run_market_gate(SystemState& state, AlpacaClient& client);
 
 #endif // MAIN_HPP

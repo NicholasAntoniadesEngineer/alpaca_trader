@@ -7,7 +7,7 @@
 #include "../data/account_manager.hpp"
 #include "../data/data_structures.hpp"
 #include "strategy_logic.hpp"
-#include "trader_logging.hpp"
+#include "../logging/trading_logger.hpp"
 #include <thread>
 #include <mutex>
 #include <atomic>

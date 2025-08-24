@@ -1,0 +1,102 @@
+#include "thread_logger.hpp"
+#include "async_logger.hpp"
+#include <sstream>
+#include <iomanip>
+
+std::string ThreadLogger::format_priority_status(const std::string& thread_name,
+                                                const std::string& priority,
+                                                bool success) {
+    std::ostringstream oss;
+    oss << thread_name << ": " << priority << " priority [" << (success ? "OK" : "FAIL") << "]";
+    return oss.str();
+}
+
+void ThreadLogger::log_system_startup(const TimingConfig& config) {
+    log_message("Thread system initializing", "");
+    
+    if (config.thread_priorities.enable_thread_priorities) {
+        log_message("Thread priorities: ENABLED", "");
+    } else {
+        log_message("Thread priorities: DISABLED", "");
+    }
+    
+    if (config.thread_priorities.enable_cpu_affinity) {
+        log_message("CPU affinity: ENABLED", "");
+    } else {
+        log_message("CPU affinity: DISABLED", "");
+    }
+}
+
+void ThreadLogger::log_system_shutdown() {
+    // Using unified log_message for consistent output
+    log_message("THREADS", "Thread system shutdown complete");
+}
+
+void ThreadLogger::log_thread_started(const std::string& thread_name, const std::string& thread_info) {
+    // Using unified log_message for consistent output
+    
+    std::ostringstream oss;
+    oss << thread_name << " thread started: " << thread_info;
+    
+    log_message("THREAD", oss.str());
+}
+
+void ThreadLogger::log_thread_stopped(const std::string& thread_name) {
+    // Using unified log_message for consistent output
+    log_message("THREAD", thread_name + " thread stopped");
+}
+
+void ThreadLogger::log_priority_assignment(const std::string& thread_name,
+                                          const std::string& requested_priority,
+                                          const std::string& actual_priority,
+                                          bool success) {
+    std::string status_msg = format_priority_status(thread_name, actual_priority, success);
+    
+    if (success) {
+        log_message(status_msg, "");
+    } else {
+        std::ostringstream oss;
+        oss << status_msg << " (requested: " << requested_priority << ")";
+        log_message(oss.str(), "");
+    }
+}
+
+void ThreadLogger::log_thread_performance(const std::string& thread_name,
+                                         unsigned long iterations,
+                                         double cpu_usage) {
+    // Using unified log_message for consistent output
+    
+    std::ostringstream oss;
+    oss << thread_name << " performance - Iterations: " << iterations;
+    
+    if (cpu_usage >= 0.0) {
+        oss << " | CPU: " << std::fixed << std::setprecision(1) << cpu_usage << "%";
+    }
+    
+    log_message("PERF", oss.str());
+}
+
+void ThreadLogger::log_thread_health(const std::string& thread_name, bool healthy, const std::string& details) {
+    // Using unified log_message for consistent output
+    
+    std::ostringstream oss;
+    oss << thread_name << " health: " << (healthy ? "OK" : "ERROR");
+    if (!details.empty()) {
+        oss << " - " << details;
+    }
+    
+    if (healthy) {
+        log_message("HEALTH", oss.str());
+    } else {
+        log_message("HEALTH", oss.str());
+    }
+}
+
+void ThreadLogger::log_system_performance_summary(unsigned long total_iterations) {
+    // Using unified log_message for consistent output
+    
+    std::ostringstream oss;
+    oss << "System performance summary - Total iterations: " << total_iterations;
+    
+    log_message("SUMMARY", oss.str());
+}

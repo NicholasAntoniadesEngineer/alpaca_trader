@@ -4160,3 +4160,2248 @@
 2025-08-24 18:14:58 [DECIDE]      ┌─
 2025-08-24 18:14:58 [DECIDE]      │ No trade executed
 2025-08-24 18:14:58 [DECIDE]      └─
+2025-08-24 18:15:04 [DECIDE]   
+2025-08-24 18:15:04 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:04 [DECIDE]   ║                              TRADING LOOP #12                                     ║
+2025-08-24 18:15:04 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:04 [DECIDE]   
+2025-08-24 18:15:04 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:04 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:04 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:04 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:04 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:04 [DECIDE]      ┌─ 
+2025-08-24 18:15:04 [DECIDE]      │ Current Equity: $0 (acct poll=5s)
+2025-08-24 18:15:04 [DECIDE]      └─ 
+2025-08-24 18:15:04 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:04 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:04 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:04 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:04 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:04 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:04 [DECIDE]      ┌─
+2025-08-24 18:15:04 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:04 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~0
+2025-08-24 18:15:04 [DECIDE]      ┌─
+2025-08-24 18:15:04 [DECIDE]      │ No trade executed
+2025-08-24 18:15:04 [DECIDE]      └─
+2025-08-24 18:15:10 [DECIDE]   
+2025-08-24 18:15:10 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:10 [DECIDE]   ║                              TRADING LOOP #13                                     ║
+2025-08-24 18:15:10 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:10 [DECIDE]   
+2025-08-24 18:15:10 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:12 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:12 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:12 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:12 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:12 [DECIDE]      ┌─ 
+2025-08-24 18:15:12 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:12 [DECIDE]      └─ 
+2025-08-24 18:15:12 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:12 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:12 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:12 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:12 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:12 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:12 [DECIDE]      ┌─
+2025-08-24 18:15:12 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:12 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:12 [DECIDE]      ┌─
+2025-08-24 18:15:12 [DECIDE]      │ No trade executed
+2025-08-24 18:15:12 [DECIDE]      └─
+2025-08-24 18:15:18 [DECIDE]   
+2025-08-24 18:15:18 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:18 [DECIDE]   ║                              TRADING LOOP #14                                     ║
+2025-08-24 18:15:18 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:18 [DECIDE]   
+2025-08-24 18:15:18 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:18 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:18 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:18 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:18 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:18 [DECIDE]      ┌─ 
+2025-08-24 18:15:18 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:18 [DECIDE]      └─ 
+2025-08-24 18:15:18 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:18 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:18 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:18 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:18 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:18 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:18 [DECIDE]      ┌─
+2025-08-24 18:15:18 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:18 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:18 [DECIDE]      ┌─
+2025-08-24 18:15:18 [DECIDE]      │ No trade executed
+2025-08-24 18:15:18 [DECIDE]      └─
+2025-08-24 18:15:24 [DECIDE]   
+2025-08-24 18:15:24 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:24 [DECIDE]   ║                              TRADING LOOP #15                                     ║
+2025-08-24 18:15:24 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:24 [DECIDE]   
+2025-08-24 18:15:24 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:25 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:25 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:25 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:25 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:25 [DECIDE]      ┌─ 
+2025-08-24 18:15:25 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:25 [DECIDE]      └─ 
+2025-08-24 18:15:25 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:25 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:25 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:25 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:25 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:25 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:25 [DECIDE]      ┌─
+2025-08-24 18:15:25 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:25 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:25 [DECIDE]      ┌─
+2025-08-24 18:15:25 [DECIDE]      │ No trade executed
+2025-08-24 18:15:25 [DECIDE]      └─
+2025-08-24 18:15:31 [DECIDE]   
+2025-08-24 18:15:31 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:31 [DECIDE]   ║                              TRADING LOOP #16                                     ║
+2025-08-24 18:15:31 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:31 [DECIDE]   
+2025-08-24 18:15:31 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:31 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:31 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:31 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:31 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:31 [DECIDE]      ┌─ 
+2025-08-24 18:15:31 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:31 [DECIDE]      └─ 
+2025-08-24 18:15:31 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:31 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:31 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:31 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:31 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:31 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:31 [DECIDE]      ┌─
+2025-08-24 18:15:31 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:31 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:31 [DECIDE]      ┌─
+2025-08-24 18:15:31 [DECIDE]      │ No trade executed
+2025-08-24 18:15:31 [DECIDE]      └─
+2025-08-24 18:15:37 [DECIDE]   
+2025-08-24 18:15:37 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:37 [DECIDE]   ║                              TRADING LOOP #17                                     ║
+2025-08-24 18:15:37 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:37 [DECIDE]   
+2025-08-24 18:15:37 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:37 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:37 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:37 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:37 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:37 [DECIDE]      ┌─ 
+2025-08-24 18:15:37 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:37 [DECIDE]      └─ 
+2025-08-24 18:15:37 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:37 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:37 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:37 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:37 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:37 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:37 [DECIDE]      ┌─
+2025-08-24 18:15:37 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:37 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:37 [DECIDE]      ┌─
+2025-08-24 18:15:37 [DECIDE]      │ No trade executed
+2025-08-24 18:15:37 [DECIDE]      └─
+2025-08-24 18:15:43 [DECIDE]   
+2025-08-24 18:15:43 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:43 [DECIDE]   ║                              TRADING LOOP #18                                     ║
+2025-08-24 18:15:43 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:43 [DECIDE]   
+2025-08-24 18:15:43 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:44 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:44 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:44 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:44 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:44 [DECIDE]      ┌─ 
+2025-08-24 18:15:44 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:44 [DECIDE]      └─ 
+2025-08-24 18:15:44 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:44 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:44 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:44 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:44 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:44 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:44 [DECIDE]      ┌─
+2025-08-24 18:15:44 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:44 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:44 [DECIDE]      ┌─
+2025-08-24 18:15:44 [DECIDE]      │ No trade executed
+2025-08-24 18:15:44 [DECIDE]      └─
+2025-08-24 18:15:50 [DECIDE]   
+2025-08-24 18:15:50 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:50 [DECIDE]   ║                              TRADING LOOP #19                                     ║
+2025-08-24 18:15:50 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:50 [DECIDE]   
+2025-08-24 18:15:50 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:50 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:50 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:50 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:50 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:50 [DECIDE]      ┌─ 
+2025-08-24 18:15:50 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:50 [DECIDE]      └─ 
+2025-08-24 18:15:50 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:50 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:50 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:50 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:50 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:50 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:50 [DECIDE]      ┌─
+2025-08-24 18:15:50 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:50 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:50 [DECIDE]      ┌─
+2025-08-24 18:15:50 [DECIDE]      │ No trade executed
+2025-08-24 18:15:50 [DECIDE]      └─
+2025-08-24 18:15:56 [DECIDE]   
+2025-08-24 18:15:56 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:15:56 [DECIDE]   ║                              TRADING LOOP #20                                     ║
+2025-08-24 18:15:56 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:15:56 [DECIDE]   
+2025-08-24 18:15:56 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:15:56 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:15:56 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:15:56 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:15:56 [DECIDE]      └─ Trading allowed
+2025-08-24 18:15:56 [DECIDE]      ┌─ 
+2025-08-24 18:15:56 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:15:56 [DECIDE]      └─ 
+2025-08-24 18:15:56 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:15:56 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:15:56 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:15:56 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:15:56 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:15:56 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:15:56 [DECIDE]      ┌─
+2025-08-24 18:15:56 [DECIDE]      │ Filters Not Met
+2025-08-24 18:15:56 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:15:56 [DECIDE]      ┌─
+2025-08-24 18:15:56 [DECIDE]      │ No trade executed
+2025-08-24 18:15:56 [DECIDE]      └─
+2025-08-24 18:16:02 [DECIDE]   
+2025-08-24 18:16:02 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:02 [DECIDE]   ║                              TRADING LOOP #21                                     ║
+2025-08-24 18:16:02 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:02 [DECIDE]   
+2025-08-24 18:16:02 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:03 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:03 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:03 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:03 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:03 [DECIDE]      ┌─ 
+2025-08-24 18:16:03 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:03 [DECIDE]      └─ 
+2025-08-24 18:16:03 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:03 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:03 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:03 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:03 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:03 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:03 [DECIDE]      ┌─
+2025-08-24 18:16:03 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:03 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:03 [DECIDE]      ┌─
+2025-08-24 18:16:03 [DECIDE]      │ No trade executed
+2025-08-24 18:16:03 [DECIDE]      └─
+2025-08-24 18:16:09 [DECIDE]   
+2025-08-24 18:16:09 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:09 [DECIDE]   ║                              TRADING LOOP #22                                     ║
+2025-08-24 18:16:09 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:09 [DECIDE]   
+2025-08-24 18:16:09 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:10 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:10 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:10 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:10 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:10 [DECIDE]      ┌─ 
+2025-08-24 18:16:10 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:10 [DECIDE]      └─ 
+2025-08-24 18:16:10 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:10 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:10 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:10 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:10 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:10 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:10 [DECIDE]      ┌─
+2025-08-24 18:16:10 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:10 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:10 [DECIDE]      ┌─
+2025-08-24 18:16:10 [DECIDE]      │ No trade executed
+2025-08-24 18:16:10 [DECIDE]      └─
+2025-08-24 18:16:16 [DECIDE]   
+2025-08-24 18:16:16 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:16 [DECIDE]   ║                              TRADING LOOP #23                                     ║
+2025-08-24 18:16:16 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:16 [DECIDE]   
+2025-08-24 18:16:16 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:17 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:17 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:17 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:17 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:17 [DECIDE]      ┌─ 
+2025-08-24 18:16:17 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:17 [DECIDE]      └─ 
+2025-08-24 18:16:17 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:17 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:17 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:17 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:17 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:17 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:17 [DECIDE]      ┌─
+2025-08-24 18:16:17 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:17 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:17 [DECIDE]      ┌─
+2025-08-24 18:16:17 [DECIDE]      │ No trade executed
+2025-08-24 18:16:17 [DECIDE]      └─
+2025-08-24 18:16:23 [DECIDE]   
+2025-08-24 18:16:23 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:23 [DECIDE]   ║                              TRADING LOOP #24                                     ║
+2025-08-24 18:16:23 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:23 [DECIDE]   
+2025-08-24 18:16:23 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:24 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:24 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:24 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:24 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:24 [DECIDE]      ┌─ 
+2025-08-24 18:16:24 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:24 [DECIDE]      └─ 
+2025-08-24 18:16:24 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:24 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:24 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:24 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:24 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:24 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:24 [DECIDE]      ┌─
+2025-08-24 18:16:24 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:24 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:24 [DECIDE]      ┌─
+2025-08-24 18:16:24 [DECIDE]      │ No trade executed
+2025-08-24 18:16:24 [DECIDE]      └─
+2025-08-24 18:16:30 [DECIDE]   
+2025-08-24 18:16:30 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:30 [DECIDE]   ║                              TRADING LOOP #25                                     ║
+2025-08-24 18:16:30 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:30 [DECIDE]   
+2025-08-24 18:16:30 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:30 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:30 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:30 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:30 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:30 [DECIDE]      ┌─ 
+2025-08-24 18:16:30 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:30 [DECIDE]      └─ 
+2025-08-24 18:16:30 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:30 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:30 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:30 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:30 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:30 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:30 [DECIDE]      ┌─
+2025-08-24 18:16:30 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:30 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:30 [DECIDE]      ┌─
+2025-08-24 18:16:30 [DECIDE]      │ No trade executed
+2025-08-24 18:16:30 [DECIDE]      └─
+2025-08-24 18:16:36 [DECIDE]   
+2025-08-24 18:16:36 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:36 [DECIDE]   ║                              TRADING LOOP #26                                     ║
+2025-08-24 18:16:36 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:36 [DECIDE]   
+2025-08-24 18:16:36 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:37 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:37 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:37 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:37 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:37 [DECIDE]      ┌─ 
+2025-08-24 18:16:37 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:37 [DECIDE]      └─ 
+2025-08-24 18:16:37 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:37 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:37 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:37 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:37 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:37 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:37 [DECIDE]      ┌─
+2025-08-24 18:16:37 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:37 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:37 [DECIDE]      ┌─
+2025-08-24 18:16:37 [DECIDE]      │ No trade executed
+2025-08-24 18:16:37 [DECIDE]      └─
+2025-08-24 18:16:43 [DECIDE]   
+2025-08-24 18:16:43 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:43 [DECIDE]   ║                              TRADING LOOP #27                                     ║
+2025-08-24 18:16:43 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:43 [DECIDE]   
+2025-08-24 18:16:43 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:16:43 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:16:43 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:16:43 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:16:43 [DECIDE]      └─ Trading allowed
+2025-08-24 18:16:43 [DECIDE]      ┌─ 
+2025-08-24 18:16:43 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:16:43 [DECIDE]      └─ 
+2025-08-24 18:16:43 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:16:43 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:16:43 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:16:43 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:16:43 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:16:43 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:16:43 [DECIDE]      ┌─
+2025-08-24 18:16:43 [DECIDE]      │ Filters Not Met
+2025-08-24 18:16:43 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:16:43 [DECIDE]      ┌─
+2025-08-24 18:16:43 [DECIDE]      │ No trade executed
+2025-08-24 18:16:43 [DECIDE]      └─
+2025-08-24 18:16:49 [DECIDE]   
+2025-08-24 18:16:49 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:16:49 [DECIDE]   ║                              TRADING LOOP #28                                     ║
+2025-08-24 18:16:49 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:16:49 [DECIDE]   
+2025-08-24 18:16:49 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:05 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:05 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:05 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:05 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:05 [DECIDE]      ┌─ 
+2025-08-24 18:18:05 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:05 [DECIDE]      └─ 
+2025-08-24 18:18:05 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:05 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:05 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:05 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:05 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:05 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:05 [DECIDE]      ┌─
+2025-08-24 18:18:05 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:05 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:05 [DECIDE]      ┌─
+2025-08-24 18:18:05 [DECIDE]      │ No trade executed
+2025-08-24 18:18:05 [DECIDE]      └─
+2025-08-24 18:18:11 [DECIDE]   
+2025-08-24 18:18:11 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:11 [DECIDE]   ║                              TRADING LOOP #29                                     ║
+2025-08-24 18:18:11 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:11 [DECIDE]   
+2025-08-24 18:18:11 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:12 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:12 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:12 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:12 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:12 [DECIDE]      ┌─ 
+2025-08-24 18:18:12 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:12 [DECIDE]      └─ 
+2025-08-24 18:18:12 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:12 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:12 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:12 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:12 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:12 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:12 [DECIDE]      ┌─
+2025-08-24 18:18:12 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:12 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:12 [DECIDE]      ┌─
+2025-08-24 18:18:12 [DECIDE]      │ No trade executed
+2025-08-24 18:18:12 [DECIDE]      └─
+2025-08-24 18:18:18 [DECIDE]   
+2025-08-24 18:18:18 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:18 [DECIDE]   ║                              TRADING LOOP #30                                     ║
+2025-08-24 18:18:18 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:18 [DECIDE]   
+2025-08-24 18:18:18 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:18 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:18 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:18 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:18 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:18 [DECIDE]      ┌─ 
+2025-08-24 18:18:18 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:18 [DECIDE]      └─ 
+2025-08-24 18:18:18 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:18 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:18 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:18 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:18 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:18 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:18 [DECIDE]      ┌─
+2025-08-24 18:18:18 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:18 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:18 [DECIDE]      ┌─
+2025-08-24 18:18:18 [DECIDE]      │ No trade executed
+2025-08-24 18:18:18 [DECIDE]      └─
+2025-08-24 18:18:24 [DECIDE]   
+2025-08-24 18:18:24 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:24 [DECIDE]   ║                              TRADING LOOP #31                                     ║
+2025-08-24 18:18:24 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:24 [DECIDE]   
+2025-08-24 18:18:24 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:24 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:24 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:24 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:24 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:24 [DECIDE]      ┌─ 
+2025-08-24 18:18:24 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:24 [DECIDE]      └─ 
+2025-08-24 18:18:24 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:24 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:24 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:24 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:24 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:24 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:24 [DECIDE]      ┌─
+2025-08-24 18:18:24 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:24 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:24 [DECIDE]      ┌─
+2025-08-24 18:18:24 [DECIDE]      │ No trade executed
+2025-08-24 18:18:24 [DECIDE]      └─
+2025-08-24 18:18:30 [DECIDE]   
+2025-08-24 18:18:30 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:30 [DECIDE]   ║                              TRADING LOOP #32                                     ║
+2025-08-24 18:18:30 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:30 [DECIDE]   
+2025-08-24 18:18:30 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:31 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:31 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:31 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:31 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:31 [DECIDE]      ┌─ 
+2025-08-24 18:18:31 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:31 [DECIDE]      └─ 
+2025-08-24 18:18:31 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:31 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:31 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:31 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:31 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:31 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:31 [DECIDE]      ┌─
+2025-08-24 18:18:31 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:31 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:31 [DECIDE]      ┌─
+2025-08-24 18:18:31 [DECIDE]      │ No trade executed
+2025-08-24 18:18:31 [DECIDE]      └─
+2025-08-24 18:18:37 [DECIDE]   
+2025-08-24 18:18:37 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:37 [DECIDE]   ║                              TRADING LOOP #33                                     ║
+2025-08-24 18:18:37 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:37 [DECIDE]   
+2025-08-24 18:18:37 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:37 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:37 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:37 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:37 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:37 [DECIDE]      ┌─ 
+2025-08-24 18:18:37 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:37 [DECIDE]      └─ 
+2025-08-24 18:18:37 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:37 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:37 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:37 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:37 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:37 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:37 [DECIDE]      ┌─
+2025-08-24 18:18:37 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:37 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:37 [DECIDE]      ┌─
+2025-08-24 18:18:37 [DECIDE]      │ No trade executed
+2025-08-24 18:18:37 [DECIDE]      └─
+2025-08-24 18:18:43 [DECIDE]   
+2025-08-24 18:18:43 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:43 [DECIDE]   ║                              TRADING LOOP #34                                     ║
+2025-08-24 18:18:43 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:43 [DECIDE]   
+2025-08-24 18:18:43 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:44 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:44 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:44 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:44 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:44 [DECIDE]      ┌─ 
+2025-08-24 18:18:44 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:44 [DECIDE]      └─ 
+2025-08-24 18:18:44 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:44 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:44 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:44 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:44 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:44 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:44 [DECIDE]      ┌─
+2025-08-24 18:18:44 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:44 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:44 [DECIDE]      ┌─
+2025-08-24 18:18:44 [DECIDE]      │ No trade executed
+2025-08-24 18:18:44 [DECIDE]      └─
+2025-08-24 18:18:50 [DECIDE]   
+2025-08-24 18:18:50 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:50 [DECIDE]   ║                              TRADING LOOP #35                                     ║
+2025-08-24 18:18:50 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:50 [DECIDE]   
+2025-08-24 18:18:50 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:50 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:50 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:50 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:50 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:50 [DECIDE]      ┌─ 
+2025-08-24 18:18:50 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:50 [DECIDE]      └─ 
+2025-08-24 18:18:50 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:50 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:50 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:50 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:50 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:50 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:50 [DECIDE]      ┌─
+2025-08-24 18:18:50 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:50 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:50 [DECIDE]      ┌─
+2025-08-24 18:18:50 [DECIDE]      │ No trade executed
+2025-08-24 18:18:50 [DECIDE]      └─
+2025-08-24 18:18:56 [DECIDE]   
+2025-08-24 18:18:56 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:18:56 [DECIDE]   ║                              TRADING LOOP #36                                     ║
+2025-08-24 18:18:56 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:18:56 [DECIDE]   
+2025-08-24 18:18:56 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:18:57 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:18:57 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:18:57 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:18:57 [DECIDE]      └─ Trading allowed
+2025-08-24 18:18:57 [DECIDE]      ┌─ 
+2025-08-24 18:18:57 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:18:57 [DECIDE]      └─ 
+2025-08-24 18:18:57 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:18:57 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:18:57 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:18:57 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:18:57 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:18:57 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:18:57 [DECIDE]      ┌─
+2025-08-24 18:18:57 [DECIDE]      │ Filters Not Met
+2025-08-24 18:18:57 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:18:57 [DECIDE]      ┌─
+2025-08-24 18:18:57 [DECIDE]      │ No trade executed
+2025-08-24 18:18:57 [DECIDE]      └─
+2025-08-24 18:19:03 [DECIDE]   
+2025-08-24 18:19:03 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:03 [DECIDE]   ║                              TRADING LOOP #37                                     ║
+2025-08-24 18:19:03 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:03 [DECIDE]   
+2025-08-24 18:19:03 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:03 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:03 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:03 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:03 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:03 [DECIDE]      ┌─ 
+2025-08-24 18:19:03 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:03 [DECIDE]      └─ 
+2025-08-24 18:19:03 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:03 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:03 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:03 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:03 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:03 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:03 [DECIDE]      ┌─
+2025-08-24 18:19:03 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:03 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:03 [DECIDE]      ┌─
+2025-08-24 18:19:03 [DECIDE]      │ No trade executed
+2025-08-24 18:19:03 [DECIDE]      └─
+2025-08-24 18:19:09 [DECIDE]   
+2025-08-24 18:19:09 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:09 [DECIDE]   ║                              TRADING LOOP #38                                     ║
+2025-08-24 18:19:09 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:09 [DECIDE]   
+2025-08-24 18:19:09 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:09 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:09 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:09 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:09 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:09 [DECIDE]      ┌─ 
+2025-08-24 18:19:09 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:09 [DECIDE]      └─ 
+2025-08-24 18:19:09 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:09 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:09 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:09 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:09 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:09 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:09 [DECIDE]      ┌─
+2025-08-24 18:19:09 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:09 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:09 [DECIDE]      ┌─
+2025-08-24 18:19:09 [DECIDE]      │ No trade executed
+2025-08-24 18:19:09 [DECIDE]      └─
+2025-08-24 18:19:15 [DECIDE]   
+2025-08-24 18:19:15 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:15 [DECIDE]   ║                              TRADING LOOP #39                                     ║
+2025-08-24 18:19:15 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:15 [DECIDE]   
+2025-08-24 18:19:15 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:16 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:16 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:16 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:16 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:16 [DECIDE]      ┌─ 
+2025-08-24 18:19:16 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:16 [DECIDE]      └─ 
+2025-08-24 18:19:16 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:16 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:16 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:16 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:16 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:16 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:16 [DECIDE]      ┌─
+2025-08-24 18:19:16 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:16 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:16 [DECIDE]      ┌─
+2025-08-24 18:19:16 [DECIDE]      │ No trade executed
+2025-08-24 18:19:16 [DECIDE]      └─
+2025-08-24 18:19:22 [DECIDE]   
+2025-08-24 18:19:22 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:22 [DECIDE]   ║                              TRADING LOOP #40                                     ║
+2025-08-24 18:19:22 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:22 [DECIDE]   
+2025-08-24 18:19:22 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:23 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:23 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:23 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:23 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:23 [DECIDE]      ┌─ 
+2025-08-24 18:19:23 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:23 [DECIDE]      └─ 
+2025-08-24 18:19:23 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:23 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:23 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:23 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:23 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:23 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:23 [DECIDE]      ┌─
+2025-08-24 18:19:23 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:23 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:23 [DECIDE]      ┌─
+2025-08-24 18:19:23 [DECIDE]      │ No trade executed
+2025-08-24 18:19:23 [DECIDE]      └─
+2025-08-24 18:19:29 [DECIDE]   
+2025-08-24 18:19:29 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:29 [DECIDE]   ║                              TRADING LOOP #41                                     ║
+2025-08-24 18:19:29 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:29 [DECIDE]   
+2025-08-24 18:19:29 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:29 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:29 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:29 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:29 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:29 [DECIDE]      ┌─ 
+2025-08-24 18:19:29 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:29 [DECIDE]      └─ 
+2025-08-24 18:19:29 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:29 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:29 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:29 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:29 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:29 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:29 [DECIDE]      ┌─
+2025-08-24 18:19:29 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:29 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:29 [DECIDE]      ┌─
+2025-08-24 18:19:29 [DECIDE]      │ No trade executed
+2025-08-24 18:19:29 [DECIDE]      └─
+2025-08-24 18:19:35 [DECIDE]   
+2025-08-24 18:19:35 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:35 [DECIDE]   ║                              TRADING LOOP #42                                     ║
+2025-08-24 18:19:35 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:35 [DECIDE]   
+2025-08-24 18:19:35 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:36 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:36 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:36 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:36 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:36 [DECIDE]      ┌─ 
+2025-08-24 18:19:36 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:36 [DECIDE]      └─ 
+2025-08-24 18:19:36 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:36 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:36 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:36 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:36 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:36 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:36 [DECIDE]      ┌─
+2025-08-24 18:19:36 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:36 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:36 [DECIDE]      ┌─
+2025-08-24 18:19:36 [DECIDE]      │ No trade executed
+2025-08-24 18:19:36 [DECIDE]      └─
+2025-08-24 18:19:42 [DECIDE]   
+2025-08-24 18:19:42 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:42 [DECIDE]   ║                              TRADING LOOP #43                                     ║
+2025-08-24 18:19:42 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:42 [DECIDE]   
+2025-08-24 18:19:42 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:42 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:42 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:42 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:42 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:42 [DECIDE]      ┌─ 
+2025-08-24 18:19:42 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:42 [DECIDE]      └─ 
+2025-08-24 18:19:42 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:42 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:42 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:42 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:42 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:42 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:42 [DECIDE]      ┌─
+2025-08-24 18:19:42 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:42 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:42 [DECIDE]      ┌─
+2025-08-24 18:19:42 [DECIDE]      │ No trade executed
+2025-08-24 18:19:42 [DECIDE]      └─
+2025-08-24 18:19:48 [DECIDE]   
+2025-08-24 18:19:48 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:48 [DECIDE]   ║                              TRADING LOOP #44                                     ║
+2025-08-24 18:19:48 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:48 [DECIDE]   
+2025-08-24 18:19:48 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:48 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:48 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:48 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:48 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:48 [DECIDE]      ┌─ 
+2025-08-24 18:19:48 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:48 [DECIDE]      └─ 
+2025-08-24 18:19:48 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:48 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:48 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:48 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:48 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:48 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:48 [DECIDE]      ┌─
+2025-08-24 18:19:48 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:48 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:48 [DECIDE]      ┌─
+2025-08-24 18:19:48 [DECIDE]      │ No trade executed
+2025-08-24 18:19:48 [DECIDE]      └─
+2025-08-24 18:19:54 [DECIDE]   
+2025-08-24 18:19:54 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:19:54 [DECIDE]   ║                              TRADING LOOP #45                                     ║
+2025-08-24 18:19:54 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:19:54 [DECIDE]   
+2025-08-24 18:19:54 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:19:56 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:19:56 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:19:56 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:19:56 [DECIDE]      └─ Trading allowed
+2025-08-24 18:19:56 [DECIDE]      ┌─ 
+2025-08-24 18:19:56 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:19:56 [DECIDE]      └─ 
+2025-08-24 18:19:56 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:19:56 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:19:56 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:19:56 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:19:56 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:19:56 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:19:56 [DECIDE]      ┌─
+2025-08-24 18:19:56 [DECIDE]      │ Filters Not Met
+2025-08-24 18:19:56 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:19:56 [DECIDE]      ┌─
+2025-08-24 18:19:56 [DECIDE]      │ No trade executed
+2025-08-24 18:19:56 [DECIDE]      └─
+2025-08-24 18:20:02 [DECIDE]   
+2025-08-24 18:20:02 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:02 [DECIDE]   ║                              TRADING LOOP #46                                     ║
+2025-08-24 18:20:02 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:02 [DECIDE]   
+2025-08-24 18:20:02 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:02 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:02 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:02 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:02 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:02 [DECIDE]      ┌─ 
+2025-08-24 18:20:02 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:02 [DECIDE]      └─ 
+2025-08-24 18:20:02 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:02 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:02 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:02 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:02 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:02 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:02 [DECIDE]      ┌─
+2025-08-24 18:20:02 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:02 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:02 [DECIDE]      ┌─
+2025-08-24 18:20:02 [DECIDE]      │ No trade executed
+2025-08-24 18:20:02 [DECIDE]      └─
+2025-08-24 18:20:08 [DECIDE]   
+2025-08-24 18:20:08 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:08 [DECIDE]   ║                              TRADING LOOP #47                                     ║
+2025-08-24 18:20:08 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:08 [DECIDE]   
+2025-08-24 18:20:08 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:09 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:09 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:09 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:09 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:09 [DECIDE]      ┌─ 
+2025-08-24 18:20:09 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:09 [DECIDE]      └─ 
+2025-08-24 18:20:09 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:09 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:09 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:09 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:09 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:09 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:09 [DECIDE]      ┌─
+2025-08-24 18:20:09 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:09 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:09 [DECIDE]      ┌─
+2025-08-24 18:20:09 [DECIDE]      │ No trade executed
+2025-08-24 18:20:09 [DECIDE]      └─
+2025-08-24 18:20:15 [DECIDE]   
+2025-08-24 18:20:15 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:15 [DECIDE]   ║                              TRADING LOOP #48                                     ║
+2025-08-24 18:20:15 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:15 [DECIDE]   
+2025-08-24 18:20:15 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:15 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:15 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:15 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:15 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:15 [DECIDE]      ┌─ 
+2025-08-24 18:20:15 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:15 [DECIDE]      └─ 
+2025-08-24 18:20:15 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:15 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:15 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:15 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:15 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:15 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:15 [DECIDE]      ┌─
+2025-08-24 18:20:15 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:15 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:15 [DECIDE]      ┌─
+2025-08-24 18:20:15 [DECIDE]      │ No trade executed
+2025-08-24 18:20:15 [DECIDE]      └─
+2025-08-24 18:20:21 [DECIDE]   
+2025-08-24 18:20:21 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:21 [DECIDE]   ║                              TRADING LOOP #49                                     ║
+2025-08-24 18:20:21 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:21 [DECIDE]   
+2025-08-24 18:20:21 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:21 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:21 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:21 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:21 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:21 [DECIDE]      ┌─ 
+2025-08-24 18:20:21 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:21 [DECIDE]      └─ 
+2025-08-24 18:20:21 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:21 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:21 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:21 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:21 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:21 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:21 [DECIDE]      ┌─
+2025-08-24 18:20:21 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:21 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:21 [DECIDE]      ┌─
+2025-08-24 18:20:21 [DECIDE]      │ No trade executed
+2025-08-24 18:20:21 [DECIDE]      └─
+2025-08-24 18:20:27 [DECIDE]   
+2025-08-24 18:20:27 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:27 [DECIDE]   ║                              TRADING LOOP #50                                     ║
+2025-08-24 18:20:27 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:27 [DECIDE]   
+2025-08-24 18:20:27 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:28 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:28 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:28 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:28 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:28 [DECIDE]      ┌─ 
+2025-08-24 18:20:28 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:28 [DECIDE]      └─ 
+2025-08-24 18:20:28 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:28 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:28 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:28 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:28 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:28 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:28 [DECIDE]      ┌─
+2025-08-24 18:20:28 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:28 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:28 [DECIDE]      ┌─
+2025-08-24 18:20:28 [DECIDE]      │ No trade executed
+2025-08-24 18:20:28 [DECIDE]      └─
+2025-08-24 18:20:34 [DECIDE]   
+2025-08-24 18:20:34 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:34 [DECIDE]   ║                              TRADING LOOP #51                                     ║
+2025-08-24 18:20:34 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:34 [DECIDE]   
+2025-08-24 18:20:34 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:34 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:34 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:34 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:34 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:34 [DECIDE]      ┌─ 
+2025-08-24 18:20:34 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:34 [DECIDE]      └─ 
+2025-08-24 18:20:34 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:34 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:34 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:34 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:34 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:34 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:34 [DECIDE]      ┌─
+2025-08-24 18:20:34 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:34 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:34 [DECIDE]      ┌─
+2025-08-24 18:20:34 [DECIDE]      │ No trade executed
+2025-08-24 18:20:34 [DECIDE]      └─
+2025-08-24 18:20:40 [DECIDE]   
+2025-08-24 18:20:40 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:40 [DECIDE]   ║                              TRADING LOOP #52                                     ║
+2025-08-24 18:20:40 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:40 [DECIDE]   
+2025-08-24 18:20:40 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:40 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:40 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:40 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:40 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:40 [DECIDE]      ┌─ 
+2025-08-24 18:20:40 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:40 [DECIDE]      └─ 
+2025-08-24 18:20:40 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:40 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:40 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:40 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:40 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:40 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:40 [DECIDE]      ┌─
+2025-08-24 18:20:40 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:40 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:40 [DECIDE]      ┌─
+2025-08-24 18:20:40 [DECIDE]      │ No trade executed
+2025-08-24 18:20:40 [DECIDE]      └─
+2025-08-24 18:20:46 [DECIDE]   
+2025-08-24 18:20:46 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:46 [DECIDE]   ║                              TRADING LOOP #53                                     ║
+2025-08-24 18:20:46 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:46 [DECIDE]   
+2025-08-24 18:20:46 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:48 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:48 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:48 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:48 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:48 [DECIDE]      ┌─ 
+2025-08-24 18:20:48 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:48 [DECIDE]      └─ 
+2025-08-24 18:20:48 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:48 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:48 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:48 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:48 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:48 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:48 [DECIDE]      ┌─
+2025-08-24 18:20:48 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:48 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:48 [DECIDE]      ┌─
+2025-08-24 18:20:48 [DECIDE]      │ No trade executed
+2025-08-24 18:20:48 [DECIDE]      └─
+2025-08-24 18:20:54 [DECIDE]   
+2025-08-24 18:20:54 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:20:54 [DECIDE]   ║                              TRADING LOOP #54                                     ║
+2025-08-24 18:20:54 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:20:54 [DECIDE]   
+2025-08-24 18:20:54 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:20:54 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:20:54 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:20:54 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:20:54 [DECIDE]      └─ Trading allowed
+2025-08-24 18:20:54 [DECIDE]      ┌─ 
+2025-08-24 18:20:54 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:20:54 [DECIDE]      └─ 
+2025-08-24 18:20:54 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:20:54 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:20:54 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:20:54 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:20:54 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:20:54 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:20:54 [DECIDE]      ┌─
+2025-08-24 18:20:54 [DECIDE]      │ Filters Not Met
+2025-08-24 18:20:54 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:20:54 [DECIDE]      ┌─
+2025-08-24 18:20:54 [DECIDE]      │ No trade executed
+2025-08-24 18:20:54 [DECIDE]      └─
+2025-08-24 18:21:00 [DECIDE]   
+2025-08-24 18:21:00 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:00 [DECIDE]   ║                              TRADING LOOP #55                                     ║
+2025-08-24 18:21:00 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:00 [DECIDE]   
+2025-08-24 18:21:00 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:00 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:00 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:00 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:00 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:00 [DECIDE]      ┌─ 
+2025-08-24 18:21:00 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:00 [DECIDE]      └─ 
+2025-08-24 18:21:00 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:00 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:00 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:00 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:00 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:00 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:00 [DECIDE]      ┌─
+2025-08-24 18:21:00 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:00 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:00 [DECIDE]      ┌─
+2025-08-24 18:21:00 [DECIDE]      │ No trade executed
+2025-08-24 18:21:00 [DECIDE]      └─
+2025-08-24 18:21:06 [DECIDE]   
+2025-08-24 18:21:06 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:06 [DECIDE]   ║                              TRADING LOOP #56                                     ║
+2025-08-24 18:21:06 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:06 [DECIDE]   
+2025-08-24 18:21:06 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:07 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:07 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:07 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:07 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:07 [DECIDE]      ┌─ 
+2025-08-24 18:21:07 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:07 [DECIDE]      └─ 
+2025-08-24 18:21:07 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:07 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:07 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:07 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:07 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:07 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:07 [DECIDE]      ┌─
+2025-08-24 18:21:07 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:07 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:07 [DECIDE]      ┌─
+2025-08-24 18:21:07 [DECIDE]      │ No trade executed
+2025-08-24 18:21:07 [DECIDE]      └─
+2025-08-24 18:21:13 [DECIDE]   
+2025-08-24 18:21:13 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:13 [DECIDE]   ║                              TRADING LOOP #57                                     ║
+2025-08-24 18:21:13 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:13 [DECIDE]   
+2025-08-24 18:21:13 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:13 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:13 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:13 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:13 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:13 [DECIDE]      ┌─ 
+2025-08-24 18:21:13 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:13 [DECIDE]      └─ 
+2025-08-24 18:21:13 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:13 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:13 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:13 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:13 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:13 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:13 [DECIDE]      ┌─
+2025-08-24 18:21:13 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:13 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:13 [DECIDE]      ┌─
+2025-08-24 18:21:13 [DECIDE]      │ No trade executed
+2025-08-24 18:21:13 [DECIDE]      └─
+2025-08-24 18:21:19 [DECIDE]   
+2025-08-24 18:21:19 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:19 [DECIDE]   ║                              TRADING LOOP #58                                     ║
+2025-08-24 18:21:19 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:19 [DECIDE]   
+2025-08-24 18:21:19 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:20 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:20 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:20 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:20 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:20 [DECIDE]      ┌─ 
+2025-08-24 18:21:20 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:20 [DECIDE]      └─ 
+2025-08-24 18:21:20 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:20 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:20 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:20 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:20 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:20 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:20 [DECIDE]      ┌─
+2025-08-24 18:21:20 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:20 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:20 [DECIDE]      ┌─
+2025-08-24 18:21:20 [DECIDE]      │ No trade executed
+2025-08-24 18:21:20 [DECIDE]      └─
+2025-08-24 18:21:26 [DECIDE]   
+2025-08-24 18:21:26 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:26 [DECIDE]   ║                              TRADING LOOP #59                                     ║
+2025-08-24 18:21:26 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:26 [DECIDE]   
+2025-08-24 18:21:26 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:26 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:26 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:26 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:26 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:26 [DECIDE]      ┌─ 
+2025-08-24 18:21:26 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:26 [DECIDE]      └─ 
+2025-08-24 18:21:26 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:26 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:26 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:26 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:26 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:26 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:26 [DECIDE]      ┌─
+2025-08-24 18:21:26 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:26 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:26 [DECIDE]      ┌─
+2025-08-24 18:21:26 [DECIDE]      │ No trade executed
+2025-08-24 18:21:26 [DECIDE]      └─
+2025-08-24 18:21:40 [DECIDE]   
+2025-08-24 18:21:40 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:40 [DECIDE]   ║                              TRADING LOOP #60                                     ║
+2025-08-24 18:21:40 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:40 [DECIDE]   
+2025-08-24 18:21:40 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:40 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:40 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:40 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:40 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:40 [DECIDE]      ┌─ 
+2025-08-24 18:21:40 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:40 [DECIDE]      └─ 
+2025-08-24 18:21:40 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:40 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:40 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:40 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:40 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:40 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:40 [DECIDE]      ┌─
+2025-08-24 18:21:40 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:40 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:40 [DECIDE]      ┌─
+2025-08-24 18:21:40 [DECIDE]      │ No trade executed
+2025-08-24 18:21:40 [DECIDE]      └─
+2025-08-24 18:21:46 [DECIDE]   
+2025-08-24 18:21:46 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:46 [DECIDE]   ║                              TRADING LOOP #61                                     ║
+2025-08-24 18:21:46 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:46 [DECIDE]   
+2025-08-24 18:21:46 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:46 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:46 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:46 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:46 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:46 [DECIDE]      ┌─ 
+2025-08-24 18:21:46 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:46 [DECIDE]      └─ 
+2025-08-24 18:21:46 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:46 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:46 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:46 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:46 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:46 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:46 [DECIDE]      ┌─
+2025-08-24 18:21:46 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:46 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:46 [DECIDE]      ┌─
+2025-08-24 18:21:46 [DECIDE]      │ No trade executed
+2025-08-24 18:21:46 [DECIDE]      └─
+2025-08-24 18:21:52 [DECIDE]   
+2025-08-24 18:21:52 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:52 [DECIDE]   ║                              TRADING LOOP #62                                     ║
+2025-08-24 18:21:52 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:52 [DECIDE]   
+2025-08-24 18:21:52 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:21:53 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:21:53 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:21:53 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:21:53 [DECIDE]      └─ Trading allowed
+2025-08-24 18:21:53 [DECIDE]      ┌─ 
+2025-08-24 18:21:53 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:21:53 [DECIDE]      └─ 
+2025-08-24 18:21:53 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:21:53 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:21:53 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:21:53 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:21:53 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:21:53 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:21:53 [DECIDE]      ┌─
+2025-08-24 18:21:53 [DECIDE]      │ Filters Not Met
+2025-08-24 18:21:53 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:21:53 [DECIDE]      ┌─
+2025-08-24 18:21:53 [DECIDE]      │ No trade executed
+2025-08-24 18:21:53 [DECIDE]      └─
+2025-08-24 18:21:59 [DECIDE]   
+2025-08-24 18:21:59 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:21:59 [DECIDE]   ║                              TRADING LOOP #63                                     ║
+2025-08-24 18:21:59 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:21:59 [DECIDE]   
+2025-08-24 18:21:59 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:00 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:00 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:00 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:00 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:00 [DECIDE]      ┌─ 
+2025-08-24 18:22:00 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:00 [DECIDE]      └─ 
+2025-08-24 18:22:00 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:00 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:00 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:00 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:00 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:00 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:00 [DECIDE]      ┌─
+2025-08-24 18:22:00 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:00 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:00 [DECIDE]      ┌─
+2025-08-24 18:22:00 [DECIDE]      │ No trade executed
+2025-08-24 18:22:00 [DECIDE]      └─
+2025-08-24 18:22:06 [DECIDE]   
+2025-08-24 18:22:06 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:06 [DECIDE]   ║                              TRADING LOOP #64                                     ║
+2025-08-24 18:22:06 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:06 [DECIDE]   
+2025-08-24 18:22:06 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:06 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:06 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:06 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:06 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:06 [DECIDE]      ┌─ 
+2025-08-24 18:22:06 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:06 [DECIDE]      └─ 
+2025-08-24 18:22:06 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:06 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:06 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:06 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:06 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:06 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:06 [DECIDE]      ┌─
+2025-08-24 18:22:06 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:06 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:06 [DECIDE]      ┌─
+2025-08-24 18:22:06 [DECIDE]      │ No trade executed
+2025-08-24 18:22:06 [DECIDE]      └─
+2025-08-24 18:22:12 [DECIDE]   
+2025-08-24 18:22:12 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:12 [DECIDE]   ║                              TRADING LOOP #65                                     ║
+2025-08-24 18:22:12 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:12 [DECIDE]   
+2025-08-24 18:22:12 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:12 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:12 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:12 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:12 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:12 [DECIDE]      ┌─ 
+2025-08-24 18:22:12 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:12 [DECIDE]      └─ 
+2025-08-24 18:22:12 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:12 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:12 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:12 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:12 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:12 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:12 [DECIDE]      ┌─
+2025-08-24 18:22:12 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:12 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:12 [DECIDE]      ┌─
+2025-08-24 18:22:12 [DECIDE]      │ No trade executed
+2025-08-24 18:22:12 [DECIDE]      └─
+2025-08-24 18:22:18 [DECIDE]   
+2025-08-24 18:22:18 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:18 [DECIDE]   ║                              TRADING LOOP #66                                     ║
+2025-08-24 18:22:18 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:18 [DECIDE]   
+2025-08-24 18:22:18 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:19 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:19 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:19 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:19 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:19 [DECIDE]      ┌─ 
+2025-08-24 18:22:19 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:19 [DECIDE]      └─ 
+2025-08-24 18:22:19 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:19 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:19 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:19 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:19 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:19 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:19 [DECIDE]      ┌─
+2025-08-24 18:22:19 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:19 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:19 [DECIDE]      ┌─
+2025-08-24 18:22:19 [DECIDE]      │ No trade executed
+2025-08-24 18:22:19 [DECIDE]      └─
+2025-08-24 18:22:25 [DECIDE]   
+2025-08-24 18:22:25 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:25 [DECIDE]   ║                              TRADING LOOP #67                                     ║
+2025-08-24 18:22:25 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:25 [DECIDE]   
+2025-08-24 18:22:25 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:25 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:25 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:25 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:25 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:25 [DECIDE]      ┌─ 
+2025-08-24 18:22:25 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:25 [DECIDE]      └─ 
+2025-08-24 18:22:25 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:25 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:25 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:25 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:25 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:25 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:25 [DECIDE]      ┌─
+2025-08-24 18:22:25 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:25 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:25 [DECIDE]      ┌─
+2025-08-24 18:22:25 [DECIDE]      │ No trade executed
+2025-08-24 18:22:25 [DECIDE]      └─
+2025-08-24 18:22:31 [DECIDE]   
+2025-08-24 18:22:31 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:31 [DECIDE]   ║                              TRADING LOOP #68                                     ║
+2025-08-24 18:22:31 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:31 [DECIDE]   
+2025-08-24 18:22:31 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:31 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:31 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:31 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:31 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:31 [DECIDE]      ┌─ 
+2025-08-24 18:22:31 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:31 [DECIDE]      └─ 
+2025-08-24 18:22:31 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:31 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:31 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:31 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:31 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:31 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:31 [DECIDE]      ┌─
+2025-08-24 18:22:31 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:31 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:31 [DECIDE]      ┌─
+2025-08-24 18:22:31 [DECIDE]      │ No trade executed
+2025-08-24 18:22:31 [DECIDE]      └─
+2025-08-24 18:22:37 [DECIDE]   
+2025-08-24 18:22:37 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:37 [DECIDE]   ║                              TRADING LOOP #69                                     ║
+2025-08-24 18:22:37 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:37 [DECIDE]   
+2025-08-24 18:22:37 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:38 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:38 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:38 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:38 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:38 [DECIDE]      ┌─ 
+2025-08-24 18:22:38 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:38 [DECIDE]      └─ 
+2025-08-24 18:22:38 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:38 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:38 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:38 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:38 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:38 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:38 [DECIDE]      ┌─
+2025-08-24 18:22:38 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:38 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:38 [DECIDE]      ┌─
+2025-08-24 18:22:38 [DECIDE]      │ No trade executed
+2025-08-24 18:22:38 [DECIDE]      └─
+2025-08-24 18:22:44 [DECIDE]   
+2025-08-24 18:22:44 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:44 [DECIDE]   ║                              TRADING LOOP #70                                     ║
+2025-08-24 18:22:44 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:44 [DECIDE]   
+2025-08-24 18:22:44 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:44 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:44 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:44 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:44 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:44 [DECIDE]      ┌─ 
+2025-08-24 18:22:44 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:44 [DECIDE]      └─ 
+2025-08-24 18:22:44 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:44 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:44 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:44 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:44 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:44 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:44 [DECIDE]      ┌─
+2025-08-24 18:22:44 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:44 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:44 [DECIDE]      ┌─
+2025-08-24 18:22:44 [DECIDE]      │ No trade executed
+2025-08-24 18:22:44 [DECIDE]      └─
+2025-08-24 18:22:50 [DECIDE]   
+2025-08-24 18:22:50 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:50 [DECIDE]   ║                              TRADING LOOP #71                                     ║
+2025-08-24 18:22:50 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:50 [DECIDE]   
+2025-08-24 18:22:50 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:51 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:51 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:51 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:51 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:51 [DECIDE]      ┌─ 
+2025-08-24 18:22:51 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:51 [DECIDE]      └─ 
+2025-08-24 18:22:51 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:51 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:51 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:51 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:51 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:51 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:51 [DECIDE]      ┌─
+2025-08-24 18:22:51 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:51 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:51 [DECIDE]      ┌─
+2025-08-24 18:22:51 [DECIDE]      │ No trade executed
+2025-08-24 18:22:51 [DECIDE]      └─
+2025-08-24 18:22:57 [DECIDE]   
+2025-08-24 18:22:57 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:22:57 [DECIDE]   ║                              TRADING LOOP #72                                     ║
+2025-08-24 18:22:57 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:22:57 [DECIDE]   
+2025-08-24 18:22:57 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:22:57 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:22:57 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:22:57 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:22:57 [DECIDE]      └─ Trading allowed
+2025-08-24 18:22:57 [DECIDE]      ┌─ 
+2025-08-24 18:22:57 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:22:57 [DECIDE]      └─ 
+2025-08-24 18:22:57 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:22:57 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:22:57 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:22:57 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:22:57 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:22:57 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:22:57 [DECIDE]      ┌─
+2025-08-24 18:22:57 [DECIDE]      │ Filters Not Met
+2025-08-24 18:22:57 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:22:57 [DECIDE]      ┌─
+2025-08-24 18:22:57 [DECIDE]      │ No trade executed
+2025-08-24 18:22:57 [DECIDE]      └─
+2025-08-24 18:23:03 [DECIDE]   
+2025-08-24 18:23:03 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:03 [DECIDE]   ║                              TRADING LOOP #73                                     ║
+2025-08-24 18:23:03 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:03 [DECIDE]   
+2025-08-24 18:23:03 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:03 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:03 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:03 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:03 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:03 [DECIDE]      ┌─ 
+2025-08-24 18:23:03 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:03 [DECIDE]      └─ 
+2025-08-24 18:23:03 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:03 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:03 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:03 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:03 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:03 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:03 [DECIDE]      ┌─
+2025-08-24 18:23:03 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:03 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:03 [DECIDE]      ┌─
+2025-08-24 18:23:03 [DECIDE]      │ No trade executed
+2025-08-24 18:23:03 [DECIDE]      └─
+2025-08-24 18:23:09 [DECIDE]   
+2025-08-24 18:23:09 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:09 [DECIDE]   ║                              TRADING LOOP #74                                     ║
+2025-08-24 18:23:09 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:09 [DECIDE]   
+2025-08-24 18:23:09 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:10 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:10 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:10 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:10 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:10 [DECIDE]      ┌─ 
+2025-08-24 18:23:10 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:10 [DECIDE]      └─ 
+2025-08-24 18:23:10 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:10 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:10 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:10 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:10 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:10 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:10 [DECIDE]      ┌─
+2025-08-24 18:23:10 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:10 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:10 [DECIDE]      ┌─
+2025-08-24 18:23:10 [DECIDE]      │ No trade executed
+2025-08-24 18:23:10 [DECIDE]      └─
+2025-08-24 18:23:16 [DECIDE]   
+2025-08-24 18:23:16 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:16 [DECIDE]   ║                              TRADING LOOP #75                                     ║
+2025-08-24 18:23:16 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:16 [DECIDE]   
+2025-08-24 18:23:16 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:16 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:16 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:16 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:16 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:16 [DECIDE]      ┌─ 
+2025-08-24 18:23:16 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:16 [DECIDE]      └─ 
+2025-08-24 18:23:16 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:16 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:16 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:16 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:16 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:16 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:16 [DECIDE]      ┌─
+2025-08-24 18:23:16 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:16 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:16 [DECIDE]      ┌─
+2025-08-24 18:23:16 [DECIDE]      │ No trade executed
+2025-08-24 18:23:16 [DECIDE]      └─
+2025-08-24 18:23:22 [DECIDE]   
+2025-08-24 18:23:22 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:22 [DECIDE]   ║                              TRADING LOOP #76                                     ║
+2025-08-24 18:23:22 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:22 [DECIDE]   
+2025-08-24 18:23:22 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:22 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:22 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:22 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:22 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:22 [DECIDE]      ┌─ 
+2025-08-24 18:23:22 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:22 [DECIDE]      └─ 
+2025-08-24 18:23:22 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:22 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:22 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:22 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:22 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:22 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:22 [DECIDE]      ┌─
+2025-08-24 18:23:22 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:22 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:22 [DECIDE]      ┌─
+2025-08-24 18:23:22 [DECIDE]      │ No trade executed
+2025-08-24 18:23:22 [DECIDE]      └─
+2025-08-24 18:23:28 [DECIDE]   
+2025-08-24 18:23:28 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:28 [DECIDE]   ║                              TRADING LOOP #77                                     ║
+2025-08-24 18:23:28 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:28 [DECIDE]   
+2025-08-24 18:23:28 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:29 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:29 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:29 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:29 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:29 [DECIDE]      ┌─ 
+2025-08-24 18:23:29 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:29 [DECIDE]      └─ 
+2025-08-24 18:23:29 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:29 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:29 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:29 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:29 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:29 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:29 [DECIDE]      ┌─
+2025-08-24 18:23:29 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:29 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:29 [DECIDE]      ┌─
+2025-08-24 18:23:29 [DECIDE]      │ No trade executed
+2025-08-24 18:23:29 [DECIDE]      └─
+2025-08-24 18:23:35 [DECIDE]   
+2025-08-24 18:23:35 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:35 [DECIDE]   ║                              TRADING LOOP #78                                     ║
+2025-08-24 18:23:35 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:35 [DECIDE]   
+2025-08-24 18:23:35 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:35 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:35 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:35 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:35 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:35 [DECIDE]      ┌─ 
+2025-08-24 18:23:35 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:35 [DECIDE]      └─ 
+2025-08-24 18:23:35 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:35 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:35 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:35 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:35 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:35 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:35 [DECIDE]      ┌─
+2025-08-24 18:23:35 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:35 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:35 [DECIDE]      ┌─
+2025-08-24 18:23:35 [DECIDE]      │ No trade executed
+2025-08-24 18:23:35 [DECIDE]      └─
+2025-08-24 18:23:41 [DECIDE]   
+2025-08-24 18:23:41 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:41 [DECIDE]   ║                              TRADING LOOP #79                                     ║
+2025-08-24 18:23:41 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:41 [DECIDE]   
+2025-08-24 18:23:41 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:42 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:42 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:42 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:42 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:42 [DECIDE]      ┌─ 
+2025-08-24 18:23:42 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:42 [DECIDE]      └─ 
+2025-08-24 18:23:42 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:42 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:42 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:42 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:42 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:42 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:42 [DECIDE]      ┌─
+2025-08-24 18:23:42 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:42 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:42 [DECIDE]      ┌─
+2025-08-24 18:23:42 [DECIDE]      │ No trade executed
+2025-08-24 18:23:42 [DECIDE]      └─
+2025-08-24 18:23:48 [DECIDE]   
+2025-08-24 18:23:48 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:48 [DECIDE]   ║                              TRADING LOOP #80                                     ║
+2025-08-24 18:23:48 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:48 [DECIDE]   
+2025-08-24 18:23:48 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:48 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:48 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:48 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:48 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:48 [DECIDE]      ┌─ 
+2025-08-24 18:23:48 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:48 [DECIDE]      └─ 
+2025-08-24 18:23:48 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:48 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:48 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:48 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:48 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:48 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:48 [DECIDE]      ┌─
+2025-08-24 18:23:48 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:48 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:48 [DECIDE]      ┌─
+2025-08-24 18:23:48 [DECIDE]      │ No trade executed
+2025-08-24 18:23:48 [DECIDE]      └─
+2025-08-24 18:23:54 [DECIDE]   
+2025-08-24 18:23:54 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:23:54 [DECIDE]   ║                              TRADING LOOP #81                                     ║
+2025-08-24 18:23:54 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:23:54 [DECIDE]   
+2025-08-24 18:23:54 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:23:54 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:23:54 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:23:54 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:23:54 [DECIDE]      └─ Trading allowed
+2025-08-24 18:23:54 [DECIDE]      ┌─ 
+2025-08-24 18:23:54 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:23:54 [DECIDE]      └─ 
+2025-08-24 18:23:54 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:23:54 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:23:54 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:23:54 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:23:54 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:23:54 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:23:54 [DECIDE]      ┌─
+2025-08-24 18:23:54 [DECIDE]      │ Filters Not Met
+2025-08-24 18:23:54 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:23:54 [DECIDE]      ┌─
+2025-08-24 18:23:54 [DECIDE]      │ No trade executed
+2025-08-24 18:23:54 [DECIDE]      └─
+2025-08-24 18:24:00 [DECIDE]   
+2025-08-24 18:24:00 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:24:00 [DECIDE]   ║                              TRADING LOOP #82                                     ║
+2025-08-24 18:24:00 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:24:00 [DECIDE]   
+2025-08-24 18:24:00 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:24:01 [DECIDE]      │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:24:01 [DECIDE]      │ Exposure: 0% (Max: 50%)
+2025-08-24 18:24:01 [DECIDE]      │ PASS: All conditions met
+2025-08-24 18:24:01 [DECIDE]      └─ Trading allowed
+2025-08-24 18:24:01 [DECIDE]      ┌─ 
+2025-08-24 18:24:01 [DECIDE]      │ Current Equity: $107537 (acct poll=5s)
+2025-08-24 18:24:01 [DECIDE]      └─ 
+2025-08-24 18:24:01 [DECIDE]      ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:24:01 [DECIDE]      │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:24:01 [DECIDE]      │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:24:01 [DECIDE]      │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:24:01 [DECIDE]      | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:24:01 [DECIDE]      └─ Signal analysis complete
+2025-08-24 18:24:01 [DECIDE]      ┌─
+2025-08-24 18:24:01 [DECIDE]      │ Filters Not Met
+2025-08-24 18:24:01 [DECIDE]      │ Preview Sizing: Risk=$1.0000 | Qty~21507
+2025-08-24 18:24:01 [DECIDE]      ┌─
+2025-08-24 18:24:01 [DECIDE]      │ No trade executed
+2025-08-24 18:24:01 [DECIDE]      └─
+2025-08-24 18:34:49 [MAIN  ]   
+2025-08-24 18:34:49 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:34:49 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:34:49 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:34:49 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:34:49 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:34:49 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:34:49 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:34:49 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:34:49 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:34:49 [MAIN  ]   │
+2025-08-24 18:34:50 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:34:50 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:34:50 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:34:50 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:34:50 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:34:50 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:34:50 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:34:50 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:34:50 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:34:50 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:34:50 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:34:50 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:34:50 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:34:50 [MAIN  ]   │
+2025-08-24 18:34:51 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:34:51 [MAIN  ]   │  •No positions held
+2025-08-24 18:34:51 [MAIN  ]   │
+2025-08-24 18:34:51 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:34:51 [MAIN  ]   
+2025-08-24 18:34:51 [MARKET]      |  • Market data thread started: TID:4203567
+2025-08-24 18:34:51 [ACCOUN]      |  • Account data thread started: TID:4203568
+2025-08-24 18:34:51 [DECIDE]      |  • Trader decision thread started: TID:4203570
+2025-08-24 18:34:51 [GATE  ]      |  • Market gate thread started: TID:4203569
+2025-08-24 18:34:51 [LOGGER]      |  • Logging thread started: TID:4203571
+2025-08-24 18:34:51 [LOGGER]      └─
+2025-08-24 18:41:01 [MAIN  ]   
+2025-08-24 18:41:01 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:41:01 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:41:01 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:41:01 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:41:01 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:41:01 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:41:01 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:41:01 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:41:01 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:41:01 [MAIN  ]   │
+2025-08-24 18:41:01 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:41:01 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:41:01 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:41:01 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:41:01 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:41:01 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:41:01 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:41:01 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:41:01 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:41:01 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:41:01 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:41:01 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:41:01 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:41:01 [MAIN  ]   │
+2025-08-24 18:41:02 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:41:02 [MAIN  ]   │  •No positions held
+2025-08-24 18:41:02 [MAIN  ]   │
+2025-08-24 18:41:02 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:41:02 [MAIN  ]   
+2025-08-24 18:41:02 [MARKET]      |  • Market data thread started: TID:4209138
+2025-08-24 18:41:02 [DECIDE]      |  • Trader decision thread started: TID:4209141
+2025-08-24 18:41:02 [GATE  ]      |  • Market gate thread started: TID:4209140
+2025-08-24 18:41:02 [ACCOUN]      |  • Account data thread started: TID:4209139
+2025-08-24 18:41:02 [LOGGER]      |  • Logging thread started: TID:4209142
+2025-08-24 18:41:02 [LOGGER]      └─
+2025-08-24 18:41:22 [MAIN  ]   
+2025-08-24 18:41:22 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:41:22 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:41:22 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:41:23 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:41:23 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:41:23 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:41:23 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:41:23 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:41:23 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:41:23 [MAIN  ]   │
+2025-08-24 18:41:23 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:41:23 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:41:23 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:41:23 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:41:23 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:41:23 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:41:23 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:41:23 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:41:23 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:41:23 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:41:23 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:41:23 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:41:23 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:41:23 [MAIN  ]   │
+2025-08-24 18:41:24 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:41:24 [MAIN  ]   │  •No positions held
+2025-08-24 18:41:24 [MAIN  ]   │
+2025-08-24 18:41:24 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:41:24 [MAIN  ]   
+2025-08-24 18:41:24 [MARKET]      |  • Market data thread started: TID:4209527
+2025-08-24 18:41:24 [ACCOUN]      |  • Account data thread started: TID:4209528
+2025-08-24 18:41:24 [GATE  ]      |  • Market gate thread started: TID:4209529
+2025-08-24 18:41:24 [DECIDE]      |  • Trader decision thread started: TID:4209530
+2025-08-24 18:41:24 [LOGGER]      |  • Logging thread started: TID:4209531
+2025-08-24 18:41:24 [LOGGER]      └─
+2025-08-24 18:44:02 [MAIN  ]   
+2025-08-24 18:44:02 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:44:02 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:44:02 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:44:02 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:44:02 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:44:02 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:44:02 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:44:02 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:44:02 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:44:02 [MAIN  ]   │
+2025-08-24 18:44:03 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:44:03 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:44:03 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:44:03 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:44:03 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:44:03 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:44:03 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:44:03 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:44:03 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:44:03 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:44:03 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:44:03 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:44:03 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:44:03 [MAIN  ]   │
+2025-08-24 18:44:05 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:44:05 [MAIN  ]   │  •No positions held
+2025-08-24 18:44:05 [MAIN  ]   │
+2025-08-24 18:44:05 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:44:05 [MAIN  ]   
+2025-08-24 18:44:05 [MARKET]      |  • Market data thread started: TID:4212501
+2025-08-24 18:44:05 [ACCOUN]      |  • Account data thread started: TID:4212502
+2025-08-24 18:44:05 [DECIDE]      |  • Trader decision thread started: TID:4212504
+2025-08-24 18:44:05 [GATE  ]      |  • Market gate thread started: TID:4212503
+2025-08-24 18:44:05 [LOGGER]      |  • Logging thread started: TID:4212505
+2025-08-24 18:44:05 [LOGGER]      └─
+2025-08-24 18:44:07 [DECIDE]   
+2025-08-24 18:44:07 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:44:07 [DECIDE]   ║                              TRADING LOOP #54                                     ║
+2025-08-24 18:44:07 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:44:07 [DECIDE]   
+2025-08-24 18:44:07 [DECIDE]      ┌─ TRADING CONDITIONS
+2025-08-24 18:44:28 [MAIN  ]   
+2025-08-24 18:44:28 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:44:28 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:44:28 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:44:28 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:44:28 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:44:28 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:44:28 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:44:28 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:44:28 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:44:28 [MAIN  ]   │
+2025-08-24 18:44:29 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:44:29 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:44:29 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:44:29 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:44:29 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:44:29 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:44:29 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:44:29 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:44:29 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:44:29 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:44:29 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:44:29 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:44:29 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:44:29 [MAIN  ]   │
+2025-08-24 18:44:30 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:44:30 [MAIN  ]   │  •No positions held
+2025-08-24 18:44:30 [MAIN  ]   │
+2025-08-24 18:44:30 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:44:30 [MAIN  ]   
+2025-08-24 18:44:30 [MARKET]      |  • Market data thread started: TID:4213535
+2025-08-24 18:44:30 [ACCOUN]      |  • Account data thread started: TID:4213536
+2025-08-24 18:44:30 [GATE  ]      |  • Market gate thread started: TID:4213537
+2025-08-24 18:44:30 [DECIDE]      |  • Trader decision thread started: TID:4213538
+2025-08-24 18:44:30 [LOGGER]      |  • Logging thread started: TID:4213539
+2025-08-24 18:44:30 [LOGGER]      └─
+2025-08-24 18:47:53 [MAIN  ]   Advanced momentum trader starting for TSLA
+2025-08-24 18:47:53 [MAIN  ]   Initial equity: $107537.28
+2025-08-24 18:47:53 [MAIN  ]   Risk per trade: 20.000%
+2025-08-24 18:47:53 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-08-24 18:47:55 [MAIN  ]   Thread system initializing
+2025-08-24 18:47:55 [MAIN  ]   Thread priorities: ENABLED
+2025-08-24 18:47:55 [MAIN  ]   CPU affinity: DISABLED
+2025-08-24 18:47:55 [MAIN  ]   TRADER: HIGHEST priority [OK]
+2025-08-24 18:47:55 [MAIN  ]   MARKET: HIGH priority [OK]
+2025-08-24 18:47:55 [MAIN  ]   ACCOUNT: NORMAL priority [OK]
+2025-08-24 18:47:55 [MAIN  ]   GATE: LOW priority [OK]
+2025-08-24 18:47:55 [MAIN  ]   LOGGER: LOWEST priority [OK]
+2025-08-24 18:47:53 [MAIN  ]   
+2025-08-24 18:47:53 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:47:53 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:47:53 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:47:54 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:47:54 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:47:54 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:47:54 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:47:54 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:47:54 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:47:54 [MAIN  ]   │
+2025-08-24 18:47:54 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:47:54 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:47:54 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:47:54 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:47:54 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:47:54 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:47:54 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:47:54 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:47:54 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:47:54 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:47:54 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:47:54 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:47:54 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:47:54 [MAIN  ]   │
+2025-08-24 18:47:55 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:47:55 [MAIN  ]   │  •No positions held
+2025-08-24 18:47:55 [MAIN  ]   │
+2025-08-24 18:47:55 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:47:55 [MAIN  ]   
+2025-08-24 18:47:55 [LOGGER]      |  • Logging thread started: TID:4216138
+2025-08-24 18:47:55 [LOGGER]      └─
+2025-08-24 18:47:55 [ACCOUN]      |  • Account data thread started: TID:4216135
+2025-08-24 18:47:55 [MARKET]      |  • Market data thread started: TID:4216134
+2025-08-24 18:47:55 [GATE  ]      |  • Market gate thread started: TID:4216136
+2025-08-24 18:47:55 [DECIDE]      |  • Trader decision thread started: TID:4216137
+2025-08-24 18:51:57 [MAIN  ]   Advanced momentum trader starting for TSLA
+2025-08-24 18:51:57 [MAIN  ]   Initial equity: $107537.28
+2025-08-24 18:51:57 [MAIN  ]   Risk per trade: 20.000%
+2025-08-24 18:51:57 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-08-24 18:51:57 [MAIN  ]   
+2025-08-24 18:51:57 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:51:57 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:51:57 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:51:57 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:51:57 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:51:57 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:51:57 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:51:57 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:51:57 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:51:57 [MAIN  ]   │
+2025-08-24 18:51:57 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:51:57 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:51:57 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:51:57 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:51:57 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:51:57 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:51:57 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:51:57 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:51:57 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:51:57 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:51:57 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:51:57 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:51:57 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:51:57 [MAIN  ]   │
+2025-08-24 18:51:58 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:51:58 [MAIN  ]   │  •No positions held
+2025-08-24 18:51:58 [MAIN  ]   │
+2025-08-24 18:51:58 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:51:58 [MAIN  ]   
+2025-08-24 18:51:58 [MAIN  ]   Thread system initializing
+2025-08-24 18:51:58 [MAIN  ]   Thread priorities: ENABLED
+2025-08-24 18:51:58 [MAIN  ]   CPU affinity: DISABLED
+2025-08-24 18:51:58 [MARKET]      |  • Market data thread started: TID:4220060
+2025-08-24 18:51:58 [ACCOUN]      |  • Account data thread started: TID:4220061
+2025-08-24 18:51:58 [GATE  ]      |  • Market gate thread started: TID:4220062
+2025-08-24 18:51:58 [DECIDE]      |  • Trader decision thread started: TID:4220063
+2025-08-24 18:51:58 [LOGGER]      |  • Logging thread started: TID:4220064
+2025-08-24 18:51:58 [LOGGER]      └─
+2025-08-24 18:51:59 [MAIN  ]   TRADER: HIGHEST priority [OK]
+2025-08-24 18:51:59 [MAIN  ]   MARKET: HIGH priority [OK]
+2025-08-24 18:51:59 [MAIN  ]   ACCOUNT: NORMAL priority [OK]
+2025-08-24 18:51:59 [MAIN  ]   GATE: LOW priority [OK]
+2025-08-24 18:51:59 [MAIN  ]   LOGGER: LOWEST priority [OK]
+2025-08-24 18:52:00 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:52:00 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:52:42 [MAIN  ]   Advanced momentum trader starting for TSLA
+2025-08-24 18:52:42 [MAIN  ]   Initial equity: $107537.28
+2025-08-24 18:52:42 [MAIN  ]   Risk per trade: 20.000%
+2025-08-24 18:52:42 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-08-24 18:52:42 [MAIN  ]   
+2025-08-24 18:52:42 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:52:42 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:52:42 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:52:43 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:52:43 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:52:43 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:52:43 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:52:43 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:52:43 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:52:43 [MAIN  ]   │
+2025-08-24 18:52:43 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:52:43 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:52:43 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:52:43 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:52:43 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:52:43 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:52:43 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:52:43 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:52:43 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:52:43 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:52:43 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:52:43 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:52:43 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:52:43 [MAIN  ]   │
+2025-08-24 18:52:44 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:52:44 [MAIN  ]   │  •No positions held
+2025-08-24 18:52:44 [MAIN  ]   │
+2025-08-24 18:52:44 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:52:44 [MAIN  ]   
+2025-08-24 18:52:44 [MAIN  ]   Thread system initializing
+2025-08-24 18:52:44 [MAIN  ]   Thread priorities: ENABLED
+2025-08-24 18:52:44 [MAIN  ]   CPU affinity: DISABLED
+2025-08-24 18:52:44 [MARKET]      |  • Market data thread started: TID:4220578
+2025-08-24 18:52:44 [ACCOUN]      |  • Account data thread started: TID:4220579
+2025-08-24 18:52:44 [GATE  ]      |  • Market gate thread started: TID:4220580
+2025-08-24 18:52:44 [DECIDE]      |  • Trader decision thread started: TID:4220581
+2025-08-24 18:52:44 [LOGGER]      |  • Logging thread started: TID:4220582
+2025-08-24 18:52:44 [LOGGER]      └─
+2025-08-24 18:52:44 [MAIN  ]   TRADER: HIGHEST priority [OK]
+2025-08-24 18:52:44 [MAIN  ]   MARKET: HIGH priority [OK]
+2025-08-24 18:52:44 [MAIN  ]   ACCOUNT: NORMAL priority [OK]
+2025-08-24 18:52:44 [MAIN  ]   GATE: LOW priority [OK]
+2025-08-24 18:52:44 [MAIN  ]   LOGGER: LOWEST priority [OK]
+2025-08-24 18:52:46 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:52:46 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:52:52 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:52:52 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:52:59 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:52:59 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:05 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:05 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:11 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:11 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:18 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:18 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:24 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:24 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:30 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:30 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:37 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:37 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:43 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:43 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:49 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:49 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:53:56 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:53:56 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:02 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:02 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:09 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:09 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:15 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:15 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:21 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:21 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:28 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:28 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:34 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:34 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:41 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:41 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:47 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:47 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:54:53 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:54:53 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:55:00 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:55:00 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:55:06 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:55:06 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:55:12 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:55:12 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:55:19 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:55:19 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:56:41 [DECIDE]   Daily P/L: 0.000% | Exposure: 0.000% | Status: ALLOWED
+2025-08-24 18:56:41 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:59:28 [MAIN  ]   Advanced momentum trader starting for TSLA
+2025-08-24 18:59:28 [MAIN  ]   Initial equity: $107537.28
+2025-08-24 18:59:28 [MAIN  ]   Risk per trade: 20.000%
+2025-08-24 18:59:28 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-08-24 18:59:28 [MAIN  ]   
+2025-08-24 18:59:28 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:59:28 [MAIN  ]   ║                              ACCOUNT STATUS SUMMARY                              ║
+2025-08-24 18:59:28 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:59:29 [MAIN  ]   ┌─ ACCOUNT OVERVIEW
+2025-08-24 18:59:29 [MAIN  ]   │  • Account Number: PA38WQNR60QX
+2025-08-24 18:59:29 [MAIN  ]   │  • Status: ACTIVE
+2025-08-24 18:59:29 [MAIN  ]   │  • Currency: USD
+2025-08-24 18:59:29 [MAIN  ]   │  • Pattern Day Trader: YES
+2025-08-24 18:59:29 [MAIN  ]   │  • Created: 2024-04-19T12:51:14.81408Z
+2025-08-24 18:59:29 [MAIN  ]   │
+2025-08-24 18:59:29 [MAIN  ]   ┌─ FINANCIAL SUMMARY
+2025-08-24 18:59:29 [MAIN  ]   │  • Equity: $107537.28
+2025-08-24 18:59:29 [MAIN  ]   │  • Last Equity: $107537.28
+2025-08-24 18:59:29 [MAIN  ]   │  • Cash: $107537.28
+2025-08-24 18:59:29 [MAIN  ]   │  • Buying Power: $430149.12
+2025-08-24 18:59:29 [MAIN  ]   │  • Long Market Value: $0.00
+2025-08-24 18:59:29 [MAIN  ]   │  • Short Market Value: $0.00
+2025-08-24 18:59:29 [MAIN  ]   │  • Initial Margin: $0.00
+2025-08-24 18:59:29 [MAIN  ]   │  • Maintenance Margin: $0.00
+2025-08-24 18:59:29 [MAIN  ]   │  • SMA: $107537.28
+2025-08-24 18:59:29 [MAIN  ]   │  • Day Trade Count: 0
+2025-08-24 18:59:29 [MAIN  ]   │  • RegT Buying Power: $215074.56
+2025-08-24 18:59:29 [MAIN  ]   │  • Day Trading Buying Power: $430149.12
+2025-08-24 18:59:29 [MAIN  ]   │
+2025-08-24 18:59:30 [MAIN  ]   ┌─ CURRENT POSITIONS
+2025-08-24 18:59:30 [MAIN  ]   │  •No positions held
+2025-08-24 18:59:30 [MAIN  ]   │
+2025-08-24 18:59:30 [MAIN  ]   └─────────────────────────────────────────────────────────────────────────────────
+2025-08-24 18:59:30 [MAIN  ]   
+2025-08-24 18:59:30 [MAIN  ]   
+2025-08-24 18:59:30 [MAIN  ]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:59:30 [MAIN  ]   ║                                   ALPACA TRADER                                  ║
+2025-08-24 18:59:30 [MAIN  ]   ║                            Advanced Momentum Trading Bot                         ║
+2025-08-24 18:59:30 [MAIN  ]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:59:30 [MAIN  ]   
+2025-08-24 18:59:30 [MAIN  ]        ┌─ CONFIGURATION:
+2025-08-24 18:59:30 [MAIN  ]        |  • Symbol: TSLA
+2025-08-24 18:59:30 [MAIN  ]        |  • Risk per Trade: 20.000%
+2025-08-24 18:59:30 [MAIN  ]        |  • Risk/Reward Ratio: 1:3.000000
+2025-08-24 18:59:30 [MAIN  ]        |  • Loop Interval: 5 seconds
+2025-08-24 18:59:30 [MAIN  ]        └─ 
+2025-08-24 18:59:30 [MAIN  ]   
+2025-08-24 18:59:30 [MAIN  ]   Thread system initializing
+2025-08-24 18:59:30 [MAIN  ]   Thread priorities: ENABLED
+2025-08-24 18:59:30 [MAIN  ]   CPU affinity: DISABLED
+2025-08-24 18:59:30 [MARKET]      |  • Market data thread started: TID:4226558
+2025-08-24 18:59:30 [ACCOUN]      |  • Account data thread started: TID:4226559
+2025-08-24 18:59:30 [GATE  ]      |  • Market gate thread started: TID:4226560
+2025-08-24 18:59:30 [DECIDE]      |  • Trader decision thread started: TID:4226561
+2025-08-24 18:59:30 [LOGGER]      |  • Logging thread started: TID:4226562
+2025-08-24 18:59:30 [LOGGER]      └─
+2025-08-24 18:59:30 [MAIN  ]   TRADER: HIGHEST priority [OK]
+2025-08-24 18:59:30 [MAIN  ]   MARKET: HIGH priority [OK]
+2025-08-24 18:59:30 [MAIN  ]   ACCOUNT: NORMAL priority [OK]
+2025-08-24 18:59:30 [MAIN  ]   GATE: LOW priority [OK]
+2025-08-24 18:59:30 [MAIN  ]   LOGGER: LOWEST priority [OK]
+2025-08-24 18:59:31 [DECIDE]   
+2025-08-24 18:59:31 [DECIDE]   ╔══════════════════════════════════════════════════════════════════════════════════╗
+2025-08-24 18:59:31 [DECIDE]   ║                              TRADING LOOP #1                                     ║
+2025-08-24 18:59:31 [DECIDE]   ╚══════════════════════════════════════════════════════════════════════════════════╝
+2025-08-24 18:59:31 [DECIDE]   
+2025-08-24 18:59:32 [DECIDE]        ┌─ TRADING CONDITIONS
+2025-08-24 18:59:32 [DECIDE]        │ Daily P/L: 0.000% (Limits: -100.000000% to 30.000000%)
+2025-08-24 18:59:32 [DECIDE]        │ Exposure: 0% (Max: 50%)
+2025-08-24 18:59:32 [DECIDE]        │ PASS: All conditions met
+2025-08-24 18:59:32 [DECIDE]        └─ Trading allowed
+2025-08-24 18:59:32 [DECIDE]   Market is OPEN - trading allowed
+2025-08-24 18:59:32 [DECIDE]        ┌─ SIGNAL ANALYSIS (per-lap decisions)
+2025-08-24 18:59:32 [DECIDE]        │
+2025-08-24 18:59:32 [DECIDE]        │ Candle: O=$0 H=$0 L=$0 C=$0
+2025-08-24 18:59:32 [DECIDE]        │ Signals: BUY=NO | SELL=NO
+2025-08-24 18:59:32 [DECIDE]        │ Filters: ATR=FAIL (0.00x > 0.50x) | VOL=FAIL (0.00x > 0.50x) | DOJI=PASS
+2025-08-24 18:59:32 [DECIDE]        | Summary: C=0 | SIG: B=NO S=NO | FIL: ATR- VOL- DOJI+ | ATRx=0.0000 VOLx=0.0000 | EXP=0%
+2025-08-24 18:59:32 [DECIDE]        │
+2025-08-24 18:59:32 [DECIDE]        └─ Signal analysis complete
+2025-08-24 18:59:32 [DECIDE]        │ 
+2025-08-24 18:59:32 [DECIDE]        │ Filters Not Met
+2025-08-24 18:59:32 [DECIDE]        │ Preview Sizing: Risk=$1.00 | Qty~0
+2025-08-24 18:59:32 [DECIDE]        │-----------------------------------
+2025-08-24 18:59:32 [DECIDE]        │ No trade executed
+2025-08-24 18:59:32 [DECIDE]        └─----------------------------------- 

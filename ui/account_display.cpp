@@ -1,6 +1,6 @@
 // account_display.cpp
 #include "ui/account_display.hpp"
-#include "utils/async_logger.hpp"
+#include "../logging/async_logger.hpp"
 #include <string>
 #include <iomanip>
 #include <sstream>

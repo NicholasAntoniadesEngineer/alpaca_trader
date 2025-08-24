@@ -1,6 +1,6 @@
 // market_processing.cpp
 #include "core/market_processing.hpp"
-#include "utils/indicators.hpp"
+#include "indicators.hpp"
 
 namespace MarketProcessing {
 

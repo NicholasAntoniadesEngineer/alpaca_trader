@@ -1,8 +1,8 @@
 // AlpacaClient.cpp
 #include "api/alpaca_client.hpp"
-#include "utils/async_logger.hpp"
-#include "utils/http_utils.hpp"
-#include "external/json.hpp"
+#include "../logging/async_logger.hpp"
+#include "../utils/http_utils.hpp"
+#include "../external/json.hpp"
 #include <iomanip>
 #include <sstream>
 #include <vector>

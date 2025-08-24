@@ -1,8 +1,8 @@
 // AccountManager.cpp
 #include "data/account_manager.hpp"
-#include "utils/async_logger.hpp"
-#include "utils/http_utils.hpp"
-#include "external/json.hpp"
+#include "../logging/async_logger.hpp"
+#include "../utils/http_utils.hpp"
+#include "../external/json.hpp"
 #include <cmath>
 
 using json = nlohmann::json;

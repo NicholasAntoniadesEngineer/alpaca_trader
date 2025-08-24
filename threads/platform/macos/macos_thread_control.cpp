@@ -67,7 +67,7 @@ bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priorit
     
     // Note: macOS doesn't support CPU affinity in the same way as Linux
     // CPU affinity requests are ignored but don't cause failure
-    (void)cpu_affinity; // Suppress unused parameter warning
+    (void)cpu_affinity;
     
     return success;
 }
@@ -75,7 +75,7 @@ bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priorit
 bool ThreadControl::set_current_priority(Priority priority, int cpu_affinity) {
     bool success = true;
     
-    // macOS thread priority setting for current thread
+
     if (priority >= Priority::HIGH) {
         thread_time_constraint_policy_data_t time_constraints;
         time_constraints.period = 1000000;
@@ -116,7 +116,7 @@ bool ThreadControl::set_current_priority(Priority priority, int cpu_affinity) {
     }
     
     // CPU affinity not supported on macOS
-    (void)cpu_affinity; // Suppress unused parameter warning
+    (void)cpu_affinity;
     
     return success;
 }

@@ -1,6 +1,6 @@
 // strategy_logic.cpp
 #include "core/strategy_logic.hpp"
-#include "utils/indicators.hpp"
+#include "indicators.hpp"
 #include <cmath>
 
 namespace StrategyLogic {

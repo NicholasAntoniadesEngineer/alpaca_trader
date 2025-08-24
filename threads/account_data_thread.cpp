@@ -1,6 +1,9 @@
-// AccountDataThread.cpp
+/**
+ * Account data polling thread.
+ * Maintains current account state for trading decisions.
+ */
 #include "account_data_thread.hpp"
-#include "../utils/async_logger.hpp"
+#include "../logging/async_logger.hpp"
 #include "platform/thread_control.hpp"
 #include <chrono>
 
@@ -8,7 +11,6 @@ void AccountDataThread::operator()() {
     set_log_thread_tag("ACCOUNT");
     log_message("   |  • Account data thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
     
-    // Wait for main thread to complete priority setup
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     
     while (running.load()) {

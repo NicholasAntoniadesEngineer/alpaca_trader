@@ -19,14 +19,15 @@ SOURCES = main.cpp \
           core/strategy_logic.cpp \
           core/risk_logic.cpp \
           core/market_processing.cpp \
-          core/trader_logging.cpp \
           utils/config_loader.cpp \
           data/account_manager.cpp \
           ui/account_display.cpp \
-          utils/async_logger.cpp \
           utils/http_utils.cpp \
-          utils/indicators.cpp \
-          utils/thread_logging.cpp \
+          core/indicators.cpp \
+          logging/async_logger.cpp \
+          logging/logger.cpp \
+          logging/trading_logger.cpp \
+          logging/thread_logger.cpp \
           threads/config/thread_config.cpp \
           threads/platform/thread_control.cpp \
           threads/platform/linux/linux_thread_control.cpp \
@@ -55,6 +56,7 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/data
 	mkdir -p $(OBJ_DIR)/ui
 	mkdir -p $(OBJ_DIR)/utils
+	mkdir -p $(OBJ_DIR)/logging
 	mkdir -p $(OBJ_DIR)/threads
 	mkdir -p $(OBJ_DIR)/threads/config
 	mkdir -p $(OBJ_DIR)/threads/platform

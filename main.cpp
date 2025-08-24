@@ -1,6 +1,7 @@
 // main.cpp
 #include "main.hpp"
 #include "threads/thread_manager.hpp"
+
 #include <thread>
 #include <chrono>
 #include <csignal>
@@ -17,7 +18,7 @@ static void setup_signal_handlers(std::atomic<bool>& running) {
 }
 
 // Config validation
-static bool validate_config(const Config& config, std::string& errorMessage) {
+static bool validate_config(const SystemConfig& config, std::string& errorMessage) {
     if (config.api.api_key.empty() || config.api.api_secret.empty()) {
         errorMessage = "API credentials missing (provide via CONFIG_CSV)";
         return false;
@@ -65,13 +66,14 @@ static void run_until_shutdown(SystemState& state) {
     while (state.running.load()) std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void initialize_application(const Config& config, AsyncLogger& logger) {
+void initialize_application(const SystemConfig& config, AsyncLogger& logger) {
     std::string cfgError;
     if (!validate_config(config, cfgError)) {
         fprintf(stderr, "Config error: %s\n", cfgError.c_str());
         exit(1);
     }
     
+    // Use unified AsyncLogger system for consistent output
     initialize_global_logger(logger);
     set_log_thread_tag("MAIN  ");
 }
@@ -158,7 +160,7 @@ void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles)
 
 int main() 
 {
-    Config initial_config;
+    SystemConfig initial_config;
 
     std::string csv_path = std::string("config/runtime_config.csv");
     if (!load_config_from_csv(initial_config, csv_path)) {
@@ -181,6 +183,7 @@ int main()
 
     ThreadSystem::Manager::log_thread_monitoring_stats(thread_handles);
     
+    // Shutdown logging system
     shutdown_global_logger(logger);
 
     return 0;

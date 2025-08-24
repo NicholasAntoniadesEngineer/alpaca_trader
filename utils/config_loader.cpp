@@ -1,5 +1,5 @@
 #include "config_loader.hpp"
-#include "../Config.hpp"
+#include "../configs/system_config.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -19,7 +19,7 @@ namespace {
     }
 }
 
-bool load_config_from_csv(Config& cfg, const std::string& csv_path) {
+bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
     std::ifstream in(csv_path);
     if (!in.is_open()) return false;
     std::string line;

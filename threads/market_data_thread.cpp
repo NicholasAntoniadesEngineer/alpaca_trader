@@ -1,6 +1,9 @@
-// MarketDataThread.cpp
+/**
+ * Market data collection and processing thread.
+ * Fetches real-time market data for trading decisions.
+ */
 #include "market_data_thread.hpp"
-#include "../utils/async_logger.hpp"
+#include "../logging/async_logger.hpp"
 #include "platform/thread_control.hpp"
 #include "../core/market_processing.hpp"
 #include <atomic>
@@ -10,7 +13,6 @@ void MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
     log_message("   |  • Market data thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
     
-    // Wait for main thread to complete priority setup
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     
     while (running.load()) {
@@ -49,7 +51,6 @@ void run_market_gate(std::atomic<bool>& running,
     set_log_thread_tag("GATE  ");
     log_message("   |  • Market gate thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), logging.log_file);
     
-    // Wait for main thread to complete priority setup
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     
     bool last_within = client.is_within_fetch_window();

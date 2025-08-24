@@ -1,6 +1,6 @@
 // HttpUtils.cpp
 #include "utils/http_utils.hpp"
-#include "utils/async_logger.hpp"
+#include "../logging/async_logger.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
