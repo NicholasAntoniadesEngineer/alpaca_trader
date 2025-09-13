@@ -96,16 +96,18 @@ void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
     
     // Create compact multi-line summary
     std::ostringstream msg;
-    msg << std::fixed << std::setprecision(0);
-    msg << "THREADS STATUS:";
-    msg << "\n                               Market:   " << handles.market_iterations.load();
-    msg << ",    Account:  " << handles.account_iterations.load();
-    msg << "\n                               Trader:   " << handles.trader_iterations.load();
-    msg << ",    Gate:     " << handles.gate_iterations.load();
-    msg << "\n                               Logger:   " << handles.logger_iterations.load();
-    msg << ",   Total:    " << total_iterations;
-    msg << "\n                               Rate:     " << std::fixed << std::setprecision(1) << iterations_per_second << "/s";
+    log_message("THREADS STATUS:", "");
+    log_message("Market:  " + std::to_string(handles.market_iterations.load()) + 
+                "    Account:  " + std::to_string(handles.account_iterations.load()), "");
+    log_message("Trader:  " + std::to_string(handles.trader_iterations.load()) + 
+                "    Gate:     " + std::to_string(handles.gate_iterations.load()), "");
+    log_message("Logger:  " + std::to_string(handles.logger_iterations.load()) + 
+                "   Total:   " + std::to_string(total_iterations), "");
     
+    std::ostringstream rate_msg;
+    rate_msg << std::fixed << std::setprecision(1);
+    rate_msg << "Rate:    " << iterations_per_second << "/s";
+    log_message(rate_msg.str(), "");
     // Log compact summary
     log_message(msg.str(), "");
 }
