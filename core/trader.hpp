@@ -35,6 +35,7 @@ private:
         double initial_equity = 0.0;
         std::thread decision_thread;
         std::atomic<unsigned long> loop_counter{0};
+        std::atomic<unsigned long>* iteration_counter = nullptr;
     };
 
     TraderServices services;
@@ -85,6 +86,9 @@ public:
     // Start only the decision thread
     void start_decision_thread();
     void join_decision_thread();
+    
+    // Set iteration counter for monitoring
+    void set_iteration_counter(std::atomic<unsigned long>& counter);
 };
 
 #endif // TRADER_HPP

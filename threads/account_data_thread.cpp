@@ -25,6 +25,12 @@ void AccountDataThread::operator()() {
             has_account.store(true);
         }
         data_cv.notify_all();
+        
+        // Increment iteration counter for monitoring
+        if (iteration_counter) {
+            iteration_counter->fetch_add(1);
+        }
+        
         std::this_thread::sleep_for(std::chrono::seconds(timing.account_poll_sec));
     }
 }

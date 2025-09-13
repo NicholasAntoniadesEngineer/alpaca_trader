@@ -18,6 +18,7 @@ struct AccountDataThread {
     std::atomic<bool>& has_account;
     std::atomic<bool>& running;
     std::atomic<bool>* allow_fetch_ptr {nullptr};
+    std::atomic<unsigned long>* iteration_counter {nullptr};
 
     AccountDataThread(const AccountDataThreadConfig& cfg,
                     AccountManager& accountMgr,
@@ -31,6 +32,7 @@ struct AccountDataThread {
           running(running_flag) {}
 
     void set_allow_fetch_flag(std::atomic<bool>& allow_flag) { allow_fetch_ptr = &allow_flag; }
+    void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
 
     // Thread entrypoint
     void operator()();

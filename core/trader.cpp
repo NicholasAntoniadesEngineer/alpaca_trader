@@ -37,9 +37,7 @@ bool Trader::can_trade(double exposure_pct) {
     in.initial_equity = runtime.initial_equity;
     in.current_equity = services.account_manager.get_equity();
     in.exposure_pct = exposure_pct;
-    // in.core_trading_hours = services.client.is_core_trading_hours();
-    // this is failing which has been effecting ability to reade
-    in.core_trading_hours = true;
+    in.core_trading_hours = services.client.is_core_trading_hours();
 
     RiskLogic::TradeGateResult res = RiskLogic::evaluate_trade_gate(in, services.config);
 
@@ -105,32 +103,32 @@ ProcessedData Trader::fetch_and_process_data() {
 
 void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equity) 
 {
-    TradingLogger::log_signal_analysis_start(services.config);
+    TradingLogger::log_signal_analysis_start();
     int current_qty = data.pos_details.qty;
 
     // Step 1: Detect signals and log candle/signal info
     StrategyLogic::SignalDecision signal_decision = detect_signals(data);
-    TradingLogger::log_candle_and_signals(data, signal_decision, services.config);
+    TradingLogger::log_candle_and_signals(data, signal_decision);
 
     // Step 2: Evaluate filters and log details
     StrategyLogic::FilterResult filter_result = evaluate_filters(data);
-    TradingLogger::log_filters(filter_result, services.config);
-    TradingLogger::log_summary(data, signal_decision, filter_result, services.config);
+    TradingLogger::log_filters(filter_result,services.config);
+    TradingLogger::log_summary(data, signal_decision, filter_result);
 
     // Step 3: Early return if filters fail (with sizing preview)
     if (!filter_result.all_pass) {
         double risk_prev = data.atr > 0.0 ? data.atr : 1.0;
         int qty_prev = static_cast<int>(std::floor((equity * services.config.risk.risk_per_trade) / risk_prev));
-        TradingLogger::log_signal_analysis_complete(services.config);
-        TradingLogger::log_filters_not_met_preview(risk_prev, qty_prev, services.config);
+        TradingLogger::log_signal_analysis_complete();
+        TradingLogger::log_filters_not_met_preview(risk_prev, qty_prev);
         return;
     }
     // TraderLogging::log_filters_pass(services.config);
 
     // Step 4: Calculate position sizing and validate
-    TradingLogger::log_current_position(current_qty, services.config);
+    TradingLogger::log_current_position(current_qty);
     StrategyLogic::PositionSizing sizing = calculate_position_sizing(data, equity, current_qty);
-    TradingLogger::log_position_size(sizing.risk_amount, sizing.quantity, services.config);
+    TradingLogger::log_position_size(sizing.risk_amount, sizing.quantity);
     if (sizing.quantity < 1) {
         // TraderLogging::log_qty_too_small(services.config);
         // TraderLogging::log_signal_analysis_complete(services.config);
@@ -232,6 +230,11 @@ void Trader::decision_loop() {
         // Process data and execute signals
         process_trading_cycle(market, account);
         
+        // Increment iteration counter for monitoring
+        if (runtime.iteration_counter) {
+            runtime.iteration_counter->fetch_add(1);
+        }
+        
         // Countdown to next cycle
         countdown_to_next_cycle();
     }
@@ -264,7 +267,7 @@ std::pair<MarketSnapshot, AccountSnapshot> Trader::get_current_snapshots() {
 
 void Trader::display_loop_header() {
     runtime.loop_counter.fetch_add(1);
-    TradingLogger::log_loop_header(runtime.loop_counter.load(), services.config);
+    TradingLogger::log_loop_header(runtime.loop_counter.load());
 }
 
 void Trader::handle_trading_halt() {
@@ -279,7 +282,7 @@ void Trader::handle_trading_halt() {
     end_inline_status();
 }
 
-void Trader::display_equity_status(double equity) {
+void Trader::display_equity_status(double /* equity */) {
     // TraderLogging::log_equity_status(equity, services.config);
 }
 
@@ -339,4 +342,8 @@ void Trader::start_decision_thread() {
 
 void Trader::join_decision_thread() {
     if (runtime.decision_thread.joinable()) runtime.decision_thread.join();
+}
+
+void Trader::set_iteration_counter(std::atomic<unsigned long>& counter) {
+    runtime.iteration_counter = &counter;
 }

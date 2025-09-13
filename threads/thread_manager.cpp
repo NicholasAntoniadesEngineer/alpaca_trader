@@ -2,8 +2,12 @@
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include "../logging/thread_logger.hpp"
+#include "../logging/async_logger.hpp"
 #include "../main.hpp"  // For SystemThreads definition
 #include <vector>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
 
 namespace ThreadSystem {
 
@@ -74,8 +78,37 @@ void Manager::log_thread_startup_info(const TimingConfig& config) {
 }
 
 void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
-    // Performance summary will be calculated and logged by centralized system
-    // ThreadLogger::log_system_performance_summary(total_iterations);
+    // Calculate total runtime
+    auto current_time = std::chrono::steady_clock::now();
+    auto runtime_duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - handles.start_time);
+    double runtime_seconds = runtime_duration.count();
+    
+    // Calculate total iterations across all threads
+    unsigned long total_iterations = 
+        handles.market_iterations.load() +
+        handles.account_iterations.load() +
+        handles.gate_iterations.load() +
+        handles.trader_iterations.load() +
+        handles.logger_iterations.load();
+    
+    // Calculate performance rate
+    double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
+    
+    // Create compact multi-line summary
+    std::ostringstream msg;
+    msg << std::fixed << std::setprecision(0);
+    msg << "THREADS STATUS[" << runtime_seconds << "s] :";
+    msg << "\n                               Market:   " << handles.market_iterations.load();
+    msg << "\n                               Account:  " << handles.account_iterations.load();
+    msg << "\n                               Trader:   " << handles.trader_iterations.load();
+    msg << "\n                               Gate:     " << handles.gate_iterations.load();
+    msg << "\n                               Logger:   " << handles.logger_iterations.load();
+    msg << "\n                               Total:    " << total_iterations;
+    msg << "\n                               Rate:     " << std::fixed << std::setprecision(1) << iterations_per_second << "/s";
+    
+    // Log compact summary
+    log_message(msg.str(), "");
 }
 
 } // namespace ThreadSystem
+

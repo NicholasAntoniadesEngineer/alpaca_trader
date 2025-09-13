@@ -62,8 +62,20 @@ static void show_startup_account_status(AccountDisplay& account_display) {
     account_display.display_account_status();
 }
 
-static void run_until_shutdown(SystemState& state) {
-    while (state.running.load()) std::this_thread::sleep_for(std::chrono::seconds(1));
+static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
+    auto last_monitoring_time = std::chrono::steady_clock::now();
+    const auto monitoring_interval = std::chrono::seconds(state.config.timing.monitoring_interval_sec);
+    
+    while (state.running.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        
+        // Check if it's time for periodic monitoring
+        auto current_time = std::chrono::steady_clock::now();
+        if (current_time - last_monitoring_time >= monitoring_interval) {
+            ThreadSystem::Manager::log_thread_monitoring_stats(handles);
+            last_monitoring_time = current_time;
+        }
+    }
 }
 
 void initialize_application(const SystemConfig& config, AsyncLogger& logger) {
@@ -133,6 +145,11 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
     // Log thread priority configuration
     ThreadSystem::Manager::log_thread_startup_info(system_state.config.timing);
 
+    // Set iteration counters for monitoring
+    system_components.market_thread->set_iteration_counter(handles.market_iterations);
+    system_components.account_thread->set_iteration_counter(handles.account_iterations);
+    system_components.market_gate_thread->set_iteration_counter(handles.gate_iterations);
+
     handles.market = std::thread(std::ref(*system_components.market_thread));
     handles.account = std::thread(std::ref(*system_components.account_thread));
     handles.gate = std::thread(std::ref(*system_components.market_gate_thread));
@@ -150,7 +167,7 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
 
 void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles) 
 {
-    run_until_shutdown(system_state);
+    run_until_shutdown(system_state, handles);
     system_state.cv.notify_all();
     if (handles.market.joinable()) handles.market.join();
     if (handles.account.joinable()) handles.account.join();
@@ -179,7 +196,6 @@ int main()
     SystemThreads thread_handles = boot_system(system_state, core_components, logger);
 
     run_and_shutdown_system(system_state, thread_handles);
-    
 
     ThreadSystem::Manager::log_thread_monitoring_stats(thread_handles);
     

@@ -22,6 +22,7 @@ struct MarketDataThread {
     std::atomic<bool>& has_market;
     std::atomic<bool>& running;
     std::atomic<bool>* allow_fetch_ptr {nullptr};
+    std::atomic<unsigned long>* iteration_counter {nullptr};
 
     MarketDataThread(const MarketDataThreadConfig& cfg,
                    AlpacaClient& cli,
@@ -36,6 +37,9 @@ struct MarketDataThread {
 
     // External gate: when set, task will fetch; otherwise it sleeps
     void set_allow_fetch_flag(std::atomic<bool>& allow_flag) { allow_fetch_ptr = &allow_flag; }
+    
+    // Set iteration counter for monitoring
+    void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
 
     // Thread entrypoint
     void operator()();
@@ -45,7 +49,8 @@ void run_market_gate(std::atomic<bool>& running,
                      std::atomic<bool>& allow_fetch,
                      const TimingConfig& timing,
                      const LoggingConfig& logging,
-                     AlpacaClient& client);
+                     AlpacaClient& client,
+                     std::atomic<unsigned long>* iteration_counter = nullptr);
 
 struct MarketGateThread {
     const TimingConfig& timing;
@@ -53,6 +58,7 @@ struct MarketGateThread {
     std::atomic<bool>& allow_fetch;
     std::atomic<bool>& running;
     AlpacaClient& client;
+    std::atomic<unsigned long>* iteration_counter {nullptr};
 
     MarketGateThread(const TimingConfig& timingCfg,
                    const LoggingConfig& loggingCfg,
@@ -60,6 +66,8 @@ struct MarketGateThread {
                    std::atomic<bool>& running_flag,
                    AlpacaClient& cli)
         : timing(timingCfg), logging(loggingCfg), allow_fetch(allow), running(running_flag), client(cli) {}
+    
+    void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
     void operator()();
 };
 

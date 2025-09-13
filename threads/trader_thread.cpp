@@ -8,6 +8,9 @@ void TraderThread::operator()() {
     set_log_thread_tag("DECIDE");
     log_message("   |  • Trader decision thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
     
+    // Set iteration counter for monitoring
+    trader.set_iteration_counter(trader_iterations);
+    
     // Wait for main thread to complete priority setup
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

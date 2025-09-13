@@ -19,17 +19,17 @@ public:
     // Trading loop events
     static void log_loop_start(unsigned long loop_number);
     static void log_loop_complete();
-    static void log_loop_header(unsigned long loop_number, const TraderConfig& config);
+    static void log_loop_header(unsigned long loop_number);
     
     // Detailed trading analysis  
-    static void log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const TraderConfig& config);
+    static void log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals);
     static void log_filters(const StrategyLogic::FilterResult& filters, const TraderConfig& config);
-    static void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters, const TraderConfig& config);
-    static void log_filters_not_met_preview(double risk_amount, int quantity, const TraderConfig& config);
-    static void log_position_size(double risk_amount, int quantity, const TraderConfig& config);
-    static void log_current_position(int quantity, const TraderConfig& config);
-    static void log_signal_analysis_start(const TraderConfig& config);
-    static void log_signal_analysis_complete(const TraderConfig& config);
+    static void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters);
+    static void log_filters_not_met_preview(double risk_amount, int quantity);
+    static void log_position_size(double risk_amount, int quantity);
+    static void log_current_position(int quantity);
+    static void log_signal_analysis_start();
+    static void log_signal_analysis_complete();
     
     // Headers and configurations
     static void log_header_and_config(const TraderConfig& config);

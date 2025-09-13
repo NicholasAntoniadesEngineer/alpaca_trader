@@ -189,7 +189,7 @@ void TradingLogger::log_system_health(const std::string& component, bool healthy
 
 // Beautiful formatted detailed logs
 
-void TradingLogger::log_loop_header(unsigned long loop_number, const TraderConfig& config) {
+void TradingLogger::log_loop_header(unsigned long loop_number) {
     log_message("", "");
     log_message("╔══════════════════════════════════════════════════════════════════════════════════╗", "");
     log_message("║                              TRADING LOOP #" + std::to_string(loop_number) + "                                     ║", "");
@@ -213,7 +213,7 @@ void TradingLogger::log_header_and_config(const TraderConfig& config) {
     log_message("", "");
 }
 
-void TradingLogger::log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const TraderConfig& config) {
+void TradingLogger::log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals) {
     std::ostringstream oss;
     oss << "     │ Candle: O=$" << std::fixed << std::setprecision(0) << data.curr.o 
         << " H=$" << data.curr.h 
@@ -237,7 +237,7 @@ void TradingLogger::log_filters(const StrategyLogic::FilterResult& filters, cons
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters, const TraderConfig& config) {
+void TradingLogger::log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters) {
     std::ostringstream oss;
     oss << "     | Summary: C=" << std::fixed << std::setprecision(0) << data.curr.c 
         << " | SIG: B=" << (signals.buy ? "YES" : "NO") 
@@ -251,17 +251,17 @@ void TradingLogger::log_summary(const ProcessedData& data, const StrategyLogic::
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_signal_analysis_start(const TraderConfig& config) {
+void TradingLogger::log_signal_analysis_start() {
     log_message("     ┌─ SIGNAL ANALYSIS (per-lap decisions)", "");
     log_message("     │", "");
 }
 
-void TradingLogger::log_signal_analysis_complete(const TraderConfig& config) {
+void TradingLogger::log_signal_analysis_complete() {
     log_message("     │", "");
     log_message("     └─ Signal analysis complete", "");
 }
 
-void TradingLogger::log_filters_not_met_preview(double risk_amount, int quantity, const TraderConfig& config) {
+void TradingLogger::log_filters_not_met_preview(double risk_amount, int quantity) {
     log_message("     │ ", "");
     log_message("     │ Filters Not Met", "");
     std::ostringstream oss;
@@ -272,14 +272,15 @@ void TradingLogger::log_filters_not_met_preview(double risk_amount, int quantity
     log_message("     └─----------------------------------- ", "");
 }
 
-void TradingLogger::log_position_size(double risk_amount, int quantity, const TraderConfig& config) {
+void TradingLogger::log_position_size(double risk_amount, int quantity) {
     std::ostringstream oss;
     oss << "Position sizing - Risk: " << format_currency(risk_amount) << " | Qty: " << quantity;
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_current_position(int quantity, const TraderConfig& config) {
+void TradingLogger::log_current_position(int quantity) {
     std::ostringstream oss;
     oss << "Current position: " << quantity << " shares";
     log_message(oss.str(), "");
 }
+

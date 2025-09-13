@@ -3,7 +3,7 @@ api.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
 api.base_url,https://paper-api.alpaca.markets
 api.data_url,https://data.alpaca.markets
 
-target.symbol,TSLA
+target.symbol,AAPL
 
 strategy.atr_period,14
 strategy.atr_multiplier_entry,0.5
@@ -29,6 +29,7 @@ timing.pre_open_buffer_min,5
 timing.post_close_buffer_min,5
 timing.halt_sleep_min,1
 timing.countdown_tick_sec,1
+timing.monitoring_interval_sec,20
 
 session.et_utc_offset_hours,-4
 session.market_open_hour,9

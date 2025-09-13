@@ -20,7 +20,7 @@ struct TimingConfig {
     int post_close_buffer_min;
     int halt_sleep_min;
     int countdown_tick_sec;
-    
+    int monitoring_interval_sec;
     // Thread priority configuration
     ThreadPriorityConfig thread_priorities;
 };

@@ -67,6 +67,7 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "timing.post_close_buffer_min") cfg.timing.post_close_buffer_min = std::stoi(value);
         else if (key == "timing.halt_sleep_min") cfg.timing.halt_sleep_min = std::stoi(value);
         else if (key == "timing.countdown_tick_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
+        else if (key == "timing.monitoring_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
 
         // Session
         else if (key == "session.et_utc_offset_hours") cfg.session.et_utc_offset_hours = std::stoi(value);

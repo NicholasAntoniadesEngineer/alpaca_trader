@@ -39,6 +39,12 @@ void MarketDataThread::operator()() {
                 data_cv.notify_all();
             }
         }
+        
+        // Increment iteration counter for monitoring
+        if (iteration_counter) {
+            iteration_counter->fetch_add(1);
+        }
+        
         std::this_thread::sleep_for(std::chrono::seconds(timing.sleep_interval_sec));
     }
 }
@@ -47,7 +53,8 @@ void run_market_gate(std::atomic<bool>& running,
                      std::atomic<bool>& allow_fetch,
                      const TimingConfig& timing,
                      const LoggingConfig& logging,
-                     AlpacaClient& client) {
+                     AlpacaClient& client,
+                     std::atomic<unsigned long>* iteration_counter) {
     set_log_thread_tag("GATE  ");
     log_message("   |  • Market gate thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), logging.log_file);
     
@@ -63,10 +70,16 @@ void run_market_gate(std::atomic<bool>& running,
                         " (pre/post window applied)", logging.log_file);
             last_within = within;
         }
+        
+        // Increment iteration counter for monitoring
+        if (iteration_counter) {
+            iteration_counter->fetch_add(1);
+        }
+        
         std::this_thread::sleep_for(std::chrono::seconds(timing.market_open_check_sec));
     }
 }
 
 void MarketGateThread::operator()() {
-    run_market_gate(running, allow_fetch, timing, logging, client);
+    run_market_gate(running, allow_fetch, timing, logging, client, iteration_counter);
 }
