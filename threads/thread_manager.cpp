@@ -97,13 +97,13 @@ void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
     // Create compact multi-line summary
     std::ostringstream msg;
     msg << std::fixed << std::setprecision(0);
-    msg << "THREADS STATUS[" << runtime_seconds << "s] :";
+    msg << "THREADS STATUS:";
     msg << "\n                               Market:   " << handles.market_iterations.load();
-    msg << "\n                               Account:  " << handles.account_iterations.load();
+    msg << ",    Account:  " << handles.account_iterations.load();
     msg << "\n                               Trader:   " << handles.trader_iterations.load();
-    msg << "\n                               Gate:     " << handles.gate_iterations.load();
+    msg << ",    Gate:     " << handles.gate_iterations.load();
     msg << "\n                               Logger:   " << handles.logger_iterations.load();
-    msg << "\n                               Total:    " << total_iterations;
+    msg << ",   Total:    " << total_iterations;
     msg << "\n                               Rate:     " << std::fixed << std::setprecision(1) << iterations_per_second << "/s";
     
     // Log compact summary

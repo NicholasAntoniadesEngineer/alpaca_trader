@@ -270,9 +270,7 @@ void Trader::display_loop_header() {
     TradingLogger::log_loop_header(runtime.loop_counter.load());
 }
 
-void Trader::handle_trading_halt() {
-    // TraderLogging::log_halted_header(services.config);
-    
+void Trader::handle_trading_halt() {    
     // Countdown while halted
     int halt_secs = services.config.timing.halt_sleep_min * 60;
     for (int s = halt_secs; s > 0 && shared.running->load(); --s) {
