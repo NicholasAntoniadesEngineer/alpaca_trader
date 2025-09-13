@@ -10,7 +10,8 @@ LIBS = -lcurl -pthread
 # Directories
 OBJ_DIR = obj
 BIN_DIR = bin
-TARGET = $(BIN_DIR)/alpaca_trader
+GIT_HASH = $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Source files (now in consolidated structure)
 SOURCES = main.cpp \
@@ -67,7 +68,9 @@ $(OBJ_DIR):
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	$(CXX) $(OBJECTS) -o $@ $(LIBS)
+	@ln -sf $(notdir $(TARGET)) $(BIN_DIR)/alpaca_trader_latest
 	@echo "Build successful: $(TARGET)"
+	@echo "Latest symlink created: $(BIN_DIR)/alpaca_trader_latest"
 
 # Compile source files to object files
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
@@ -75,7 +78,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 
 # Clean build artifacts
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)/alpaca_trader
+	rm -rf $(OBJ_DIR) $(BIN_DIR)/alpaca_trader_* $(BIN_DIR)/alpaca_trader_latest
 	@echo "Clean complete"
 
 # Build and then clean object files
@@ -103,6 +106,10 @@ help:
 	@echo "  clean-all      - Remove all build artifacts"
 	@echo "  rebuild        - Clean and build from scratch"
 	@echo "  help           - Show this help message"
+	@echo ""
+	@echo "Versioning:"
+	@echo "  Executable will be named: alpaca_trader_$(GIT_HASH)"
+	@echo "  Symlink 'alpaca_trader_latest' points to current build"
 
 # Prevent make from treating file names as targets
 .PHONY: all clean clean-obj clean-all rebuild help build-and-clean

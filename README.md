@@ -228,26 +228,6 @@ The system now implements comprehensive thread prioritization for optimal perfor
 - **`LoggingThread`** (`threads/logging_thread.cpp`) - Background logging thread
 - **`ThreadManager`** (`threads/thread_manager.cpp`) - Thread lifecycle and priority management
 
-### Configuration
-Thread priorities are configurable via `TimingConfig`:
-```cpp
-struct ThreadPriorityConfig {
-    bool enable_thread_priorities = true;
-    bool enable_cpu_affinity = false;
-    int trader_cpu_affinity = 0;       // Pin trader to CPU 0
-    int market_data_cpu_affinity = 1;  // Pin market data to CPU 1
-    bool log_thread_info = true;       // Log thread priority info
-};
-```
-
-### Cross-Platform Support
-- **Linux**: SCHED_FIFO for high priority, CPU affinity support
-- **macOS**: Time constraint policies, thread affinity tags  
-- **Windows**: Thread priority classes, CPU affinity masks
-
-### Verification
-The system logs thread startup information and performance statistics, demonstrating true multithreaded operation with proper priority scheduling.
-
 ---
 
 ## TODO:
@@ -255,7 +235,6 @@ The system logs thread startup information and performance statistics, demonstra
 - The delayed data results in invalid bracket orders as share price value chaneges such that the stop loss and take profit are not in the correct position.
 - Better handling and logging of trader gate and risk logic.
   - this logic needs to looked at evaluate_trade_gate and can_trade.
-- ✅ ~~Need to add thread priority to the threads.~~ **COMPLETED**
 - in.core_trading_hours = services.client.is_core_trading_hours();
     - this is failing which has been effecting ability to trade
 - go through current order types and look to increase decision performance
@@ -265,15 +244,12 @@ The system logs thread startup information and performance statistics, demonstra
   of use of codebase. make it clear what sections to work on for trying new stratergies
 - something to notify that the aplication is running with and to count how
   many instances are running
-- logging currently has an issue, it could be because of the current blocking implementation
 - clear implementation for the signal analysis
 - clear logging for the marget gate thread, fix implementation
-- update trade to use a realistic stsrting capital
-- once abstracted sufficiently could the tradine stratergy come froma stratergy.csv
+- update trade to use a realistic starting capital
+- once abstracted sufficiently could the trading stratergy come froma stratergy.csv
   so you wouldnt even need to compile, and the stratergy is not spart of the codebase.
   easier for stratergy testing
 - Can the current interface turn into a cmd line controller interface?
-  will logging need to change? with background threads you could either show whats being logged 
-  or a menu interface. Can manually test some configurations and then save the config.
+  Can manually test some configurations and then save the config.
   What open source cmd line libraries are there or do I make my own.
-- update make to add git commit and branch name to built .exe
