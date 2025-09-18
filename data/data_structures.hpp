@@ -1,6 +1,8 @@
 #ifndef DATA_STRUCTURES_HPP
 #define DATA_STRUCTURES_HPP
 
+#include <string>
+
 struct Bar {
     double o, h, l, c;
     long long v; /* volume */

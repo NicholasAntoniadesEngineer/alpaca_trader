@@ -30,11 +30,17 @@ std::string http_get(const HttpRequest& req) {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, req.timeout_seconds);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, req.enable_ssl_verification ? 1L : 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, req.enable_ssl_verification ? 2L : 0L);
         CURLcode res;
         for (int i = 0; i < req.retries; ++i) {
             res = curl_easy_perform(curl);
             if (res == CURLE_OK) break;
-            std::cerr << "HTTP retry failed: " << curl_easy_strerror(res) << std::endl;
+            log_message("HTTP retry failed: " + std::string(curl_easy_strerror(res)), *req.log_file);
+            if (i < req.retries - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(req.rate_limit_delay_ms));
+            }
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         curl_slist_free_all(headers);
@@ -57,11 +63,17 @@ std::string http_post(const HttpRequest& req) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, req.body.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, req.timeout_seconds);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, req.enable_ssl_verification ? 1L : 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, req.enable_ssl_verification ? 2L : 0L);
         CURLcode res;
         for (int i = 0; i < req.retries; ++i) {
             res = curl_easy_perform(curl);
             if (res == CURLE_OK) break;
             std::cerr << "POST retry failed: " << curl_easy_strerror(res) << std::endl;
+            if (i < req.retries - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(req.rate_limit_delay_ms));
+            }
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         curl_slist_free_all(headers);

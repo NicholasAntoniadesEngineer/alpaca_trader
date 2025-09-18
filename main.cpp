@@ -1,6 +1,7 @@
 // main.cpp
 #include "main.hpp"
 #include "threads/thread_manager.hpp"
+#include "logging/startup_logger.hpp"
 
 #include <thread>
 #include <chrono>
@@ -58,8 +59,12 @@ static bool validate_config(const SystemConfig& config, std::string& errorMessag
     return true;
 }
     
-static void show_startup_account_status(AccountDisplay& account_display) {
-    account_display.display_account_status();
+static void show_startup_account_status(AccountManager& account_manager) {
+    StartupLogger::log_account_status_header();
+    StartupLogger::log_account_overview(account_manager);
+    StartupLogger::log_financial_summary(account_manager);
+    StartupLogger::log_current_positions(account_manager);
+    StartupLogger::log_account_status_footer();
 }
 
 static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
@@ -88,6 +93,13 @@ void initialize_application(const SystemConfig& config, AsyncLogger& logger) {
     // Use unified AsyncLogger system for consistent output
     initialize_global_logger(logger);
     set_log_thread_tag("MAIN  ");
+    
+    // Start with ALPACA TRADER header
+    StartupLogger::log_application_header();
+}
+
+void log_data_source_configuration(const SystemConfig& config) {
+    StartupLogger::log_data_source_configuration(config);
 }
 
 ComponentConfigBundle build_core_configs(const SystemState& state) {
@@ -118,7 +130,8 @@ ComponentInstances build_core_components(SystemState& state, const ComponentConf
 
 SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_components, AsyncLogger& logger) 
 {
-    show_startup_account_status(*system_components.account_display);
+    show_startup_account_status(*system_components.account_manager);
+    log_data_source_configuration(system_state.config);
 
     system_components.trader->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, system_state.account,system_state.has_market, system_state.has_account, system_state.running);
     system_components.trader->run();
@@ -127,8 +140,7 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
 
     setup_signal_handlers(system_state.running);
 
-    // Create the thread objects now that we have access to thread monitoring
-    SystemThreads handles;  // Create handles first to access iteration counters
+    SystemThreads handles;  
     system_components.logging_thread = std::make_unique<LoggingThread>(
         logger.get_file_path(),
         logger.mtx,
@@ -142,10 +154,8 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
         handles.trader_iterations
     );
 
-    // Log thread priority configuration
     ThreadSystem::Manager::log_thread_startup_info(system_state.config.timing);
 
-    // Set iteration counters for monitoring
     system_components.market_thread->set_iteration_counter(handles.market_iterations);
     system_components.account_thread->set_iteration_counter(handles.account_iterations);
     system_components.market_gate_thread->set_iteration_counter(handles.gate_iterations);
@@ -159,7 +169,6 @@ SystemThreads boot_system(SystemState& system_state, ComponentInstances& system_
     // Give threads time to initialize and log their startup messages
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    // Setup thread priorities after all threads have started
     ThreadSystem::Manager::setup_thread_priorities(handles, system_state.config.timing);
 
     return handles;

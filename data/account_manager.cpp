@@ -11,7 +11,8 @@ AccountManager::AccountManager(const AccountManagerConfig& cfg)
     : api(cfg.api), logging(cfg.logging), target(cfg.target) {}
 
 double AccountManager::get_equity() const {
-    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 3);
+    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
         log_message("ERROR: Unable to retrieve account information (empty response)", logging.log_file);
@@ -34,9 +35,35 @@ double AccountManager::get_equity() const {
     return 0.0;
 }
 
+double AccountManager::get_buying_power() const {
+    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
+    std::string response = http_get(req);
+    if (response.empty()) {
+        log_message("ERROR: Unable to retrieve account information (empty response)", logging.log_file);
+        return 0.0;
+    }
+    try {
+        json j = json::parse(response);
+        if (j.contains("message")) {
+            log_message("ERROR: Account API error: " + j["message"].get<std::string>(), logging.log_file);
+            return 0.0;
+        }
+        if (j.contains("buying_power") && !j["buying_power"].is_null()) {
+            return std::stod(j["buying_power"].get<std::string>());
+        } else {
+            log_message("ERROR: Buying power field missing in account response", logging.log_file);
+        }
+    } catch (const std::exception& e) {
+        log_message("ERROR: Failed to parse account data: " + std::string(e.what()) + "; raw: " + response, logging.log_file);
+    }
+    return 0.0;
+}
+
 PositionDetails AccountManager::get_position_details(const SymbolRequest& reqSym) const {
     PositionDetails details;
-    HttpRequest req(api.base_url + "/v2/positions/" + reqSym.symbol, api.api_key, api.api_secret, logging.log_file, 3);
+    HttpRequest req(api.base_url + "/v2/positions/" + reqSym.symbol, api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) return details;
     try {
@@ -59,7 +86,8 @@ PositionDetails AccountManager::get_position_details(const SymbolRequest& reqSym
 
 int AccountManager::get_open_orders_count(const SymbolRequest& reqSym) const {
     std::string url = api.base_url + "/v2/orders?status=open&symbols=" + reqSym.symbol;
-    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 3);
+    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) return 0;
     try {
@@ -88,7 +116,8 @@ AccountSnapshot AccountManager::get_account_snapshot() const {
 AccountManager::AccountInfo AccountManager::get_account_info() const {
     AccountInfo info = {};  // Initialize all fields to defaults
     
-    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 3);
+    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
         log_message("ERROR: Could not retrieve account information", logging.log_file);

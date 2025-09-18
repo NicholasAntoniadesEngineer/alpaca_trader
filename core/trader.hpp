@@ -64,7 +64,13 @@ private:
     // Signal evaluation breakdown
     StrategyLogic::SignalDecision detect_signals(const ProcessedData& data) const;
     StrategyLogic::FilterResult evaluate_filters(const ProcessedData& data) const;
-    StrategyLogic::PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty) const;
+    StrategyLogic::PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power = 0.0) const;
+    bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
+    
+    // Real-time pricing helpers
+    double get_real_time_price_with_fallback(double fallback_price) const;
+    void log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const;
+    
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
 
 public:

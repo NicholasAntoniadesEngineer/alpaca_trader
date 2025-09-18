@@ -1,9 +1,9 @@
 // risk_logic.cpp
 #include "core/risk_logic.hpp"
+#include "../logging/async_logger.hpp"
 
 namespace RiskLogic {
 
-// TODO: Add logging to this function. 
 TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const TraderConfig& config) {
     TradeGateResult out;
     out.hours_ok = in.core_trading_hours;

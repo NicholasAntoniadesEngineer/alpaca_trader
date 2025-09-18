@@ -129,9 +129,21 @@ Alpaca Trader/
 ├── trade_log.txt            # Runtime logging output
 ├── bin/                     # Compiled binaries
 │   └── alpaca_trader       # Main executable
-├── api/                     # Alpaca API client
-│   ├── alpaca_client.cpp    # Alpaca API client implementation
-│   └── alpaca_client.hpp    # Alpaca API client interface
+├── api/                     # Alpaca API client (modular structure)
+│   ├── alpaca_client.cpp    # Main API client facade
+│   ├── alpaca_client.hpp    # Main API client interface
+│   ├── base/                # Base client functionality
+│   │   ├── alpaca_base_client.cpp
+│   │   └── alpaca_base_client.hpp
+│   ├── clock/               # Market hours and timing
+│   │   ├── market_clock.cpp
+│   │   └── market_clock.hpp
+│   ├── market/              # Market data operations
+│   │   ├── market_data_client.cpp
+│   │   └── market_data_client.hpp
+│   └── orders/              # Order management
+│       ├── order_client.cpp
+│       └── order_client.hpp
 ├── core/                    # Core trading system components
 │   ├── trader.cpp           # Core trading logic and decision engine
 │   ├── trader.hpp           # Core trading engine interface

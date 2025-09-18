@@ -2,6 +2,7 @@
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include "../logging/thread_logger.hpp"
+#include "../logging/startup_logger.hpp"
 #include "../logging/async_logger.hpp"
 #include "../main.hpp"  // For SystemThreads definition
 #include <vector>
@@ -70,7 +71,8 @@ void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig
         configure_single_thread(setup, config);
     }
     
-    // Priority setup footer logged by centralized system
+    // Close the thread system section
+    StartupLogger::log_thread_system_complete();
 }
 
 void Manager::log_thread_startup_info(const TimingConfig& config) {

@@ -1,5 +1,6 @@
 #include "logging_thread.hpp"
 #include "../logging/async_logger.hpp"
+#include "../logging/startup_logger.hpp"
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include <iostream>
@@ -13,8 +14,7 @@ void LoggingThread::operator()() {
     ThreadSystem::Platform::ThreadControl::set_current_priority(config);
     
     set_log_thread_tag("LOGGER");
-    log_message("   |  • Logging thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
-    log_message("   └─", "");
+    StartupLogger::log_thread_started("Logging", ThreadSystem::Platform::ThreadControl::get_thread_info());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

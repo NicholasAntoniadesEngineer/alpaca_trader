@@ -36,6 +36,11 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "api.api_secret") cfg.api.api_secret = value;
         else if (key == "api.base_url") cfg.api.base_url = value;
         else if (key == "api.data_url") cfg.api.data_url = value;
+        else if (key == "api.retry_count") cfg.api.retry_count = std::stoi(value);
+        else if (key == "api.timeout_seconds") cfg.api.timeout_seconds = std::stoi(value);
+        else if (key == "api.enable_ssl_verification") cfg.api.enable_ssl_verification = to_bool(value);
+        else if (key == "api.rate_limit_delay_ms") cfg.api.rate_limit_delay_ms = std::stoi(value);
+        else if (key == "api.api_version") cfg.api.api_version = value;
 
         // Target
         else if (key == "target.symbol") cfg.target.symbol = value;
@@ -56,6 +61,8 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "risk.max_layers") cfg.risk.max_layers = std::stoi(value);
         else if (key == "risk.scale_in_multiplier") cfg.risk.scale_in_multiplier = std::stod(value);
         else if (key == "risk.close_on_reverse") cfg.risk.close_on_reverse = to_bool(value);
+        else if (key == "risk.buying_power_usage_factor") cfg.risk.buying_power_usage_factor = std::stod(value);
+        else if (key == "risk.buying_power_validation_factor") cfg.risk.buying_power_validation_factor = std::stod(value);
 
         // Timing
         else if (key == "timing.sleep_interval_sec") cfg.timing.sleep_interval_sec = std::stoi(value);

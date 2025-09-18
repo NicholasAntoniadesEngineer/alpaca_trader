@@ -5,10 +5,22 @@
 #include <string>
 
 struct ApiConfig {
+    // Authentication
     std::string api_key;
     std::string api_secret;
+    
+    // API Endpoints
     std::string base_url;
     std::string data_url;
+    
+    // HTTP Configuration
+    int retry_count;         
+    int timeout_seconds;   
+    bool enable_ssl_verification; 
+    int rate_limit_delay_ms; 
+    
+    // API Versioning
+    std::string api_version; 
 };
 
 #endif // API_CONFIG_HPP

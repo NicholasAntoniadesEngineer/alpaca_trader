@@ -4,12 +4,13 @@
  */
 #include "account_data_thread.hpp"
 #include "../logging/async_logger.hpp"
+#include "../logging/startup_logger.hpp"
 #include "platform/thread_control.hpp"
 #include <chrono>
 
 void AccountDataThread::operator()() {
     set_log_thread_tag("ACCOUNT");
-    log_message("   |  • Account data thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
+    StartupLogger::log_thread_started("Account data", ThreadSystem::Platform::ThreadControl::get_thread_info());
     
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

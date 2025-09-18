@@ -1,10 +1,10 @@
 #ifndef TRADING_LOGGER_HPP
 #define TRADING_LOGGER_HPP
 
-#include "logger.hpp"
 #include "../configs/trader_config.hpp"
 #include "../data/data_structures.hpp"
 #include "../core/strategy_logic.hpp"
+#include "logging_macros.hpp"
 
 /**
  * Specialized high-performance logging for trading operations.
@@ -19,7 +19,7 @@ public:
     // Trading loop events
     static void log_loop_start(unsigned long loop_number);
     static void log_loop_complete();
-    static void log_loop_header(unsigned long loop_number);
+    static void log_loop_header(unsigned long loop_number, const std::string& symbol);
     
     // Detailed trading analysis  
     static void log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals);
@@ -27,8 +27,10 @@ public:
     static void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters);
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);
-    static void log_current_position(int quantity);
-    static void log_signal_analysis_start();
+    static void log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price);
+    static void log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int buying_power_qty, int final_qty);
+    static void log_current_position(int quantity, const std::string& symbol);
+    static void log_signal_analysis_start(const std::string& symbol);
     static void log_signal_analysis_complete();
     
     // Headers and configurations
@@ -36,7 +38,7 @@ public:
     
     // Market conditions
     static void log_market_status(bool is_open, const std::string& reason = "");
-    static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed);
+    static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const TraderConfig& config);
     static void log_equity_update(double current_equity);
     
     // Signal processing

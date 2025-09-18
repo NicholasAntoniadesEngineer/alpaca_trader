@@ -19,6 +19,7 @@ public:
 
     // Account data operations (moved from AlpacaClient)
     double get_equity() const;
+    double get_buying_power() const;
     PositionDetails get_position_details(const SymbolRequest& reqSym) const;
     int get_open_orders_count(const SymbolRequest& reqSym) const;
     

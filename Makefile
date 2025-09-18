@@ -15,7 +15,9 @@ TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Source files (now in consolidated structure)
 SOURCES = main.cpp \
-          api/alpaca_client.cpp \
+          api/clock/market_clock.cpp \
+          api/market/market_data_client.cpp \
+          api/orders/order_client.cpp \
           core/trader.cpp \
           core/strategy_logic.cpp \
           core/risk_logic.cpp \
@@ -26,9 +28,9 @@ SOURCES = main.cpp \
           utils/http_utils.cpp \
           core/indicators.cpp \
           logging/async_logger.cpp \
-          logging/logger.cpp \
           logging/trading_logger.cpp \
           logging/thread_logger.cpp \
+          logging/startup_logger.cpp \
           threads/config/thread_config.cpp \
           threads/platform/thread_control.cpp \
           threads/platform/linux/linux_thread_control.cpp \
@@ -53,6 +55,10 @@ $(BIN_DIR):
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)/api
+	mkdir -p $(OBJ_DIR)/api/base
+	mkdir -p $(OBJ_DIR)/api/clock
+	mkdir -p $(OBJ_DIR)/api/market
+	mkdir -p $(OBJ_DIR)/api/orders
 	mkdir -p $(OBJ_DIR)/core
 	mkdir -p $(OBJ_DIR)/data
 	mkdir -p $(OBJ_DIR)/ui

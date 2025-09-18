@@ -1,4 +1,5 @@
 #include "thread_logger.hpp"
+#include "startup_logger.hpp"
 #include "async_logger.hpp"
 #include <sstream>
 #include <iomanip>
@@ -12,19 +13,7 @@ std::string ThreadLogger::format_priority_status(const std::string& thread_name,
 }
 
 void ThreadLogger::log_system_startup(const TimingConfig& config) {
-    log_message("Thread system initializing", "");
-    
-    if (config.thread_priorities.enable_thread_priorities) {
-        log_message("Thread priorities: ENABLED", "");
-    } else {
-        log_message("Thread priorities: DISABLED", "");
-    }
-    
-    if (config.thread_priorities.enable_cpu_affinity) {
-        log_message("CPU affinity: ENABLED", "");
-    } else {
-        log_message("CPU affinity: DISABLED", "");
-    }
+    StartupLogger::log_thread_system_startup(config);
 }
 
 void ThreadLogger::log_system_shutdown() {
@@ -50,13 +39,11 @@ void ThreadLogger::log_priority_assignment(const std::string& thread_name,
                                           const std::string& requested_priority,
                                           const std::string& actual_priority,
                                           bool success) {
-    std::string status_msg = format_priority_status(thread_name, actual_priority, success);
+    StartupLogger::log_thread_priority_status(thread_name, actual_priority, success);
     
-    if (success) {
-        log_message(status_msg, "");
-    } else {
+    if (!success) {
         std::ostringstream oss;
-        oss << status_msg << " (requested: " << requested_priority << ")";
+        oss << "     |   " << thread_name << ": WARNING - requested " << requested_priority << ", got " << actual_priority;
         log_message(oss.str(), "");
     }
 }

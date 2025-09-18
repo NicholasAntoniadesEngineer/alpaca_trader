@@ -11,6 +11,9 @@ struct RiskConfig {
     int max_layers;
     double scale_in_multiplier;
     bool close_on_reverse;
+    // Position sizing safety factors
+    double buying_power_usage_factor{0.8};  // Use 80% of available buying power
+    double buying_power_validation_factor{1.25}; // Require 125% of position value
 };
 
 #endif // RISK_CONFIG_HPP

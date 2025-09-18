@@ -6,11 +6,14 @@
 #include "risk_logic.hpp"
 #include "market_processing.hpp"
 #include "../logging/async_logger.hpp"
+#include "../logging/logging_macros.hpp"
 #include "../threads/platform/thread_control.hpp"
 #include <thread>
 #include <cmath>
 #include <chrono>
 #include <cassert>
+#include <sstream>
+#include <iomanip>
 
 namespace {
     enum class OrderSide { Buy, Sell };
@@ -47,7 +50,7 @@ bool Trader::can_trade(double exposure_pct) {
     }
 
     bool trading_allowed = res.pnl_ok && res.exposure_ok;
-    TradingLogger::log_trading_conditions(res.daily_pnl, exposure_pct, trading_allowed);
+    TradingLogger::log_trading_conditions(res.daily_pnl, exposure_pct, trading_allowed, services.config);
     
     if (!res.pnl_ok) {
         return false;
@@ -103,7 +106,7 @@ ProcessedData Trader::fetch_and_process_data() {
 
 void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equity) 
 {
-    TradingLogger::log_signal_analysis_start();
+    TradingLogger::log_signal_analysis_start(services.config.target.symbol);
     int current_qty = data.pos_details.qty;
 
     // Step 1: Detect signals and log candle/signal info
@@ -115,27 +118,37 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     TradingLogger::log_filters(filter_result,services.config);
     TradingLogger::log_summary(data, signal_decision, filter_result);
 
-    // Step 3: Early return if filters fail (with sizing preview)
+    // Step 3: Get buying power once for efficiency
+    double buying_power = services.account_manager.get_buying_power();
+    
+    // Early return if filters fail (with sizing preview)
     if (!filter_result.all_pass) {
-        double risk_prev = data.atr > 0.0 ? data.atr : 1.0;
-        int qty_prev = static_cast<int>(std::floor((equity * services.config.risk.risk_per_trade) / risk_prev));
+        StrategyLogic::PositionSizing preview_sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
         TradingLogger::log_signal_analysis_complete();
-        TradingLogger::log_filters_not_met_preview(risk_prev, qty_prev);
+        TradingLogger::log_filters_not_met_preview(preview_sizing.risk_amount, preview_sizing.quantity);
+        TradingLogger::log_position_sizing_debug(preview_sizing.risk_based_qty, preview_sizing.exposure_based_qty, preview_sizing.buying_power_qty, preview_sizing.quantity);
         return;
     }
     // TraderLogging::log_filters_pass(services.config);
 
     // Step 4: Calculate position sizing and validate
-    TradingLogger::log_current_position(current_qty);
-    StrategyLogic::PositionSizing sizing = calculate_position_sizing(data, equity, current_qty);
-    TradingLogger::log_position_size(sizing.risk_amount, sizing.quantity);
+    TradingLogger::log_current_position(current_qty, services.config.target.symbol);
+    StrategyLogic::PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
+    TradingLogger::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
+    TradingLogger::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.buying_power_qty, sizing.quantity);
+    
     if (sizing.quantity < 1) {
-        // TraderLogging::log_qty_too_small(services.config);
-        // TraderLogging::log_signal_analysis_complete(services.config);
+        log_message("Position sizing resulted in quantity < 1, skipping trade", "");
         return;
     }
 
-    // Step 5: Execute the trade decision
+    // Step 5: Validate trade feasibility
+    if (!validate_trade_feasibility(sizing, buying_power, data.curr.c)) {
+        log_message("Trade validation failed - insufficient buying power", "");
+        return;
+    }
+
+    // Step 6: Execute the trade decision
     execute_trade(data, current_qty, sizing, signal_decision);
 
     // Final completion log
@@ -150,11 +163,78 @@ StrategyLogic::FilterResult Trader::evaluate_filters(const ProcessedData& data) 
     return StrategyLogic::evaluate_filters(data, services.config);
 }
 
-StrategyLogic::PositionSizing Trader::calculate_position_sizing(const ProcessedData& data, double equity, int current_qty) const {
-    return StrategyLogic::calculate_position_sizing(data, equity, current_qty, services.config);
+StrategyLogic::PositionSizing Trader::calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power) const {
+    return StrategyLogic::calculate_position_sizing(data, equity, current_qty, services.config, buying_power);
+}
+
+bool Trader::validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const {
+    if (sizing.quantity <= 0) {
+        return false;
+    }
+    
+    // Calculate the total position value
+    double position_value = sizing.quantity * current_price;
+    
+    // For conservative validation, use configurable validation factor
+    // This accounts for margin requirements and market fluctuations
+    double required_buying_power = position_value * services.config.risk.buying_power_validation_factor;
+    
+    if (buying_power < required_buying_power) {
+        std::ostringstream oss;
+        oss << "Insufficient buying power: Need $" << std::fixed << std::setprecision(2) << required_buying_power 
+            << ", Have $" << std::fixed << std::setprecision(2) << buying_power 
+            << " (Position: " << sizing.quantity << " @ $" << std::fixed << std::setprecision(2) << current_price << ")";
+        log_message(oss.str(), "");
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * @brief Get best available price with realistic expectations
+ * 
+ * REALITY: "Free real-time data" is limited and unreliable for production trading.
+ * This function attempts to get current quotes but gracefully falls back to delayed data
+ * with appropriate logging to set realistic expectations.
+ * 
+ * @param fallback_price Delayed price from historical bars
+ * @return Best available price (real-time if possible, fallback otherwise)
+ */
+double Trader::get_real_time_price_with_fallback(double fallback_price) const {
+    // Attempt to get current quote (may fail for many symbols on free plan)
+    double current_price = services.client.get_current_price(services.config.target.symbol);
+    
+    if (current_price <= 0.0) {
+        // Expected behavior for most symbols on free IEX feed
+        current_price = fallback_price;
+        LOG_THREAD_CONTENT("DATA SOURCE: DELAYED BAR DATA (15-MIN DELAY) - $" + std::to_string(current_price) + " [FREE PLAN LIMITATION]");
+    } else {
+        LOG_THREAD_CONTENT("DATA SOURCE: IEX FREE QUOTE - $" + std::to_string(current_price) + " [LIMITED SYMBOL COVERAGE]");
+    }
+    
+    return current_price;
+}
+
+/**
+ * @brief Log exit target calculations for debugging purposes
+ * @param side Order side ("BUY" or "SELL")
+ * @param price Entry price used
+ * @param risk Risk amount per share
+ * @param rr Risk-reward ratio
+ * @param targets Calculated exit targets
+ */
+void Trader::log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const {
+    std::ostringstream oss;
+    oss << "(" << side << ") entry=$" << std::fixed << std::setprecision(3) << price 
+        << " risk=$" << risk << " rr=" << rr
+        << " -> SL=$" << targets.stop_loss << " TP=$" << targets.take_profit;
+    LOG_THREAD_CONTENT("EXIT TARGETS: " + oss.str());
 }
 
 void Trader::execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd) {
+    LOG_THREAD_ORDER_EXECUTION_HEADER();
+    
     bool is_long = current_qty > 0;
     bool is_short = current_qty < 0;
 
@@ -164,7 +244,16 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
             // TraderLogging::log_close_position_first("long", services.config);
             services.client.close_position(ClosePositionRequest{current_qty});
         }
-        StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(to_side_string(OrderSide::Buy), data.curr.c, sizing.risk_amount, services.config.strategy.rr_ratio);
+        // ATTEMPT: Get best available price (likely delayed on free plan)
+        // Conservative buffers in exit target calculation handle data delays
+        double current_price = get_real_time_price_with_fallback(data.curr.c);
+        
+        StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(
+            to_side_string(OrderSide::Buy), current_price, sizing.risk_amount, services.config.strategy.rr_ratio
+        );
+        
+        // Debug logging to verify exit target calculations
+        log_exit_target_debug("BUY", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets);
         if (is_long && services.config.risk.allow_multiple_positions) {
             // TraderLogging::log_open_position_details("Scaling into long position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Buy), sizing.quantity, targets.take_profit, targets.stop_loss});
@@ -180,7 +269,15 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
             // TraderLogging::log_close_position_first("short", services.config);
             services.client.close_position(ClosePositionRequest{current_qty});
         }
-        StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(to_side_string(OrderSide::Sell), data.curr.c, sizing.risk_amount, services.config.strategy.rr_ratio);
+        // ATTEMPT: Get best available price (likely delayed on free plan)
+        double current_price = get_real_time_price_with_fallback(data.curr.c);
+        
+        StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(
+            to_side_string(OrderSide::Sell), current_price, sizing.risk_amount, services.config.strategy.rr_ratio
+        );
+        
+        // Debug logging to verify exit target calculations
+        log_exit_target_debug("SELL", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets);
         if (is_short && services.config.risk.allow_multiple_positions) {
             // TraderLogging::log_open_position_details("Scaling into short position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Sell), sizing.quantity, targets.take_profit, targets.stop_loss});
@@ -267,7 +364,7 @@ std::pair<MarketSnapshot, AccountSnapshot> Trader::get_current_snapshots() {
 
 void Trader::display_loop_header() {
     runtime.loop_counter.fetch_add(1);
-    TradingLogger::log_loop_header(runtime.loop_counter.load());
+    TradingLogger::log_loop_header(runtime.loop_counter.load(), services.config.target.symbol);
 }
 
 void Trader::handle_trading_halt() {    

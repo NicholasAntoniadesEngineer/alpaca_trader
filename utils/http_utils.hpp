@@ -12,6 +12,9 @@ struct HttpRequest {
     const std::string* api_secret;
     const std::string* log_file;
     int retries;
+    int timeout_seconds;
+    bool enable_ssl_verification;
+    int rate_limit_delay_ms;
     std::string body; // for POST; leave empty for GET
 
     HttpRequest(const std::string& u,
@@ -19,8 +22,13 @@ struct HttpRequest {
                 const std::string& secret,
                 const std::string& logfile,
                 int r = 3,
+                int timeout = 30,
+                bool ssl_verify = true,
+                int rate_delay = 100,
                 std::string b = "")
-        : url(u), api_key(&key), api_secret(&secret), log_file(&logfile), retries(r), body(std::move(b)) {}
+        : url(u), api_key(&key), api_secret(&secret), log_file(&logfile), 
+          retries(r), timeout_seconds(timeout), enable_ssl_verification(ssl_verify),
+          rate_limit_delay_ms(rate_delay), body(std::move(b)) {}
 };
 
 size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* s);

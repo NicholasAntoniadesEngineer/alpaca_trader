@@ -2,6 +2,12 @@ api.api_key,PKFV5ODSQ2G2TA5DLIIT
 api.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
 api.base_url,https://paper-api.alpaca.markets
 api.data_url,https://data.alpaca.markets
+api.retry_count,3
+api.timeout_seconds,30
+api.enable_ssl_verification,true
+api.rate_limit_delay_ms,100
+api.api_version,v2
+api.alpha_vantage_key,DEMO // Replace with your actual key from alphavantage.co
 
 target.symbol,AAPL
 
@@ -14,11 +20,13 @@ strategy.avg_atr_multiplier,2
 risk.risk_per_trade,0.2
 risk.daily_max_loss,-1
 risk.daily_profit_target,0.3
-risk.max_exposure_pct,50.0
+risk.max_exposure_pct,75.0
 risk.allow_multiple_positions,true
 risk.max_layers,5
 risk.scale_in_multiplier,1
 risk.close_on_reverse,true
+risk.buying_power_usage_factor,0.8
+risk.buying_power_validation_factor,1.25
 
 timing.sleep_interval_sec,5
 timing.account_poll_sec,5
@@ -29,7 +37,7 @@ timing.pre_open_buffer_min,5
 timing.post_close_buffer_min,5
 timing.halt_sleep_min,1
 timing.countdown_tick_sec,1
-timing.monitoring_interval_sec,60
+timing.monitoring_interval_sec,20
 
 session.et_utc_offset_hours,-4
 session.market_open_hour,9
