@@ -1,550 +1,778 @@
 
-2025-09-18 21:49:56 [MAIN  ]   
-2025-09-18 21:49:56 [MAIN  ]   ================================================================================
-2025-09-18 21:49:56 [MAIN  ]                                      ALPACA TRADER
-2025-09-18 21:49:56 [MAIN  ]                               Advanced Momentum Trading Bot
-2025-09-18 21:49:56 [MAIN  ]   ================================================================================
-2025-09-18 21:49:56 [MAIN  ]   
-2025-09-18 21:49:56 [MAIN  ]   Advanced momentum trader starting for AAPL
-2025-09-18 21:49:56 [MAIN  ]   Initial equity: $107785.02
-2025-09-18 21:49:56 [MAIN  ]   Risk per trade: 20.000%
-2025-09-18 21:49:56 [MAIN  ]   Risk/reward ratio: 1:3.000000
-2025-09-18 21:49:56 [MAIN  ]   
-2025-09-18 21:49:56 [MAIN  ]   ================================================================================
-2025-09-18 21:49:56 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
-2025-09-18 21:49:56 [MAIN  ]   ================================================================================
-2025-09-18 21:49:57 [MAIN  ]   +-- ACCOUNT OVERVIEW
-2025-09-18 21:49:57 [MAIN  ]   |   Account Number: PA38WQNR60QX
-2025-09-18 21:49:57 [MAIN  ]   |   Status: ACTIVE
-2025-09-18 21:49:57 [MAIN  ]   |   Currency: USD
-2025-09-18 21:49:57 [MAIN  ]   |   Pattern Day Trader: YES
-2025-09-18 21:49:57 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
-2025-09-18 21:49:57 [MAIN  ]   |
-2025-09-18 21:49:57 [MAIN  ]   +-- FINANCIAL SUMMARY
-2025-09-18 21:49:57 [MAIN  ]   |   Equity: $107785.02
-2025-09-18 21:49:57 [MAIN  ]   |   Last Equity: $107537.28
-2025-09-18 21:49:57 [MAIN  ]   |   Cash: $269122.21
-2025-09-18 21:49:57 [MAIN  ]   |   Buying Power: $236528.20
-2025-09-18 21:49:57 [MAIN  ]   |   Long Market Value: $0.00
-2025-09-18 21:49:57 [MAIN  ]   |   Short Market Value: $-161337.19
-2025-09-18 21:49:57 [MAIN  ]   |   Initial Margin: $80668.60
-2025-09-18 21:49:57 [MAIN  ]   |   Maintenance Margin: $48401.16
-2025-09-18 21:49:57 [MAIN  ]   |   SMA: $107537.28
-2025-09-18 21:49:57 [MAIN  ]   |   Day Trade Count: 0
-2025-09-18 21:49:57 [MAIN  ]   |   RegT Buying Power: $54232.85
-2025-09-18 21:49:57 [MAIN  ]   |   Day Trading Buying Power: $236528.20
-2025-09-18 21:49:57 [MAIN  ]   |
-2025-09-18 21:49:58 [MAIN  ]   +-- CURRENT POSITIONS
-2025-09-18 21:49:58 [MAIN  ]   |   Position: SHORT 679 shares
-2025-09-18 21:49:58 [MAIN  ]   |   Current Value: $-161337.19
-2025-09-18 21:49:58 [MAIN  ]   |   Unrealized P/L: $13.58
-2025-09-18 21:49:58 [MAIN  ]   |   Exposure: 149.7%
-2025-09-18 21:49:58 [MAIN  ]   |   Open Orders: 3
-2025-09-18 21:49:58 [MAIN  ]   |
-2025-09-18 21:49:58 [MAIN  ]   -------------------------------------------------------------------------------
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   ================================================================================
-2025-09-18 21:49:58 [MAIN  ]                               DATA SOURCE CONFIGURATION
-2025-09-18 21:49:58 [MAIN  ]   ================================================================================
-2025-09-18 21:49:58 [MAIN  ]   HISTORICAL BARS:
-2025-09-18 21:49:58 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
-2025-09-18 21:49:58 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   REAL-TIME QUOTES:
-2025-09-18 21:49:58 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
-2025-09-18 21:49:58 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   TRADING SYMBOL: AAPL
-2025-09-18 21:49:58 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
-2025-09-18 21:49:58 [MAIN  ]   ================================================================================
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   +-- CONFIGURATION:
-2025-09-18 21:49:58 [MAIN  ]   |   Symbol: AAPL
-2025-09-18 21:49:58 [MAIN  ]   |   Risk per Trade: 20.000%
-2025-09-18 21:49:58 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
-2025-09-18 21:49:58 [MAIN  ]   |   Loop Interval: 5 seconds
-2025-09-18 21:49:58 [MAIN  ]   +-- 
-2025-09-18 21:49:58 [MAIN  ]   
-2025-09-18 21:49:58 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
-2025-09-18 21:49:58 [MAIN  ]   |   System Status:
-2025-09-18 21:49:58 [MAIN  ]   |     - Thread priorities: ENABLED
-2025-09-18 21:49:58 [MAIN  ]   |     - CPU affinity: DISABLED
-2025-09-18 21:49:58 [MAIN  ]   |
-2025-09-18 21:49:58 [MAIN  ]   |   Thread Startup:
-2025-09-18 21:49:58 [MARKET]   |   Market data thread started: TID:13465688
-2025-09-18 21:49:58 [GATE  ]   |   Market gate thread started: TID:13465690
-2025-09-18 21:49:58 [ACCOUN]   |   Account data thread started: TID:13465689
-2025-09-18 21:49:58 [LOGGER]   |   Logging thread started: TID:13465692
-2025-09-18 21:49:58 [DECIDE]   |   Trader decision thread started: TID:13465691
-2025-09-18 21:49:58 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
-2025-09-18 21:49:58 [MAIN  ]   |   MARKET: HIGH priority [OK]
-2025-09-18 21:49:58 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
-2025-09-18 21:49:58 [MAIN  ]   |   GATE: LOW priority [OK]
-2025-09-18 21:49:58 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
-2025-09-18 21:49:58 [MAIN  ]   +-- 
-2025-09-18 21:49:59 [MARKET]   +-- MARKET DATA
-2025-09-18 21:49:59 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:49:59 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:49:59 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:49:59 [MARKET]   +-- 
-2025-09-18 21:50:00 [DECIDE]   
-2025-09-18 21:50:00 [DECIDE]   ================================================================================
-2025-09-18 21:50:00 [DECIDE]                                    TRADING LOOP #1 - AAPL
-2025-09-18 21:50:00 [DECIDE]   ================================================================================
-2025-09-18 21:50:00 [DECIDE]   
-2025-09-18 21:50:00 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:50:00 [DECIDE]           |   Daily P/L: 0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:50:00 [DECIDE]           |   Exposure: 0% (Max: 75%)
-2025-09-18 21:50:00 [DECIDE]           |   
-2025-09-18 21:50:00 [DECIDE]           |   RESULT: All conditions met
-2025-09-18 21:50:00 [DECIDE]           +-- Trading allowed
-2025-09-18 21:50:00 [DECIDE]   
-2025-09-18 21:50:00 [DECIDE]   Market is OPEN - trading allowed
-2025-09-18 21:50:00 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
-2025-09-18 21:50:00 [DECIDE]           |   
-2025-09-18 21:50:00 [DECIDE]           |   CANDLE DATA:  Open=237.75  High=237.75  Low=237.71  Close=237.71
-2025-09-18 21:50:00 [DECIDE]           |   SIGNALS:      BUY= NO  SELL=YES
-2025-09-18 21:50:00 [DECIDE]           |   
-2025-09-18 21:50:00 [DECIDE]           |   FILTERS:
-2025-09-18 21:50:00 [DECIDE]           |     ATR Filter:   PASS  (0.99x > 0.50x)
-2025-09-18 21:50:00 [DECIDE]           |     Volume Filter:FAIL  (0.15x > 0.50x)
-2025-09-18 21:50:00 [DECIDE]           |     Doji Filter:  PASS
-2025-09-18 21:50:00 [DECIDE]           |   
-2025-09-18 21:50:00 [DECIDE]           |   SUMMARY:
-2025-09-18 21:50:00 [DECIDE]           |     Price=237.71  Signals: BUY=NO SELL=YES
-2025-09-18 21:50:00 [DECIDE]           |     Filters: ATR=PASS VOL=FAIL DOJI=PASS  Exposure=0%
-2025-09-18 21:50:00 [DECIDE]           |     Ratios: ATR=0.989x  VOL=0.148x
-2025-09-18 21:50:01 [DECIDE]           |   
-2025-09-18 21:50:01 [DECIDE]           +-- SIGNAL ANALYSIS COMPLETE
-2025-09-18 21:50:01 [DECIDE]   
-2025-09-18 21:50:01 [DECIDE]           |   
-2025-09-18 21:50:01 [DECIDE]           +-- FILTERS FAILED - TRADE SKIPPED
-2025-09-18 21:50:01 [DECIDE]           |   Position would have been:
-2025-09-18 21:50:01 [DECIDE]           |     - Risk Amount: $0.09/share
-2025-09-18 21:50:01 [DECIDE]           |     - Quantity: 0 shares
-2025-09-18 21:50:01 [DECIDE]           +-- 
-2025-09-18 21:50:01 [DECIDE]           |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=796, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
-2025-09-18 21:50:14 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:51:00 [MAIN  ]   
-2025-09-18 21:51:00 [MAIN  ]   ================================================================================
-2025-09-18 21:51:00 [MAIN  ]                                      ALPACA TRADER
-2025-09-18 21:51:00 [MAIN  ]                               Advanced Momentum Trading Bot
-2025-09-18 21:51:00 [MAIN  ]   ================================================================================
-2025-09-18 21:51:00 [MAIN  ]   
-2025-09-18 21:51:00 [MAIN  ]   Advanced momentum trader starting for AAPL
-2025-09-18 21:51:00 [MAIN  ]   Initial equity: $107737.49
-2025-09-18 21:51:00 [MAIN  ]   Risk per trade: 20.000%
-2025-09-18 21:51:00 [MAIN  ]   Risk/reward ratio: 1:3.000000
-2025-09-18 21:51:00 [MAIN  ]   
-2025-09-18 21:51:00 [MAIN  ]   ================================================================================
-2025-09-18 21:51:00 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
-2025-09-18 21:51:00 [MAIN  ]   ================================================================================
-2025-09-18 21:51:00 [MAIN  ]   +-- ACCOUNT OVERVIEW
-2025-09-18 21:51:00 [MAIN  ]   |   Account Number: PA38WQNR60QX
-2025-09-18 21:51:00 [MAIN  ]   |   Status: ACTIVE
-2025-09-18 21:51:00 [MAIN  ]   |   Currency: USD
-2025-09-18 21:51:00 [MAIN  ]   |   Pattern Day Trader: YES
-2025-09-18 21:51:00 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
-2025-09-18 21:51:00 [MAIN  ]   |
-2025-09-18 21:51:01 [MAIN  ]   +-- FINANCIAL SUMMARY
-2025-09-18 21:51:01 [MAIN  ]   |   Equity: $107740.89
-2025-09-18 21:51:01 [MAIN  ]   |   Last Equity: $107537.28
-2025-09-18 21:51:01 [MAIN  ]   |   Cash: $269122.21
-2025-09-18 21:51:01 [MAIN  ]   |   Buying Power: $236528.20
-2025-09-18 21:51:01 [MAIN  ]   |   Long Market Value: $0.00
-2025-09-18 21:51:01 [MAIN  ]   |   Short Market Value: $-161381.33
-2025-09-18 21:51:01 [MAIN  ]   |   Initial Margin: $80690.66
-2025-09-18 21:51:01 [MAIN  ]   |   Maintenance Margin: $48414.40
-2025-09-18 21:51:01 [MAIN  ]   |   SMA: $107537.28
-2025-09-18 21:51:01 [MAIN  ]   |   Day Trade Count: 0
-2025-09-18 21:51:01 [MAIN  ]   |   RegT Buying Power: $54100.45
-2025-09-18 21:51:01 [MAIN  ]   |   Day Trading Buying Power: $236528.20
-2025-09-18 21:51:01 [MAIN  ]   |
-2025-09-18 21:51:02 [MAIN  ]   +-- CURRENT POSITIONS
-2025-09-18 21:51:02 [MAIN  ]   |   Position: SHORT 679 shares
-2025-09-18 21:51:02 [MAIN  ]   |   Current Value: $-161381.33
-2025-09-18 21:51:02 [MAIN  ]   |   Unrealized P/L: $-30.55
-2025-09-18 21:51:02 [MAIN  ]   |   Exposure: 149.8%
-2025-09-18 21:51:02 [MAIN  ]   |   Open Orders: 3
-2025-09-18 21:51:02 [MAIN  ]   |
-2025-09-18 21:51:02 [MAIN  ]   -------------------------------------------------------------------------------
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   ================================================================================
-2025-09-18 21:51:02 [MAIN  ]                               DATA SOURCE CONFIGURATION
-2025-09-18 21:51:02 [MAIN  ]   ================================================================================
-2025-09-18 21:51:02 [MAIN  ]   HISTORICAL BARS:
-2025-09-18 21:51:02 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
-2025-09-18 21:51:02 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   REAL-TIME QUOTES:
-2025-09-18 21:51:02 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
-2025-09-18 21:51:02 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   TRADING SYMBOL: AAPL
-2025-09-18 21:51:02 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
-2025-09-18 21:51:02 [MAIN  ]   ================================================================================
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   +-- CONFIGURATION:
-2025-09-18 21:51:02 [MAIN  ]   |   Symbol: AAPL
-2025-09-18 21:51:02 [MAIN  ]   |   Risk per Trade: 20.000%
-2025-09-18 21:51:02 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
-2025-09-18 21:51:02 [MAIN  ]   |   Loop Interval: 5 seconds
-2025-09-18 21:51:02 [MAIN  ]   +-- 
-2025-09-18 21:51:02 [MAIN  ]   
-2025-09-18 21:51:02 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
-2025-09-18 21:51:02 [MAIN  ]   |   System Status:
-2025-09-18 21:51:02 [MAIN  ]   |     - Thread priorities: ENABLED
-2025-09-18 21:51:02 [MAIN  ]   |     - CPU affinity: DISABLED
-2025-09-18 21:51:02 [MAIN  ]   |
-2025-09-18 21:51:02 [MAIN  ]   |   Thread Startup:
-2025-09-18 21:51:02 [MARKET]   |   Market data thread started: TID:13467385
-2025-09-18 21:51:02 [ACCOUN]   |   Account data thread started: TID:13467386
-2025-09-18 21:51:02 [GATE  ]   |   Market gate thread started: TID:13467387
-2025-09-18 21:51:02 [DECIDE]   |   Trader decision thread started: TID:13467388
-2025-09-18 21:51:02 [LOGGER]   |   Logging thread started: TID:13467389
-2025-09-18 21:51:02 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
-2025-09-18 21:51:02 [MAIN  ]   |   MARKET: HIGH priority [OK]
-2025-09-18 21:51:02 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
-2025-09-18 21:51:02 [MAIN  ]   |   GATE: LOW priority [OK]
-2025-09-18 21:51:02 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
-2025-09-18 21:51:02 [MAIN  ]   +-- 
-2025-09-18 21:51:03 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:03 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:03 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:03 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:03 [MARKET]   +-- 
-2025-09-18 21:51:03 [DECIDE]   
-2025-09-18 21:51:03 [DECIDE]   ================================================================================
-2025-09-18 21:51:03 [DECIDE]                                    TRADING LOOP #1 - AAPL
-2025-09-18 21:51:03 [DECIDE]   ================================================================================
-2025-09-18 21:51:03 [DECIDE]   
-2025-09-18 21:51:04 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:51:04 [DECIDE]           |   Daily P/L: 0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:51:04 [DECIDE]           |   Exposure: 0% (Max: 75%)
-2025-09-18 21:51:04 [DECIDE]           |   
-2025-09-18 21:51:04 [DECIDE]           |   RESULT: All conditions met
-2025-09-18 21:51:04 [DECIDE]           +-- Trading allowed
-2025-09-18 21:51:04 [DECIDE]   
-2025-09-18 21:51:04 [DECIDE]   Market is OPEN - trading allowed
-2025-09-18 21:51:04 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
-2025-09-18 21:51:04 [DECIDE]           |   
-2025-09-18 21:51:04 [DECIDE]           |   CANDLE DATA:  Open=237.79  High=237.79  Low=237.76  Close=237.78
-2025-09-18 21:51:04 [DECIDE]           |   SIGNALS:      BUY= NO  SELL= NO
-2025-09-18 21:51:04 [DECIDE]           |   
-2025-09-18 21:51:04 [DECIDE]           |   FILTERS:
-2025-09-18 21:51:04 [DECIDE]           |     ATR Filter:   PASS  (0.96x > 0.50x)
-2025-09-18 21:51:04 [DECIDE]           |     Volume Filter:FAIL  (0.44x > 0.50x)
-2025-09-18 21:51:04 [DECIDE]           |     Doji Filter:  FAIL
-2025-09-18 21:51:04 [DECIDE]           |   
-2025-09-18 21:51:04 [DECIDE]           |   SUMMARY:
-2025-09-18 21:51:04 [DECIDE]           |     Price=237.78  Signals: BUY=NO SELL=NO
-2025-09-18 21:51:04 [DECIDE]           |     Filters: ATR=PASS VOL=FAIL DOJI=FAIL  Exposure=0%
-2025-09-18 21:51:04 [DECIDE]           |     Ratios: ATR=0.962x  VOL=0.435x
-2025-09-18 21:51:05 [DECIDE]           |   
-2025-09-18 21:51:05 [DECIDE]           +-- SIGNAL ANALYSIS COMPLETE
-2025-09-18 21:51:05 [DECIDE]   
-2025-09-18 21:51:05 [DECIDE]           |   
-2025-09-18 21:51:05 [DECIDE]           +-- FILTERS FAILED - TRADE SKIPPED
-2025-09-18 21:51:05 [DECIDE]           |   Position would have been:
-2025-09-18 21:51:05 [DECIDE]           |     - Risk Amount: $0.09/share
-2025-09-18 21:51:05 [DECIDE]           |     - Quantity: 0 shares
-2025-09-18 21:51:05 [DECIDE]           +-- 
-2025-09-18 21:51:05 [DECIDE]           |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=795, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
-2025-09-18 21:51:09 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:09 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:09 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:09 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:09 [MARKET]   +-- 
-2025-09-18 21:51:10 [DECIDE]   
-2025-09-18 21:51:10 [DECIDE]   ================================================================================
-2025-09-18 21:51:10 [DECIDE]                                    TRADING LOOP #2 - AAPL
-2025-09-18 21:51:10 [DECIDE]   ================================================================================
-2025-09-18 21:51:10 [DECIDE]   
-2025-09-18 21:51:10 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:51:10 [DECIDE]           |   Daily P/L: 0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:51:10 [DECIDE]           |   Exposure: 150% (Max: 75%)
-2025-09-18 21:51:10 [DECIDE]           |   
-2025-09-18 21:51:10 [DECIDE]           |   RESULT: Trading halted
-2025-09-18 21:51:10 [DECIDE]           +-- Trading suspended
-2025-09-18 21:51:10 [DECIDE]   
-2025-09-18 21:51:14 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:14 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:14 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:15 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:15 [MARKET]   +-- 
-2025-09-18 21:51:20 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:20 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:20 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:21 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:21 [MARKET]   +-- 
-2025-09-18 21:51:22 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:51:22 [MAIN  ]   Market:  4    Account:  4
-2025-09-18 21:51:22 [MAIN  ]   Trader:  1    Gate:     2
-2025-09-18 21:51:22 [MAIN  ]   Logger:  155   Total:   165
-2025-09-18 21:51:22 [MAIN  ]   Rate:    8.2/s
-2025-09-18 21:51:22 [MAIN  ]   
-2025-09-18 21:51:26 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:26 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:26 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:27 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:27 [MARKET]   +-- 
-2025-09-18 21:51:32 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:32 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:32 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:32 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:32 [MARKET]   +-- 
-2025-09-18 21:51:38 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:38 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:38 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:38 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:38 [MARKET]   +-- 
-2025-09-18 21:51:42 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:51:42 [MAIN  ]   Market:  7    Account:  7
-2025-09-18 21:51:42 [MAIN  ]   Trader:  1    Gate:     3
-2025-09-18 21:51:42 [MAIN  ]   Logger:  176   Total:   193
-2025-09-18 21:51:42 [MAIN  ]   Rate:    4.8/s
-2025-09-18 21:51:42 [MAIN  ]   
-2025-09-18 21:51:44 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:44 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:44 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:44 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:44 [MARKET]   +-- 
-2025-09-18 21:51:49 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:49 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:49 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:50 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:50 [MARKET]   +-- 
-2025-09-18 21:51:55 [MARKET]   +-- MARKET DATA
-2025-09-18 21:51:55 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:51:55 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:51:56 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:51:56 [MARKET]   +-- 
-2025-09-18 21:52:01 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:01 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:01 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:01 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:01 [MARKET]   +-- 
-2025-09-18 21:52:02 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:52:02 [MAIN  ]   Market:  11    Account:  10
-2025-09-18 21:52:02 [MAIN  ]   Trader:  1    Gate:     4
-2025-09-18 21:52:02 [MAIN  ]   Logger:  202   Total:   227
-2025-09-18 21:52:02 [MAIN  ]   Rate:    3.8/s
-2025-09-18 21:52:02 [MAIN  ]   
-2025-09-18 21:52:07 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:07 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:07 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:07 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:07 [MARKET]   +-- 
-2025-09-18 21:52:10 [DECIDE]   
-2025-09-18 21:52:10 [DECIDE]   ================================================================================
-2025-09-18 21:52:10 [DECIDE]                                    TRADING LOOP #3 - AAPL
-2025-09-18 21:52:10 [DECIDE]   ================================================================================
-2025-09-18 21:52:10 [DECIDE]   
-2025-09-18 21:52:11 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:52:11 [DECIDE]           |   Daily P/L: 0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:52:11 [DECIDE]           |   Exposure: 150% (Max: 75%)
-2025-09-18 21:52:11 [DECIDE]           |   
-2025-09-18 21:52:11 [DECIDE]           |   RESULT: Trading halted
-2025-09-18 21:52:11 [DECIDE]           +-- Trading suspended
-2025-09-18 21:52:11 [DECIDE]   
-2025-09-18 21:52:13 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:13 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:13 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:13 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:13 [MARKET]   +-- 
-2025-09-18 21:52:18 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:18 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:18 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:19 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:19 [MARKET]   +-- 
-2025-09-18 21:52:23 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:52:23 [MAIN  ]   Market:  14    Account:  13
-2025-09-18 21:52:23 [MAIN  ]   Trader:  1    Gate:     6
-2025-09-18 21:52:23 [MAIN  ]   Logger:  235   Total:   268
-2025-09-18 21:52:23 [MAIN  ]   Rate:    3.4/s
-2025-09-18 21:52:23 [MAIN  ]   
-2025-09-18 21:52:24 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:24 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:24 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:25 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:25 [MARKET]   +-- 
-2025-09-18 21:52:30 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:30 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:30 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:30 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:30 [MARKET]   +-- 
-2025-09-18 21:52:36 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:36 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:36 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:36 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:36 [MARKET]   +-- 
-2025-09-18 21:52:42 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:42 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:42 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:42 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:42 [MARKET]   +-- 
-2025-09-18 21:52:43 [MAIN  ]   THREADS STATUS:
-2025-09-18 21:52:43 [MAIN  ]   Market:  18    Account:  16
-2025-09-18 21:52:43 [MAIN  ]   Trader:  1    Gate:     7
-2025-09-18 21:52:43 [MAIN  ]   Logger:  261   Total:   302
-2025-09-18 21:52:43 [MAIN  ]   Rate:    3.0/s
-2025-09-18 21:52:43 [MAIN  ]   
-2025-09-18 21:52:47 [MARKET]   +-- MARKET DATA
-2025-09-18 21:52:47 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:52:47 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:52:48 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:52:48 [MARKET]   +-- 
-2025-09-18 21:53:11 [MAIN  ]   
-2025-09-18 21:53:11 [MAIN  ]   ================================================================================
-2025-09-18 21:53:11 [MAIN  ]                                      ALPACA TRADER
-2025-09-18 21:53:11 [MAIN  ]                               Advanced Momentum Trading Bot
-2025-09-18 21:53:11 [MAIN  ]   ================================================================================
-2025-09-18 21:53:11 [MAIN  ]   
-2025-09-18 21:53:12 [MAIN  ]   Advanced momentum trader starting for AAPL
-2025-09-18 21:53:12 [MAIN  ]   Initial equity: $107666.20
-2025-09-18 21:53:12 [MAIN  ]   Risk per trade: 20.000%
-2025-09-18 21:53:12 [MAIN  ]   Risk/reward ratio: 1:3.000000
-2025-09-18 21:53:12 [MAIN  ]   
-2025-09-18 21:53:12 [MAIN  ]   ================================================================================
-2025-09-18 21:53:12 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
-2025-09-18 21:53:12 [MAIN  ]   ================================================================================
-2025-09-18 21:53:12 [MAIN  ]   +-- ACCOUNT OVERVIEW
-2025-09-18 21:53:12 [MAIN  ]   |   Account Number: PA38WQNR60QX
-2025-09-18 21:53:12 [MAIN  ]   |   Status: ACTIVE
-2025-09-18 21:53:12 [MAIN  ]   |   Currency: USD
-2025-09-18 21:53:12 [MAIN  ]   |   Pattern Day Trader: YES
-2025-09-18 21:53:12 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
-2025-09-18 21:53:12 [MAIN  ]   |
-2025-09-18 21:53:12 [MAIN  ]   +-- FINANCIAL SUMMARY
-2025-09-18 21:53:12 [MAIN  ]   |   Equity: $107656.01
-2025-09-18 21:53:12 [MAIN  ]   |   Last Equity: $107537.28
-2025-09-18 21:53:12 [MAIN  ]   |   Cash: $269122.21
-2025-09-18 21:53:12 [MAIN  ]   |   Buying Power: $236528.20
-2025-09-18 21:53:12 [MAIN  ]   |   Long Market Value: $0.00
-2025-09-18 21:53:12 [MAIN  ]   |   Short Market Value: $-161466.20
-2025-09-18 21:53:12 [MAIN  ]   |   Initial Margin: $80733.10
-2025-09-18 21:53:12 [MAIN  ]   |   Maintenance Margin: $48439.86
-2025-09-18 21:53:12 [MAIN  ]   |   SMA: $107537.28
-2025-09-18 21:53:12 [MAIN  ]   |   Day Trade Count: 0
-2025-09-18 21:53:12 [MAIN  ]   |   RegT Buying Power: $53845.82
-2025-09-18 21:53:12 [MAIN  ]   |   Day Trading Buying Power: $236528.20
-2025-09-18 21:53:12 [MAIN  ]   |
-2025-09-18 21:53:14 [MAIN  ]   +-- CURRENT POSITIONS
-2025-09-18 21:53:14 [MAIN  ]   |   Position: SHORT 679 shares
-2025-09-18 21:53:14 [MAIN  ]   |   Current Value: $-161466.20
-2025-09-18 21:53:14 [MAIN  ]   |   Unrealized P/L: $-115.43
-2025-09-18 21:53:14 [MAIN  ]   |   Exposure: 150.0%
-2025-09-18 21:53:14 [MAIN  ]   |   Open Orders: 3
-2025-09-18 21:53:14 [MAIN  ]   |
-2025-09-18 21:53:14 [MAIN  ]   -------------------------------------------------------------------------------
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   ================================================================================
-2025-09-18 21:53:14 [MAIN  ]                               DATA SOURCE CONFIGURATION
-2025-09-18 21:53:14 [MAIN  ]   ================================================================================
-2025-09-18 21:53:14 [MAIN  ]   HISTORICAL BARS:
-2025-09-18 21:53:14 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
-2025-09-18 21:53:14 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   REAL-TIME QUOTES:
-2025-09-18 21:53:14 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
-2025-09-18 21:53:14 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   TRADING SYMBOL: AAPL
-2025-09-18 21:53:14 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
-2025-09-18 21:53:14 [MAIN  ]   ================================================================================
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   +-- CONFIGURATION:
-2025-09-18 21:53:14 [MAIN  ]   |   Symbol: AAPL
-2025-09-18 21:53:14 [MAIN  ]   |   Risk per Trade: 20.000%
-2025-09-18 21:53:14 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
-2025-09-18 21:53:14 [MAIN  ]   |   Loop Interval: 5 seconds
-2025-09-18 21:53:14 [MAIN  ]   +-- 
-2025-09-18 21:53:14 [MAIN  ]   
-2025-09-18 21:53:14 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
-2025-09-18 21:53:14 [MAIN  ]   |   System Status:
-2025-09-18 21:53:14 [MAIN  ]   |     - Thread priorities: ENABLED
-2025-09-18 21:53:14 [MAIN  ]   |     - CPU affinity: DISABLED
-2025-09-18 21:53:14 [MAIN  ]   |
-2025-09-18 21:53:14 [MAIN  ]   |   Thread Startup:
-2025-09-18 21:53:14 [MARKET]   |   Market data thread started: TID:13470424
-2025-09-18 21:53:14 [ACCOUN]   |   Account data thread started: TID:13470425
-2025-09-18 21:53:14 [GATE  ]   |   Market gate thread started: TID:13470426
-2025-09-18 21:53:14 [DECIDE]   |   Trader decision thread started: TID:13470427
-2025-09-18 21:53:14 [LOGGER]   |   Logging thread started: TID:13470428
-2025-09-18 21:53:14 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
-2025-09-18 21:53:14 [MAIN  ]   |   MARKET: HIGH priority [OK]
-2025-09-18 21:53:14 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
-2025-09-18 21:53:14 [MAIN  ]   |   GATE: LOW priority [OK]
-2025-09-18 21:53:14 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
-2025-09-18 21:53:14 [MAIN  ]   +-- 
-2025-09-18 21:53:14 [MARKET]   +-- MARKET DATA
-2025-09-18 21:53:14 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:53:14 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:53:15 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:53:15 [MARKET]   +-- 
-2025-09-18 21:53:15 [DECIDE]   
-2025-09-18 21:53:15 [DECIDE]   ================================================================================
-2025-09-18 21:53:15 [DECIDE]                                    TRADING LOOP #1 - AAPL
-2025-09-18 21:53:15 [DECIDE]   ================================================================================
-2025-09-18 21:53:15 [DECIDE]   
-2025-09-18 21:53:16 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:53:16 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:53:16 [DECIDE]   |   Exposure: 0% (Max: 75%)
-2025-09-18 21:53:16 [DECIDE]   |
-2025-09-18 21:53:16 [DECIDE]   |   RESULT: All conditions met
-2025-09-18 21:53:16 [DECIDE]   +-- Trading allowed
-2025-09-18 21:53:16 [DECIDE]   
-2025-09-18 21:53:16 [DECIDE]   Market is OPEN - trading allowed
-2025-09-18 21:53:16 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
-2025-09-18 21:53:16 [DECIDE]   |
-2025-09-18 21:53:16 [DECIDE]   |   CANDLE DATA:  Open=237.84  High=237.92  Low=237.84  Close=237.89
-2025-09-18 21:53:16 [DECIDE]   |   SIGNALS:      BUY=YES  SELL= NO
-2025-09-18 21:53:16 [DECIDE]   |
-2025-09-18 21:53:16 [DECIDE]   |   FILTERS:
-2025-09-18 21:53:16 [DECIDE]   |     ATR Filter:   PASS  (0.95x > 0.50x)
-2025-09-18 21:53:16 [DECIDE]   |     Volume Filter:PASS  (1.23x > 0.50x)
-2025-09-18 21:53:16 [DECIDE]   |     Doji Filter:  PASS
-2025-09-18 21:53:16 [DECIDE]   |
-2025-09-18 21:53:16 [DECIDE]   |   SUMMARY:
-2025-09-18 21:53:16 [DECIDE]   |     Price=237.89  Signals: BUY=YES SELL=NO
-2025-09-18 21:53:16 [DECIDE]   |     Filters: ATR=PASS VOL=PASS DOJI=PASS  Exposure=0%
-2025-09-18 21:53:16 [DECIDE]   |     Ratios: ATR=0.949x  VOL=1.230x
-2025-09-18 21:53:16 [DECIDE]   +-- CURRENT POSITION
-2025-09-18 21:53:16 [DECIDE]   |   No position in AAPL
-2025-09-18 21:53:16 [DECIDE]   |
-2025-09-18 21:53:16 [DECIDE]   +-- POSITION SIZING
-2025-09-18 21:53:16 [DECIDE]   |   Risk Amount:    $0.09
-2025-09-18 21:53:16 [DECIDE]   |   Quantity:       0 shares
-2025-09-18 21:53:16 [DECIDE]   |   Position Value: $0.00
-2025-09-18 21:53:16 [DECIDE]   |   Buying Power:   $236528.20
-2025-09-18 21:53:16 [DECIDE]   
-2025-09-18 21:53:16 [DECIDE]   |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=795, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
-2025-09-18 21:53:16 [DECIDE]   Position sizing resulted in quantity < 1, skipping trade
-2025-09-18 21:53:20 [MARKET]   +-- MARKET DATA
-2025-09-18 21:53:20 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:53:20 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:53:21 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:53:21 [MARKET]   +-- 
-2025-09-18 21:53:21 [DECIDE]   
-2025-09-18 21:53:21 [DECIDE]   ================================================================================
-2025-09-18 21:53:21 [DECIDE]                                    TRADING LOOP #2 - AAPL
-2025-09-18 21:53:21 [DECIDE]   ================================================================================
-2025-09-18 21:53:21 [DECIDE]   
-2025-09-18 21:53:22 [DECIDE]   +-- TRADING CONDITIONS
-2025-09-18 21:53:22 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
-2025-09-18 21:53:22 [DECIDE]   |   Exposure: 150% (Max: 75%)
-2025-09-18 21:53:22 [DECIDE]   |
-2025-09-18 21:53:22 [DECIDE]   |   RESULT: Trading halted
-2025-09-18 21:53:22 [DECIDE]   +-- Trading suspended
-2025-09-18 21:53:22 [DECIDE]   
-2025-09-18 21:53:26 [MARKET]   +-- MARKET DATA
-2025-09-18 21:53:26 [MARKET]   |   Fetching live market data for AAPL
-2025-09-18 21:53:26 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
-2025-09-18 21:53:26 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
-2025-09-18 21:53:26 [MARKET]   +-- 
+2025-09-18 21:56:03 [MARKET]   +-- MARKET DATA
+2025-09-18 21:56:03 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:56:03 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:56:03 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:56:03 [MARKET]   +-- 
+2025-09-18 21:56:01 [MAIN  ]   
+2025-09-18 21:56:01 [MAIN  ]   ================================================================================
+2025-09-18 21:56:01 [MAIN  ]                                      ALPACA TRADER
+2025-09-18 21:56:01 [MAIN  ]                               Advanced Momentum Trading Bot
+2025-09-18 21:56:01 [MAIN  ]   ================================================================================
+2025-09-18 21:56:01 [MAIN  ]   
+2025-09-18 21:56:01 [MAIN  ]   Advanced momentum trader starting for AAPL
+2025-09-18 21:56:01 [MAIN  ]   Initial equity: $107618.67
+2025-09-18 21:56:01 [MAIN  ]   Risk per trade: 20.000%
+2025-09-18 21:56:01 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-09-18 21:56:01 [MAIN  ]   
+2025-09-18 21:56:01 [MAIN  ]   ================================================================================
+2025-09-18 21:56:01 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
+2025-09-18 21:56:01 [MAIN  ]   ================================================================================
+2025-09-18 21:56:02 [MAIN  ]   +-- ACCOUNT OVERVIEW
+2025-09-18 21:56:02 [MAIN  ]   |   Account Number: PA38WQNR60QX
+2025-09-18 21:56:02 [MAIN  ]   |   Status: ACTIVE
+2025-09-18 21:56:02 [MAIN  ]   |   Currency: USD
+2025-09-18 21:56:02 [MAIN  ]   |   Pattern Day Trader: YES
+2025-09-18 21:56:02 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
+2025-09-18 21:56:02 [MAIN  ]   |
+2025-09-18 21:56:02 [MAIN  ]   +-- FINANCIAL SUMMARY
+2025-09-18 21:56:02 [MAIN  ]   |   Equity: $107625.46
+2025-09-18 21:56:02 [MAIN  ]   |   Last Equity: $107537.28
+2025-09-18 21:56:02 [MAIN  ]   |   Cash: $269122.21
+2025-09-18 21:56:02 [MAIN  ]   |   Buying Power: $236528.20
+2025-09-18 21:56:02 [MAIN  ]   |   Long Market Value: $0.00
+2025-09-18 21:56:02 [MAIN  ]   |   Short Market Value: $-161496.76
+2025-09-18 21:56:02 [MAIN  ]   |   Initial Margin: $80748.38
+2025-09-18 21:56:02 [MAIN  ]   |   Maintenance Margin: $48449.03
+2025-09-18 21:56:02 [MAIN  ]   |   SMA: $107537.28
+2025-09-18 21:56:02 [MAIN  ]   |   Day Trade Count: 0
+2025-09-18 21:56:02 [MAIN  ]   |   RegT Buying Power: $53754.16
+2025-09-18 21:56:02 [MAIN  ]   |   Day Trading Buying Power: $236528.20
+2025-09-18 21:56:02 [MAIN  ]   |
+2025-09-18 21:56:03 [MAIN  ]   +-- CURRENT POSITIONS
+2025-09-18 21:56:03 [MAIN  ]   |   Position: SHORT 679 shares
+2025-09-18 21:56:03 [MAIN  ]   |   Current Value: $-161486.57
+2025-09-18 21:56:03 [MAIN  ]   |   Unrealized P/L: $-135.80
+2025-09-18 21:56:03 [MAIN  ]   |   Exposure: 150.0%
+2025-09-18 21:56:03 [MAIN  ]   |   Open Orders: 3
+2025-09-18 21:56:03 [MAIN  ]   |
+2025-09-18 21:56:03 [MAIN  ]   -------------------------------------------------------------------------------
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   ================================================================================
+2025-09-18 21:56:03 [MAIN  ]                               DATA SOURCE CONFIGURATION
+2025-09-18 21:56:03 [MAIN  ]   ================================================================================
+2025-09-18 21:56:03 [MAIN  ]   HISTORICAL BARS:
+2025-09-18 21:56:03 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
+2025-09-18 21:56:03 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   REAL-TIME QUOTES:
+2025-09-18 21:56:03 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
+2025-09-18 21:56:03 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   TRADING SYMBOL: AAPL
+2025-09-18 21:56:03 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
+2025-09-18 21:56:03 [MAIN  ]   ================================================================================
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   +-- CONFIGURATION:
+2025-09-18 21:56:03 [MAIN  ]   |   Symbol: AAPL
+2025-09-18 21:56:03 [MAIN  ]   |   Risk per Trade: 20.000%
+2025-09-18 21:56:03 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
+2025-09-18 21:56:03 [MAIN  ]   |   Loop Interval: 5 seconds
+2025-09-18 21:56:03 [MAIN  ]   +-- 
+2025-09-18 21:56:03 [MAIN  ]   
+2025-09-18 21:56:03 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
+2025-09-18 21:56:03 [MAIN  ]   |   System Status:
+2025-09-18 21:56:03 [MAIN  ]   |     - Thread priorities: ENABLED
+2025-09-18 21:56:03 [MAIN  ]   |     - CPU affinity: DISABLED
+2025-09-18 21:56:03 [MAIN  ]   |
+2025-09-18 21:56:03 [MAIN  ]   |   Thread Startup:
+2025-09-18 21:56:03 [MARKET]   |   Market data thread started: TID:13473965
+2025-09-18 21:56:03 [ACCOUN]   |   Account data thread started: TID:13473966
+2025-09-18 21:56:03 [GATE  ]   |   Market gate thread started: TID:13473967
+2025-09-18 21:56:03 [DECIDE]   |   Trader decision thread started: TID:13473968
+2025-09-18 21:56:03 [LOGGER]   |   Logging thread started: TID:13473969
+2025-09-18 21:56:03 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
+2025-09-18 21:56:03 [MAIN  ]   |   MARKET: HIGH priority [OK]
+2025-09-18 21:56:03 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
+2025-09-18 21:56:03 [MAIN  ]   |   GATE: LOW priority [OK]
+2025-09-18 21:56:03 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
+2025-09-18 21:56:03 [MAIN  ]   +-- 
+2025-09-18 21:56:04 [MARKET]   +-- MARKET DATA
+2025-09-18 21:56:04 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:56:04 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:56:04 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:56:04 [MARKET]   +-- 
+2025-09-18 21:56:05 [DECIDE]   
+2025-09-18 21:56:05 [DECIDE]   ================================================================================
+2025-09-18 21:56:05 [DECIDE]                                    TRADING LOOP #1 - AAPL
+2025-09-18 21:56:05 [DECIDE]   ================================================================================
+2025-09-18 21:56:05 [DECIDE]   
+2025-09-18 21:56:05 [DECIDE]   +-- TRADING CONDITIONS
+2025-09-18 21:56:05 [DECIDE]   |   Daily P/L: 0.000% (Limits: -1.000% to 0.300%)
+2025-09-18 21:56:05 [DECIDE]   |   Exposure: 0% (Max: 75%)
+2025-09-18 21:56:05 [DECIDE]   |
+2025-09-18 21:56:05 [DECIDE]   |   RESULT: All conditions met
+2025-09-18 21:56:05 [DECIDE]   +-- Trading allowed
+2025-09-18 21:56:05 [DECIDE]   
+2025-09-18 21:56:05 [DECIDE]   Market is OPEN - trading allowed
+2025-09-18 21:56:05 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
+2025-09-18 21:56:05 [DECIDE]   |
+2025-09-18 21:56:05 [DECIDE]   |   CANDLE DATA:  Open=237.82  High=237.85  Low=237.81  Close=237.83
+2025-09-18 21:56:05 [DECIDE]   |   SIGNALS:      BUY= NO  SELL= NO
+2025-09-18 21:56:05 [DECIDE]   |
+2025-09-18 21:56:05 [DECIDE]   |   FILTERS:
+2025-09-18 21:56:05 [DECIDE]   |     ATR Filter:   PASS  (0.87x > 0.50x)
+2025-09-18 21:56:05 [DECIDE]   |     Volume Filter:PASS  (0.90x > 0.50x)
+2025-09-18 21:56:05 [DECIDE]   |     Doji Filter:  FAIL
+2025-09-18 21:56:05 [DECIDE]   |
+2025-09-18 21:56:05 [DECIDE]   |   SUMMARY:
+2025-09-18 21:56:05 [DECIDE]   |     Price=237.83  Signals: BUY=NO SELL=NO
+2025-09-18 21:56:05 [DECIDE]   |     Filters: ATR=PASS VOL=PASS DOJI=FAIL  Exposure=0%
+2025-09-18 21:56:05 [DECIDE]   |     Ratios: ATR=0.870x  VOL=0.904x
+2025-09-18 21:56:06 [DECIDE]   |
+2025-09-18 21:56:06 [DECIDE]           +-- SIGNAL ANALYSIS COMPLETE
+2025-09-18 21:56:06 [DECIDE]   
+2025-09-18 21:56:06 [DECIDE]   |
+2025-09-18 21:56:06 [DECIDE]           +-- FILTERS FAILED - TRADE SKIPPED
+2025-09-18 21:56:06 [DECIDE]   |   Position would have been:
+2025-09-18 21:56:06 [DECIDE]   |     - Risk Amount: $0.08/share
+2025-09-18 21:56:06 [DECIDE]   |     - Quantity: 0 shares
+2025-09-18 21:56:06 [DECIDE]   +-- 
+2025-09-18 21:56:06 [DECIDE]   |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=795, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
+2025-09-18 21:56:09 [MARKET]   +-- MARKET DATA
+2025-09-18 21:56:09 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:56:09 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:56:09 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:56:09 [MARKET]   +-- 
+2025-09-18 21:56:10 [MARKET]   +-- MARKET DATA
+2025-09-18 21:56:10 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:56:10 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:56:10 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:56:10 [MARKET]   +-- 
+2025-09-18 21:56:19 [MAIN  ]   THREADS STATUS:
+2025-09-18 21:56:19 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 21:56:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:56:19 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 21:56:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:56:19 [MAIN  ]   |   | 2        | 2        | 1        | 1        | 133      |
+2025-09-18 21:56:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:56:19 [MAIN  ]   |
+2025-09-18 21:56:19 [MAIN  ]   |   Total Iterations: 138  |  Rate: 8.6/s
+2025-09-18 21:56:57 [MAIN  ]   
+2025-09-18 21:56:57 [MAIN  ]   ================================================================================
+2025-09-18 21:56:57 [MAIN  ]                                      ALPACA TRADER
+2025-09-18 21:56:57 [MAIN  ]                               Advanced Momentum Trading Bot
+2025-09-18 21:56:57 [MAIN  ]   ================================================================================
+2025-09-18 21:56:57 [MAIN  ]   
+2025-09-18 21:56:57 [MAIN  ]   Advanced momentum trader starting for AAPL
+2025-09-18 21:56:57 [MAIN  ]   Initial equity: $107601.69
+2025-09-18 21:56:57 [MAIN  ]   Risk per trade: 20.000%
+2025-09-18 21:56:57 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-09-18 21:56:57 [MAIN  ]   
+2025-09-18 21:56:57 [MAIN  ]   ================================================================================
+2025-09-18 21:56:57 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
+2025-09-18 21:56:57 [MAIN  ]   ================================================================================
+2025-09-18 21:56:58 [MAIN  ]   +-- ACCOUNT OVERVIEW
+2025-09-18 21:56:58 [MAIN  ]   |   Account Number: PA38WQNR60QX
+2025-09-18 21:56:58 [MAIN  ]   |   Status: ACTIVE
+2025-09-18 21:56:58 [MAIN  ]   |   Currency: USD
+2025-09-18 21:56:58 [MAIN  ]   |   Pattern Day Trader: YES
+2025-09-18 21:56:58 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
+2025-09-18 21:56:58 [MAIN  ]   |
+2025-09-18 21:56:58 [MAIN  ]   +-- FINANCIAL SUMMARY
+2025-09-18 21:56:58 [MAIN  ]   |   Equity: $107598.30
+2025-09-18 21:56:58 [MAIN  ]   |   Last Equity: $107537.28
+2025-09-18 21:56:58 [MAIN  ]   |   Cash: $269122.21
+2025-09-18 21:56:58 [MAIN  ]   |   Buying Power: $236528.20
+2025-09-18 21:56:58 [MAIN  ]   |   Long Market Value: $0.00
+2025-09-18 21:56:58 [MAIN  ]   |   Short Market Value: $-161523.92
+2025-09-18 21:56:58 [MAIN  ]   |   Initial Margin: $80761.96
+2025-09-18 21:56:58 [MAIN  ]   |   Maintenance Margin: $48457.17
+2025-09-18 21:56:58 [MAIN  ]   |   SMA: $107537.28
+2025-09-18 21:56:58 [MAIN  ]   |   Day Trade Count: 0
+2025-09-18 21:56:58 [MAIN  ]   |   RegT Buying Power: $53672.68
+2025-09-18 21:56:58 [MAIN  ]   |   Day Trading Buying Power: $236528.20
+2025-09-18 21:56:58 [MAIN  ]   |
+2025-09-18 21:56:59 [MAIN  ]   +-- CURRENT POSITIONS
+2025-09-18 21:56:59 [MAIN  ]   |   Position: SHORT 679 shares
+2025-09-18 21:56:59 [MAIN  ]   |   Current Value: $-161527.31
+2025-09-18 21:56:59 [MAIN  ]   |   Unrealized P/L: $-176.54
+2025-09-18 21:56:59 [MAIN  ]   |   Exposure: 150.1%
+2025-09-18 21:56:59 [MAIN  ]   |   Open Orders: 3
+2025-09-18 21:56:59 [MAIN  ]   |
+2025-09-18 21:56:59 [MAIN  ]   -------------------------------------------------------------------------------
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   ================================================================================
+2025-09-18 21:56:59 [MAIN  ]                               DATA SOURCE CONFIGURATION
+2025-09-18 21:56:59 [MAIN  ]   ================================================================================
+2025-09-18 21:56:59 [MAIN  ]   HISTORICAL BARS:
+2025-09-18 21:56:59 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
+2025-09-18 21:56:59 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   REAL-TIME QUOTES:
+2025-09-18 21:56:59 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
+2025-09-18 21:56:59 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   TRADING SYMBOL: AAPL
+2025-09-18 21:56:59 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
+2025-09-18 21:56:59 [MAIN  ]   ================================================================================
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   +-- CONFIGURATION:
+2025-09-18 21:56:59 [MAIN  ]   |   Symbol: AAPL
+2025-09-18 21:56:59 [MAIN  ]   |   Risk per Trade: 20.000%
+2025-09-18 21:56:59 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
+2025-09-18 21:56:59 [MAIN  ]   |   Loop Interval: 5 seconds
+2025-09-18 21:56:59 [MAIN  ]   +-- 
+2025-09-18 21:56:59 [MAIN  ]   
+2025-09-18 21:56:59 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
+2025-09-18 21:56:59 [MAIN  ]   |   System Status:
+2025-09-18 21:56:59 [MAIN  ]   |     - Thread priorities: ENABLED
+2025-09-18 21:56:59 [MAIN  ]   |     - CPU affinity: DISABLED
+2025-09-18 21:56:59 [MAIN  ]   |
+2025-09-18 21:56:59 [MAIN  ]   |   Thread Startup:
+2025-09-18 21:56:59 [MARKET]   |   Market data thread started: TID:13474858
+2025-09-18 21:56:59 [ACCOUN]   |   Account data thread started: TID:13474859
+2025-09-18 21:56:59 [GATE  ]   |   Market gate thread started: TID:13474860
+2025-09-18 21:56:59 [DECIDE]   |   Trader decision thread started: TID:13474861
+2025-09-18 21:56:59 [LOGGER]   |   Logging thread started: TID:13474862
+2025-09-18 21:56:59 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
+2025-09-18 21:56:59 [MAIN  ]   |   MARKET: HIGH priority [OK]
+2025-09-18 21:56:59 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
+2025-09-18 21:56:59 [MAIN  ]   |   GATE: LOW priority [OK]
+2025-09-18 21:56:59 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
+2025-09-18 21:56:59 [MAIN  ]   +-- 
+2025-09-18 21:57:00 [MARKET]   +-- MARKET DATA
+2025-09-18 21:57:00 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:57:00 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:57:00 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:57:00 [MARKET]   +-- 
+2025-09-18 21:57:00 [DECIDE]   
+2025-09-18 21:57:00 [DECIDE]   ================================================================================
+2025-09-18 21:57:00 [DECIDE]                                    TRADING LOOP #1 - AAPL
+2025-09-18 21:57:00 [DECIDE]   ================================================================================
+2025-09-18 21:57:00 [DECIDE]   
+2025-09-18 21:57:01 [DECIDE]   +-- TRADING CONDITIONS
+2025-09-18 21:57:01 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
+2025-09-18 21:57:01 [DECIDE]   |   Exposure: 0% (Max: 75%)
+2025-09-18 21:57:01 [DECIDE]   |
+2025-09-18 21:57:01 [DECIDE]   |   RESULT: All conditions met
+2025-09-18 21:57:01 [DECIDE]   +-- Trading allowed
+2025-09-18 21:57:01 [DECIDE]   
+2025-09-18 21:57:01 [DECIDE]   Market is OPEN - trading allowed
+2025-09-18 21:57:01 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
+2025-09-18 21:57:01 [DECIDE]   |
+2025-09-18 21:57:01 [DECIDE]   |   CANDLE DATA:  Open=237.82  High=237.85  Low=237.81  Close=237.83
+2025-09-18 21:57:01 [DECIDE]   |   SIGNALS:      BUY= NO  SELL= NO
+2025-09-18 21:57:01 [DECIDE]   |
+2025-09-18 21:57:01 [DECIDE]   |   FILTERS:
+2025-09-18 21:57:01 [DECIDE]   |     ATR Filter:   PASS  (0.87x > 0.50x)
+2025-09-18 21:57:01 [DECIDE]   |     Volume Filter:PASS  (0.90x > 0.50x)
+2025-09-18 21:57:01 [DECIDE]   |     Doji Filter:  FAIL
+2025-09-18 21:57:01 [DECIDE]   |
+2025-09-18 21:57:01 [DECIDE]   |   SUMMARY:
+2025-09-18 21:57:01 [DECIDE]   |     Price=237.83  Signals: BUY=NO SELL=NO
+2025-09-18 21:57:01 [DECIDE]   |     Filters: ATR=PASS VOL=PASS DOJI=FAIL  Exposure=0%
+2025-09-18 21:57:01 [DECIDE]   |     Ratios: ATR=0.870x  VOL=0.904x
+2025-09-18 21:57:02 [DECIDE]   |
+2025-09-18 21:57:02 [DECIDE]           +-- SIGNAL ANALYSIS COMPLETE
+2025-09-18 21:57:02 [DECIDE]   
+2025-09-18 21:57:02 [DECIDE]   |
+2025-09-18 21:57:02 [DECIDE]           +-- FILTERS FAILED - TRADE SKIPPED
+2025-09-18 21:57:02 [DECIDE]   |   Position would have been:
+2025-09-18 21:57:02 [DECIDE]   |     - Risk Amount: $0.08/share
+2025-09-18 21:57:02 [DECIDE]   |     - Quantity: 0 shares
+2025-09-18 21:57:02 [DECIDE]   +-- 
+2025-09-18 21:57:02 [DECIDE]   |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=795, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
+2025-09-18 21:57:06 [MARKET]   +-- MARKET DATA
+2025-09-18 21:57:06 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:57:06 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:57:06 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:57:06 [MARKET]   +-- 
+2025-09-18 21:57:07 [DECIDE]   
+2025-09-18 21:57:07 [DECIDE]   ================================================================================
+2025-09-18 21:57:07 [DECIDE]                                    TRADING LOOP #2 - AAPL
+2025-09-18 21:57:07 [DECIDE]   ================================================================================
+2025-09-18 21:57:07 [DECIDE]   
+2025-09-18 21:57:07 [DECIDE]   +-- TRADING CONDITIONS
+2025-09-18 21:57:07 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
+2025-09-18 21:57:07 [DECIDE]   |   Exposure: 150% (Max: 75%)
+2025-09-18 21:57:07 [DECIDE]   |
+2025-09-18 21:57:07 [DECIDE]   |   RESULT: Trading halted
+2025-09-18 21:57:07 [DECIDE]   +-- Trading suspended
+2025-09-18 21:57:07 [DECIDE]   
+2025-09-18 21:57:11 [MARKET]   +-- MARKET DATA
+2025-09-18 21:57:11 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:57:11 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:57:12 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:57:12 [MARKET]   +-- 
+2025-09-18 21:57:17 [MARKET]   +-- MARKET DATA
+2025-09-18 21:57:17 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:57:17 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:57:18 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:57:18 [MARKET]   +-- 
+2025-09-18 21:57:19 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 21:57:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:57:19 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 21:57:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:57:19 [MAIN  ]   |   | 4        | 4        | 1        | 2        | 155      |
+2025-09-18 21:57:19 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:57:19 [MAIN  ]   |
+2025-09-18 21:57:19 [MAIN  ]   |   Total Iterations: 165  |  Rate: 8.2/s
+2025-09-18 21:57:23 [MARKET]   +-- MARKET DATA
+2025-09-18 21:57:23 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:57:23 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:57:24 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:57:24 [MARKET]   +-- 
+2025-09-18 21:58:50 [MAIN  ]   
+2025-09-18 21:58:50 [MAIN  ]   ================================================================================
+2025-09-18 21:58:50 [MAIN  ]                                      ALPACA TRADER
+2025-09-18 21:58:50 [MAIN  ]                               Advanced Momentum Trading Bot
+2025-09-18 21:58:50 [MAIN  ]   ================================================================================
+2025-09-18 21:58:50 [MAIN  ]   
+2025-09-18 21:58:50 [MAIN  ]   Advanced momentum trader starting for AAPL
+2025-09-18 21:58:50 [MAIN  ]   Initial equity: $107540.58
+2025-09-18 21:58:50 [MAIN  ]   Risk per trade: 20.000%
+2025-09-18 21:58:50 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-09-18 21:58:50 [MAIN  ]   
+2025-09-18 21:58:50 [MAIN  ]   ================================================================================
+2025-09-18 21:58:50 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
+2025-09-18 21:58:50 [MAIN  ]   ================================================================================
+2025-09-18 21:58:51 [MAIN  ]   +-- ACCOUNT OVERVIEW
+2025-09-18 21:58:51 [MAIN  ]   |   Account Number: PA38WQNR60QX
+2025-09-18 21:58:51 [MAIN  ]   |   Status: ACTIVE
+2025-09-18 21:58:51 [MAIN  ]   |   Currency: USD
+2025-09-18 21:58:51 [MAIN  ]   |   Pattern Day Trader: YES
+2025-09-18 21:58:51 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
+2025-09-18 21:58:51 [MAIN  ]   |
+2025-09-18 21:58:51 [MAIN  ]   +-- FINANCIAL SUMMARY
+2025-09-18 21:58:51 [MAIN  ]   |   Equity: $107547.37
+2025-09-18 21:58:51 [MAIN  ]   |   Last Equity: $107537.28
+2025-09-18 21:58:51 [MAIN  ]   |   Cash: $269122.21
+2025-09-18 21:58:51 [MAIN  ]   |   Buying Power: $236528.20
+2025-09-18 21:58:51 [MAIN  ]   |   Long Market Value: $0.00
+2025-09-18 21:58:51 [MAIN  ]   |   Short Market Value: $-161574.84
+2025-09-18 21:58:51 [MAIN  ]   |   Initial Margin: $80787.42
+2025-09-18 21:58:51 [MAIN  ]   |   Maintenance Margin: $48472.45
+2025-09-18 21:58:51 [MAIN  ]   |   SMA: $107537.28
+2025-09-18 21:58:51 [MAIN  ]   |   Day Trade Count: 0
+2025-09-18 21:58:51 [MAIN  ]   |   RegT Buying Power: $53519.90
+2025-09-18 21:58:51 [MAIN  ]   |   Day Trading Buying Power: $236528.20
+2025-09-18 21:58:51 [MAIN  ]   |
+2025-09-18 21:58:52 [MAIN  ]   +-- CURRENT POSITIONS
+2025-09-18 21:58:52 [MAIN  ]   |   Position: SHORT 679 shares
+2025-09-18 21:58:52 [MAIN  ]   |   Current Value: $-161571.45
+2025-09-18 21:58:52 [MAIN  ]   |   Unrealized P/L: $-220.68
+2025-09-18 21:58:52 [MAIN  ]   |   Exposure: 150.2%
+2025-09-18 21:58:52 [MAIN  ]   |   Open Orders: 3
+2025-09-18 21:58:52 [MAIN  ]   |
+2025-09-18 21:58:52 [MAIN  ]   -------------------------------------------------------------------------------
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   ================================================================================
+2025-09-18 21:58:52 [MAIN  ]                               DATA SOURCE CONFIGURATION
+2025-09-18 21:58:52 [MAIN  ]   ================================================================================
+2025-09-18 21:58:52 [MAIN  ]   HISTORICAL BARS:
+2025-09-18 21:58:52 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
+2025-09-18 21:58:52 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   REAL-TIME QUOTES:
+2025-09-18 21:58:52 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
+2025-09-18 21:58:52 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   TRADING SYMBOL: AAPL
+2025-09-18 21:58:52 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
+2025-09-18 21:58:52 [MAIN  ]   ================================================================================
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   +-- CONFIGURATION:
+2025-09-18 21:58:52 [MAIN  ]   |   Symbol: AAPL
+2025-09-18 21:58:52 [MAIN  ]   |   Risk per Trade: 20.000%
+2025-09-18 21:58:52 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
+2025-09-18 21:58:52 [MAIN  ]   |   Loop Interval: 5 seconds
+2025-09-18 21:58:52 [MAIN  ]   +-- 
+2025-09-18 21:58:52 [MAIN  ]   
+2025-09-18 21:58:52 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
+2025-09-18 21:58:52 [MAIN  ]   |   System Status:
+2025-09-18 21:58:52 [MAIN  ]   |     - Thread priorities: ENABLED
+2025-09-18 21:58:52 [MAIN  ]   |     - CPU affinity: DISABLED
+2025-09-18 21:58:52 [MAIN  ]   |
+2025-09-18 21:58:52 [MAIN  ]   |   Thread Startup:
+2025-09-18 21:58:52 [MARKET]   |   Market data thread started: TID:13479120
+2025-09-18 21:58:52 [ACCOUN]   |   Account data thread started: TID:13479121
+2025-09-18 21:58:52 [GATE  ]   |   Market gate thread started: TID:13479122
+2025-09-18 21:58:52 [DECIDE]   |   Trader decision thread started: TID:13479123
+2025-09-18 21:58:52 [LOGGER]   |   Logging thread started: TID:13479124
+2025-09-18 21:58:53 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
+2025-09-18 21:58:53 [MAIN  ]   |   MARKET: HIGH priority [OK]
+2025-09-18 21:58:53 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
+2025-09-18 21:58:53 [MAIN  ]   |   GATE: LOW priority [OK]
+2025-09-18 21:58:53 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
+2025-09-18 21:58:53 [MAIN  ]   +-- 
+2025-09-18 21:58:53 [MARKET]   +-- MARKET DATA
+2025-09-18 21:58:53 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:58:53 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:58:53 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:58:53 [MARKET]   +-- 
+2025-09-18 21:58:54 [DECIDE]   
+2025-09-18 21:58:54 [DECIDE]   ================================================================================
+2025-09-18 21:58:54 [DECIDE]                                    TRADING LOOP #1 - AAPL
+2025-09-18 21:58:54 [DECIDE]   ================================================================================
+2025-09-18 21:58:54 [DECIDE]   
+2025-09-18 21:58:54 [DECIDE]   +-- TRADING CONDITIONS
+2025-09-18 21:58:54 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
+2025-09-18 21:58:54 [DECIDE]   |   Exposure: 0% (Max: 75%)
+2025-09-18 21:58:54 [DECIDE]   |
+2025-09-18 21:58:54 [DECIDE]   |   RESULT: All conditions met
+2025-09-18 21:58:54 [DECIDE]   +-- Trading allowed
+2025-09-18 21:58:54 [DECIDE]   
+2025-09-18 21:58:54 [DECIDE]   Market is OPEN - trading allowed
+2025-09-18 21:58:54 [DECIDE]   +-- SIGNAL ANALYSIS - AAPL (per-lap decisions)
+2025-09-18 21:58:54 [DECIDE]   |
+2025-09-18 21:58:54 [DECIDE]   |   CANDLE DATA:  Open=237.85  High=237.87  Low=237.83  Close=237.83
+2025-09-18 21:58:54 [DECIDE]   |   SIGNALS:      BUY= NO  SELL= NO
+2025-09-18 21:58:54 [DECIDE]   |
+2025-09-18 21:58:54 [DECIDE]   |   FILTERS:
+2025-09-18 21:58:54 [DECIDE]   |     ATR Filter:   PASS  (0.83x > 0.50x)
+2025-09-18 21:58:54 [DECIDE]   |     Volume Filter:PASS  (0.51x > 0.50x)
+2025-09-18 21:58:54 [DECIDE]   |     Doji Filter:  FAIL
+2025-09-18 21:58:54 [DECIDE]   |
+2025-09-18 21:58:54 [DECIDE]   |   SUMMARY:
+2025-09-18 21:58:54 [DECIDE]   |     Price=237.83  Signals: BUY=NO SELL=NO
+2025-09-18 21:58:54 [DECIDE]   |     Filters: ATR=PASS VOL=PASS DOJI=FAIL  Exposure=0%
+2025-09-18 21:58:54 [DECIDE]   |     Ratios: ATR=0.826x  VOL=0.513x
+2025-09-18 21:58:55 [DECIDE]   |
+2025-09-18 21:58:55 [DECIDE]           +-- SIGNAL ANALYSIS COMPLETE
+2025-09-18 21:58:55 [DECIDE]   
+2025-09-18 21:58:55 [DECIDE]   |
+2025-09-18 21:58:55 [DECIDE]           +-- FILTERS FAILED - TRADE SKIPPED
+2025-09-18 21:58:55 [DECIDE]   |   Position would have been:
+2025-09-18 21:58:55 [DECIDE]   |     - Risk Amount: $0.07/share
+2025-09-18 21:58:55 [DECIDE]   |     - Quantity: 0 shares
+2025-09-18 21:58:55 [DECIDE]   +-- 
+2025-09-18 21:58:55 [DECIDE]   |   SIZING DEBUG: Risk=0, Exposure=0, BuyPower=795, Final=0 shares [LIMITED BY: RISK EXPOSURE ]
+2025-09-18 21:58:59 [MARKET]   +-- MARKET DATA
+2025-09-18 21:58:59 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:58:59 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:58:59 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:58:59 [MARKET]   +-- 
+2025-09-18 21:59:00 [DECIDE]   
+2025-09-18 21:59:00 [DECIDE]   ================================================================================
+2025-09-18 21:59:00 [DECIDE]                                    TRADING LOOP #2 - AAPL
+2025-09-18 21:59:00 [DECIDE]   ================================================================================
+2025-09-18 21:59:00 [DECIDE]   
+2025-09-18 21:59:01 [DECIDE]   +-- TRADING CONDITIONS
+2025-09-18 21:59:01 [DECIDE]   |   Daily P/L: -0.000% (Limits: -1.000% to 0.300%)
+2025-09-18 21:59:01 [DECIDE]   |   Exposure: 150% (Max: 75%)
+2025-09-18 21:59:01 [DECIDE]   |
+2025-09-18 21:59:01 [DECIDE]   |   RESULT: Trading halted
+2025-09-18 21:59:01 [DECIDE]   +-- Trading suspended
+2025-09-18 21:59:01 [DECIDE]   
+2025-09-18 21:59:05 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:05 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:05 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:05 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:05 [MARKET]   +-- 
+2025-09-18 21:59:11 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:11 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:11 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:11 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:11 [MARKET]   +-- 
+2025-09-18 21:59:13 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 21:59:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:13 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 21:59:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:13 [MAIN  ]   |   | 4        | 4        | 1        | 2        | 154      |
+2025-09-18 21:59:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:13 [MAIN  ]   |
+2025-09-18 21:59:13 [MAIN  ]   |   Total Iterations: 165  |  Rate: 8.2/s
+2025-09-18 21:59:16 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:16 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:16 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:17 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:17 [MARKET]   +-- 
+2025-09-18 21:59:22 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:22 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:22 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:22 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:22 [MARKET]   +-- 
+2025-09-18 21:59:28 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:28 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:28 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:28 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:28 [MARKET]   +-- 
+2025-09-18 21:59:33 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 21:59:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:33 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 21:59:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:33 [MAIN  ]   |   | 7        | 7        | 1        | 3        | 178      |
+2025-09-18 21:59:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:33 [MAIN  ]   |
+2025-09-18 21:59:33 [MAIN  ]   |   Total Iterations: 195  |  Rate: 4.9/s
+2025-09-18 21:59:34 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:34 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:34 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:34 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:34 [MARKET]   +-- 
+2025-09-18 21:59:40 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:40 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:40 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:40 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:40 [MARKET]   +-- 
+2025-09-18 21:59:45 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:45 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:45 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:46 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:46 [MARKET]   +-- 
+2025-09-18 21:59:51 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:51 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:51 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:51 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:51 [MARKET]   +-- 
+2025-09-18 21:59:53 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 21:59:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:53 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 21:59:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:53 [MAIN  ]   |   | 11       | 10       | 1        | 4        | 206      |
+2025-09-18 21:59:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 21:59:53 [MAIN  ]   |
+2025-09-18 21:59:53 [MAIN  ]   |   Total Iterations: 231  |  Rate: 3.9/s
+2025-09-18 21:59:57 [MARKET]   +-- MARKET DATA
+2025-09-18 21:59:57 [MARKET]   |   Fetching live market data for AAPL
+2025-09-18 21:59:57 [MARKET]   |   Trying IEX FEED (FREE - 15MIN DELAYED)...
+2025-09-18 21:59:57 [MARKET]   |   SUCCESS: Using 34 bars from IEX FEED (FREE - 15MIN DELAYED)
+2025-09-18 21:59:57 [MARKET]   +-- 
+2025-09-18 22:00:01 [DECIDE]   
+2025-09-18 22:00:01 [DECIDE]   ================================================================================
+2025-09-18 22:00:01 [DECIDE]                                    TRADING LOOP #3 - AAPL
+2025-09-18 22:00:01 [DECIDE]   ================================================================================
+2025-09-18 22:00:01 [DECIDE]   
+2025-09-18 22:00:02 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:00:10 [GATE  ]   Market fetch gate DISABLED (pre/post window applied)
+2025-09-18 22:00:13 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:00:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:13 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:00:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:13 [MAIN  ]   |   | 12       | 13       | 1        | 6        | 226      |
+2025-09-18 22:00:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:13 [MAIN  ]   |
+2025-09-18 22:00:13 [MAIN  ]   |   Total Iterations: 257  |  Rate: 3.2/s
+2025-09-18 22:00:33 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:00:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:33 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:00:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:33 [MAIN  ]   |   | 12       | 13       | 1        | 7        | 234      |
+2025-09-18 22:00:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:33 [MAIN  ]   |
+2025-09-18 22:00:33 [MAIN  ]   |   Total Iterations: 266  |  Rate: 2.7/s
+2025-09-18 22:00:53 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:00:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:53 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:00:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:53 [MAIN  ]   |   | 12       | 13       | 1        | 8        | 242      |
+2025-09-18 22:00:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:00:53 [MAIN  ]   |
+2025-09-18 22:00:53 [MAIN  ]   |   Total Iterations: 275  |  Rate: 2.3/s
+2025-09-18 22:01:03 [DECIDE]   
+2025-09-18 22:01:03 [DECIDE]   ================================================================================
+2025-09-18 22:01:03 [DECIDE]                                    TRADING LOOP #4 - AAPL
+2025-09-18 22:01:03 [DECIDE]   ================================================================================
+2025-09-18 22:01:03 [DECIDE]   
+2025-09-18 22:01:03 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:01:13 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:01:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:13 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:01:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:13 [MAIN  ]   |   | 12       | 13       | 1        | 10       | 256      |
+2025-09-18 22:01:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:13 [MAIN  ]   |
+2025-09-18 22:01:13 [MAIN  ]   |   Total Iterations: 291  |  Rate: 2.1/s
+2025-09-18 22:01:33 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:01:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:33 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:01:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:33 [MAIN  ]   |   | 12       | 13       | 1        | 11       | 264      |
+2025-09-18 22:01:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:33 [MAIN  ]   |
+2025-09-18 22:01:33 [MAIN  ]   |   Total Iterations: 300  |  Rate: 1.9/s
+2025-09-18 22:01:53 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:01:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:53 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:01:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:53 [MAIN  ]   |   | 12       | 13       | 1        | 12       | 272      |
+2025-09-18 22:01:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:01:53 [MAIN  ]   |
+2025-09-18 22:01:53 [MAIN  ]   |   Total Iterations: 309  |  Rate: 1.7/s
+2025-09-18 22:02:04 [DECIDE]   
+2025-09-18 22:02:04 [DECIDE]   ================================================================================
+2025-09-18 22:02:04 [DECIDE]                                    TRADING LOOP #5 - AAPL
+2025-09-18 22:02:04 [DECIDE]   ================================================================================
+2025-09-18 22:02:04 [DECIDE]   
+2025-09-18 22:02:05 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:02:13 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:02:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:13 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:02:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:13 [MAIN  ]   |   | 12       | 13       | 1        | 13       | 286      |
+2025-09-18 22:02:13 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:13 [MAIN  ]   |
+2025-09-18 22:02:13 [MAIN  ]   |   Total Iterations: 324  |  Rate: 1.6/s
+2025-09-18 22:02:33 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:02:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:33 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:02:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:33 [MAIN  ]   |   | 12       | 13       | 1        | 15       | 293      |
+2025-09-18 22:02:33 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:33 [MAIN  ]   |
+2025-09-18 22:02:33 [MAIN  ]   |   Total Iterations: 334  |  Rate: 1.5/s
+2025-09-18 22:02:53 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:02:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:53 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:02:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:53 [MAIN  ]   |   | 12       | 13       | 1        | 16       | 302      |
+2025-09-18 22:02:53 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:02:53 [MAIN  ]   |
+2025-09-18 22:02:53 [MAIN  ]   |   Total Iterations: 343  |  Rate: 1.4/s
+2025-09-18 22:03:06 [MAIN  ]   
+2025-09-18 22:03:06 [MAIN  ]   ================================================================================
+2025-09-18 22:03:06 [MAIN  ]                                      ALPACA TRADER
+2025-09-18 22:03:06 [MAIN  ]                               Advanced Momentum Trading Bot
+2025-09-18 22:03:06 [MAIN  ]   ================================================================================
+2025-09-18 22:03:06 [MAIN  ]   
+2025-09-18 22:03:07 [MAIN  ]   Advanced momentum trader starting for AAPL
+2025-09-18 22:03:07 [MAIN  ]   Initial equity: $107581.32
+2025-09-18 22:03:07 [MAIN  ]   Risk per trade: 20.000%
+2025-09-18 22:03:07 [MAIN  ]   Risk/reward ratio: 1:3.000000
+2025-09-18 22:03:07 [MAIN  ]   
+2025-09-18 22:03:07 [MAIN  ]   ================================================================================
+2025-09-18 22:03:07 [MAIN  ]                                 ACCOUNT STATUS SUMMARY
+2025-09-18 22:03:07 [MAIN  ]   ================================================================================
+2025-09-18 22:03:07 [MAIN  ]   +-- ACCOUNT OVERVIEW
+2025-09-18 22:03:07 [MAIN  ]   |   Account Number: PA38WQNR60QX
+2025-09-18 22:03:07 [MAIN  ]   |   Status: ACTIVE
+2025-09-18 22:03:07 [MAIN  ]   |   Currency: USD
+2025-09-18 22:03:07 [MAIN  ]   |   Pattern Day Trader: YES
+2025-09-18 22:03:07 [MAIN  ]   |   Created: 2024-04-19T12:51:14.81408Z
+2025-09-18 22:03:07 [MAIN  ]   |
+2025-09-18 22:03:07 [MAIN  ]   +-- FINANCIAL SUMMARY
+2025-09-18 22:03:07 [MAIN  ]   |   Equity: $107581.32
+2025-09-18 22:03:07 [MAIN  ]   |   Last Equity: $107537.28
+2025-09-18 22:03:07 [MAIN  ]   |   Cash: $269122.21
+2025-09-18 22:03:07 [MAIN  ]   |   Buying Power: $236528.20
+2025-09-18 22:03:07 [MAIN  ]   |   Long Market Value: $0.00
+2025-09-18 22:03:07 [MAIN  ]   |   Short Market Value: $-161540.89
+2025-09-18 22:03:07 [MAIN  ]   |   Initial Margin: $80770.45
+2025-09-18 22:03:07 [MAIN  ]   |   Maintenance Margin: $48462.27
+2025-09-18 22:03:07 [MAIN  ]   |   SMA: $107537.28
+2025-09-18 22:03:07 [MAIN  ]   |   Day Trade Count: 0
+2025-09-18 22:03:07 [MAIN  ]   |   RegT Buying Power: $53621.75
+2025-09-18 22:03:07 [MAIN  ]   |   Day Trading Buying Power: $236528.20
+2025-09-18 22:03:07 [MAIN  ]   |
+2025-09-18 22:03:09 [MAIN  ]   +-- CURRENT POSITIONS
+2025-09-18 22:03:09 [MAIN  ]   |   Position: SHORT 679 shares
+2025-09-18 22:03:09 [MAIN  ]   |   Current Value: $-161540.89
+2025-09-18 22:03:09 [MAIN  ]   |   Unrealized P/L: $-190.12
+2025-09-18 22:03:09 [MAIN  ]   |   Exposure: 150.2%
+2025-09-18 22:03:09 [MAIN  ]   |   Open Orders: 3
+2025-09-18 22:03:09 [MAIN  ]   |
+2025-09-18 22:03:09 [MAIN  ]   -------------------------------------------------------------------------------
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   ================================================================================
+2025-09-18 22:03:09 [MAIN  ]                               DATA SOURCE CONFIGURATION
+2025-09-18 22:03:09 [MAIN  ]   ================================================================================
+2025-09-18 22:03:09 [MAIN  ]   HISTORICAL BARS:
+2025-09-18 22:03:09 [MAIN  ]      - IEX FEED (FREE): 15-minute delayed, limited symbol coverage
+2025-09-18 22:03:09 [MAIN  ]      - SIP FEED (PAID): Real-time, full market coverage ($100+/month)
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   REAL-TIME QUOTES:
+2025-09-18 22:03:09 [MAIN  ]      - IEX FREE QUOTES: Limited symbols, may not be available
+2025-09-18 22:03:09 [MAIN  ]      - FALLBACK: Delayed bar close prices with conservative buffers
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   TRADING SYMBOL: AAPL
+2025-09-18 22:03:09 [MAIN  ]   ACCOUNT TYPE: PAPER TRADING
+2025-09-18 22:03:09 [MAIN  ]   ================================================================================
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   +-- CONFIGURATION:
+2025-09-18 22:03:09 [MAIN  ]   |   Symbol: AAPL
+2025-09-18 22:03:09 [MAIN  ]   |   Risk per Trade: 20.000%
+2025-09-18 22:03:09 [MAIN  ]   |   Risk/Reward Ratio: 1:3.000000
+2025-09-18 22:03:09 [MAIN  ]   |   Loop Interval: 5 seconds
+2025-09-18 22:03:09 [MAIN  ]   +-- 
+2025-09-18 22:03:09 [MAIN  ]   
+2025-09-18 22:03:09 [MAIN  ]   +-- THREAD SYSTEM INITIALIZATION
+2025-09-18 22:03:09 [MAIN  ]   |   System Status:
+2025-09-18 22:03:09 [MAIN  ]   |     - Thread priorities: ENABLED
+2025-09-18 22:03:09 [MAIN  ]   |     - CPU affinity: DISABLED
+2025-09-18 22:03:09 [MAIN  ]   |
+2025-09-18 22:03:09 [MAIN  ]   |   Thread Startup:
+2025-09-18 22:03:09 [MARKET]   |   Market data thread started: TID:13483646
+2025-09-18 22:03:09 [ACCOUN]   |   Account data thread started: TID:13483647
+2025-09-18 22:03:09 [DECIDE]   |   Trader decision thread started: TID:13483649
+2025-09-18 22:03:09 [GATE  ]   |   Market gate thread started: TID:13483648
+2025-09-18 22:03:09 [LOGGER]   |   Logging thread started: TID:13483650
+2025-09-18 22:03:09 [MAIN  ]   |   TRADER: HIGHEST priority [OK]
+2025-09-18 22:03:09 [MAIN  ]   |   MARKET: HIGH priority [OK]
+2025-09-18 22:03:09 [MAIN  ]   |   ACCOUNT: NORMAL priority [OK]
+2025-09-18 22:03:09 [MAIN  ]   |   GATE: LOW priority [OK]
+2025-09-18 22:03:09 [MAIN  ]   |   LOGGER: LOWEST priority [OK]
+2025-09-18 22:03:09 [MAIN  ]   +-- 
+2025-09-18 22:03:10 [DECIDE]   
+2025-09-18 22:03:10 [DECIDE]   ================================================================================
+2025-09-18 22:03:10 [DECIDE]                                    TRADING LOOP #1 - AAPL
+2025-09-18 22:03:10 [DECIDE]   ================================================================================
+2025-09-18 22:03:10 [DECIDE]   
+2025-09-18 22:03:11 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:04:12 [DECIDE]   
+2025-09-18 22:04:12 [DECIDE]   ================================================================================
+2025-09-18 22:04:12 [DECIDE]                                    TRADING LOOP #2 - AAPL
+2025-09-18 22:04:12 [DECIDE]   ================================================================================
+2025-09-18 22:04:12 [DECIDE]   
+2025-09-18 22:04:12 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:05:09 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:05:09 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:05:09 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:05:09 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:05:09 [MAIN  ]   |   | 0        | 1        | 0        | 8        | 98       |
+2025-09-18 22:05:09 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:05:09 [MAIN  ]   |
+2025-09-18 22:05:09 [MAIN  ]   |   Total Iterations: 106  |  Rate: 0.9/s
+2025-09-18 22:05:14 [DECIDE]   
+2025-09-18 22:05:14 [DECIDE]   ================================================================================
+2025-09-18 22:05:14 [DECIDE]                                    TRADING LOOP #3 - AAPL
+2025-09-18 22:05:14 [DECIDE]   ================================================================================
+2025-09-18 22:05:14 [DECIDE]   
+2025-09-18 22:05:14 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:06:15 [DECIDE]   
+2025-09-18 22:06:15 [DECIDE]   ================================================================================
+2025-09-18 22:06:15 [DECIDE]                                    TRADING LOOP #4 - AAPL
+2025-09-18 22:06:15 [DECIDE]   ================================================================================
+2025-09-18 22:06:15 [DECIDE]   
+2025-09-18 22:06:16 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:06:45 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:06:46 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:06:47 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:03 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:04 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:05 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:10 [MAIN  ]   +-- THREADS STATUS
+2025-09-18 22:07:10 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:07:10 [MAIN  ]   |   | Market   | Account  | Trader   | Gate     | Logger   |
+2025-09-18 22:07:10 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:07:10 [MAIN  ]   |   | 0        | 1        | 0        | 16       | 124      |
+2025-09-18 22:07:10 [MAIN  ]   |   +----------+----------+----------+----------+----------+
+2025-09-18 22:07:10 [MAIN  ]   |
+2025-09-18 22:07:10 [MAIN  ]   |   Total Iterations: 140  |  Rate: 0.6/s
+2025-09-18 22:07:17 [DECIDE]   
+2025-09-18 22:07:17 [DECIDE]   ================================================================================
+2025-09-18 22:07:17 [DECIDE]                                    TRADING LOOP #5 - AAPL
+2025-09-18 22:07:17 [DECIDE]   ================================================================================
+2025-09-18 22:07:17 [DECIDE]   
+2025-09-18 22:07:17 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:18 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:19 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:20 [DECIDE]   ERROR: Unable to retrieve account information (empty response)
+2025-09-18 22:07:20 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:21 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:22 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:22 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:23 [DECIDE]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:23 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:24 [DECIDE]   Market is CLOSED - Market hours restriction
+2025-09-18 22:07:39 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:41 [GATE  ]   HTTP retry failed: Couldn't resolve host name
+2025-09-18 22:07:42 [GATE  ]   HTTP retry failed: Couldn't resolve host name

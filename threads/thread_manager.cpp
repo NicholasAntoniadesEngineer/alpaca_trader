@@ -4,6 +4,7 @@
 #include "../logging/thread_logger.hpp"
 #include "../logging/startup_logger.hpp"
 #include "../logging/async_logger.hpp"
+#include "../logging/logging_macros.hpp"
 #include "../main.hpp"  // For SystemThreads definition
 #include <vector>
 #include <chrono>
@@ -12,7 +13,7 @@
 
 namespace ThreadSystem {
 
-// Helper function to configure a single thread with consistent logic
+// Configures thread priority and CPU affinity
 void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConfig& config) {
     // Get default configuration for this thread type
     ThreadConfig thread_config = ConfigProvider::get_default_config(setup.type);
@@ -96,22 +97,29 @@ void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
     // Calculate performance rate
     double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
     
-    // Create compact multi-line summary
-    std::ostringstream msg;
-    log_message("THREADS STATUS:", "");
-    log_message("Market:  " + std::to_string(handles.market_iterations.load()) + 
-                "    Account:  " + std::to_string(handles.account_iterations.load()), "");
-    log_message("Trader:  " + std::to_string(handles.trader_iterations.load()) + 
-                "    Gate:     " + std::to_string(handles.gate_iterations.load()), "");
-    log_message("Logger:  " + std::to_string(handles.logger_iterations.load()) + 
-                "   Total:   " + std::to_string(total_iterations), "");
+    // Log thread status table
+    LOG_THREAD_STATUS_HEADER();
+    LOG_THREAD_STATUS_TABLE_HEADER();
+    LOG_THREAD_STATUS_TABLE_COLUMNS();
+    LOG_THREAD_STATUS_TABLE_SEPARATOR();
     
-    std::ostringstream rate_msg;
-    rate_msg << std::fixed << std::setprecision(1);
-    rate_msg << "Rate:    " << iterations_per_second << "/s";
-    log_message(rate_msg.str(), "");
-    // Log compact summary
-    log_message(msg.str(), "");
+    // Build table row with iteration counts
+    std::ostringstream table_row;
+    table_row << "| " << std::setw(8) << std::left << handles.market_iterations.load()
+              << " | " << std::setw(8) << std::left << handles.account_iterations.load() 
+              << " | " << std::setw(8) << std::left << handles.trader_iterations.load()
+              << " | " << std::setw(8) << std::left << handles.gate_iterations.load()
+              << " | " << std::setw(8) << std::left << handles.logger_iterations.load() << " |";
+    LOG_THREAD_CONTENT(table_row.str());
+    
+    LOG_THREAD_STATUS_TABLE_FOOTER();
+    LOG_THREAD_SEPARATOR();
+    
+    // Log performance summary
+    std::ostringstream summary;
+    summary << "Total Iterations: " << total_iterations << "  |  Rate: " 
+            << std::fixed << std::setprecision(1) << iterations_per_second << "/s";
+    LOG_THREAD_CONTENT(summary.str());
 }
 
 } // namespace ThreadSystem

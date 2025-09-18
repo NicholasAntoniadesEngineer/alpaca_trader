@@ -312,7 +312,7 @@ void Trader::decision_loop() {
         MarketSnapshot market = snapshots.first;
         AccountSnapshot account = snapshots.second;
         
-        // Display loop header
+        // Log trading loop start
         display_loop_header();
         
         // Check if we can trade
@@ -321,7 +321,7 @@ void Trader::decision_loop() {
             continue;
         }
         
-        // Display current equity status
+        // Log current equity status
         display_equity_status(account.equity);
         
         // Process data and execute signals
@@ -371,7 +371,7 @@ void Trader::handle_trading_halt() {
     // Countdown while halted
     int halt_secs = services.config.timing.halt_sleep_min * 60;
     for (int s = halt_secs; s > 0 && shared.running->load(); --s) {
-        log_inline_status("   ⏳ Halted: next check in " + std::to_string(s) + "s   ");
+        LOG_INLINE_HALT_STATUS(s);
         std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
     }
     end_inline_status();
@@ -397,10 +397,10 @@ void Trader::process_trading_cycle(const MarketSnapshot& market, const AccountSn
 }
 
 void Trader::countdown_to_next_cycle() {
-    // Per-loop countdown to next cycle (visual heartbeat)
+    // Countdown timer to next trading cycle
     int sleep_secs = services.config.timing.sleep_interval_sec;
     for (int s = sleep_secs; s > 0 && shared.running->load(); --s) {
-        log_inline_status("   ⏳ Next loop in " + std::to_string(s) + "s   ");
+        LOG_INLINE_NEXT_LOOP(s);
         std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
     }
     end_inline_status();

@@ -37,7 +37,7 @@ timing.pre_open_buffer_min,5
 timing.post_close_buffer_min,5
 timing.halt_sleep_min,1
 timing.countdown_tick_sec,1
-timing.monitoring_interval_sec,20
+timing.monitoring_interval_sec,120
 
 session.et_utc_offset_hours,-4
 session.market_open_hour,9

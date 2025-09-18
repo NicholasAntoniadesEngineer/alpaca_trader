@@ -17,12 +17,10 @@ void ThreadLogger::log_system_startup(const TimingConfig& config) {
 }
 
 void ThreadLogger::log_system_shutdown() {
-    // Using unified log_message for consistent output
     log_message("THREADS", "Thread system shutdown complete");
 }
 
 void ThreadLogger::log_thread_started(const std::string& thread_name, const std::string& thread_info) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << thread_name << " thread started: " << thread_info;
@@ -31,7 +29,6 @@ void ThreadLogger::log_thread_started(const std::string& thread_name, const std:
 }
 
 void ThreadLogger::log_thread_stopped(const std::string& thread_name) {
-    // Using unified log_message for consistent output
     log_message("THREAD", thread_name + " thread stopped");
 }
 
@@ -51,7 +48,6 @@ void ThreadLogger::log_priority_assignment(const std::string& thread_name,
 void ThreadLogger::log_thread_performance(const std::string& thread_name,
                                          unsigned long iterations,
                                          double cpu_usage) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << thread_name << " performance - Iterations: " << iterations;
@@ -64,7 +60,6 @@ void ThreadLogger::log_thread_performance(const std::string& thread_name,
 }
 
 void ThreadLogger::log_thread_health(const std::string& thread_name, bool healthy, const std::string& details) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << thread_name << " health: " << (healthy ? "OK" : "ERROR");
@@ -80,7 +75,6 @@ void ThreadLogger::log_thread_health(const std::string& thread_name, bool health
 }
 
 void ThreadLogger::log_system_performance_summary(unsigned long total_iterations) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << "System performance summary - Total iterations: " << total_iterations;

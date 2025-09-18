@@ -90,7 +90,7 @@ void initialize_application(const SystemConfig& config, AsyncLogger& logger) {
         exit(1);
     }
     
-    // Use unified AsyncLogger system for consistent output
+    // Initialize global logging system
     initialize_global_logger(logger);
     set_log_thread_tag("MAIN  ");
     

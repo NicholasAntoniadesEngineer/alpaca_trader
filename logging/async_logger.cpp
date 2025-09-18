@@ -70,6 +70,14 @@ void end_inline_status() {
     }
 }
 
+std::string get_formatted_inline_message(const std::string& content) {
+    std::time_t now = std::time(nullptr);
+    std::tm* local_tm = std::localtime(&now);
+    std::stringstream ss;
+    ss << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S") << " [" << t_log_tag << "]   " << content;
+    return ss.str();
+}
+
 void initialize_global_logger(AsyncLogger& logger) {
     set_async_logger(&logger);
     // Thread will be started separately via SystemThreads

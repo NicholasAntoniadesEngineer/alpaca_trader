@@ -39,6 +39,9 @@ extern std::atomic<bool> g_inline_active;
 void log_inline_status(const std::string& message);
 void end_inline_status();
 
+// Formats inline messages with timestamp and thread tag
+std::string get_formatted_inline_message(const std::string& content);
+
 // Thread-local log tag (6 characters, padded/truncated) to appear in timestamp
 void set_log_thread_tag(const std::string& tag6);
 

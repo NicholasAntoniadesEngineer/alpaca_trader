@@ -3,7 +3,7 @@
 
 #include "async_logger.hpp"
 
-// Standard spacing levels for consistent logging
+// Standard indentation levels
 #define LOG_INDENT_L0 ""                    // No indentation
 #define LOG_INDENT_L1 "        "            // 8 spaces - Main section level
 #define LOG_INDENT_L2 "        |   "        // 8 spaces + |   - Content level
@@ -14,7 +14,7 @@
 #define LOG_SECTION_FOOTER() log_message(LOG_INDENT_L1 "+-- ", "")
 #define LOG_SECTION_SEPARATOR() log_message(LOG_INDENT_L2, "")
 
-// Content logging with consistent spacing
+// Content logging macros
 #define LOG_CONTENT(msg) log_message(LOG_INDENT_L2 + std::string(msg), "")
 #define LOG_SUBCONTENT(msg) log_message(LOG_INDENT_L3 + std::string(msg), "")
 
@@ -48,7 +48,7 @@
 #define LOG_EXIT_TARGETS(msg) LOG_CONTENT("EXIT TARGETS: " + std::string(msg))
 #define LOG_ORDER_RESULT(msg) LOG_CONTENT("ORDER RESULT: " + std::string(msg))
 
-// Thread-consistent macros (same spacing regardless of thread name length)
+// Thread-agnostic macros
 #define LOG_THREAD_SECTION_HEADER(title) log_message("+-- " title, "")
 #define LOG_THREAD_CONTENT(msg) log_message("|   " + std::string(msg), "")
 #define LOG_THREAD_SUBCONTENT(msg) log_message("|     " + std::string(msg), "")
@@ -63,5 +63,19 @@
 #define LOG_THREAD_POSITION_SIZING_HEADER() LOG_THREAD_SECTION_HEADER("POSITION SIZING")
 #define LOG_THREAD_CURRENT_POSITION_HEADER() LOG_THREAD_SECTION_HEADER("CURRENT POSITION")
 #define LOG_THREAD_ORDER_EXECUTION_HEADER() LOG_THREAD_SECTION_HEADER("ORDER EXECUTION")
+
+// Thread status table macros
+#define LOG_THREAD_STATUS_HEADER() LOG_THREAD_SECTION_HEADER("THREADS STATUS")
+#define LOG_THREAD_STATUS_TABLE_HEADER() LOG_THREAD_CONTENT("+----------+----------+----------+----------+----------+")
+#define LOG_THREAD_STATUS_TABLE_COLUMNS() LOG_THREAD_CONTENT("| Market   | Account  | Trader   | Gate     | Logger   |")
+#define LOG_THREAD_STATUS_TABLE_SEPARATOR() LOG_THREAD_CONTENT("+----------+----------+----------+----------+----------+")
+#define LOG_THREAD_STATUS_TABLE_FOOTER() LOG_THREAD_CONTENT("+----------+----------+----------+----------+----------+")
+
+// Inline status macros for terminal display (not saved to log files)
+#define LOG_INLINE_HALT_STATUS(seconds) log_inline_status(get_formatted_inline_message("|   TRADING HALTED - Next check in " + std::to_string(seconds) + "s"))
+#define LOG_INLINE_NEXT_LOOP(seconds) log_inline_status("   ⏳ Next loop in " + std::to_string(seconds) + "s   ")
+
+// Formats inline messages with timestamp and thread tag
+std::string get_formatted_inline_message(const std::string& content);
 
 #endif // LOGGING_MACROS_HPP

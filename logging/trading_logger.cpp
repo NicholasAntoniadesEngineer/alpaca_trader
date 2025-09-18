@@ -26,7 +26,6 @@ void TradingLogger::log_startup(const TraderConfig& config, double initial_equit
 }
 
 void TradingLogger::log_shutdown(unsigned long total_loops, double final_equity) {
-    // Using unified log_message for consistent output
     
     log_message("Trading session complete", "");
     log_message("Total loops executed: " + std::to_string(total_loops), "");
@@ -34,12 +33,10 @@ void TradingLogger::log_shutdown(unsigned long total_loops, double final_equity)
 }
 
 void TradingLogger::log_loop_start(unsigned long loop_number) {
-    // Using unified log_message for consistent output
     log_message("Trading loop #" + std::to_string(loop_number) + " starting", "");
 }
 
 void TradingLogger::log_loop_complete() {
-    // Using unified log_message for consistent output
     log_message("Trading loop complete", "");
 }
 
@@ -89,7 +86,6 @@ void TradingLogger::log_equity_update(double current_equity) {
 }
 
 void TradingLogger::log_market_data_status(bool has_data, size_t data_points) {
-    // Using unified log_message for consistent output
     
     if (has_data) {
         log_message("Market data available (" + std::to_string(data_points) + " points)", "");
@@ -99,7 +95,6 @@ void TradingLogger::log_market_data_status(bool has_data, size_t data_points) {
 }
 
 void TradingLogger::log_signal_analysis(const std::string& symbol, bool buy_signal, bool sell_signal) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << symbol << " signals - BUY: " << (buy_signal ? "YES" : "NO") 
@@ -109,7 +104,6 @@ void TradingLogger::log_signal_analysis(const std::string& symbol, bool buy_sign
 }
 
 void TradingLogger::log_filter_results(bool atr_pass, bool volume_pass, bool doji_pass) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << "Filters - ATR: " << (atr_pass ? "PASS" : "FAIL")
@@ -120,7 +114,6 @@ void TradingLogger::log_filter_results(bool atr_pass, bool volume_pass, bool doj
 }
 
 void TradingLogger::log_position_sizing(double risk_amount, int quantity) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << "Position sizing - Risk: " << format_currency(risk_amount) 
@@ -130,7 +123,6 @@ void TradingLogger::log_position_sizing(double risk_amount, int quantity) {
 }
 
 void TradingLogger::log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << side << " order intent - Entry: " << format_currency(entry_price)
@@ -141,7 +133,6 @@ void TradingLogger::log_order_intent(const std::string& side, double entry_price
 }
 
 void TradingLogger::log_order_result(const std::string& order_id, bool success, const std::string& reason) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << "Order " << order_id << " - " << (success ? "SUCCESS" : "FAILED");
@@ -157,7 +148,6 @@ void TradingLogger::log_order_result(const std::string& order_id, bool success, 
 }
 
 void TradingLogger::log_position_update(int current_quantity, double unrealized_pnl) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << "Position: " << current_quantity << " shares";
@@ -169,7 +159,6 @@ void TradingLogger::log_position_update(int current_quantity, double unrealized_
 }
 
 void TradingLogger::log_execution_time(const std::string& operation, long microseconds) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << operation << " execution time: " << microseconds << "μs";
@@ -178,7 +167,6 @@ void TradingLogger::log_execution_time(const std::string& operation, long micros
 }
 
 void TradingLogger::log_system_health(const std::string& component, bool healthy, const std::string& details) {
-    // Using unified log_message for consistent output
     
     std::ostringstream oss;
     oss << component << " health: " << (healthy ? "OK" : "ERROR");
@@ -193,7 +181,7 @@ void TradingLogger::log_system_health(const std::string& component, bool healthy
     }
 }
 
-// Beautiful formatted detailed logs
+// Detailed trading analysis logging
 
 void TradingLogger::log_loop_header(unsigned long loop_number, const std::string& symbol) {
     LOG_TRADING_LOOP_HEADER(loop_number, symbol);
@@ -204,7 +192,7 @@ void TradingLogger::log_header_and_config(const TraderConfig& config) {
 }
 
 void TradingLogger::log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals) {
-    // Format candle data in a more tabular way
+    // Log candle OHLC data
     std::ostringstream oss;
     oss << "CANDLE DATA:  Open=" << std::fixed << std::setprecision(2) << data.curr.o 
         << "  High=" << data.curr.h 
