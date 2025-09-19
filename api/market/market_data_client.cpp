@@ -18,8 +18,7 @@ std::vector<Bar> MarketDataClient::get_recent_bars(const BarRequest& reqBars) co
     ss << std::put_time(std::gmtime(&in_time_t), "%Y-%m-%dT%H:%M:%SZ");
     std::string end = ss.str();
 
-    LOG_THREAD_MARKET_DATA_HEADER();
-    LOG_THREAD_CONTENT("Fetching live market data for " + reqBars.symbol);
+    TradingLogger::log_market_data_fetch_table(reqBars.symbol);
 
     std::vector<std::string> urls;
     urls.push_back(build_bars_url(reqBars.symbol, start, end, reqBars.limit, "iex"));
@@ -102,15 +101,11 @@ std::vector<Bar> MarketDataClient::parse_bars_response(const std::string& respon
 }
 
 void MarketDataClient::log_fetch_attempt(const std::string& /* symbol */, const std::string& description) const {
-    LOG_THREAD_CONTENT("Trying " + description + "...");
+    TradingLogger::log_market_data_attempt_table(description);
 }
 
 void MarketDataClient::log_fetch_result(const std::string& description, bool success, size_t bar_count) const {
-    if (success) {
-        LOG_THREAD_CONTENT("SUCCESS: Using " + std::to_string(bar_count) + " bars from " + description);
-    } else {
-        LOG_THREAD_CONTENT("FAILED: " + description + " - empty response");
-    }
+    TradingLogger::log_market_data_result_table(description, success, bar_count);
 }
 
 void MarketDataClient::log_fetch_failure() const {

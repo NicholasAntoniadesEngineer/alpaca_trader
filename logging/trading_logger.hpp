@@ -28,6 +28,7 @@ public:
     static void log_filters(const StrategyLogic::FilterResult& filters, const TraderConfig& config);
     static void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters, const std::string& symbol = "");
     static void log_filters_not_met_preview(double risk_amount, int quantity);
+    static void log_filters_not_met_table(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);
     static void log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price);
     static void log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int buying_power_qty, int final_qty);
@@ -78,6 +79,11 @@ public:
     static void log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled);
     static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses = {});
     static void log_data_source_info_table(const std::string& source, double price, const std::string& status);
+    
+    // Market data fetching tables
+    static void log_market_data_fetch_table(const std::string& symbol);
+    static void log_market_data_attempt_table(const std::string& description);
+    static void log_market_data_result_table(const std::string& description, bool success, size_t bar_count);
     
     // Performance metrics
     static void log_execution_time(const std::string& operation, long microseconds);

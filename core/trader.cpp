@@ -135,7 +135,6 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
         StrategyLogic::PositionSizing preview_sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
         TradingLogger::log_signal_analysis_complete();
         TradingLogger::log_filters_not_met_preview(preview_sizing.risk_amount, preview_sizing.quantity);
-        TradingLogger::log_position_sizing_debug(preview_sizing.risk_based_qty, preview_sizing.exposure_based_qty, preview_sizing.max_value_qty, preview_sizing.buying_power_qty, preview_sizing.quantity);
         return;
     }
     // TraderLogging::log_filters_pass(services.config);

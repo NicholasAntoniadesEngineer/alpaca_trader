@@ -6,6 +6,8 @@
 #include "../configs/timing_config.hpp"
 #include <vector>
 #include <tuple>
+#include <string>
+#include <thread>
 
 // Forward declarations
 struct SystemThreads;

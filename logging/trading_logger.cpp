@@ -204,19 +204,20 @@ void TradingLogger::log_signal_analysis_complete() {
 }
 
 void TradingLogger::log_filters_not_met_preview(double risk_amount, int quantity) {
-    LOG_THREAD_SEPARATOR();
-    LOG_FILTERS_FAILED_HEADER();
-    LOG_THREAD_CONTENT("Position would have been:");
+    log_filters_not_met_table(risk_amount, quantity);
+}
+
+void TradingLogger::log_filters_not_met_table(double risk_amount, int quantity) {
+    TABLE_HEADER_48("Filters Failed", "Trade Skipped - Position Preview");
     
-    std::ostringstream risk_oss;
-    risk_oss << "- Risk Amount: " << format_currency(risk_amount) << "/share";
-    LOG_THREAD_SUBCONTENT(risk_oss.str());
+    TABLE_ROW_48("Risk Amount", format_currency(risk_amount) + "/share");
+    TABLE_ROW_48("Quantity", std::to_string(quantity) + " shares");
     
-    std::ostringstream qty_oss;
-    qty_oss << "- Quantity: " << quantity << " shares";
-    LOG_THREAD_SUBCONTENT(qty_oss.str());
+    TABLE_SEPARATOR_48();
     
-    LOG_THREAD_SECTION_FOOTER();
+    TABLE_ROW_48("STATUS", "TRADE BLOCKED - Filters not met");
+    
+    TABLE_FOOTER_48();
 }
 
 void TradingLogger::log_position_size(double risk_amount, int quantity) {
@@ -312,7 +313,7 @@ void TradingLogger::log_exit_targets_table(const std::string& side, double price
 }
 
 void TradingLogger::log_order_result_table(const std::string& operation, const std::string& response) {
-    TABLE_HEADER_48("Order Result", "Details");
+    TABLE_HEADER_48("Order Result", "Execution Status");
     
     // Parse operation for multiline display
     std::string op_line1 = operation;
@@ -335,33 +336,54 @@ void TradingLogger::log_order_result_table(const std::string& operation, const s
         TABLE_ROW_48("", op_line2);
     }
     
-    std::string status = "Failed";
+    std::string status = "FAILED";
     std::string order_id = "";
+    std::string error_reason = "";
     
     if (!response.empty()) {
         try {
-            // Simple JSON parsing to extract order ID
+            // Simple JSON parsing to extract order ID and check for errors
             size_t id_pos = response.find("\"id\":");
             if (id_pos != std::string::npos) {
                 size_t start = response.find("\"", id_pos + 5) + 1;
                 size_t end = response.find("\"", start);
                 if (start != std::string::npos && end != std::string::npos) {
-                    status = "Success";
+                    status = "SUCCESS";
                     order_id = response.substr(start, end - start);
                 }
             } else {
-                status = "Unknown Response";
+                // Check for error message in response
+                size_t error_pos = response.find("\"message\":");
+                if (error_pos != std::string::npos) {
+                    size_t start = response.find("\"", error_pos + 10) + 1;
+                    size_t end = response.find("\"", start);
+                    if (start != std::string::npos && end != std::string::npos) {
+                        error_reason = response.substr(start, end - start);
+                        status = "FAILED - " + error_reason;
+                    }
+                } else {
+                    status = "FAILED - Unknown Response";
+                }
             }
         } catch (...) {
-            status = "Parse Error";
+            status = "FAILED - Parse Error";
         }
+    } else {
+        status = "FAILED - No Response";
     }
     
-    TABLE_ROW_48("Status", status);
-    
+    // Show Order ID first if successful
     if (!order_id.empty()) {
         TABLE_ROW_48("Order ID", order_id);
     }
+    
+    // Add separator before final status for emphasis
+    if (!order_id.empty()) {
+        TABLE_SEPARATOR_48();
+    }
+    
+    // Final status line - most important information last
+    TABLE_ROW_48("RESULT", status);
     
     TABLE_FOOTER_48();
 }
@@ -372,6 +394,28 @@ void TradingLogger::log_data_source_info_table(const std::string& source, double
     TABLE_ROW_48("Price", format_currency(price));
     TABLE_ROW_48("Status", status);
     TABLE_FOOTER_48();
+}
+
+// ========================================================================
+// Market Data Fetching Tables
+// ========================================================================
+
+void TradingLogger::log_market_data_fetch_table(const std::string& /* symbol */) {
+    // No initial table needed - just show the result when done
+}
+
+void TradingLogger::log_market_data_attempt_table(const std::string& /* description */) {
+    // Simplified - no separate attempt logging
+}
+
+void TradingLogger::log_market_data_result_table(const std::string& description, bool success, size_t bar_count) {
+    if (success) {
+        TABLE_HEADER_48("Market Data", "Connection Result");
+        TABLE_ROW_48("Source", description);
+        TABLE_ROW_48("RESULT", "SUCCESS - " + std::to_string(bar_count) + " bars");
+        TABLE_FOOTER_48();
+    }
+    // Don't log failures - they're just attempts, final success is what matters
 }
 
 // ========================================================================
