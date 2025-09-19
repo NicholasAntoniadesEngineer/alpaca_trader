@@ -1,21 +1,5 @@
 // ========================================================================
-// ALPACA TRADER CONFIGURATION
-// ========================================================================
-// 
-// QUICK STRATEGY SWITCHING GUIDE:
-// 1. Go to "SIGNAL DETECTION STRATEGIES" section below
-// 2. Comment out current active strategy (add // at start of lines)
-// 3. Uncomment desired strategy (remove // from start of lines)
-// 4. Save file and run trader (NO RECOMPILING NEEDED!)
-//
-// AVAILABLE STRATEGIES:
-// - CONSERVATIVE: Strict requirements, fewer false signals
-// - ULTRA-AGGRESSIVE: Any directional move triggers signal
-// - BREAKOUT: Level-based momentum trading
-// - TREND FOLLOWING: Strong directional bias required  
-// - MODERATE: Balanced approach for mixed markets
-// - DOJI SPECIALIST: Reversal-focused trading
-//
+// ALPACA TRADER - SYSTEM CONFIGURATION
 // ========================================================================
 
 api.api_key,PKFV5ODSQ2G2TA5DLIIT
@@ -27,39 +11,23 @@ api.timeout_seconds,30
 api.enable_ssl_verification,true
 api.rate_limit_delay_ms,100
 api.api_version,v2
-api.alpha_vantage_key,DEMO // Get your free key from alphavantage.co (500 calls/day)
 
 target.symbol,SPY
 
-// ========================================================================
-// STRATEGY CONFIGURATION
-// ========================================================================
-// 
-// IMPORTANT: Strategy parameters are now configured in:
-// config/strategy_profiles.csv
-//
-// To change strategies:
-// 1. Open config/strategy_profiles.csv
-// 2. Uncomment your desired strategy profile
-// 3. Comment out all other strategies
-// 4. Save and run trader (no recompiling needed!)
-//
-// This includes: Signal detection, filters, risk management, timing
-// ========================================================================
 
-risk.risk_per_trade,0.2
+// ========================================================================
+// RISK MANAGEMENT
+// ========================================================================
 risk.daily_max_loss,-1
 risk.daily_profit_target,0.3
 risk.max_exposure_pct,100.0
-risk.allow_multiple_positions,true
-risk.max_layers,5
 risk.scale_in_multiplier,1
-risk.close_on_reverse,true
 risk.buying_power_usage_factor,0.8
 risk.buying_power_validation_factor,1.25
-risk.max_value_per_trade,1000
 
-timing.sleep_interval_sec,5
+// ========================================================================
+// SYSTEM TIMING
+// ========================================================================
 timing.account_poll_sec,5
 timing.bar_fetch_minutes,120
 timing.bar_buffer,20

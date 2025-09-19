@@ -14,7 +14,6 @@ void LoggingThread::operator()() {
     ThreadSystem::Platform::ThreadControl::set_current_priority(config);
     
     set_log_thread_tag("LOGGER");
-    StartupLogger::log_thread_started("Logging", ThreadSystem::Platform::ThreadControl::get_thread_info());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

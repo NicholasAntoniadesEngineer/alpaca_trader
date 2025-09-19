@@ -4,6 +4,8 @@
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include "../configs/timing_config.hpp"
+#include <vector>
+#include <tuple>
 
 // Forward declarations
 struct SystemThreads;
@@ -15,6 +17,9 @@ class Manager {
 public:
     // Setup thread priorities for all system threads
     static void setup_thread_priorities(SystemThreads& handles, const TimingConfig& config);
+    
+    // Get collected thread status data
+    static std::vector<std::tuple<std::string, std::string, bool>> get_thread_status_data();
     
     // Logging utilities
     static void log_thread_startup_info(const TimingConfig& config);
@@ -37,6 +42,9 @@ private:
     
     // Configure a single thread
     static void configure_single_thread(const ThreadSetup& setup, const TimingConfig& config);
+    
+    // Static container to collect thread status data
+    static std::vector<std::tuple<std::string, std::string, bool>> thread_status_data;
 };
 
 } // namespace ThreadSystem

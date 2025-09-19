@@ -16,7 +16,6 @@ public:
     static void log_system_shutdown();
     
     // Thread lifecycle
-    static void log_thread_started(const std::string& thread_name, const std::string& thread_info);
     static void log_thread_stopped(const std::string& thread_name);
     
     // Priority management

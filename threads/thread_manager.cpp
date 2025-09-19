@@ -13,6 +13,9 @@
 
 namespace ThreadSystem {
 
+// Static member definition
+std::vector<std::tuple<std::string, std::string, bool>> Manager::thread_status_data;
+
 // Configures thread priority and CPU affinity
 void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConfig& config) {
     // Get default configuration for this thread type
@@ -30,6 +33,13 @@ void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConf
     // Determine success based on whether we achieved the goal
     bool success = (actual_priority == requested_priority) || (thread_config.cpu_affinity < 0);
     
+    // Store thread status data for dynamic table logging
+    thread_status_data.push_back(std::make_tuple(
+        setup.name,
+        ConfigProvider::priority_to_string(actual_priority),
+        success
+    ));
+    
     // Log the result using the generic logging function
     ThreadLogger::log_priority_assignment(
         setup.name,
@@ -39,7 +49,14 @@ void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConf
     );
 }
 
+std::vector<std::tuple<std::string, std::string, bool>> Manager::get_thread_status_data() {
+    return thread_status_data;
+}
+
 void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig& config) {
+    // Clear any previous thread status data
+    thread_status_data.clear();
+    
     if (!config.thread_priorities.enable_thread_priorities) {
         // Thread prioritization disabled - logged by system startup
         return;

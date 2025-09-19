@@ -14,19 +14,15 @@ public:
     static void log_application_header();
     
     // Account status display
-    static void log_account_status_header();
     static void log_account_overview(const AccountManager& account_manager);
     static void log_financial_summary(const AccountManager& account_manager);
     static void log_current_positions(const AccountManager& account_manager);
-    static void log_account_status_footer();
     
     // Data source configuration
     static void log_data_source_configuration(const SystemConfig& config);
     
     // Thread system startup
     static void log_thread_system_startup(const TimingConfig& timing_config);
-    static void log_thread_started(const std::string& thread_name, const std::string& thread_info);
-    static void log_thread_priority_status(const std::string& thread_name, const std::string& priority, bool success);
     static void log_thread_system_complete();
     
     // Trading system configuration

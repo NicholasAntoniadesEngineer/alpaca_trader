@@ -217,9 +217,9 @@ double Trader::get_real_time_price_with_fallback(double fallback_price) const {
     if (current_price <= 0.0) {
         // Expected behavior for most symbols on free IEX feed
         current_price = fallback_price;
-        LOG_THREAD_CONTENT("DATA SOURCE: DELAYED BAR DATA (15-MIN DELAY) - $" + std::to_string(current_price) + " [FREE PLAN LIMITATION]");
+        TradingLogger::log_data_source_info_table("DELAYED BAR DATA (15-MIN DELAY)", current_price, "FREE PLAN LIMITATION");
     } else {
-        LOG_THREAD_CONTENT("DATA SOURCE: IEX FREE QUOTE - $" + std::to_string(current_price) + " [LIMITED SYMBOL COVERAGE]");
+        TradingLogger::log_data_source_info_table("IEX FREE QUOTE", current_price, "LIMITED SYMBOL COVERAGE");
     }
     
     return current_price;

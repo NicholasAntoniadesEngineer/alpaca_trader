@@ -78,4 +78,45 @@
 // Formats inline messages with timestamp and thread tag
 std::string get_formatted_inline_message(const std::string& content);
 
+// Comprehensive table formatting macros for structured logging
+#define TABLE_HEADER_48(title, subtitle) do { \
+    LOG_THREAD_CONTENT("┌───────────────────┬──────────────────────────────────────────────────┐"); \
+    LOG_THREAD_CONTENT("│ " + std::string(title).substr(0,17) + std::string(17 - std::min(17, (int)std::string(title).length()), ' ') + " │ " + std::string(subtitle).substr(0,48) + std::string(48 - std::min(48, (int)std::string(subtitle).length()), ' ') + " │"); \
+    LOG_THREAD_CONTENT("├───────────────────┼──────────────────────────────────────────────────┤"); \
+} while(0)
+
+#define TABLE_HEADER_30(title, subtitle) do { \
+    LOG_THREAD_CONTENT("┌───────────────────┬────────────────────────────────┐"); \
+    LOG_THREAD_CONTENT("│ " + std::string(title).substr(0,17) + std::string(17 - std::min(17, (int)std::string(title).length()), ' ') + " │ " + std::string(subtitle).substr(0,30) + std::string(30 - std::min(30, (int)std::string(subtitle).length()), ' ') + " │"); \
+    LOG_THREAD_CONTENT("├───────────────────┼────────────────────────────────┤"); \
+} while(0)
+
+#define TABLE_ROW_48(label, value) do { \
+    std::string label_str = std::string(label).substr(0,17); \
+    std::string value_str = std::string(value).substr(0,48); \
+    LOG_THREAD_CONTENT("│ " + label_str + std::string(17 - label_str.length(), ' ') + " │ " + value_str + std::string(48 - value_str.length(), ' ') + " │"); \
+} while(0)
+
+#define TABLE_ROW_30(label, value) do { \
+    std::string label_str = std::string(label).substr(0,17); \
+    std::string value_str = std::string(value).substr(0,30); \
+    LOG_THREAD_CONTENT("│ " + label_str + std::string(17 - label_str.length(), ' ') + " │ " + value_str + std::string(30 - value_str.length(), ' ') + " │"); \
+} while(0)
+
+#define TABLE_SEPARATOR_48() do { \
+    LOG_THREAD_CONTENT("├───────────────────┼──────────────────────────────────────────────────┤"); \
+} while(0)
+
+#define TABLE_SEPARATOR_30() do { \
+    LOG_THREAD_CONTENT("├───────────────────┼────────────────────────────────┤"); \
+} while(0)
+
+#define TABLE_FOOTER_48() do { \
+    LOG_THREAD_CONTENT("└───────────────────┴──────────────────────────────────────────────────┘"); \
+} while(0)
+
+#define TABLE_FOOTER_30() do { \
+    LOG_THREAD_CONTENT("└───────────────────┴────────────────────────────────┘"); \
+} while(0)
+
 #endif // LOGGING_MACROS_HPP

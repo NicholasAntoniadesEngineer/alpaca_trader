@@ -1,6 +1,7 @@
 #include "thread_logger.hpp"
 #include "startup_logger.hpp"
 #include "async_logger.hpp"
+#include "logging_macros.hpp"
 #include <sstream>
 #include <iomanip>
 
@@ -20,13 +21,6 @@ void ThreadLogger::log_system_shutdown() {
     log_message("THREADS", "Thread system shutdown complete");
 }
 
-void ThreadLogger::log_thread_started(const std::string& thread_name, const std::string& thread_info) {
-    
-    std::ostringstream oss;
-    oss << thread_name << " thread started: " << thread_info;
-    
-    log_message("THREAD", oss.str());
-}
 
 void ThreadLogger::log_thread_stopped(const std::string& thread_name) {
     log_message("THREAD", thread_name + " thread stopped");
@@ -36,8 +30,6 @@ void ThreadLogger::log_priority_assignment(const std::string& thread_name,
                                           const std::string& requested_priority,
                                           const std::string& actual_priority,
                                           bool success) {
-    StartupLogger::log_thread_priority_status(thread_name, actual_priority, success);
-    
     if (!success) {
         std::ostringstream oss;
         oss << "     |   " << thread_name << ": WARNING - requested " << requested_priority << ", got " << actual_priority;

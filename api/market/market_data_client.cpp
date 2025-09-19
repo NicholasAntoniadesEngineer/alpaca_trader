@@ -1,5 +1,6 @@
 #include "market_data_client.hpp"
 #include "../../logging/async_logger.hpp"
+#include "../../logging/trading_logger.hpp"
 #include "../../logging/logging_macros.hpp"
 #include "../../utils/http_utils.hpp"
 #include "../../external/json.hpp"
@@ -158,7 +159,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
             if (j.contains("quote") && j["quote"].contains("ap") && !j["quote"]["ap"].is_null()) {
                 double ask_price = j["quote"]["ap"].get<double>();
                 if (ask_price > 0) {
-                    log_message("        |   DATA SOURCE: IEX FREE QUOTE (ASK) - $" + std::to_string(ask_price) + " [LIMITED COVERAGE]", logging.log_file);
+                    TradingLogger::log_data_source_info_table("IEX FREE QUOTE (ASK)", ask_price, "LIMITED COVERAGE");
                     return ask_price;
                 }
             }
@@ -167,7 +168,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
         if (j.contains("quote") && j["quote"].contains("bp") && !j["quote"]["bp"].is_null()) {
             double bid_price = j["quote"]["bp"].get<double>();
             if (bid_price > 0) {
-                log_message("        |   DATA SOURCE: IEX FREE QUOTE (BID) - $" + std::to_string(bid_price) + " [LIMITED COVERAGE]", logging.log_file);
+                TradingLogger::log_data_source_info_table("IEX FREE QUOTE (BID)", bid_price, "LIMITED COVERAGE");
                 return bid_price;
             }
         }

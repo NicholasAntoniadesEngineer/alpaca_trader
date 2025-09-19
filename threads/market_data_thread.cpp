@@ -13,7 +13,6 @@
 
 void MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
-    StartupLogger::log_thread_started("Market data", ThreadSystem::Platform::ThreadControl::get_thread_info());
     
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     
@@ -58,7 +57,6 @@ void run_market_gate(std::atomic<bool>& running,
                      AlpacaClient& client,
                      std::atomic<unsigned long>* iteration_counter) {
     set_log_thread_tag("GATE  ");
-    StartupLogger::log_thread_started("Market gate", ThreadSystem::Platform::ThreadControl::get_thread_info());
     
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

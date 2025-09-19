@@ -7,7 +7,6 @@
 
 void TraderThread::operator()() {
     set_log_thread_tag("DECIDE");
-    StartupLogger::log_thread_started("Trader decision", ThreadSystem::Platform::ThreadControl::get_thread_info());
     
     // Set iteration counter for monitoring
     trader.set_iteration_counter(trader_iterations);

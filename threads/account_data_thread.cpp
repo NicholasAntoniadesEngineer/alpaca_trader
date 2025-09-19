@@ -10,7 +10,6 @@
 
 void AccountDataThread::operator()() {
     set_log_thread_tag("ACCOUNT");
-    StartupLogger::log_thread_started("Account data", ThreadSystem::Platform::ThreadControl::get_thread_info());
     
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     

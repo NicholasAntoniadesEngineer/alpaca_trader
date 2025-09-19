@@ -1,65 +1,35 @@
 # ========================================================================
-# ALPACA TRADER - COMPREHENSIVE STRATEGY PROFILES
+# STRATEGY PROFILES CONFIGURATION
 # ========================================================================
-#
-# USAGE:
-# 1. Uncomment ONE strategy profile below (remove # from start of lines)
-# 2. Comment out all other strategies (add # at start of lines)  
-# 3. Save file and run trader (NO RECOMPILING NEEDED!)
-#
-# EACH STRATEGY INCLUDES:
-# - Signal Detection: When to enter trades
-# - Filter Thresholds: Market condition requirements (ATR, Volume)
-# - Risk Management: Position sizing, limits, max value per trade
-# - Timing Parameters: How frequently to check markets
-# - Risk/Reward Ratios: Profit targets vs stop losses
-#
-# PARAMETER GUIDE:
-# - atr_multiplier_entry: Higher = need more volatility to trade
-# - volume_multiplier: Higher = need more volume to trade  
-# - risk_per_trade: % of equity to risk per trade
-# - rr_ratio: Risk/reward ratio (3.0 = 3:1 reward:risk)
-# - max_value_per_trade: Max $ amount per trade (0 = no limit)
-# - sleep_interval_sec: Seconds between trading loops
-#
+# Uncomment ONE strategy profile. Comment out all others.
 # ========================================================================
 
-# STRATEGY 1: CONSERVATIVE (Low Risk, High Confidence)
-# Perfect for: Trending markets, risk-averse traders, learning
+# STRATEGY 1: CONSERVATIVE
+# Perfect for: Trending markets, risk-averse traders
 # Characteristics: Few trades, high win rate, strong confirmations
 # Risk Level: LOW | Signal Frequency: LOW | Hold Time: MEDIUM-LONG
-#
-# SIGNAL DETECTION (Strict Requirements)
 #strategy.buy_allow_equal_close,false
 #strategy.buy_require_higher_high,true
 #strategy.buy_require_higher_low,true
 #strategy.sell_allow_equal_close,false
 #strategy.sell_require_lower_low,true
 #strategy.sell_require_lower_high,true
-#
-# FILTER THRESHOLDS (High Standards)
 #strategy.atr_multiplier_entry,0.8
 #strategy.volume_multiplier,0.8
 #strategy.atr_period,14
 #strategy.avg_atr_multiplier,2
-#
-# RISK MANAGEMENT (Conservative)
 #risk.risk_per_trade,0.10
 #risk.max_value_per_trade,5000
 #risk.allow_multiple_positions,false
 #risk.max_layers,1
 #risk.close_on_reverse,true
-#
-# RISK/REWARD & TIMING
 #strategy.rr_ratio,4.0
 #timing.sleep_interval_sec,10
 
-# STRATEGY 2: ULTRA-AGGRESSIVE (Currently Active - High Frequency)
+# STRATEGY 2: ULTRA-AGGRESSIVE (ACTIVE)
 # Perfect for: Scalping, high-volume trading, catching every move
 # Characteristics: Many trades, mixed win rate, minimal confirmations
 # Risk Level: HIGH | Signal Frequency: VERY HIGH | Hold Time: VERY SHORT
-#
-# SIGNAL DETECTION (Minimal Requirements)
 strategy.buy_allow_equal_close,true
 strategy.buy_require_higher_high,false
 strategy.buy_require_higher_low,false
@@ -79,12 +49,10 @@ risk.max_value_per_trade,1000
 risk.allow_multiple_positions,true
 risk.max_layers,3
 risk.close_on_reverse,false
-#
-# RISK/REWARD & TIMING (Fast)
 strategy.rr_ratio,2.0
 timing.sleep_interval_sec,3
 
-# STRATEGY 3: BREAKOUT (Momentum Trading)
+# STRATEGY 3: BREAKOUT
 # Perfect for: Range-bound markets, resistance/support breaks
 # Characteristics: Medium trades, good win rate, level-based entries
 # Risk Level: MEDIUM | Signal Frequency: MEDIUM | Hold Time: SHORT-MEDIUM
@@ -114,7 +82,7 @@ timing.sleep_interval_sec,3
 #strategy.rr_ratio,3.5
 #timing.sleep_interval_sec,5
 
-# STRATEGY 4: TREND_FOLLOWING (Strong Directional Moves)
+# STRATEGY 4: TREND_FOLLOWING
 # Perfect for: Trending markets, following momentum, swing trades
 # Characteristics: Fewer trades, high win rate, trend confirmations
 # Risk Level: LOW-MEDIUM | Signal Frequency: LOW | Hold Time: LONG

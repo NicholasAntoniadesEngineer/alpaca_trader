@@ -60,11 +60,9 @@ static bool validate_config(const SystemConfig& config, std::string& errorMessag
 }
     
 static void show_startup_account_status(AccountManager& account_manager) {
-    StartupLogger::log_account_status_header();
     StartupLogger::log_account_overview(account_manager);
     StartupLogger::log_financial_summary(account_manager);
     StartupLogger::log_current_positions(account_manager);
-    StartupLogger::log_account_status_footer();
 }
 
 static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
