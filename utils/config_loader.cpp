@@ -51,6 +51,12 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "strategy.volume_multiplier") cfg.strategy.volume_multiplier = std::stod(value);
         else if (key == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(value);
         else if (key == "strategy.avg_atr_multiplier") cfg.strategy.avg_atr_multiplier = std::stoi(value);
+        else if (key == "strategy.buy_allow_equal_close") cfg.strategy.buy_allow_equal_close = to_bool(value);
+        else if (key == "strategy.buy_require_higher_high") cfg.strategy.buy_require_higher_high = to_bool(value);
+        else if (key == "strategy.buy_require_higher_low") cfg.strategy.buy_require_higher_low = to_bool(value);
+        else if (key == "strategy.sell_allow_equal_close") cfg.strategy.sell_allow_equal_close = to_bool(value);
+        else if (key == "strategy.sell_require_lower_low") cfg.strategy.sell_require_lower_low = to_bool(value);
+        else if (key == "strategy.sell_require_lower_high") cfg.strategy.sell_require_lower_high = to_bool(value);
 
         // Risk
         else if (key == "risk.risk_per_trade") cfg.risk.risk_per_trade = std::stod(value);
@@ -63,6 +69,7 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "risk.close_on_reverse") cfg.risk.close_on_reverse = to_bool(value);
         else if (key == "risk.buying_power_usage_factor") cfg.risk.buying_power_usage_factor = std::stod(value);
         else if (key == "risk.buying_power_validation_factor") cfg.risk.buying_power_validation_factor = std::stod(value);
+        else if (key == "risk.max_value_per_trade") cfg.risk.max_value_per_trade = std::stod(value);
 
         // Timing
         else if (key == "timing.sleep_interval_sec") cfg.timing.sleep_interval_sec = std::stoi(value);
@@ -89,6 +96,44 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
 
         // Logging
         else if (key == "logging.log_file") cfg.logging.log_file = value;
+    }
+    return true;
+}
+
+bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profiles_path) {
+    std::ifstream in(strategy_profiles_path);
+    if (!in.is_open()) return false;
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue; // Skip comments and empty lines
+        std::stringstream ss(line);
+        std::string key, value;
+        if (!std::getline(ss, key, ',')) continue;
+        if (!std::getline(ss, value)) continue;
+        key = trim(key); value = trim(value);
+
+        // Strategy parameters
+        if (key == "strategy.atr_period") cfg.strategy.atr_period = std::stoi(value);
+        else if (key == "strategy.atr_multiplier_entry") cfg.strategy.atr_multiplier_entry = std::stod(value);
+        else if (key == "strategy.volume_multiplier") cfg.strategy.volume_multiplier = std::stod(value);
+        else if (key == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(value);
+        else if (key == "strategy.avg_atr_multiplier") cfg.strategy.avg_atr_multiplier = std::stoi(value);
+        else if (key == "strategy.buy_allow_equal_close") cfg.strategy.buy_allow_equal_close = to_bool(value);
+        else if (key == "strategy.buy_require_higher_high") cfg.strategy.buy_require_higher_high = to_bool(value);
+        else if (key == "strategy.buy_require_higher_low") cfg.strategy.buy_require_higher_low = to_bool(value);
+        else if (key == "strategy.sell_allow_equal_close") cfg.strategy.sell_allow_equal_close = to_bool(value);
+        else if (key == "strategy.sell_require_lower_low") cfg.strategy.sell_require_lower_low = to_bool(value);
+        else if (key == "strategy.sell_require_lower_high") cfg.strategy.sell_require_lower_high = to_bool(value);
+
+        // Risk parameters (can be overridden per strategy)
+        else if (key == "risk.risk_per_trade") cfg.risk.risk_per_trade = std::stod(value);
+        else if (key == "risk.max_value_per_trade") cfg.risk.max_value_per_trade = std::stod(value);
+        else if (key == "risk.allow_multiple_positions") cfg.risk.allow_multiple_positions = to_bool(value);
+        else if (key == "risk.max_layers") cfg.risk.max_layers = std::stoi(value);
+        else if (key == "risk.close_on_reverse") cfg.risk.close_on_reverse = to_bool(value);
+
+        // Timing parameters (can be overridden per strategy)
+        else if (key == "timing.sleep_interval_sec") cfg.timing.sleep_interval_sec = std::stoi(value);
     }
     return true;
 }

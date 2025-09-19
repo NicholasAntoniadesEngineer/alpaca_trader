@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "../data/data_structures.hpp"
+#include "connectivity_manager.hpp"
 
 // HTTP request wrapper to avoid multi-parameter functions
 struct HttpRequest {

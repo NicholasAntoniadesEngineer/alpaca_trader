@@ -194,6 +194,13 @@ int main()
         return 1;
     }
 
+    // Load strategy profiles (overrides base config with selected strategy)
+    std::string strategy_path = std::string("config/strategy_profiles.csv");
+    if (!load_strategy_profiles(initial_config, strategy_path)) {
+        fprintf(stderr, "Failed to load strategy profiles from %s\n", strategy_path.c_str());
+        return 1;
+    }
+
     SystemState system_state(initial_config);
 
     AsyncLogger logger(system_state.config.logging.log_file);

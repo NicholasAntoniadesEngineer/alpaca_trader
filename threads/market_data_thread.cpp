@@ -7,6 +7,7 @@
 #include "../logging/startup_logger.hpp"
 #include "platform/thread_control.hpp"
 #include "../core/market_processing.hpp"
+#include "../utils/connectivity_manager.hpp"
 #include <atomic>
 #include <chrono>
 
@@ -63,6 +64,10 @@ void run_market_gate(std::atomic<bool>& running,
     
     bool last_within = client.is_within_fetch_window();
     allow_fetch.store(last_within);
+    
+    auto& connectivity = ConnectivityManager::instance();
+    ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity.get_status();
+    
     while (running.load()) {
         bool within = client.is_within_fetch_window();
         if (within != last_within) {
@@ -70,6 +75,20 @@ void run_market_gate(std::atomic<bool>& running,
             log_message(std::string("Market fetch gate ") + (within ? "ENABLED" : "DISABLED") +
                         " (pre/post window applied)", logging.log_file);
             last_within = within;
+        }
+        
+        // Monitor and report connectivity status changes
+        ConnectivityManager::ConnectionStatus current_status = connectivity.get_status();
+        if (current_status != last_connectivity_status) {
+            std::string status_msg = "Connectivity status changed: " + connectivity.get_status_string();
+            auto state = connectivity.get_state();
+            if (current_status == ConnectivityManager::ConnectionStatus::DISCONNECTED) {
+                status_msg += " (retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s)";
+            } else if (current_status == ConnectivityManager::ConnectionStatus::DEGRADED) {
+                status_msg += " (" + std::to_string(state.consecutive_failures) + " failures)";
+            }
+            log_message(status_msg, logging.log_file);
+            last_connectivity_status = current_status;
         }
         
         // Increment iteration counter for monitoring

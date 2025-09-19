@@ -1,6 +1,7 @@
 #include "order_client.hpp"
 #include "../../logging/async_logger.hpp"
 #include "../../logging/logging_macros.hpp"
+#include "../../logging/trading_logger.hpp"
 #include "../../utils/http_utils.hpp"
 #include "../../external/json.hpp"
 #include <cmath>
@@ -72,24 +73,7 @@ void OrderClient::close_position(const ClosePositionRequest& creq) const {
 }
 
 void OrderClient::log_order_result(const std::string& operation, const std::string& response) const {
-    std::string log_msg = operation;
-    
-    if (!response.empty()) {
-        try {
-            json j = json::parse(response);
-            if (j.contains("id")) {
-                log_msg += "   Success: ID " + j["id"].get<std::string>();
-            } else {
-                log_msg += "   Response: " + response;
-            }
-        } catch (...) {
-            log_msg += "   Response: " + response;
-        }
-    } else {
-        log_msg += "   Failed";
-    }
-    
-    LOG_THREAD_CONTENT("ORDER RESULT: " + log_msg);
+    TradingLogger::log_order_result_table(operation, response);
 }
 
 std::string OrderClient::format_order_log(const std::string& operation, const std::string& details) const {

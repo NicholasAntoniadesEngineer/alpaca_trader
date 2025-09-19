@@ -7,7 +7,9 @@
 #include "market_processing.hpp"
 #include "../logging/async_logger.hpp"
 #include "../logging/logging_macros.hpp"
+#include "../logging/trading_logger.hpp"
 #include "../threads/platform/thread_control.hpp"
+#include "../utils/connectivity_manager.hpp"
 #include <thread>
 #include <cmath>
 #include <chrono>
@@ -34,8 +36,15 @@ double Trader::initialize_trader() {
 }
 
 bool Trader::can_trade(double exposure_pct) {
-    // Trading conditions will be logged by the new centralized system
+    // Check connectivity first - if we're in a connectivity outage, halt trading
+    auto& connectivity = ConnectivityManager::instance();
+    if (connectivity.is_connectivity_outage()) {
+        std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
+        TradingLogger::log_market_status(false, connectivity_msg);
+        return false;
+    }
 
+    // Trading conditions will be logged by the new centralized system
     RiskLogic::TradeGateInput in;
     in.initial_equity = runtime.initial_equity;
     in.current_equity = services.account_manager.get_equity();
@@ -116,7 +125,7 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     // Step 2: Evaluate filters and log details
     StrategyLogic::FilterResult filter_result = evaluate_filters(data);
     TradingLogger::log_filters(filter_result,services.config);
-    TradingLogger::log_summary(data, signal_decision, filter_result);
+    TradingLogger::log_summary(data, signal_decision, filter_result, services.config.target.symbol);
 
     // Step 3: Get buying power once for efficiency
     double buying_power = services.account_manager.get_buying_power();
@@ -126,7 +135,7 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
         StrategyLogic::PositionSizing preview_sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
         TradingLogger::log_signal_analysis_complete();
         TradingLogger::log_filters_not_met_preview(preview_sizing.risk_amount, preview_sizing.quantity);
-        TradingLogger::log_position_sizing_debug(preview_sizing.risk_based_qty, preview_sizing.exposure_based_qty, preview_sizing.buying_power_qty, preview_sizing.quantity);
+        TradingLogger::log_position_sizing_debug(preview_sizing.risk_based_qty, preview_sizing.exposure_based_qty, preview_sizing.max_value_qty, preview_sizing.buying_power_qty, preview_sizing.quantity);
         return;
     }
     // TraderLogging::log_filters_pass(services.config);
@@ -135,7 +144,7 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     TradingLogger::log_current_position(current_qty, services.config.target.symbol);
     StrategyLogic::PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
     TradingLogger::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
-    TradingLogger::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.buying_power_qty, sizing.quantity);
+    TradingLogger::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
     
     if (sizing.quantity < 1) {
         log_message("Position sizing resulted in quantity < 1, skipping trade", "");
@@ -156,7 +165,7 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
 }
 
 StrategyLogic::SignalDecision Trader::detect_signals(const ProcessedData& data) const {
-    return StrategyLogic::detect_signals(data);
+    return StrategyLogic::detect_signals(data, services.config);
 }
 
 StrategyLogic::FilterResult Trader::evaluate_filters(const ProcessedData& data) const {
@@ -225,11 +234,7 @@ double Trader::get_real_time_price_with_fallback(double fallback_price) const {
  * @param targets Calculated exit targets
  */
 void Trader::log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const {
-    std::ostringstream oss;
-    oss << "(" << side << ") entry=$" << std::fixed << std::setprecision(3) << price 
-        << " risk=$" << risk << " rr=" << rr
-        << " -> SL=$" << targets.stop_loss << " TP=$" << targets.take_profit;
-    LOG_THREAD_CONTENT("EXIT TARGETS: " + oss.str());
+    TradingLogger::log_exit_targets_table(side, price, risk, rr, targets.stop_loss, targets.take_profit);
 }
 
 void Trader::execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd) {
@@ -368,11 +373,27 @@ void Trader::display_loop_header() {
 }
 
 void Trader::handle_trading_halt() {    
-    // Countdown while halted
-    int halt_secs = services.config.timing.halt_sleep_min * 60;
-    for (int s = halt_secs; s > 0 && shared.running->load(); --s) {
-        LOG_INLINE_HALT_STATUS(s);
-        std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
+    auto& connectivity = ConnectivityManager::instance();
+    
+    // If it's a connectivity issue, use smart retry timing
+    if (connectivity.is_connectivity_outage()) {
+        int retry_secs = connectivity.get_seconds_until_retry();
+        if (retry_secs > 0) {
+            for (int s = retry_secs; s > 0 && shared.running->load(); --s) {
+                LOG_INLINE_HALT_STATUS(s);
+                std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
+            }
+        } else {
+            // Brief pause before retry
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    } else {
+        // Normal trading halt - use configured halt time
+        int halt_secs = services.config.timing.halt_sleep_min * 60;
+        for (int s = halt_secs; s > 0 && shared.running->load(); --s) {
+            LOG_INLINE_HALT_STATUS(s);
+            std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
+        }
     }
     end_inline_status();
 }

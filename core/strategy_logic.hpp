@@ -28,6 +28,7 @@ struct PositionSizing {
     // Debug information for logging
     int risk_based_qty{0};
     int exposure_based_qty{0};
+    int max_value_qty{0};
     int buying_power_qty{0};
 };
 
@@ -36,7 +37,7 @@ struct ExitTargets {
     double take_profit{0.0};
 };
 
-SignalDecision detect_signals(const ProcessedData& data);
+SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& config);
 FilterResult evaluate_filters(const ProcessedData& data, const TraderConfig& config);
 PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const TraderConfig& config, double buying_power = 0.0);
 ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio);

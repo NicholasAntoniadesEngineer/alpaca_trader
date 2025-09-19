@@ -1,0 +1,302 @@
+# ========================================================================
+# ALPACA TRADER - COMPREHENSIVE STRATEGY PROFILES
+# ========================================================================
+#
+# USAGE:
+# 1. Uncomment ONE strategy profile below (remove # from start of lines)
+# 2. Comment out all other strategies (add # at start of lines)  
+# 3. Save file and run trader (NO RECOMPILING NEEDED!)
+#
+# EACH STRATEGY INCLUDES:
+# - Signal Detection: When to enter trades
+# - Filter Thresholds: Market condition requirements (ATR, Volume)
+# - Risk Management: Position sizing, limits, max value per trade
+# - Timing Parameters: How frequently to check markets
+# - Risk/Reward Ratios: Profit targets vs stop losses
+#
+# PARAMETER GUIDE:
+# - atr_multiplier_entry: Higher = need more volatility to trade
+# - volume_multiplier: Higher = need more volume to trade  
+# - risk_per_trade: % of equity to risk per trade
+# - rr_ratio: Risk/reward ratio (3.0 = 3:1 reward:risk)
+# - max_value_per_trade: Max $ amount per trade (0 = no limit)
+# - sleep_interval_sec: Seconds between trading loops
+#
+# ========================================================================
+
+# STRATEGY 1: CONSERVATIVE (Low Risk, High Confidence)
+# Perfect for: Trending markets, risk-averse traders, learning
+# Characteristics: Few trades, high win rate, strong confirmations
+# Risk Level: LOW | Signal Frequency: LOW | Hold Time: MEDIUM-LONG
+#
+# SIGNAL DETECTION (Strict Requirements)
+#strategy.buy_allow_equal_close,false
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,true
+#strategy.sell_allow_equal_close,false
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,true
+#
+# FILTER THRESHOLDS (High Standards)
+#strategy.atr_multiplier_entry,0.8
+#strategy.volume_multiplier,0.8
+#strategy.atr_period,14
+#strategy.avg_atr_multiplier,2
+#
+# RISK MANAGEMENT (Conservative)
+#risk.risk_per_trade,0.10
+#risk.max_value_per_trade,5000
+#risk.allow_multiple_positions,false
+#risk.max_layers,1
+#risk.close_on_reverse,true
+#
+# RISK/REWARD & TIMING
+#strategy.rr_ratio,4.0
+#timing.sleep_interval_sec,10
+
+# STRATEGY 2: ULTRA-AGGRESSIVE (Currently Active - High Frequency)
+# Perfect for: Scalping, high-volume trading, catching every move
+# Characteristics: Many trades, mixed win rate, minimal confirmations
+# Risk Level: HIGH | Signal Frequency: VERY HIGH | Hold Time: VERY SHORT
+#
+# SIGNAL DETECTION (Minimal Requirements)
+strategy.buy_allow_equal_close,true
+strategy.buy_require_higher_high,false
+strategy.buy_require_higher_low,false
+strategy.sell_allow_equal_close,true
+strategy.sell_require_lower_low,false
+strategy.sell_require_lower_high,false
+#
+# FILTER THRESHOLDS (Very Low Standards)
+strategy.atr_multiplier_entry,0.1
+strategy.volume_multiplier,0.1
+strategy.atr_period,10
+strategy.avg_atr_multiplier,2
+#
+# RISK MANAGEMENT (Aggressive but Controlled)
+risk.risk_per_trade,0.05
+risk.max_value_per_trade,1000
+risk.allow_multiple_positions,true
+risk.max_layers,3
+risk.close_on_reverse,false
+#
+# RISK/REWARD & TIMING (Fast)
+strategy.rr_ratio,2.0
+timing.sleep_interval_sec,3
+
+# STRATEGY 3: BREAKOUT (Momentum Trading)
+# Perfect for: Range-bound markets, resistance/support breaks
+# Characteristics: Medium trades, good win rate, level-based entries
+# Risk Level: MEDIUM | Signal Frequency: MEDIUM | Hold Time: SHORT-MEDIUM
+#
+# SIGNAL DETECTION (Level-Based)
+#strategy.buy_allow_equal_close,true
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,false
+#strategy.sell_allow_equal_close,true
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,false
+#
+# FILTER THRESHOLDS (Moderate Standards)
+#strategy.atr_multiplier_entry,0.6
+#strategy.volume_multiplier,1.2
+#strategy.atr_period,12
+#strategy.avg_atr_multiplier,2
+#
+# RISK MANAGEMENT (Moderate)
+#risk.risk_per_trade,0.15
+#risk.max_value_per_trade,8000
+#risk.allow_multiple_positions,true
+#risk.max_layers,2
+#risk.close_on_reverse,true
+#
+# RISK/REWARD & TIMING
+#strategy.rr_ratio,3.5
+#timing.sleep_interval_sec,5
+
+# STRATEGY 4: TREND_FOLLOWING (Strong Directional Moves)
+# Perfect for: Trending markets, following momentum, swing trades
+# Characteristics: Fewer trades, high win rate, trend confirmations
+# Risk Level: LOW-MEDIUM | Signal Frequency: LOW | Hold Time: LONG
+#
+# SIGNAL DETECTION (Full Trend Confirmation)
+#strategy.buy_allow_equal_close,false
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,true
+#strategy.sell_allow_equal_close,false
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,true
+#
+# FILTER THRESHOLDS (High Standards for Trends)
+#strategy.atr_multiplier_entry,1.0
+#strategy.volume_multiplier,1.5
+#strategy.atr_period,20
+#strategy.avg_atr_multiplier,3
+#
+# RISK MANAGEMENT (Trend-Friendly)
+#risk.risk_per_trade,0.20
+#risk.max_value_per_trade,15000
+#risk.allow_multiple_positions,true
+#risk.max_layers,3
+#risk.close_on_reverse,false
+#
+# RISK/REWARD & TIMING (Patient)
+#strategy.rr_ratio,5.0
+#timing.sleep_interval_sec,15
+
+# STRATEGY 5: MODERATE (Balanced Approach)
+# Perfect for: Mixed market conditions, moderate risk tolerance
+# Characteristics: Balanced trades, decent win rate, flexible confirmations
+# Risk Level: MEDIUM | Signal Frequency: MEDIUM | Hold Time: MEDIUM
+#
+# SIGNAL DETECTION (Balanced Requirements)
+#strategy.buy_allow_equal_close,true
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,false
+#strategy.sell_allow_equal_close,true
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,false
+#
+# FILTER THRESHOLDS (Moderate Standards)
+#strategy.atr_multiplier_entry,0.5
+#strategy.volume_multiplier,0.6
+#strategy.atr_period,14
+#strategy.avg_atr_multiplier,2
+#
+# RISK MANAGEMENT (Balanced)
+#risk.risk_per_trade,0.15
+#risk.max_value_per_trade,7500
+#risk.allow_multiple_positions,true
+#risk.max_layers,2
+#risk.close_on_reverse,true
+#
+# RISK/REWARD & TIMING
+#strategy.rr_ratio,3.0
+#timing.sleep_interval_sec,7
+
+# STRATEGY 6: DOJI_SPECIALIST (Reversal Trading)
+# Perfect for: Support/resistance levels, reversal patterns
+# Characteristics: Selective trades, pattern-based, reversal focus
+# Risk Level: MEDIUM | Signal Frequency: LOW | Hold Time: MEDIUM
+#
+# SIGNAL DETECTION (Reversal Focus)
+#strategy.buy_allow_equal_close,true
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,true
+#strategy.sell_allow_equal_close,true
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,true
+#
+# FILTER THRESHOLDS (Reversal-Friendly)
+#strategy.atr_multiplier_entry,0.4
+#strategy.volume_multiplier,0.8
+#strategy.atr_period,10
+#strategy.avg_atr_multiplier,2
+#
+# RISK MANAGEMENT (Pattern-Based)
+#risk.risk_per_trade,0.12
+#risk.max_value_per_trade,6000
+#risk.allow_multiple_positions,false
+#risk.max_layers,1
+#risk.close_on_reverse,true
+#
+# RISK/REWARD & TIMING
+#strategy.rr_ratio,4.0
+#timing.sleep_interval_sec,8
+
+# STRATEGY 7: SCALPING (Ultra-Fast Trading)
+# Perfect for: Day trading, quick profits, high-frequency
+# Characteristics: Very many trades, quick exits, minimal holds
+# Risk Level: HIGH | Signal Frequency: EXTREME | Hold Time: SECONDS-MINUTES
+#
+# SIGNAL DETECTION (Minimal Confirmation)
+#strategy.buy_allow_equal_close,true
+#strategy.buy_require_higher_high,false
+#strategy.buy_require_higher_low,false
+#strategy.sell_allow_equal_close,true
+#strategy.sell_require_lower_low,false
+#strategy.sell_require_lower_high,false
+#
+# FILTER THRESHOLDS (Ultra-Low Standards)
+#strategy.atr_multiplier_entry,0.05
+#strategy.volume_multiplier,0.05
+#strategy.atr_period,5
+#strategy.avg_atr_multiplier,1
+#
+# RISK MANAGEMENT (Small Size, High Frequency)
+#risk.risk_per_trade,0.02
+#risk.max_value_per_trade,500
+#risk.allow_multiple_positions,true
+#risk.max_layers,5
+#risk.close_on_reverse,false
+#
+# RISK/REWARD & TIMING (Lightning Fast)
+#strategy.rr_ratio,1.5
+#timing.sleep_interval_sec,1
+
+# STRATEGY 8: SWING_TRADING (Position Holding)
+# Perfect for: Multi-day holds, strong moves, patient trading
+# Characteristics: Few trades, high conviction, longer holds
+# Risk Level: LOW | Signal Frequency: VERY LOW | Hold Time: DAYS-WEEKS
+#
+# SIGNAL DETECTION (High Conviction)
+#strategy.buy_allow_equal_close,false
+#strategy.buy_require_higher_high,true
+#strategy.buy_require_higher_low,false
+#strategy.sell_allow_equal_close,false
+#strategy.sell_require_lower_low,true
+#strategy.sell_require_lower_high,false
+#
+# FILTER THRESHOLDS (Very High Standards)
+#strategy.atr_multiplier_entry,1.5
+#strategy.volume_multiplier,2.0
+#strategy.atr_period,30
+#strategy.avg_atr_multiplier,4
+#
+# RISK MANAGEMENT (Position-Sized)
+#risk.risk_per_trade,0.25
+#risk.max_value_per_trade,25000
+#risk.allow_multiple_positions,false
+#risk.max_layers,1
+#risk.close_on_reverse,false
+#
+# RISK/REWARD & TIMING (Patient)
+#strategy.rr_ratio,6.0
+#timing.sleep_interval_sec,30
+
+# ========================================================================
+# CUSTOM STRATEGY TEMPLATE
+# ========================================================================
+# Copy and modify this template to create your own custom strategy:
+#
+# STRATEGY X: CUSTOM_NAME (Your Description)
+# Perfect for: [describe ideal market conditions]
+# Characteristics: [describe trade frequency, win rate, confirmations]
+# Risk Level: [LOW/MEDIUM/HIGH] | Signal Frequency: [LOW/MEDIUM/HIGH] | Hold Time: [SHORT/MEDIUM/LONG]
+#
+# SIGNAL DETECTION
+#strategy.buy_allow_equal_close,[true/false]
+#strategy.buy_require_higher_high,[true/false]
+#strategy.buy_require_higher_low,[true/false]
+#strategy.sell_allow_equal_close,[true/false]
+#strategy.sell_require_lower_low,[true/false]
+#strategy.sell_require_lower_high,[true/false]
+#
+# FILTER THRESHOLDS
+#strategy.atr_multiplier_entry,[0.05-2.0]
+#strategy.volume_multiplier,[0.05-3.0]
+#strategy.atr_period,[5-50]
+#strategy.avg_atr_multiplier,[1-5]
+#
+# RISK MANAGEMENT
+#risk.risk_per_trade,[0.01-0.50]
+#risk.max_value_per_trade,[500-50000]
+#risk.allow_multiple_positions,[true/false]
+#risk.max_layers,[1-10]
+#risk.close_on_reverse,[true/false]
+#
+# RISK/REWARD & TIMING
+#strategy.rr_ratio,[1.0-10.0]
+#timing.sleep_interval_sec,[1-60]
+#
+# ========================================================================

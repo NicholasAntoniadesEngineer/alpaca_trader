@@ -6,14 +6,39 @@
 
 namespace StrategyLogic {
 
-SignalDecision detect_signals(const ProcessedData& data) {
+SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& config) {
     SignalDecision decision;
-    decision.buy = (data.curr.c > data.curr.o) &&
-                   (data.curr.h > data.prev.h) &&
-                   (data.curr.l >= data.prev.l);
-    decision.sell = (data.curr.c < data.curr.o) &&
-                    (data.curr.l < data.prev.l) &&
-                    (data.curr.h <= data.prev.h);
+    
+    // Configurable BUY signal conditions
+    bool buy_close_condition = config.strategy.buy_allow_equal_close ? 
+                              (data.curr.c >= data.curr.o) : 
+                              (data.curr.c > data.curr.o);
+    
+    bool buy_high_condition = config.strategy.buy_require_higher_high ? 
+                             (data.curr.h > data.prev.h) : 
+                             true;
+    
+    bool buy_low_condition = config.strategy.buy_require_higher_low ? 
+                            (data.curr.l >= data.prev.l) : 
+                            true;
+    
+    decision.buy = buy_close_condition && buy_high_condition && buy_low_condition;
+    
+    // Configurable SELL signal conditions
+    bool sell_close_condition = config.strategy.sell_allow_equal_close ? 
+                               (data.curr.c <= data.curr.o) : 
+                               (data.curr.c < data.curr.o);
+    
+    bool sell_low_condition = config.strategy.sell_require_lower_low ? 
+                             (data.curr.l < data.prev.l) : 
+                             true;
+    
+    bool sell_high_condition = config.strategy.sell_require_lower_high ? 
+                              (data.curr.h <= data.prev.h) : 
+                              true;
+    
+    decision.sell = sell_close_condition && sell_low_condition && sell_high_condition;
+    
     return decision;
 }
 
@@ -34,8 +59,9 @@ FilterResult evaluate_filters(const ProcessedData& data, const TraderConfig& con
  * This function implements a comprehensive position sizing algorithm that considers:
  * 1. Risk per trade (% of equity to risk)
  * 2. Maximum exposure limits (% of equity in positions) 
- * 3. Available buying power (for margin/short selling)
- * 4. Existing positions (to prevent over-exposure)
+ * 3. Maximum value per trade (dollar amount limit per trade)
+ * 4. Available buying power (for margin/short selling)
+ * 5. Existing positions (to prevent over-exposure)
  * 
  * The algorithm takes the MINIMUM of all constraints to ensure safe position sizing.
  * 
@@ -73,7 +99,16 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
     // Take the minimum of risk-based and exposure-based constraints
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
-    // CONSTRAINT 3: Buying power limitation (if provided)
+    // CONSTRAINT 3: Maximum value per trade limitation (if configured)
+    int max_value_qty = INT_MAX; // Default to no max value constraint
+    if (config.risk.max_value_per_trade > 0.0) {
+        max_value_qty = static_cast<int>(std::floor(config.risk.max_value_per_trade / data.curr.c));
+        
+        // Apply the most restrictive constraint so far
+        sizing.quantity = std::min(sizing.quantity, max_value_qty);
+    }
+    
+    // CONSTRAINT 4: Buying power limitation (if provided)
     int buying_power_qty = INT_MAX; // Default to no buying power constraint
     if (buying_power > 0.0) {
         // Apply configurable safety factor (default 80% of buying power)
@@ -87,6 +122,7 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
     // Store debug information for logging
     sizing.risk_based_qty = equity_based_qty;
     sizing.exposure_based_qty = exposure_based_qty;
+    sizing.max_value_qty = max_value_qty;
     sizing.buying_power_qty = buying_power_qty;
     
     // Final validation: ensure we have a valid quantity

@@ -15,6 +15,7 @@
 #include "threads/trader_thread.hpp"
 #include "threads/thread_manager.hpp"
 #include "logging/async_logger.hpp"
+#include "utils/connectivity_manager.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
