@@ -4,7 +4,7 @@
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
-INCLUDES = -I.
+INCLUDES = -I. -Isrc
 LIBS = -lcurl -pthread
 
 # Directories
@@ -14,33 +14,35 @@ GIT_HASH = $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Source files (now in consolidated structure)
-SOURCES = main.cpp \
-          api/clock/market_clock.cpp \
-          api/market/market_data_client.cpp \
-          api/orders/order_client.cpp \
-          core/trader.cpp \
-          core/strategy_logic.cpp \
-          core/risk_logic.cpp \
-          core/market_processing.cpp \
-          utils/config_loader.cpp \
-          data/account_manager.cpp \
-          ui/account_display.cpp \
-          utils/http_utils.cpp \
-          core/indicators.cpp \
-          logging/async_logger.cpp \
-          logging/trading_logger.cpp \
-          logging/thread_logger.cpp \
-          logging/startup_logger.cpp \
-          threads/config/thread_config.cpp \
-          threads/platform/thread_control.cpp \
-          threads/platform/linux/linux_thread_control.cpp \
-          threads/platform/macos/macos_thread_control.cpp \
-          threads/platform/windows/windows_thread_control.cpp \
-          threads/thread_manager.cpp \
-          threads/account_data_thread.cpp \
-          threads/market_data_thread.cpp \
-          threads/logging_thread.cpp \
-          threads/trader_thread.cpp
+SOURCES = src/main.cpp \
+          src/api/clock/market_clock.cpp \
+          src/api/market/market_data_client.cpp \
+          src/api/orders/order_client.cpp \
+          src/core/trader.cpp \
+          src/core/strategy_logic.cpp \
+          src/core/risk_logic.cpp \
+          src/core/market_processing.cpp \
+          src/core/system_manager.cpp \
+          src/configs/component_configs.cpp \
+          src/utils/config_loader.cpp \
+          src/account_manager/account_manager.cpp \
+          src/logging/account_logger.cpp \
+          src/utils/http_utils.cpp \
+          src/core/indicators.cpp \
+          src/logging/async_logger.cpp \
+          src/logging/trading_logger.cpp \
+          src/logging/thread_logger.cpp \
+          src/logging/startup_logger.cpp \
+          src/threads/config/thread_config.cpp \
+          src/threads/platform/thread_control.cpp \
+          src/threads/platform/linux/linux_thread_control.cpp \
+          src/threads/platform/macos/macos_thread_control.cpp \
+          src/threads/platform/windows/windows_thread_control.cpp \
+          src/threads/thread_manager.cpp \
+          src/threads/account_data_thread.cpp \
+          src/threads/market_data_thread.cpp \
+          src/threads/logging_thread.cpp \
+          src/threads/trader_thread.cpp
 
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
@@ -54,22 +56,24 @@ $(BIN_DIR):
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
-	mkdir -p $(OBJ_DIR)/api
-	mkdir -p $(OBJ_DIR)/api/base
-	mkdir -p $(OBJ_DIR)/api/clock
-	mkdir -p $(OBJ_DIR)/api/market
-	mkdir -p $(OBJ_DIR)/api/orders
-	mkdir -p $(OBJ_DIR)/core
-	mkdir -p $(OBJ_DIR)/data
-	mkdir -p $(OBJ_DIR)/ui
-	mkdir -p $(OBJ_DIR)/utils
-	mkdir -p $(OBJ_DIR)/logging
-	mkdir -p $(OBJ_DIR)/threads
-	mkdir -p $(OBJ_DIR)/threads/config
-	mkdir -p $(OBJ_DIR)/threads/platform
-	mkdir -p $(OBJ_DIR)/threads/platform/linux
-	mkdir -p $(OBJ_DIR)/threads/platform/macos
-	mkdir -p $(OBJ_DIR)/threads/platform/windows
+	mkdir -p $(OBJ_DIR)/src
+	mkdir -p $(OBJ_DIR)/src/api
+	mkdir -p $(OBJ_DIR)/src/api/base
+	mkdir -p $(OBJ_DIR)/src/api/clock
+	mkdir -p $(OBJ_DIR)/src/api/market
+	mkdir -p $(OBJ_DIR)/src/api/orders
+	mkdir -p $(OBJ_DIR)/src/core
+	mkdir -p $(OBJ_DIR)/src/configs
+	mkdir -p $(OBJ_DIR)/src/account_manager
+	mkdir -p $(OBJ_DIR)/src/json
+	mkdir -p $(OBJ_DIR)/src/utils
+	mkdir -p $(OBJ_DIR)/src/logging
+	mkdir -p $(OBJ_DIR)/src/threads
+	mkdir -p $(OBJ_DIR)/src/threads/config
+	mkdir -p $(OBJ_DIR)/src/threads/platform
+	mkdir -p $(OBJ_DIR)/src/threads/platform/linux
+	mkdir -p $(OBJ_DIR)/src/threads/platform/macos
+	mkdir -p $(OBJ_DIR)/src/threads/platform/windows
 
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
