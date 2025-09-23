@@ -8,6 +8,7 @@
 #include <tuple>
 #include <string>
 #include <thread>
+#include <memory>
 
 // Forward declarations
 struct SystemThreads;
@@ -53,7 +54,7 @@ private:
 };
 
 // Thread lifecycle management functions
-SystemThreads setup_and_start_threads(TradingSystemModules& modules, AsyncLogger& logger, const SystemConfig& config);
+SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared_ptr<AsyncLogger> logger, const SystemConfig& config);
 void shutdown_system_threads(SystemThreads& handles);
 
 } // namespace ThreadSystem

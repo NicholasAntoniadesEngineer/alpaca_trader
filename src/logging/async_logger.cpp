@@ -116,9 +116,9 @@ std::string generate_timestamped_log_filename(const std::string& base_filename) 
         extension = base_filename.substr(dot_pos);
     }
     
-    // Create timestamped filename with git hash: base_name_MM-DD-MM-SS_githash.extension
+    // Create timestamped filename with git hash: base_name_DD-HH-MM_githash.extension
     std::stringstream ss;
-    ss << base_name << "_" << std::put_time(local_tm, "%m-%d-%M-%S") << "_" << git_hash << extension;
+    ss << base_name << "_" << std::put_time(local_tm, "%d-%H-%M") << "_" << git_hash << extension;
     return ss.str();
 }
 

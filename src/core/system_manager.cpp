@@ -7,6 +7,7 @@
 #include <chrono>
 #include <csignal>
 #include <thread>
+#include <ctime>
 
 // =============================================================================
 // SIGNAL HANDLING
@@ -37,33 +38,36 @@ static void log_startup_information(const TradingSystemModules& modules, const S
 
 namespace SystemManager {
 
-SystemThreads startup(SystemState& system_state, AsyncLogger& logger) {
-    // Create all trading system modules
-    TradingSystemModules trading_modules = create_trading_modules(system_state);
+SystemThreads startup(SystemState& system_state, std::shared_ptr<AsyncLogger> logger) {
+    // Create all trading system modules and store them in system_state for lifetime management
+    system_state.trading_modules = std::make_unique<TradingSystemModules>(create_trading_modules(system_state));
     
     // Log startup information
-    log_startup_information(trading_modules, system_state.config);
+    log_startup_information(*system_state.trading_modules, system_state.config);
     
     // Configure trading modules
-    configure_trading_modules(system_state, trading_modules);
+    configure_trading_modules(system_state, *system_state.trading_modules);
     
     // Setup signal handling for graceful shutdown
     setup_signal_handlers(system_state.running);
     
     // Setup and start all threads
-    return ThreadSystem::setup_and_start_threads(trading_modules, logger, system_state.config);
+    return ThreadSystem::setup_and_start_threads(*system_state.trading_modules, logger, system_state.config);
 }
 
 static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
+    const int monitoring_interval_sec = state.config.timing.monitoring_interval_sec;
     auto last_monitoring_time = std::chrono::steady_clock::now();
-    const auto monitoring_interval = std::chrono::seconds(state.config.timing.monitoring_interval_sec);
     
     while (state.running.load()) {
+        // Sleep for 1 second instead of busy wait
         std::this_thread::sleep_for(std::chrono::seconds(1));
         
-        // Periodic monitoring
+        // Check if it's time for monitoring output
         auto current_time = std::chrono::steady_clock::now();
-        if (current_time - last_monitoring_time >= monitoring_interval) {
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_monitoring_time).count();
+        
+        if (elapsed_seconds >= monitoring_interval_sec) {
             ThreadSystem::Manager::log_thread_monitoring_stats(handles);
             last_monitoring_time = current_time;
         }
@@ -74,7 +78,7 @@ void run(SystemState& system_state, SystemThreads& handles) {
     run_until_shutdown(system_state, handles);
 }
 
-void shutdown(SystemState& system_state, SystemThreads& handles, AsyncLogger& logger) {
+void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
     
@@ -82,7 +86,7 @@ void shutdown(SystemState& system_state, SystemThreads& handles, AsyncLogger& lo
     ThreadSystem::shutdown_system_threads(handles);
     
     // Shutdown logging system
-    shutdown_global_logger(logger);
+    shutdown_global_logger(*logger);
 }
 
 } // namespace SystemManager

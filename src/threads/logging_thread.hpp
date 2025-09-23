@@ -7,24 +7,20 @@
 #include <queue>
 #include <atomic>
 #include <fstream>
+#include <memory>
+
+// Forward declaration
+class AsyncLogger;
 
 class LoggingThread {
 private:
-    std::string file_path;
-    std::mutex& mtx;
-    std::condition_variable& cv;
-    std::queue<std::string>& queue;
-    std::atomic<bool>& running;
+    std::shared_ptr<AsyncLogger> logger_ptr;
     std::atomic<unsigned long>& logger_iterations;
 
 public:
-    LoggingThread(const std::string& log_file_path,
-                std::mutex& m,
-                std::condition_variable& c,
-                std::queue<std::string>& q,
-                std::atomic<bool>& r,
-                std::atomic<unsigned long>& iterations)
-        : file_path(log_file_path), mtx(m), cv(c), queue(q), running(r), logger_iterations(iterations) {}
+    LoggingThread(std::shared_ptr<AsyncLogger> logger,
+                  std::atomic<unsigned long>& iterations)
+        : logger_ptr(logger), logger_iterations(iterations) {}
 
     void operator()();
 };

@@ -4,6 +4,7 @@
 #include "logging/startup_logger.hpp"
 #include "logging/async_logger.hpp"
 #include "core/system_manager.hpp"
+#include <memory>
 
 // =============================================================================
 // MAIN APPLICATION ENTRY POINT
@@ -19,8 +20,8 @@ int main() {
     
     // Initialize application foundation (logging, validation)
     std::string timestamped_log_file = generate_timestamped_log_filename(system_state.config.logging.log_file);
-    AsyncLogger logger(timestamped_log_file);
-    StartupLogger::initialize_application_foundation(system_state.config, logger);
+    auto logger = std::make_shared<AsyncLogger>(timestamped_log_file);
+    StartupLogger::initialize_application_foundation(system_state.config, *logger);
     
     // Start the complete trading system
     SystemThreads thread_handles = SystemManager::startup(system_state, logger);

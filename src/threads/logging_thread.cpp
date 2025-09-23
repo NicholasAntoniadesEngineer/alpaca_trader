@@ -5,6 +5,7 @@
 #include "platform/thread_control.hpp"
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 extern std::mutex g_console_mtx;
 extern std::atomic<bool> g_inline_active;
@@ -17,20 +18,19 @@ void LoggingThread::operator()() {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     
-    std::ofstream log_file(file_path, std::ios::app);
-    running.store(true);
+    std::ofstream log_file(logger_ptr->get_file_path(), std::ios::app);
+    logger_ptr->running.store(true);
     
-    while (running.load()) {
-        std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock, [&]{ return !queue.empty() || !running.load(); });
+    while (logger_ptr->running.load()) {
+        std::unique_lock<std::mutex> lock(logger_ptr->mtx);
+        logger_ptr->cv.wait(lock, [&]{ return !logger_ptr->queue.empty() || !logger_ptr->running.load(); });
         
-        while (!queue.empty()) {
-            std::string line = std::move(queue.front());
-            queue.pop();
+        while (!logger_ptr->queue.empty()) {
+            std::string line = std::move(logger_ptr->queue.front());
+            logger_ptr->queue.pop();
             logger_iterations++;
             lock.unlock();
             
-
             {
                 std::lock_guard<std::mutex> cguard(g_console_mtx);
                 if (g_inline_active.load()) {

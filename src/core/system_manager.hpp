@@ -2,6 +2,9 @@
 #ifndef SYSTEM_MANAGER_HPP
 #define SYSTEM_MANAGER_HPP
 
+#include <mutex>
+#include <memory>
+
 // Forward declarations
 struct SystemState;
 struct SystemThreads;
@@ -22,7 +25,7 @@ namespace SystemManager {
  * @param logger The initialized logger
  * @return SystemThreads handles for the running system
  */
-SystemThreads startup(SystemState& system_state, AsyncLogger& logger);
+SystemThreads startup(SystemState& system_state, std::shared_ptr<AsyncLogger> logger);
 
 /**
  * Run the trading system until shutdown signal
@@ -42,7 +45,7 @@ void run(SystemState& system_state, SystemThreads& handles);
  * @param handles Thread handles for the running system
  * @param logger The logger to shutdown
  */
-void shutdown(SystemState& system_state, SystemThreads& handles, AsyncLogger& logger);
+void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AsyncLogger> logger);
 
 } // namespace SystemManager
 

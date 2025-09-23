@@ -34,6 +34,9 @@ struct SystemState {
     std::atomic<bool> allow_fetch{true};
     SystemConfig config; 
     TraderConfig trader_view;
+    
+    // Store trading modules to ensure lifetime throughout execution
+    std::unique_ptr<TradingSystemModules> trading_modules;
 
     SystemState() : trader_view(config.strategy, config.risk, config.timing,
                                 config.flags, config.ux, config.logging, config.target) {}

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 namespace ThreadSystem {
 
@@ -114,42 +115,41 @@ void Manager::log_thread_monitoring_stats(const SystemThreads& handles) {
     // Calculate performance rate
     double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
     
-    // Log thread status table
-    LOG_THREAD_STATUS_HEADER();
-    LOG_THREAD_STATUS_TABLE_HEADER();
-    LOG_THREAD_STATUS_TABLE_COLUMNS();
-    LOG_THREAD_STATUS_TABLE_SEPARATOR();
+    // Use proper table macros for consistent formatting
+    TABLE_HEADER_48("Thread Monitor", "Iteration Counts & Performance");
     
-    // Build table row with iteration counts
-    std::ostringstream table_row;
-    table_row << "| " << std::setw(8) << std::left << handles.market_iterations.load()
-              << " | " << std::setw(8) << std::left << handles.account_iterations.load() 
-              << " | " << std::setw(8) << std::left << handles.trader_iterations.load()
-              << " | " << std::setw(8) << std::left << handles.gate_iterations.load()
-              << " | " << std::setw(8) << std::left << handles.logger_iterations.load() << " |";
-    LOG_THREAD_CONTENT(table_row.str());
+    TABLE_ROW_48("Market Thread", std::to_string(handles.market_iterations.load()) + " iterations");
+    TABLE_ROW_48("Account Thread", std::to_string(handles.account_iterations.load()) + " iterations");
+    TABLE_ROW_48("Trader Thread", std::to_string(handles.trader_iterations.load()) + " iterations");
+    TABLE_ROW_48("Gate Thread", std::to_string(handles.gate_iterations.load()) + " iterations");
+    TABLE_ROW_48("Logger Thread", std::to_string(handles.logger_iterations.load()) + " iterations");
     
-    LOG_THREAD_STATUS_TABLE_FOOTER();
-    LOG_THREAD_SEPARATOR();
+    TABLE_SEPARATOR_48();
     
-    // Log performance summary
-    std::ostringstream summary;
-    summary << "Total Iterations: " << total_iterations << "  |  Rate: " 
-            << std::fixed << std::setprecision(1) << iterations_per_second << "/s";
-    LOG_THREAD_CONTENT(summary.str());
+    // Performance summary
+    std::string runtime_display = std::to_string((int)runtime_seconds) + " seconds";
+    TABLE_ROW_48("Runtime", runtime_display);
+    
+    std::string total_display = std::to_string(total_iterations) + " total";
+    TABLE_ROW_48("Total Iterations", total_display);
+    
+    std::ostringstream rate_stream;
+    rate_stream << std::fixed << std::setprecision(1) << iterations_per_second << "/sec";
+    TABLE_ROW_48("Performance Rate", rate_stream.str());
+    
+    TABLE_FOOTER_48();
 }
 
 // =============================================================================
 // THREAD SETUP AND LIFECYCLE MANAGEMENT
 // =============================================================================
 
-SystemThreads setup_and_start_threads(TradingSystemModules& modules, AsyncLogger& logger, const SystemConfig& config) {
+SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared_ptr<AsyncLogger> logger, const SystemConfig& config) {
     SystemThreads handles;
     
     // Create remaining thread objects
     modules.logging_thread = std::make_unique<LoggingThread>(
-        logger.get_file_path(), logger.mtx, logger.cv, logger.queue, 
-        logger.running, handles.logger_iterations
+        logger, handles.logger_iterations
     );
     modules.trading_thread = std::make_unique<TraderThread>(
         *modules.trading_engine, handles.trader_iterations
