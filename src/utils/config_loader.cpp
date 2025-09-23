@@ -54,15 +54,15 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "risk.buying_power_validation_factor") cfg.risk.buying_power_validation_factor = std::stod(value);
 
         // Timing (System Infrastructure Only)
-        else if (key == "timing.account_poll_sec") cfg.timing.account_poll_sec = std::stoi(value);
-        else if (key == "timing.bar_fetch_minutes") cfg.timing.bar_fetch_minutes = std::stoi(value);
-        else if (key == "timing.bar_buffer") cfg.timing.bar_buffer = std::stoi(value);
-        else if (key == "timing.market_open_check_sec") cfg.timing.market_open_check_sec = std::stoi(value);
-        else if (key == "timing.pre_open_buffer_min") cfg.timing.pre_open_buffer_min = std::stoi(value);
-        else if (key == "timing.post_close_buffer_min") cfg.timing.post_close_buffer_min = std::stoi(value);
-        else if (key == "timing.halt_sleep_min") cfg.timing.halt_sleep_min = std::stoi(value);
-        else if (key == "timing.countdown_tick_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
-        else if (key == "timing.monitoring_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
+        else if (key == "timing.account_data_poll_interval_sec") cfg.timing.account_poll_sec = std::stoi(value);
+        else if (key == "timing.historical_bars_fetch_minutes") cfg.timing.bar_fetch_minutes = std::stoi(value);
+        else if (key == "timing.historical_bars_buffer_count") cfg.timing.bar_buffer = std::stoi(value);
+        else if (key == "timing.market_status_check_interval_sec") cfg.timing.market_open_check_sec = std::stoi(value);
+        else if (key == "timing.market_pre_open_buffer_minutes") cfg.timing.pre_open_buffer_min = std::stoi(value);
+        else if (key == "timing.market_post_close_buffer_minutes") cfg.timing.post_close_buffer_min = std::stoi(value);
+        else if (key == "timing.trading_halt_sleep_minutes") cfg.timing.halt_sleep_min = std::stoi(value);
+        else if (key == "timing.countdown_display_interval_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
+        else if (key == "timing.thread_monitor_log_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
 
         // Session
         else if (key == "session.et_utc_offset_hours") cfg.session.et_utc_offset_hours = std::stoi(value);

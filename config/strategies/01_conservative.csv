@@ -1,0 +1,32 @@
+# ========================================================================
+# STRATEGY 1: CONSERVATIVE
+# ========================================================================
+# Perfect for: Trending markets, risk-averse traders
+# Characteristics: Few trades, high win rate, strong confirmations
+# Risk Level: LOW | Signal Frequency: LOW | Hold Time: MEDIUM-LONG
+# ========================================================================
+
+# SIGNAL DETECTION (Strong Confirmations Required)
+strategy.buy_allow_equal_close,false
+strategy.buy_require_higher_high,true
+strategy.buy_require_higher_low,true
+strategy.sell_allow_equal_close,false
+strategy.sell_require_lower_low,true
+strategy.sell_require_lower_high,true
+
+# FILTER THRESHOLDS (High Standards)
+strategy.atr_multiplier_entry,0.8
+strategy.volume_multiplier,0.8
+strategy.atr_period,14
+strategy.avg_atr_multiplier,2
+
+# RISK MANAGEMENT (Conservative)
+risk.risk_per_trade,0.10
+risk.max_value_per_trade,5000
+risk.allow_multiple_positions,false
+risk.max_layers,1
+risk.close_on_reverse,true
+
+# RISK/REWARD & TIMING
+strategy.rr_ratio,4.0
+timing.sleep_interval_sec,10

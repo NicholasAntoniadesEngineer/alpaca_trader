@@ -30,6 +30,8 @@ static void log_startup_information(const TradingSystemModules& modules, const S
     StartupLogger::log_financial_summary(*modules.portfolio_manager);
     StartupLogger::log_current_positions(*modules.portfolio_manager);
     StartupLogger::log_data_source_configuration(config);
+    StartupLogger::log_runtime_configuration(config);
+    StartupLogger::log_strategy_configuration(config);
 }
 
 // =============================================================================

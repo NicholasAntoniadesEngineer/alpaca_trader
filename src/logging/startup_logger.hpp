@@ -31,8 +31,10 @@ public:
     static void log_thread_system_startup(const TimingConfig& timing_config);
     static void log_thread_system_complete();
     
-    // Trading system configuration
-    static void log_trading_configuration(const TraderConfig& config);
+    
+    // System configuration tables
+    static void log_runtime_configuration(const SystemConfig& config);
+    static void log_strategy_configuration(const SystemConfig& config);
     
 private:
     static std::string format_currency(double amount);

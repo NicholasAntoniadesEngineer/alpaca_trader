@@ -8,6 +8,9 @@
 #include <vector>
 #include <tuple>
 
+// Forward declarations
+struct SystemConfig;
+
 /**
  * Specialized high-performance logging for trading operations.
  * Optimized for minimal latency in critical trading paths.
@@ -36,8 +39,6 @@ public:
     static void log_signal_analysis_start(const std::string& symbol);
     static void log_signal_analysis_complete();
     
-    // Headers and configurations
-    static void log_header_and_config(const TraderConfig& config);
     
     // Market conditions
     static void log_market_status(bool is_open, const std::string& reason = "");
@@ -70,15 +71,16 @@ public:
     static void log_decision_summary_table(const std::string& symbol, double price, bool buy_signal, bool sell_signal, bool atr_pass, bool volume_pass, bool doji_pass, double exposure_pct, double atr_ratio, double volume_ratio);
     
     // System startup and status tables
-    static void log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio);
+    static void log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval);
     static void log_account_overview_table(const std::string& account_number, const std::string& status, const std::string& currency, bool pattern_day_trader, const std::string& created_date);
     static void log_financial_summary_table(double equity, double last_equity, double cash, double buying_power, double long_market_value, double short_market_value, double initial_margin, double maintenance_margin, double sma, int day_trade_count, double regt_buying_power, double day_trading_buying_power);
     static void log_current_positions_table(int quantity, double current_value, double unrealized_pnl, double exposure_pct, int open_orders);
     static void log_data_source_table(const std::string& symbol, const std::string& account_type);
-    static void log_configuration_table(const std::string& symbol, double risk_per_trade, double rr_ratio, int loop_interval);
     static void log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled);
     static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses = {});
     static void log_data_source_info_table(const std::string& source, double price, const std::string& status);
+    static void log_runtime_config_table(const SystemConfig& config);
+    static void log_strategy_config_table(const SystemConfig& config);
     
     // Market data fetching tables
     static void log_market_data_fetch_table(const std::string& symbol);

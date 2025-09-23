@@ -2,6 +2,9 @@
 // ALPACA TRADER - SYSTEM CONFIGURATION
 // ========================================================================
 
+// ========================================================================
+// API CONNECTION SETTINGS
+// ========================================================================
 api.api_key,PKFV5ODSQ2G2TA5DLIIT
 api.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
 api.base_url,https://paper-api.alpaca.markets
@@ -12,11 +15,13 @@ api.enable_ssl_verification,true
 api.rate_limit_delay_ms,100
 api.api_version,v2
 
+// ========================================================================
+// TRADING TARGET CONFIGURATION
+// ========================================================================
 target.symbol,SPY
 
-
 // ========================================================================
-// RISK MANAGEMENT
+// RISK MANAGEMENT SETTINGS
 // ========================================================================
 risk.daily_max_loss,-1
 risk.daily_profit_target,0.3
@@ -26,26 +31,54 @@ risk.buying_power_usage_factor,0.8
 risk.buying_power_validation_factor,1.25
 
 // ========================================================================
-// SYSTEM TIMING
+// DATA POLLING CONFIGURATION
 // ========================================================================
-timing.account_poll_sec,5
-timing.bar_fetch_minutes,120
-timing.bar_buffer,20
-timing.market_open_check_sec,15
-timing.pre_open_buffer_min,5
-timing.post_close_buffer_min,5
-timing.halt_sleep_min,1
-timing.countdown_tick_sec,1
-timing.monitoring_interval_sec,20
+timing.account_data_poll_interval_sec,5
+timing.historical_bars_fetch_minutes,120
+timing.historical_bars_buffer_count,20
 
+// ========================================================================
+// MARKET MONITORING CONFIGURATION
+// ========================================================================
+timing.market_status_check_interval_sec,15
+timing.market_pre_open_buffer_minutes,5
+timing.market_post_close_buffer_minutes,5
+
+// ========================================================================
+// SYSTEM MONITORING CONFIGURATION
+// ========================================================================
+timing.thread_monitor_log_interval_sec,60
+
+// ========================================================================
+// ERROR HANDLING CONFIGURATION
+// ========================================================================
+timing.trading_halt_sleep_minutes,1
+
+// ========================================================================
+// USER INTERFACE TIMING
+// ========================================================================
+timing.countdown_display_interval_sec,1
+
+// ========================================================================
+// MARKET SESSION CONFIGURATION
+// ========================================================================
 session.et_utc_offset_hours,-4
 session.market_open_hour,9
 session.market_open_minute,30
 session.market_close_hour,16
 session.market_close_minute,0
 
+// ========================================================================
+// SYSTEM FLAGS AND OPTIONS
+// ========================================================================
 flags.debug_mode,false
 
+// ========================================================================
+// USER INTERFACE SETTINGS
+// ========================================================================
 ux.log_float_chars,4
 
+// ========================================================================
+// LOGGING CONFIGURATION
+// ========================================================================
 logging.log_file,trade_log.txt

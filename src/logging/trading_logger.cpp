@@ -2,6 +2,7 @@
 #include "startup_logger.hpp"
 #include "async_logger.hpp"
 #include "logging_macros.hpp"
+#include "../configs/system_config.hpp"
 #include <iomanip>
 #include <sstream>
 #include <climits>
@@ -24,7 +25,8 @@ void TradingLogger::log_startup(const TraderConfig& config, double initial_equit
         config.target.symbol,
         initial_equity,
         config.risk.risk_per_trade,
-        config.strategy.rr_ratio
+        config.strategy.rr_ratio,
+        config.timing.sleep_interval_sec
     );
 }
 
@@ -170,9 +172,6 @@ void TradingLogger::log_loop_header(unsigned long loop_number, const std::string
     LOG_TRADING_LOOP_HEADER(loop_number, symbol);
 }
 
-void TradingLogger::log_header_and_config(const TraderConfig& config) {
-    StartupLogger::log_trading_configuration(config);
-}
 
 void TradingLogger::log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals) {
     log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
@@ -422,8 +421,8 @@ void TradingLogger::log_market_data_result_table(const std::string& description,
 // System Startup and Status Tables
 // ========================================================================
 
-void TradingLogger::log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio) {
-    TABLE_HEADER_48("Trader Startup", "Configuration");
+void TradingLogger::log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval) {
+    TABLE_HEADER_48("Trading Overview", "Current Session");
     
     TABLE_ROW_48("Trading Symbol", symbol);
     TABLE_ROW_48("Initial Equity", format_currency(initial_equity));
@@ -433,6 +432,9 @@ void TradingLogger::log_trader_startup_table(const std::string& symbol, double i
     
     std::string rr_display = "1:" + std::to_string(rr_ratio).substr(0,6);
     TABLE_ROW_48("Risk/Reward", rr_display);
+    
+    std::string interval_display = std::to_string(loop_interval) + " seconds";
+    TABLE_ROW_48("Loop Interval", interval_display);
     
     TABLE_FOOTER_48();
 }
@@ -493,7 +495,7 @@ void TradingLogger::log_current_positions_table(int quantity, double current_val
 }
 
 void TradingLogger::log_data_source_table(const std::string& symbol, const std::string& account_type) {
-    TABLE_HEADER_48("Data Sources", "Configuration");
+    TABLE_HEADER_48("Data Sources", "Feed Configuration");
     
     TABLE_ROW_48("Historical Bars", "IEX Feed (15-min delayed)");
     TABLE_ROW_48("Real-time Quotes", "IEX Free (limited coverage)");
@@ -503,25 +505,9 @@ void TradingLogger::log_data_source_table(const std::string& symbol, const std::
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_configuration_table(const std::string& symbol, double risk_per_trade, double rr_ratio, int loop_interval) {
-    TABLE_HEADER_48("Configuration", "Trading Parameters");
-    
-    TABLE_ROW_48("Symbol", symbol);
-    
-    std::string risk_display = std::to_string(risk_per_trade * 100.0).substr(0,5) + "%";
-    TABLE_ROW_48("Risk per Trade", risk_display);
-    
-    std::string rr_display = "1:" + std::to_string(rr_ratio).substr(0,6);
-    TABLE_ROW_48("Risk/Reward", rr_display);
-    
-    std::string interval_display = std::to_string(loop_interval) + " seconds";
-    TABLE_ROW_48("Loop Interval", interval_display);
-    
-    TABLE_FOOTER_48();
-}
 
 void TradingLogger::log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled) {
-    TABLE_HEADER_48("Thread System", "Configuration");
+    TABLE_HEADER_48("Thread System", "Performance Settings");
     
     std::string priorities_display = priorities_enabled ? "ENABLED" : "DISABLED";
     TABLE_ROW_48("Thread Priorities", priorities_display);
@@ -552,6 +538,83 @@ void TradingLogger::log_thread_priorities_table(const std::vector<std::tuple<std
             TABLE_ROW_48(thread_name, status_display);
         }
     }
+    
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_runtime_config_table(const SystemConfig& config) {
+    TABLE_HEADER_48("Runtime Config", "System Settings");
+    
+    // API Configuration
+    std::string api_env = (config.api.base_url.find("paper") != std::string::npos) ? "PAPER" : "LIVE";
+    TABLE_ROW_48("Environment", api_env);
+    TABLE_ROW_48("API Version", config.api.api_version);
+    TABLE_ROW_48("Retry Count", std::to_string(config.api.retry_count));
+    TABLE_ROW_48("Timeout", std::to_string(config.api.timeout_seconds) + "s");
+    
+    TABLE_SEPARATOR_48();
+    
+    // Risk Management
+    TABLE_ROW_48("Max Exposure", std::to_string((int)config.risk.max_exposure_pct) + "%");
+    TABLE_ROW_48("BP Usage Factor", std::to_string(config.risk.buying_power_usage_factor).substr(0,4));
+    
+    std::string daily_loss = (config.risk.daily_max_loss == -1) ? "UNLIMITED" : std::to_string(config.risk.daily_max_loss) + "%";
+    TABLE_ROW_48("Daily Max Loss", daily_loss);
+    TABLE_ROW_48("Profit Target", std::to_string(config.risk.daily_profit_target) + "%");
+    
+    TABLE_SEPARATOR_48();
+    
+    // Timing Configuration
+    TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.account_poll_sec) + "s");
+    TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.bar_fetch_minutes) + "m");
+    TABLE_ROW_48("Market Status Check", std::to_string(config.timing.market_open_check_sec) + "s");
+    TABLE_ROW_48("Thread Monitor Log", std::to_string(config.timing.monitoring_interval_sec) + "s");
+    
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_strategy_config_table(const SystemConfig& config) {
+    TABLE_HEADER_48("Strategy Config", "Trading Strategy Settings");
+    
+    // Signal Detection
+    std::string buy_equal = config.strategy.buy_allow_equal_close ? "YES" : "NO";
+    std::string buy_higher_high = config.strategy.buy_require_higher_high ? "YES" : "NO";
+    std::string buy_higher_low = config.strategy.buy_require_higher_low ? "YES" : "NO";
+    TABLE_ROW_48("Buy Equal Close", buy_equal);
+    TABLE_ROW_48("Buy Higher High", buy_higher_high);
+    TABLE_ROW_48("Buy Higher Low", buy_higher_low);
+    
+    TABLE_SEPARATOR_48();
+    
+    std::string sell_equal = config.strategy.sell_allow_equal_close ? "YES" : "NO";
+    std::string sell_lower_low = config.strategy.sell_require_lower_low ? "YES" : "NO";
+    std::string sell_lower_high = config.strategy.sell_require_lower_high ? "YES" : "NO";
+    TABLE_ROW_48("Sell Equal Close", sell_equal);
+    TABLE_ROW_48("Sell Lower Low", sell_lower_low);
+    TABLE_ROW_48("Sell Lower High", sell_lower_high);
+    
+    TABLE_SEPARATOR_48();
+    
+    // Filter Thresholds
+    TABLE_ROW_48("ATR Multiplier", std::to_string(config.strategy.atr_multiplier_entry).substr(0,4));
+    TABLE_ROW_48("Volume Multiplier", std::to_string(config.strategy.volume_multiplier).substr(0,4));
+    TABLE_ROW_48("ATR Period", std::to_string(config.strategy.atr_period));
+    TABLE_ROW_48("Avg ATR Multi", std::to_string(config.strategy.avg_atr_multiplier).substr(0,4));
+    
+    TABLE_SEPARATOR_48();
+    
+    // Risk & Position Management
+    std::string risk_pct = std::to_string(config.risk.risk_per_trade * 100.0).substr(0,4) + "%";
+    TABLE_ROW_48("Risk per Trade", risk_pct);
+    TABLE_ROW_48("Max Trade Value", "$" + std::to_string((int)config.risk.max_value_per_trade));
+    TABLE_ROW_48("RR Ratio", "1:" + std::to_string(config.strategy.rr_ratio).substr(0,4));
+    
+    std::string multi_pos = config.risk.allow_multiple_positions ? "YES" : "NO";
+    TABLE_ROW_48("Multi Positions", multi_pos);
+    TABLE_ROW_48("Max Layers", std::to_string(config.risk.max_layers));
+    
+    std::string close_reverse = config.risk.close_on_reverse ? "YES" : "NO";
+    TABLE_ROW_48("Close on Reverse", close_reverse);
     
     TABLE_FOOTER_48();
 }

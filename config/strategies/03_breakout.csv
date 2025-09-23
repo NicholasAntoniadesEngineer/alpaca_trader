@@ -1,0 +1,32 @@
+# ========================================================================
+# STRATEGY 3: BREAKOUT
+# ========================================================================
+# Perfect for: Range-bound markets, resistance/support breaks
+# Characteristics: Medium trades, good win rate, level-based entries
+# Risk Level: MEDIUM | Signal Frequency: MEDIUM | Hold Time: SHORT-MEDIUM
+# ========================================================================
+
+# SIGNAL DETECTION (Level-Based)
+strategy.buy_allow_equal_close,true
+strategy.buy_require_higher_high,true
+strategy.buy_require_higher_low,false
+strategy.sell_allow_equal_close,true
+strategy.sell_require_lower_low,true
+strategy.sell_require_lower_high,false
+
+# FILTER THRESHOLDS (Moderate Standards)
+strategy.atr_multiplier_entry,0.6
+strategy.volume_multiplier,1.2
+strategy.atr_period,12
+strategy.avg_atr_multiplier,2
+
+# RISK MANAGEMENT (Moderate)
+risk.risk_per_trade,0.15
+risk.max_value_per_trade,8000
+risk.allow_multiple_positions,true
+risk.max_layers,2
+risk.close_on_reverse,true
+
+# RISK/REWARD & TIMING
+strategy.rr_ratio,3.5
+timing.sleep_interval_sec,5

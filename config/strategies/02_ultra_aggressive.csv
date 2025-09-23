@@ -1,15 +1,10 @@
 # ========================================================================
-# ACTIVE STRATEGY CONFIGURATION
+# STRATEGY 2: ULTRA-AGGRESSIVE
 # ========================================================================
-# This file contains the currently active strategy settings.
-# To change strategies, copy the desired strategy from config/strategies/
-# directory and replace the contents of this file.
-# ========================================================================
-
-# STRATEGY: ULTRA-AGGRESSIVE
 # Perfect for: Scalping, high-volume trading, catching every move
 # Characteristics: Many trades, mixed win rate, minimal confirmations
 # Risk Level: HIGH | Signal Frequency: VERY HIGH | Hold Time: VERY SHORT
+# ========================================================================
 
 # SIGNAL DETECTION (Minimal Confirmation)
 strategy.buy_allow_equal_close,true

@@ -160,8 +160,8 @@ SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared
     modules.account_data_thread->set_iteration_counter(handles.account_iterations);
     modules.market_gate_thread->set_iteration_counter(handles.gate_iterations);
     
-    // Log thread startup information
-    Manager::log_thread_startup_info(config.timing);
+    // Log thread system startup information
+    StartupLogger::log_thread_system_startup(config.timing);
     
     // Start all threads
     handles.market = std::thread(std::ref(*modules.market_data_thread));

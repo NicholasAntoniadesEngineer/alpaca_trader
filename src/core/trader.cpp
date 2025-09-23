@@ -427,8 +427,8 @@ void Trader::countdown_to_next_cycle() {
 }
 
 void Trader::run() {
-    TradingLogger::log_header_and_config(services.config);
     // In new design, main() owns market/account threads and running flag.
+    // Configuration logging is now handled in the startup sequence
 }
 
 void Trader::attach_shared_state(std::mutex& mtx,

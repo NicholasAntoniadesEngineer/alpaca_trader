@@ -88,13 +88,13 @@ void StartupLogger::log_thread_system_complete() {
     TradingLogger::log_thread_priorities_table(thread_status_data);
 }
 
-void StartupLogger::log_trading_configuration(const TraderConfig& config) {
-    TradingLogger::log_configuration_table(
-        config.target.symbol,
-        config.risk.risk_per_trade,
-        config.strategy.rr_ratio,
-        config.timing.sleep_interval_sec
-    );
+
+void StartupLogger::log_runtime_configuration(const SystemConfig& config) {
+    TradingLogger::log_runtime_config_table(config);
+}
+
+void StartupLogger::log_strategy_configuration(const SystemConfig& config) {
+    TradingLogger::log_strategy_config_table(config);
 }
 
 // =============================================================================

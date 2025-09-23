@@ -1,0 +1,32 @@
+# ========================================================================
+# STRATEGY 7: SCALPING (Ultra-Fast Trading)
+# ========================================================================
+# Perfect for: Day trading, quick profits, high-frequency
+# Characteristics: Very many trades, quick exits, minimal holds
+# Risk Level: HIGH | Signal Frequency: EXTREME | Hold Time: SECONDS-MINUTES
+# ========================================================================
+
+# SIGNAL DETECTION (Minimal Confirmation)
+strategy.buy_allow_equal_close,true
+strategy.buy_require_higher_high,false
+strategy.buy_require_higher_low,false
+strategy.sell_allow_equal_close,true
+strategy.sell_require_lower_low,false
+strategy.sell_require_lower_high,false
+
+# FILTER THRESHOLDS (Ultra-Low Standards)
+strategy.atr_multiplier_entry,0.05
+strategy.volume_multiplier,0.05
+strategy.atr_period,5
+strategy.avg_atr_multiplier,1
+
+# RISK MANAGEMENT (Small Size, High Frequency)
+risk.risk_per_trade,0.02
+risk.max_value_per_trade,500
+risk.allow_multiple_positions,true
+risk.max_layers,5
+risk.close_on_reverse,false
+
+# RISK/REWARD & TIMING (Lightning Fast)
+strategy.rr_ratio,1.5
+timing.sleep_interval_sec,1
