@@ -3,7 +3,7 @@
 #define STRATEGY_LOGIC_HPP
 
 #include "../configs/trader_config.hpp"
-#include "../utils/data_structures.hpp"
+#include "data_structures.hpp"
 
 namespace StrategyLogic {
 

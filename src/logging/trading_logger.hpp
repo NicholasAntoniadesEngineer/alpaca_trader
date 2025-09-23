@@ -2,7 +2,7 @@
 #define TRADING_LOGGER_HPP
 
 #include "../configs/trader_config.hpp"
-#include "../utils/data_structures.hpp"
+#include "../core/data_structures.hpp"
 #include "../core/strategy_logic.hpp"
 #include "logging_macros.hpp"
 #include <vector>

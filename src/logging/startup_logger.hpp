@@ -2,7 +2,7 @@
 #define STARTUP_LOGGER_HPP
 
 #include "../configs/system_config.hpp"
-#include "../account_manager/account_manager.hpp"
+#include "../core/account_manager.hpp"
 
 // Forward declarations
 class AsyncLogger;

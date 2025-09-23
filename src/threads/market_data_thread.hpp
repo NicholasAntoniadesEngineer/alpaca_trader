@@ -6,7 +6,7 @@
 #include "../configs/target_config.hpp"
 #include "../api/alpaca_client.hpp"
 #include "../configs/component_configs.hpp"
-#include "../utils/data_structures.hpp"
+#include "../core/data_structures.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>

@@ -2,11 +2,11 @@
 #define MAIN_HPP
 
 #include "configs/system_config.hpp"
-#include "utils/data_structures.hpp"
+#include "core/data_structures.hpp"
 #include "configs/component_configs.hpp"
 #include "configs/trader_config.hpp"
 #include "api/alpaca_client.hpp"
-#include "account_manager/account_manager.hpp"
+#include "core/account_manager.hpp"
 #include "logging/account_logger.hpp"
 #include "core/trader.hpp"
 #include "threads/market_data_thread.hpp"

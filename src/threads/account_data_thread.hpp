@@ -2,8 +2,8 @@
 #define ACCOUNT_DATA_THREAD_HPP
 
 #include "../configs/timing_config.hpp"
-#include "../account_manager/account_manager.hpp"
-#include "../utils/data_structures.hpp"
+#include "../core/account_manager.hpp"
+#include "../core/data_structures.hpp"
 #include "../configs/component_configs.hpp"
 #include <atomic>
 #include <mutex>

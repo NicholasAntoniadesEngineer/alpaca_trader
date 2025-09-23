@@ -2,7 +2,7 @@
 #define ORDER_CLIENT_HPP
 
 #include "../base/alpaca_base_client.hpp"
-#include "../../utils/data_structures.hpp"
+#include "../../core/data_structures.hpp"
 
 class OrderClient : public AlpacaBaseClient {
 public:

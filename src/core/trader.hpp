@@ -4,8 +4,8 @@
 
 #include "../configs/trader_config.hpp"
 #include "../api/alpaca_client.hpp"
-#include "../account_manager/account_manager.hpp"
-#include "../utils/data_structures.hpp"
+#include "account_manager.hpp"
+#include "data_structures.hpp"
 #include "strategy_logic.hpp"
 #include "../logging/trading_logger.hpp"
 #include <thread>

@@ -23,9 +23,9 @@ SOURCES = src/main.cpp \
           src/core/risk_logic.cpp \
           src/core/market_processing.cpp \
           src/core/system_manager.cpp \
-          src/configs/component_configs.cpp \
-          src/utils/config_loader.cpp \
-          src/account_manager/account_manager.cpp \
+                 src/configs/component_configs.cpp \
+                 src/configs/config_loader.cpp \
+                 src/core/account_manager.cpp \
           src/logging/account_logger.cpp \
           src/utils/http_utils.cpp \
           src/core/indicators.cpp \
@@ -64,7 +64,6 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/api/orders
 	mkdir -p $(OBJ_DIR)/src/core
 	mkdir -p $(OBJ_DIR)/src/configs
-	mkdir -p $(OBJ_DIR)/src/account_manager
 	mkdir -p $(OBJ_DIR)/src/json
 	mkdir -p $(OBJ_DIR)/src/utils
 	mkdir -p $(OBJ_DIR)/src/logging

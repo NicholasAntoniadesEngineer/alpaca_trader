@@ -5,7 +5,7 @@
 #include "../configs/logging_config.hpp"
 #include "../configs/target_config.hpp"
 #include "../configs/component_configs.hpp"
-#include "../utils/data_structures.hpp"
+#include "data_structures.hpp"
 #include <string>
 
 class AccountManager {

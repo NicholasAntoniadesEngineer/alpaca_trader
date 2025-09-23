@@ -2,7 +2,7 @@
 #include "component_configs.hpp"
 #include "../main.hpp"
 #include "../api/alpaca_client.hpp"
-#include "../account_manager/account_manager.hpp"
+#include "../core/account_manager.hpp"
 #include "../logging/account_logger.hpp"
 #include "../core/trader.hpp"
 #include "../threads/market_data_thread.hpp"

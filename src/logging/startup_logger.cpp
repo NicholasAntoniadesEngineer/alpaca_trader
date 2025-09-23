@@ -4,7 +4,7 @@
 #include "logging_macros.hpp"
 #include "../configs/timing_config.hpp"
 #include "../threads/thread_manager.hpp"
-#include "../utils/config_loader.hpp"
+#include "../configs/config_loader.hpp"
 #include <iomanip>
 #include <sstream>
 

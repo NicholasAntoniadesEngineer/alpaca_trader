@@ -1,6 +1,6 @@
 // main.cpp
 #include "main.hpp"
-#include "utils/config_loader.hpp"
+#include "configs/config_loader.hpp"
 #include "logging/startup_logger.hpp"
 #include "logging/async_logger.hpp"
 #include "core/system_manager.hpp"

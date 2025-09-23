@@ -2,7 +2,7 @@
 #define ACCOUNT_LOGGER_HPP
 
 #include "../configs/logging_config.hpp"
-#include "../account_manager/account_manager.hpp"
+#include "../core/account_manager.hpp"
 
 class AccountLogger {
 private:
