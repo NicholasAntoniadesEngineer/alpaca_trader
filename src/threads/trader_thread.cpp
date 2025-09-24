@@ -1,9 +1,13 @@
-#include "trader_thread.hpp"
-#include "../logging/async_logger.hpp"
-#include "../logging/startup_logger.hpp"
+#include "threads/trader_thread.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/startup_logger.hpp"
 #include "platform/thread_control.hpp"
 #include <chrono>
 #include <thread>
+
+// Using declarations for cleaner code
+using AlpacaTrader::Threads::TraderThread;
+using AlpacaTrader::Logging::set_log_thread_tag;
 
 void TraderThread::operator()() {
     set_log_thread_tag("DECIDE");

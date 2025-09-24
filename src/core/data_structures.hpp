@@ -3,6 +3,9 @@
 
 #include <string>
 
+namespace AlpacaTrader {
+namespace Core {
+
 struct Bar {
     double o, h, l, c;
     long long v; /* volume */
@@ -25,7 +28,7 @@ struct ProcessedData {
     double exposure_pct = 0.0;
 };
 
-// Optional split views for multi-threading
+// Optional split views for multi-threading.
 struct MarketSnapshot {
     double atr = 0.0;
     double avg_atr = 0.0;
@@ -41,7 +44,7 @@ struct AccountSnapshot {
     double exposure_pct = 0.0;
 };
 
-// Request objects (to avoid multi-parameter functions)
+// Request objects (to avoid multi-parameter functions).
 struct SymbolRequest {
     std::string symbol;
     explicit SymbolRequest(const std::string& s) : symbol(s) {}
@@ -63,8 +66,11 @@ struct OrderRequest {
 };
 
 struct ClosePositionRequest {
-    int currentQty = 0;
-    explicit ClosePositionRequest(int q) : currentQty(q) {}
+    int current_qty = 0;
+    explicit ClosePositionRequest(int q) : current_qty(q) {}
 };
+
+} // namespace Core
+} // namespace AlpacaTrader
 
 #endif // DATA_STRUCTURES_HPP

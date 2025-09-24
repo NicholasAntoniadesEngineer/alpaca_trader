@@ -2,22 +2,25 @@
 #ifndef TRADER_HPP
 #define TRADER_HPP
 
-#include "../configs/trader_config.hpp"
-#include "../api/alpaca_client.hpp"
-#include "account_manager.hpp"
-#include "data_structures.hpp"
-#include "strategy_logic.hpp"
-#include "../logging/trading_logger.hpp"
+#include "configs/trader_config.hpp"
+#include "api/alpaca_client.hpp"
+#include "core/account_manager.hpp"
+#include "core/data_structures.hpp"
+#include "core/strategy_logic.hpp"
+#include "logging/trading_logger.hpp"
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
 
+namespace AlpacaTrader {
+namespace Core {
+
 class Trader {
 private:
     struct TraderServices {
         const TraderConfig& config;
-        AlpacaClient& client;
+        API::AlpacaClient& client;
         AccountManager& account_manager;
     };
 
@@ -74,7 +77,7 @@ private:
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
 
 public:
-    Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr);
+    Trader(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
     ~Trader();
 
     // Print header/config only
@@ -96,5 +99,8 @@ public:
     // Set iteration counter for monitoring
     void set_iteration_counter(std::atomic<unsigned long>& counter);
 };
+
+} // namespace Core
+} // namespace AlpacaTrader
 
 #endif // TRADER_HPP

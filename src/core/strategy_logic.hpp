@@ -2,8 +2,11 @@
 #ifndef STRATEGY_LOGIC_HPP
 #define STRATEGY_LOGIC_HPP
 
-#include "../configs/trader_config.hpp"
+#include "configs/trader_config.hpp"
 #include "data_structures.hpp"
+
+namespace AlpacaTrader {
+namespace Core {
 
 namespace StrategyLogic {
 
@@ -43,6 +46,8 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
 ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio);
 
 } // namespace StrategyLogic
+} // namespace Core
+} // namespace AlpacaTrader
 
 #endif // STRATEGY_LOGIC_HPP
 

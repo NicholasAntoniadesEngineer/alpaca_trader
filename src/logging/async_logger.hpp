@@ -8,6 +8,9 @@
 #include <atomic>
 #include <thread>
 
+namespace AlpacaTrader {
+namespace Logging {
+
 // Named constants
 constexpr int LOG_TAG_WIDTH = 6;
 static_assert(LOG_TAG_WIDTH > 0, "LOG_TAG_WIDTH must be positive");
@@ -55,5 +58,8 @@ std::string generate_timestamped_log_filename(const std::string& base_filename);
 // Global lifecycle helpers
 void initialize_global_logger(AsyncLogger& logger);
 void shutdown_global_logger(AsyncLogger& logger);
+
+} // namespace Logging
+} // namespace AlpacaTrader
 
 #endif // ASYNC_LOGGER_HPP

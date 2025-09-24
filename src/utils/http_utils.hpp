@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "../core/data_structures.hpp"
+#include "core/data_structures.hpp"
 #include "connectivity_manager.hpp"
 
 // HTTP request wrapper to avoid multi-parameter functions

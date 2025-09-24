@@ -1,16 +1,22 @@
-#include "thread_manager.hpp"
-#include "config/thread_config.hpp"
-#include "platform/thread_control.hpp"
-#include "../logging/thread_logger.hpp"
-#include "../logging/startup_logger.hpp"
-#include "../logging/async_logger.hpp"
-#include "../logging/logging_macros.hpp"
-#include "../main.hpp"  
+#include "threads/thread_manager.hpp"
+#include "threads/config/thread_config.hpp"
+#include "threads/platform/thread_control.hpp"
+#include "logging/thread_logger.hpp"
+#include "logging/startup_logger.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "main.hpp"  
 #include <vector>
 #include <chrono>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Logging::AsyncLogger;
+using AlpacaTrader::Threads::LoggingThread;
+using AlpacaTrader::Threads::TraderThread;
 
 namespace ThreadSystem {
 

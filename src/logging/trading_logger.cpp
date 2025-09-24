@@ -1,12 +1,21 @@
-#include "trading_logger.hpp"
-#include "startup_logger.hpp"
-#include "async_logger.hpp"
-#include "logging_macros.hpp"
-#include "../configs/system_config.hpp"
+#include "logging/trading_logger.hpp"
+#include "logging/startup_logger.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "configs/system_config.hpp"
+#include "main.hpp"
 #include <iomanip>
 #include <sstream>
 #include <climits>
 
+namespace AlpacaTrader {
+namespace Logging {
+
+// Using declarations for cleaner code
+using AlpacaTrader::Core::AccountManager;
+using AlpacaTrader::Core::ProcessedData;
+using AlpacaTrader::Core::StrategyLogic::SignalDecision;
+using AlpacaTrader::Core::StrategyLogic::FilterResult;
 
 std::string TradingLogger::format_currency(double amount) {
     std::ostringstream oss;
@@ -26,7 +35,7 @@ void TradingLogger::log_startup(const TraderConfig& config, double initial_equit
         initial_equity,
         config.risk.risk_per_trade,
         config.strategy.rr_ratio,
-        config.timing.sleep_interval_sec
+        config.timing.thread_market_data_poll_interval_sec
     );
 }
 
@@ -173,18 +182,18 @@ void TradingLogger::log_loop_header(unsigned long loop_number, const std::string
 }
 
 
-void TradingLogger::log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals) {
+void TradingLogger::log_candle_and_signals(const ProcessedData& data, const SignalDecision& signals) {
     log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
     log_signals_table(signals.buy, signals.sell);
 }
 
-void TradingLogger::log_filters(const StrategyLogic::FilterResult& filters, const TraderConfig& config) {
+void TradingLogger::log_filters(const FilterResult& filters, const TraderConfig& config) {
     log_filters_table(filters.atr_pass, filters.atr_ratio, config.strategy.atr_multiplier_entry, 
                      filters.vol_pass, filters.vol_ratio, config.strategy.volume_multiplier, 
                      filters.doji_pass);
 }
 
-void TradingLogger::log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters, const std::string& symbol) {
+void TradingLogger::log_summary(const ProcessedData& data, const SignalDecision& signals, const FilterResult& filters, const std::string& symbol) {
     std::string display_symbol = symbol.empty() ? "SPY" : symbol;
     log_decision_summary_table(display_symbol, data.curr.c, signals.buy, signals.sell, 
                               filters.atr_pass, filters.vol_pass, filters.doji_pass, 
@@ -565,9 +574,9 @@ void TradingLogger::log_runtime_config_table(const SystemConfig& config) {
     TABLE_SEPARATOR_48();
     
     // Timing Configuration
-    TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.account_poll_sec) + "s");
+    TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.thread_account_data_poll_interval_sec) + "s");
     TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.bar_fetch_minutes) + "m");
-    TABLE_ROW_48("Market Status Check", std::to_string(config.timing.market_open_check_sec) + "s");
+    TABLE_ROW_48("Market Status Check", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
     TABLE_ROW_48("Thread Monitor Log", std::to_string(config.timing.monitoring_interval_sec) + "s");
     
     TABLE_FOOTER_48();
@@ -699,4 +708,7 @@ void TradingLogger::log_decision_summary_table(const std::string& symbol, double
     
     TABLE_FOOTER_48();
 }
+
+} // namespace Logging
+} // namespace AlpacaTrader
 

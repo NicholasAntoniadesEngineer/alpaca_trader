@@ -31,16 +31,24 @@ risk.buying_power_usage_factor,0.8
 risk.buying_power_validation_factor,1.25
 
 // ========================================================================
+// THREAD POLLING INTERVALS
+// ========================================================================
+timing.thread_market_data_poll_interval_sec,1
+timing.thread_account_data_poll_interval_sec,5
+timing.thread_market_gate_poll_interval_sec,15
+timing.thread_trader_poll_interval_sec,1
+timing.thread_logging_poll_interval_sec,1
+
+// ========================================================================
 // DATA POLLING CONFIGURATION
 // ========================================================================
-timing.account_data_poll_interval_sec,5
 timing.historical_bars_fetch_minutes,120
 timing.historical_bars_buffer_count,20
+timing.account_data_cache_duration_sec,10
 
 // ========================================================================
 // MARKET MONITORING CONFIGURATION
 // ========================================================================
-timing.market_status_check_interval_sec,15
 timing.market_pre_open_buffer_minutes,5
 timing.market_post_close_buffer_minutes,5
 

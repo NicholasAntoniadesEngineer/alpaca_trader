@@ -2,14 +2,14 @@
  * Core trading engine implementation.
  * Executes trading decisions based on market signals and risk management.
  */
-#include "trader.hpp"
-#include "risk_logic.hpp"
-#include "market_processing.hpp"
-#include "../logging/async_logger.hpp"
-#include "../logging/logging_macros.hpp"
-#include "../logging/trading_logger.hpp"
-#include "../threads/platform/thread_control.hpp"
-#include "../utils/connectivity_manager.hpp"
+#include "core/trader.hpp"
+#include "core/risk_logic.hpp"
+#include "core/market_processing.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "logging/trading_logger.hpp"
+#include "threads/platform/thread_control.hpp"
+#include "utils/connectivity_manager.hpp"
 #include <thread>
 #include <cmath>
 #include <chrono>
@@ -17,13 +17,24 @@
 #include <sstream>
 #include <iomanip>
 
+namespace AlpacaTrader {
+namespace Core {
+
 namespace {
     enum class OrderSide { Buy, Sell };
     inline const char* to_side_string(OrderSide s) { return s == OrderSide::Buy ? "buy" : "sell"; }
 }
 
-Trader::Trader(const TraderConfig& cfg, AlpacaClient& clientRef, AccountManager& accountMgr)
-    : services{cfg, clientRef, accountMgr} {
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::TradingLogger;
+using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Logging::set_log_thread_tag;
+using AlpacaTrader::Logging::log_inline_status;
+using AlpacaTrader::Logging::end_inline_status;
+using AlpacaTrader::Logging::get_formatted_inline_message;
+
+Trader::Trader(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
+    : services{cfg, client_ref, account_mgr} {
     runtime.initial_equity = initialize_trader();
 }
 
@@ -418,7 +429,7 @@ void Trader::process_trading_cycle(const MarketSnapshot& market, const AccountSn
 
 void Trader::countdown_to_next_cycle() {
     // Countdown timer to next trading cycle
-    int sleep_secs = services.config.timing.sleep_interval_sec;
+    int sleep_secs = services.config.timing.thread_trader_poll_interval_sec;
     for (int s = sleep_secs; s > 0 && shared.running->load(); --s) {
         LOG_INLINE_NEXT_LOOP(s);
         std::this_thread::sleep_for(std::chrono::seconds(services.config.timing.countdown_tick_sec));
@@ -462,3 +473,6 @@ void Trader::join_decision_thread() {
 void Trader::set_iteration_counter(std::atomic<unsigned long>& counter) {
     runtime.iteration_counter = &counter;
 }
+
+} // namespace Core
+} // namespace AlpacaTrader

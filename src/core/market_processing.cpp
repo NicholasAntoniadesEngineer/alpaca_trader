@@ -2,6 +2,9 @@
 #include "core/market_processing.hpp"
 #include "indicators.hpp"
 
+namespace AlpacaTrader {
+namespace Core {
+
 namespace MarketProcessing {
 
 IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars) {
@@ -36,5 +39,7 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const TraderC
 }
 
 } // namespace MarketProcessing
+} // namespace Core
+} // namespace AlpacaTrader
 
 

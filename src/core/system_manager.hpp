@@ -4,11 +4,11 @@
 
 #include <mutex>
 #include <memory>
+#include "logging/async_logger.hpp"
 
 // Forward declarations
 struct SystemState;
 struct SystemThreads;
-class AsyncLogger;
 
 namespace SystemManager {
 
@@ -25,7 +25,7 @@ namespace SystemManager {
  * @param logger The initialized logger
  * @return SystemThreads handles for the running system
  */
-SystemThreads startup(SystemState& system_state, std::shared_ptr<AsyncLogger> logger);
+SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
 
 /**
  * Run the trading system until shutdown signal
@@ -45,7 +45,7 @@ void run(SystemState& system_state, SystemThreads& handles);
  * @param handles Thread handles for the running system
  * @param logger The logger to shutdown
  */
-void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AsyncLogger> logger);
+void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
 
 } // namespace SystemManager
 

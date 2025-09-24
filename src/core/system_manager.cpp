@@ -1,13 +1,16 @@
 // system_manager.cpp
-#include "system_manager.hpp"
-#include "../main.hpp"
-#include "../configs/component_configs.hpp"
-#include "../threads/thread_manager.hpp"
-#include "../logging/startup_logger.hpp"
+#include "core/system_manager.hpp"
+#include "main.hpp"
+#include "configs/component_configs.hpp"
+#include "threads/thread_manager.hpp"
+#include "logging/startup_logger.hpp"
+#include "logging/async_logger.hpp"
 #include <chrono>
 #include <csignal>
 #include <thread>
 #include <ctime>
+
+// Using declarations for cleaner code
 
 // =============================================================================
 // SIGNAL HANDLING
@@ -40,7 +43,7 @@ static void log_startup_information(const TradingSystemModules& modules, const S
 
 namespace SystemManager {
 
-SystemThreads startup(SystemState& system_state, std::shared_ptr<AsyncLogger> logger) {
+SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Create all trading system modules and store them in system_state for lifetime management
     system_state.trading_modules = std::make_unique<TradingSystemModules>(create_trading_modules(system_state));
     
@@ -80,7 +83,7 @@ void run(SystemState& system_state, SystemThreads& handles) {
     run_until_shutdown(system_state, handles);
 }
 
-void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AsyncLogger> logger) {
+void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
     
@@ -88,7 +91,7 @@ void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr
     ThreadSystem::shutdown_system_threads(handles);
     
     // Shutdown logging system
-    shutdown_global_logger(*logger);
+    AlpacaTrader::Logging::shutdown_global_logger(*logger);
 }
 
 } // namespace SystemManager

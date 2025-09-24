@@ -4,6 +4,9 @@
 #include <cmath>
 #include <climits>
 
+namespace AlpacaTrader {
+namespace Core {
+
 namespace StrategyLogic {
 
 SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& config) {
@@ -184,5 +187,7 @@ ExitTargets compute_exit_targets(const std::string& side, double entry_price, do
 }
 
 } // namespace StrategyLogic
+} // namespace Core
+} // namespace AlpacaTrader
 
 

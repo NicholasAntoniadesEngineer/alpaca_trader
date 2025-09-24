@@ -1,15 +1,20 @@
 #ifndef TRADING_LOGGER_HPP
 #define TRADING_LOGGER_HPP
 
-#include "../configs/trader_config.hpp"
-#include "../core/data_structures.hpp"
-#include "../core/strategy_logic.hpp"
+#include "configs/trader_config.hpp"
+#include "core/data_structures.hpp"
+#include "core/strategy_logic.hpp"
 #include "logging_macros.hpp"
 #include <vector>
 #include <tuple>
 
 // Forward declarations
 struct SystemConfig;
+
+namespace AlpacaTrader {
+namespace Logging {
+
+// Forward declarations
 
 /**
  * Specialized high-performance logging for trading operations.
@@ -27,9 +32,9 @@ public:
     static void log_loop_header(unsigned long loop_number, const std::string& symbol);
     
     // Detailed trading analysis  
-    static void log_candle_and_signals(const ProcessedData& data, const StrategyLogic::SignalDecision& signals);
-    static void log_filters(const StrategyLogic::FilterResult& filters, const TraderConfig& config);
-    static void log_summary(const ProcessedData& data, const StrategyLogic::SignalDecision& signals, const StrategyLogic::FilterResult& filters, const std::string& symbol = "");
+    static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
+    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const TraderConfig& config);
+    static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const std::string& symbol = "");
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_filters_not_met_table(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);
@@ -79,8 +84,8 @@ public:
     static void log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled);
     static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses = {});
     static void log_data_source_info_table(const std::string& source, double price, const std::string& status);
-    static void log_runtime_config_table(const SystemConfig& config);
-    static void log_strategy_config_table(const SystemConfig& config);
+    static void log_runtime_config_table(const struct SystemConfig& config);
+    static void log_strategy_config_table(const struct SystemConfig& config);
     
     // Market data fetching tables
     static void log_market_data_fetch_table(const std::string& symbol);
@@ -95,5 +100,8 @@ private:
     static std::string format_currency(double amount);
     static std::string format_percentage(double percentage);
 };
+
+} // namespace Logging
+} // namespace AlpacaTrader
 
 #endif // TRADING_LOGGER_HPP

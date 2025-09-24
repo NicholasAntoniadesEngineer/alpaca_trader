@@ -1,12 +1,17 @@
-#include "market_clock.hpp"
-#include "../../logging/async_logger.hpp"
-#include "../../utils/http_utils.hpp"
-#include "../../json/json.hpp"
+#include "api/clock/market_clock.hpp"
+#include "logging/async_logger.hpp"
+#include "utils/http_utils.hpp"
+#include "utils/time_utils.hpp"
+#include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
 #include <cmath>
 
 using json = nlohmann::json;
+
+namespace AlpacaTrader {
+namespace API {
+namespace Clock {
 
 bool MarketClock::is_core_trading_hours() const {
     HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
@@ -40,7 +45,7 @@ bool MarketClock::is_core_trading_hours() const {
         return is_within_time_window(hour, min, session.market_open_hour, session.market_open_minute, 
                                    session.market_close_hour, session.market_close_minute);
     } catch (...) {
-        log_message("Error parsing clock response: " + response, logging.log_file);
+        AlpacaTrader::Logging::log_message("Error parsing clock response: " + response, logging.log_file);
     }
     return false;
 }
@@ -76,7 +81,7 @@ bool MarketClock::is_within_fetch_window() const {
             }
         }
     } catch (...) {
-        log_message("Error parsing clock response for fetch window: " + response, logging.log_file);
+        AlpacaTrader::Logging::log_message("Error parsing clock response for fetch window: " + response, logging.log_file);
     }
     return false;
 }
@@ -97,21 +102,8 @@ std::tm MarketClock::parse_timestamp(const std::string& timestamp) const {
         }
     }
     
-    // Parse the base timestamp (YYYY-MM-DDTHH:MM:SS or YYYY-MM-DDTHH:MM:SSZ)
-    std::istringstream ss(base_timestamp);
-    if (base_timestamp.back() == 'Z') {
-        // Remove Z and parse as UTC
-        base_timestamp.pop_back();
-        ss.str(base_timestamp);
-        ss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%S");
-    } else if (tz_pos != std::string::npos && timestamp[tz_pos] != 'Z') {
-        // Parse without timezone info for now
-        std::string no_tz = base_timestamp.substr(0, tz_pos);
-        ss.str(no_tz);
-        ss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%S");
-    } else {
-        ss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%S");
-    }
+    // Parse the timestamp using centralized time utilities
+    t = TimeUtils::parse_iso_time_with_z(timestamp);
     
     return t;
 }
@@ -122,3 +114,7 @@ bool MarketClock::is_within_time_window(int hour, int minute, int open_hour, int
     bool before_close = (hour < close_hour) || (hour == close_hour && minute <= close_minute);
     return after_open && before_close;
 }
+
+} // namespace Clock
+} // namespace API
+} // namespace AlpacaTrader

@@ -5,6 +5,9 @@
 #include <sstream>
 #include <iomanip>
 
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+
 std::string ThreadLogger::format_priority_status(const std::string& thread_name,
                                                 const std::string& priority,
                                                 bool success) {

@@ -1,27 +1,34 @@
-#include "order_client.hpp"
-#include "../../logging/async_logger.hpp"
-#include "../../logging/logging_macros.hpp"
-#include "../../logging/trading_logger.hpp"
-#include "../../utils/http_utils.hpp"
-#include "../../json/json.hpp"
+#include "api/orders/order_client.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "logging/trading_logger.hpp"
+#include "utils/http_utils.hpp"
+#include "json/json.hpp"
 #include <cmath>
 #include <iomanip>
 #include <sstream>
 
 using json = nlohmann::json;
 
-// Helper function to round price to valid penny increments
+namespace AlpacaTrader {
+namespace API {
+namespace Orders {
+
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::TradingLogger;
+
+// Helper function to round price to valid penny increments.
 std::string round_price_to_penny(double price) {
-    // Round to 2 decimal places (penny increments)
+    // Round to 2 decimal places (penny increments).
     double rounded = std::round(price * 100.0) / 100.0;
     
-    // Format with exactly 2 decimal places
+    // Format with exactly 2 decimal places.
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << rounded;
     return oss.str();
 }
 
-void OrderClient::place_bracket_order(const OrderRequest& oreq) const {
+void OrderClient::place_bracket_order(const Core::OrderRequest& oreq) const {
     if (oreq.qty <= 0) return;
     
     json order = json::object();
@@ -51,11 +58,11 @@ void OrderClient::place_bracket_order(const OrderRequest& oreq) const {
     log_order_result(log_msg, response);
 }
 
-void OrderClient::close_position(const ClosePositionRequest& creq) const {
-    if (creq.currentQty == 0) return;
+void OrderClient::close_position(const Core::ClosePositionRequest& creq) const {
+    if (creq.current_qty == 0) return;
     
-    std::string side = (creq.currentQty > 0) ? "sell" : "buy";
-    int abs_qty = std::abs(creq.currentQty);
+    std::string side = (creq.current_qty > 0) ? "sell" : "buy";
+    int abs_qty = std::abs(creq.current_qty);
     
     json order = json::object();
     order["symbol"] = target.symbol;
@@ -79,3 +86,7 @@ void OrderClient::log_order_result(const std::string& operation, const std::stri
 std::string OrderClient::format_order_log(const std::string& operation, const std::string& details) const {
     return operation + ": " + details;
 }
+
+} // namespace Orders
+} // namespace API
+} // namespace AlpacaTrader

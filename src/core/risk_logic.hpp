@@ -1,7 +1,10 @@
 #ifndef RISK_LOGIC_HPP
 #define RISK_LOGIC_HPP
 
-#include "../configs/trader_config.hpp"
+#include "configs/trader_config.hpp"
+
+namespace AlpacaTrader {
+namespace Core {
 
 namespace RiskLogic {
 
@@ -23,6 +26,8 @@ struct TradeGateResult {
 TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const TraderConfig& config);
 
 } // namespace RiskLogic
+} // namespace Core
+} // namespace AlpacaTrader
 
 #endif // RISK_LOGIC_HPP
 

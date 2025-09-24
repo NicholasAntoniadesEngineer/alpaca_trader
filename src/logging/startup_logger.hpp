@@ -1,11 +1,9 @@
 #ifndef STARTUP_LOGGER_HPP
 #define STARTUP_LOGGER_HPP
 
-#include "../configs/system_config.hpp"
-#include "../core/account_manager.hpp"
-
-// Forward declarations
-class AsyncLogger;
+#include "configs/system_config.hpp"
+#include "core/account_manager.hpp"
+#include "logging/async_logger.hpp"
 
 /**
  * Specialized logging for application startup sequence.
@@ -14,15 +12,15 @@ class AsyncLogger;
 class StartupLogger {
 public:
     // Application initialization
-    static void initialize_application_foundation(const SystemConfig& config, AsyncLogger& logger);
+    static void initialize_application_foundation(const SystemConfig& config, AlpacaTrader::Logging::AsyncLogger& logger);
     
     // Application header and branding
     static void log_application_header();
     
     // Account status display
-    static void log_account_overview(const AccountManager& account_manager);
-    static void log_financial_summary(const AccountManager& account_manager);
-    static void log_current_positions(const AccountManager& account_manager);
+    static void log_account_overview(const AlpacaTrader::Core::AccountManager& account_manager);
+    static void log_financial_summary(const AlpacaTrader::Core::AccountManager& account_manager);
+    static void log_current_positions(const AlpacaTrader::Core::AccountManager& account_manager);
     
     // Data source configuration
     static void log_data_source_configuration(const SystemConfig& config);

@@ -1,7 +1,7 @@
 #ifndef THREAD_LOGGER_HPP
 #define THREAD_LOGGER_HPP
 
-#include "../configs/timing_config.hpp"
+#include "configs/timing_config.hpp"
 #include <string>
 #include <atomic>
 

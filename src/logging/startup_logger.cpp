@@ -1,12 +1,19 @@
-#include "startup_logger.hpp"
-#include "trading_logger.hpp"
-#include "async_logger.hpp"
-#include "logging_macros.hpp"
-#include "../configs/timing_config.hpp"
-#include "../threads/thread_manager.hpp"
-#include "../configs/config_loader.hpp"
+#include "logging/startup_logger.hpp"
+#include "logging/trading_logger.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "configs/timing_config.hpp"
+#include "threads/thread_manager.hpp"
+#include "configs/config_loader.hpp"
 #include <iomanip>
 #include <sstream>
+
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Logging::TradingLogger;
+using AlpacaTrader::Core::AccountManager;
+using AlpacaTrader::Logging::AsyncLogger;
+using AlpacaTrader::Logging::set_log_thread_tag;
 
 std::string StartupLogger::format_currency(double amount) {
     std::ostringstream oss;
@@ -25,7 +32,7 @@ void StartupLogger::log_application_header() {
 
 
 void StartupLogger::log_account_overview(const AccountManager& account_manager) {
-    auto account_info = account_manager.get_account_info();
+    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     TradingLogger::log_account_overview_table(
         account_info.account_number,
@@ -37,7 +44,7 @@ void StartupLogger::log_account_overview(const AccountManager& account_manager) 
 }
 
 void StartupLogger::log_financial_summary(const AccountManager& account_manager) {
-    auto account_info = account_manager.get_account_info();
+    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     TradingLogger::log_financial_summary_table(
         account_info.equity,
@@ -56,7 +63,7 @@ void StartupLogger::log_financial_summary(const AccountManager& account_manager)
 }
 
 void StartupLogger::log_current_positions(const AccountManager& account_manager) {
-    auto snapshot = account_manager.get_account_snapshot();
+    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     TradingLogger::log_current_positions_table(
         snapshot.pos_details.qty,
@@ -103,9 +110,10 @@ void StartupLogger::log_strategy_configuration(const SystemConfig& config) {
 
 void StartupLogger::initialize_application_foundation(const SystemConfig& config, AsyncLogger& logger) {
     // Validate configuration
-    std::string cfgError;
-    if (!validate_config(config, cfgError)) {
-        fprintf(stderr, "Config error: %s\n", cfgError.c_str());
+    std::string cfg_error;
+    if (!validate_config(config, cfg_error)) {
+        // Log error using logging system
+        log_message("ERROR: Config error: " + cfg_error, "");
         exit(1);
     }
     

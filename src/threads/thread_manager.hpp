@@ -3,18 +3,18 @@
 
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
-#include "../configs/timing_config.hpp"
+#include "configs/timing_config.hpp"
 #include <vector>
 #include <tuple>
 #include <string>
 #include <thread>
 #include <memory>
+#include "logging/async_logger.hpp"
 
 // Forward declarations
 struct SystemThreads;
 struct TradingSystemModules;
 struct SystemConfig;
-class AsyncLogger;
 
 namespace ThreadSystem {
 
@@ -54,7 +54,7 @@ private:
 };
 
 // Thread lifecycle management functions
-SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared_ptr<AsyncLogger> logger, const SystemConfig& config);
+SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger, const SystemConfig& config);
 void shutdown_system_threads(SystemThreads& handles);
 
 } // namespace ThreadSystem

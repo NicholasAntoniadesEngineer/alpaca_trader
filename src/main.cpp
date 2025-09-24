@@ -19,8 +19,8 @@ int main() {
     SystemState system_state(initial_config);
     
     // Initialize application foundation (logging, validation)
-    std::string timestamped_log_file = generate_timestamped_log_filename(system_state.config.logging.log_file);
-    auto logger = std::make_shared<AsyncLogger>(timestamped_log_file);
+    std::string timestamped_log_file = AlpacaTrader::Logging::generate_timestamped_log_filename(system_state.config.logging.log_file);
+    auto logger = std::make_shared<AlpacaTrader::Logging::AsyncLogger>(timestamped_log_file);
     StartupLogger::initialize_application_foundation(system_state.config, *logger);
     
     // Start the complete trading system

@@ -11,16 +11,22 @@ struct ThreadPriorityConfig {
 };
 
 struct TimingConfig {
-    int sleep_interval_sec;
-    int account_poll_sec;
+    // Thread polling intervals
+    int thread_market_data_poll_interval_sec;
+    int thread_account_data_poll_interval_sec;
+    int thread_market_gate_poll_interval_sec;
+    int thread_trader_poll_interval_sec;
+    int thread_logging_poll_interval_sec;
+    
+    // Data configuration
     int bar_fetch_minutes;
     int bar_buffer;
-    int market_open_check_sec;
     int pre_open_buffer_min;
     int post_close_buffer_min;
     int halt_sleep_min;
     int countdown_tick_sec;
     int monitoring_interval_sec;
+    int account_data_cache_duration_sec;
     // Thread priority configuration
     ThreadPriorityConfig thread_priorities;
 };

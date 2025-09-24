@@ -24,6 +24,7 @@ struct AccountManagerConfig {
     const ApiConfig& api;
     const LoggingConfig& logging;
     const TargetConfig& target;
+    const TimingConfig& timing;
 };
 
 // Grouped config for MarketDataThread

@@ -1,5 +1,6 @@
-#include "config_loader.hpp"
-#include "../configs/system_config.hpp"
+#include "configs/config_loader.hpp"
+#include "configs/system_config.hpp"
+#include "logging/logging_macros.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -53,11 +54,17 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "risk.buying_power_usage_factor") cfg.risk.buying_power_usage_factor = std::stod(value);
         else if (key == "risk.buying_power_validation_factor") cfg.risk.buying_power_validation_factor = std::stod(value);
 
-        // Timing (System Infrastructure Only)
-        else if (key == "timing.account_data_poll_interval_sec") cfg.timing.account_poll_sec = std::stoi(value);
+        // Thread polling intervals
+        else if (key == "timing.thread_market_data_poll_interval_sec") cfg.timing.thread_market_data_poll_interval_sec = std::stoi(value);
+        else if (key == "timing.thread_account_data_poll_interval_sec") cfg.timing.thread_account_data_poll_interval_sec = std::stoi(value);
+        else if (key == "timing.thread_market_gate_poll_interval_sec") cfg.timing.thread_market_gate_poll_interval_sec = std::stoi(value);
+        else if (key == "timing.thread_trader_poll_interval_sec") cfg.timing.thread_trader_poll_interval_sec = std::stoi(value);
+        else if (key == "timing.thread_logging_poll_interval_sec") cfg.timing.thread_logging_poll_interval_sec = std::stoi(value);
+        
+        // Data configuration
         else if (key == "timing.historical_bars_fetch_minutes") cfg.timing.bar_fetch_minutes = std::stoi(value);
         else if (key == "timing.historical_bars_buffer_count") cfg.timing.bar_buffer = std::stoi(value);
-        else if (key == "timing.market_status_check_interval_sec") cfg.timing.market_open_check_sec = std::stoi(value);
+        else if (key == "timing.account_data_cache_duration_sec") cfg.timing.account_data_cache_duration_sec = std::stoi(value);
         else if (key == "timing.market_pre_open_buffer_minutes") cfg.timing.pre_open_buffer_min = std::stoi(value);
         else if (key == "timing.market_post_close_buffer_minutes") cfg.timing.post_close_buffer_min = std::stoi(value);
         else if (key == "timing.trading_halt_sleep_minutes") cfg.timing.halt_sleep_min = std::stoi(value);
@@ -114,7 +121,6 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
         else if (key == "risk.close_on_reverse") cfg.risk.close_on_reverse = to_bool(value);
 
         // Timing parameters (can be overridden per strategy)
-        else if (key == "timing.sleep_interval_sec") cfg.timing.sleep_interval_sec = std::stoi(value);
     }
     return true;
 }
@@ -122,54 +128,56 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
 int load_system_config(SystemConfig& config) {
     std::string system_config_path = std::string("config/runtime_config.csv");
     if (!load_config_from_csv(config, system_config_path)) {
-        fprintf(stderr, "Failed to load config CSV from %s\n", system_config_path.c_str());
+        // Log error using logging system
+        AlpacaTrader::Logging::log_message("ERROR: Failed to load config CSV from " + system_config_path, "");
         return 1;
     }
     
     std::string strategy_path = std::string("config/strategy_profiles.csv");
     if (!load_strategy_profiles(config, strategy_path)) {
-        fprintf(stderr, "Failed to load strategy profiles from %s\n", strategy_path.c_str());
+        // Log error using logging system
+        AlpacaTrader::Logging::log_message("ERROR: Failed to load strategy profiles from " + strategy_path, "");
         return 1;
     }
     
     return 0;
 }
 
-bool validate_config(const SystemConfig& config, std::string& errorMessage) {
+bool validate_config(const SystemConfig& config, std::string& error_message) {
     if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        errorMessage = "API credentials missing (provide via CONFIG_CSV)";
+        error_message = "API credentials missing (provide via CONFIG_CSV)";
         return false;
     }
     if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        errorMessage = "API URLs missing (provide via CONFIG_CSV)";
+        error_message = "API URLs missing (provide via CONFIG_CSV)";
         return false;
     }
     if (config.target.symbol.empty()) {
-        errorMessage = "Symbol is missing (provide via CONFIG_CSV)";
+        error_message = "Symbol is missing (provide via CONFIG_CSV)";
         return false;
     }
     if (config.logging.log_file.empty()) {
-        errorMessage = "Logging path is empty (provide via CONFIG_CSV)";
+        error_message = "Logging path is empty (provide via CONFIG_CSV)";
         return false;
     }
     if (config.strategy.atr_period < 2) {
-        errorMessage = "strategy.atr_period must be >= 2";
+        error_message = "strategy.atr_period must be >= 2";
         return false;
     }
     if (config.strategy.rr_ratio <= 0.0) {
-        errorMessage = "strategy.rr_ratio must be > 0";
+        error_message = "strategy.rr_ratio must be > 0";
         return false;
     }
     if (config.risk.risk_per_trade <= 0.0 || config.risk.risk_per_trade >= 1.0) {
-        errorMessage = "risk.risk_per_trade must be between 0 and 1";
+        error_message = "risk.risk_per_trade must be between 0 and 1";
         return false;
     }
     if (config.risk.max_exposure_pct < 0.0 || config.risk.max_exposure_pct > 100.0) {
-        errorMessage = "risk.max_exposure_pct must be between 0 and 100";
+        error_message = "risk.max_exposure_pct must be between 0 and 100";
         return false;
     }
-    if (config.timing.sleep_interval_sec <= 0 || config.timing.account_poll_sec <= 0) {
-        errorMessage = "timing.* seconds must be > 0";
+    if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_account_data_poll_interval_sec <= 0) {
+        error_message = "timing.* seconds must be > 0";
         return false;
     }
     return true;

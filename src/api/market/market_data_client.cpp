@@ -1,29 +1,34 @@
-#include "market_data_client.hpp"
-#include "../../logging/async_logger.hpp"
-#include "../../logging/trading_logger.hpp"
-#include "../../logging/logging_macros.hpp"
-#include "../../utils/http_utils.hpp"
-#include "../../json/json.hpp"
+#include "api/market/market_data_client.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/trading_logger.hpp"
+#include "logging/logging_macros.hpp"
+#include "utils/http_utils.hpp"
+#include "utils/time_utils.hpp"
+#include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
 #include <vector>
 
 using json = nlohmann::json;
 
-std::vector<Bar> MarketDataClient::get_recent_bars(const BarRequest& reqBars) const {
-    std::string start = get_iso_time_minus(timing.bar_fetch_minutes);
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    std::time_t in_time_t = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), "%Y-%m-%dT%H:%M:%SZ");
-    std::string end = ss.str();
+namespace AlpacaTrader {
+namespace API {
+namespace Market {
 
-    TradingLogger::log_market_data_fetch_table(reqBars.symbol);
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Logging::TradingLogger;
+
+std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest& req_bars) const {
+    std::string start = TimeUtils::get_iso_time_minus_minutes(timing.bar_fetch_minutes);
+    std::string end = TimeUtils::get_current_iso_time_with_z();
+
+    TradingLogger::log_market_data_fetch_table(req_bars.symbol);
 
     std::vector<std::string> urls;
-    urls.push_back(build_bars_url(reqBars.symbol, start, end, reqBars.limit, "iex"));
-    urls.push_back(build_bars_url(reqBars.symbol, start, end, reqBars.limit, "sip"));
-    urls.push_back(build_bars_url(reqBars.symbol, start, end, 10, "iex")); // Daily bars
+    urls.push_back(build_bars_url(req_bars.symbol, start, end, req_bars.limit, "iex"));
+    urls.push_back(build_bars_url(req_bars.symbol, start, end, req_bars.limit, "sip"));
+    urls.push_back(build_bars_url(req_bars.symbol, start, end, 10, "iex")); // Daily bars
     
     std::vector<std::string> descriptions;
     descriptions.push_back("IEX FEED (FREE - 15MIN DELAYED)");
@@ -31,7 +36,7 @@ std::vector<Bar> MarketDataClient::get_recent_bars(const BarRequest& reqBars) co
     descriptions.push_back("IEX DAILY BARS (FREE - DELAYED)");
 
     for (size_t i = 0; i < urls.size(); ++i) {
-        log_fetch_attempt(reqBars.symbol, descriptions[i]);
+        log_fetch_attempt(req_bars.symbol, descriptions[i]);
         
         HttpRequest req(urls[i], api.api_key, api.api_secret, logging.log_file, 
                        api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
@@ -48,7 +53,7 @@ std::vector<Bar> MarketDataClient::get_recent_bars(const BarRequest& reqBars) co
         }
         
         try {
-            std::vector<Bar> bars = parse_bars_response(response);
+            std::vector<Core::Bar> bars = parse_bars_response(response);
             if (!bars.empty()) {
                 log_fetch_result(descriptions[i], true, bars.size());
                 LOG_THREAD_SECTION_FOOTER();
@@ -62,7 +67,7 @@ std::vector<Bar> MarketDataClient::get_recent_bars(const BarRequest& reqBars) co
     }
 
     log_fetch_failure();
-    return std::vector<Bar>();
+    return std::vector<Core::Bar>();
 }
 
 std::string MarketDataClient::build_bars_url(const std::string& symbol, const std::string& start, 
@@ -73,8 +78,8 @@ std::string MarketDataClient::build_bars_url(const std::string& symbol, const st
            "&adjustment=raw&feed=" + feed;
 }
 
-std::vector<Bar> MarketDataClient::parse_bars_response(const std::string& response) const {
-    std::vector<Bar> bars;
+std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& response) const {
+    std::vector<Core::Bar> bars;
     json j = json::parse(response);
     
     if (j.contains("bars") && j["bars"].is_array() && !j["bars"].empty()) {
@@ -82,7 +87,7 @@ std::vector<Bar> MarketDataClient::parse_bars_response(const std::string& respon
             const json& b = *it;
             if (b.contains("o") && b.contains("h") && b.contains("l") && b.contains("c") && b.contains("v") &&
                 !b["o"].is_null() && !b["h"].is_null() && !b["l"].is_null() && !b["c"].is_null() && !b["v"].is_null()) {
-                Bar bar;
+                Core::Bar bar;
                 bar.o = b["o"].get<double>();
                 bar.h = b["h"].get<double>();
                 bar.l = b["l"].get<double>();
@@ -132,25 +137,25 @@ void MarketDataClient::log_fetch_failure() const {
  * @note Alpaca provides free real-time quotes from IEX exchange
  */
 double MarketDataClient::get_current_price(const std::string& symbol) const {
-    // Construct real-time quotes endpoint URL
+    // Construct real-time quotes endpoint URL.
     std::string url = api.data_url + "/v2/stocks/" + symbol + "/quotes/latest";
     
-    // Make HTTP request with standard retry/timeout settings
+    // Make HTTP request with standard retry/timeout settings.
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     
-        // Handle empty response (network/API issues)
+        // Handle empty response (network/API issues).
         if (response.empty()) {
             LOG_THREAD_CONTENT("DATA SOURCE: IEX FREE QUOTE FAILED - falling back to DELAYED bar data");
             return 0.0;
         }
     
-    // Parse JSON response and extract price data
+    // Parse JSON response and extract price data.
     try {
         json j = json::parse(response);
         
-        // Priority 1: Use ask price (best for buy orders)
+        // Priority 1: Use ask price (best for buy orders).
             if (j.contains("quote") && j["quote"].contains("ap") && !j["quote"]["ap"].is_null()) {
                 double ask_price = j["quote"]["ap"].get<double>();
                 if (ask_price > 0) {
@@ -159,7 +164,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
                 }
             }
         
-        // Priority 2: Fallback to bid price (better than delayed data)
+        // Priority 2: Fallback to bid price (better than delayed data).
         if (j.contains("quote") && j["quote"].contains("bp") && !j["quote"]["bp"].is_null()) {
             double bid_price = j["quote"]["bp"].get<double>();
             if (bid_price > 0) {
@@ -178,3 +183,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
     // Return 0.0 to indicate failure - caller should use fallback price
     return 0.0;
 }
+
+} // namespace Market
+} // namespace API
+} // namespace AlpacaTrader

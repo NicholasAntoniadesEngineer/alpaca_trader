@@ -1,8 +1,9 @@
 /**
  * Asynchronous logging system for high-performance trading operations.
  */
-#include "async_logger.hpp"
-#include "../threads/platform/thread_control.hpp"
+#include "logging/async_logger.hpp"
+#include "threads/platform/thread_control.hpp"
+#include "utils/time_utils.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -11,6 +12,9 @@
 #include <fstream>
 #include <ctime>
 #include <cstdio>
+
+namespace AlpacaTrader {
+namespace Logging {
 
 static AsyncLogger* g_async_logger = nullptr;
 static thread_local std::string t_log_tag = "MAIN  ";
@@ -30,10 +34,9 @@ void set_log_thread_tag(const std::string& tag6) {
 
 
 void log_message(const std::string& message, const std::string& log_file_path) {
-    std::time_t now = std::time(nullptr);
-    std::tm* local_tm = std::localtime(&now);
+    std::string timestamp = TimeUtils::get_current_human_readable_time();
     std::stringstream ss;
-    ss << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S") << " [" << t_log_tag << "]   " << message << std::endl;
+    ss << timestamp << " [" << t_log_tag << "]   " << message << std::endl;
     std::string log_str = ss.str();
 
     if (g_async_logger) {
@@ -71,11 +74,10 @@ void end_inline_status() {
     }
 }
 
-std::string get_formatted_inline_message(const std::string& content) {
-    std::time_t now = std::time(nullptr);
-    std::tm* local_tm = std::localtime(&now);
+std::string AlpacaTrader::Logging::get_formatted_inline_message(const std::string& content) {
+    std::string timestamp = TimeUtils::get_current_human_readable_time();
     std::stringstream ss;
-    ss << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S") << " [" << t_log_tag << "]   " << content;
+    ss << timestamp << " [" << t_log_tag << "]   " << content;
     return ss.str();
 }
 
@@ -118,7 +120,7 @@ std::string generate_timestamped_log_filename(const std::string& base_filename) 
     
     // Create timestamped filename with git hash: base_name_DD-HH-MM_githash.extension
     std::stringstream ss;
-    ss << base_name << "_" << std::put_time(local_tm, "%d-%H-%M") << "_" << git_hash << extension;
+    ss << base_name << "_" << std::put_time(local_tm, TimeUtils::LOG_FILENAME) << "_" << git_hash << extension;
     return ss.str();
 }
 
@@ -147,3 +149,6 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
     }
     cv.notify_one();
 }
+
+} // namespace Logging
+} // namespace AlpacaTrader

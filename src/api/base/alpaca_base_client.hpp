@@ -1,12 +1,15 @@
 #ifndef ALPACA_BASE_CLIENT_HPP
 #define ALPACA_BASE_CLIENT_HPP
 
-#include "../../configs/api_config.hpp"
-#include "../../configs/session_config.hpp"
-#include "../../configs/logging_config.hpp"
-#include "../../configs/target_config.hpp"
-#include "../../configs/timing_config.hpp"
-#include "../../configs/component_configs.hpp"
+#include "configs/api_config.hpp"
+#include "configs/session_config.hpp"
+#include "configs/logging_config.hpp"
+#include "configs/target_config.hpp"
+#include "configs/timing_config.hpp"
+#include "configs/component_configs.hpp"
+
+namespace AlpacaTrader {
+namespace API {
 
 class AlpacaBaseClient {
 protected:
@@ -23,5 +26,8 @@ public:
     
     virtual ~AlpacaBaseClient() {}
 };
+
+} // namespace API
+} // namespace AlpacaTrader
 
 #endif // ALPACA_BASE_CLIENT_HPP

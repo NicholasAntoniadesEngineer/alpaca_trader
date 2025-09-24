@@ -1,6 +1,9 @@
 // risk_logic.cpp
 #include "core/risk_logic.hpp"
-#include "../logging/async_logger.hpp"
+#include "logging/async_logger.hpp"
+
+namespace AlpacaTrader {
+namespace Core {
 
 namespace RiskLogic {
 
@@ -15,5 +18,7 @@ TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const TraderConfig
 }
 
 } // namespace RiskLogic
+} // namespace Core
+} // namespace AlpacaTrader
 
 

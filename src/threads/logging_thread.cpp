@@ -1,14 +1,18 @@
-#include "logging_thread.hpp"
-#include "../logging/async_logger.hpp"
-#include "../logging/startup_logger.hpp"
+#include "threads/logging_thread.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/startup_logger.hpp"
 #include "config/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include <iostream>
 #include <fstream>
 #include <memory>
 
-extern std::mutex g_console_mtx;
-extern std::atomic<bool> g_inline_active;
+// Using declarations for cleaner code
+using AlpacaTrader::Threads::LoggingThread;
+using AlpacaTrader::Logging::set_log_thread_tag;
+using AlpacaTrader::Logging::g_console_mtx;
+using AlpacaTrader::Logging::g_inline_active;
+
 
 void LoggingThread::operator()() {
     ThreadSystem::ThreadConfig config = ThreadSystem::ConfigProvider::get_default_config(ThreadSystem::Type::LOGGING);

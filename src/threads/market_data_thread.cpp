@@ -2,14 +2,23 @@
  * Market data collection and processing thread.
  * Fetches real-time market data for trading decisions.
  */
-#include "market_data_thread.hpp"
-#include "../logging/async_logger.hpp"
-#include "../logging/startup_logger.hpp"
-#include "platform/thread_control.hpp"
-#include "../core/market_processing.hpp"
-#include "../utils/connectivity_manager.hpp"
+#include "threads/market_data_thread.hpp"
+#include "logging/async_logger.hpp"
+#include "logging/startup_logger.hpp"
+#include "threads/platform/thread_control.hpp"
+#include "core/market_processing.hpp"
+#include "utils/connectivity_manager.hpp"
 #include <atomic>
 #include <chrono>
+
+// Using declarations for cleaner code
+using AlpacaTrader::Threads::MarketDataThread;
+using AlpacaTrader::Threads::MarketGateThread;
+using AlpacaTrader::Logging::set_log_thread_tag;
+using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Core::BarRequest;
+using AlpacaTrader::Core::ProcessedData;
+using AlpacaTrader::API::AlpacaClient;
 
 void MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
@@ -18,7 +27,7 @@ void MarketDataThread::operator()() {
     
     while (running.load()) {
         if ((allow_fetch_ptr && !allow_fetch_ptr->load()) || !client.is_within_fetch_window()) {
-            std::this_thread::sleep_for(std::chrono::seconds(timing.sleep_interval_sec));
+            std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
             continue;
         }
         int num_bars = strategy.atr_period + timing.bar_buffer;
@@ -27,7 +36,7 @@ void MarketDataThread::operator()() {
         if (static_cast<int>(bars.size()) >= strategy.atr_period + 2) {
             // Compute indicators using the same implementation as Trader
             TraderConfig minimal_cfg{StrategyConfig{strategy}, RiskConfig{}, TimingConfig{timing}, FlagsConfig{}, UXConfig{}, LoggingConfig{}, TargetConfig{target}};
-            ProcessedData computed = MarketProcessing::compute_processed_data(bars, minimal_cfg);
+            ProcessedData computed = AlpacaTrader::Core::MarketProcessing::compute_processed_data(bars, minimal_cfg);
 
             if (computed.atr != 0.0) {
                 std::lock_guard<std::mutex> lock(state_mtx);
@@ -46,11 +55,12 @@ void MarketDataThread::operator()() {
             iteration_counter->fetch_add(1);
         }
         
-        std::this_thread::sleep_for(std::chrono::seconds(timing.sleep_interval_sec));
+        std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
     }
 }
 
-void run_market_gate(std::atomic<bool>& running,
+
+void AlpacaTrader::Threads::run_market_gate(std::atomic<bool>& running,
                      std::atomic<bool>& allow_fetch,
                      const TimingConfig& timing,
                      const LoggingConfig& logging,
@@ -94,7 +104,7 @@ void run_market_gate(std::atomic<bool>& running,
             iteration_counter->fetch_add(1);
         }
         
-        std::this_thread::sleep_for(std::chrono::seconds(timing.market_open_check_sec));
+        std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
     }
 }
 

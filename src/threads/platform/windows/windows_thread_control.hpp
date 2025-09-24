@@ -3,7 +3,7 @@
 
 #ifdef _WIN32
 
-#include "../../config/thread_config.hpp"
+#include "threads/config/thread_config.hpp"
 #include <thread>
 
 namespace ThreadSystem {

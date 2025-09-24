@@ -1,7 +1,8 @@
 // HttpUtils.cpp
 #include "utils/http_utils.hpp"
 #include "utils/connectivity_manager.hpp"
-#include "../logging/async_logger.hpp"
+#include "logging/async_logger.hpp"
+#include "time_utils.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -12,6 +13,9 @@
 #include <curl/curl.h>
 #include <cmath>
 #include <cstdlib>
+
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
 
 // Implement write_callback
 size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* s) {
@@ -135,11 +139,7 @@ std::string http_post(const HttpRequest& req) {
 
 // Implement get_iso_time_minus
 std::string get_iso_time_minus(int minutes) {
-    auto now = std::chrono::system_clock::now() - std::chrono::minutes(minutes);
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), "%Y-%m-%dT%H:%M:%SZ");
-    return ss.str();
+    return TimeUtils::get_iso_time_minus_minutes(minutes);
 }
 
 

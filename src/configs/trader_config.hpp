@@ -1,4 +1,4 @@
-// TraderConfig.hpp
+// TraderConfig.hpp.
 #ifndef TRADER_CONFIG_HPP
 #define TRADER_CONFIG_HPP
 
@@ -10,7 +10,7 @@
 #include "logging_config.hpp"
 #include "target_config.hpp"
 
-// Grouped configuration for Trader class
+// Grouped configuration for Trader class.
 struct TraderConfig {
     const StrategyConfig& strategy;
     const RiskConfig& risk;
@@ -20,20 +20,20 @@ struct TraderConfig {
     const LoggingConfig& logging;
     const TargetConfig& target;
 
-    TraderConfig(const StrategyConfig& strategyCfg,
-                 const RiskConfig& riskCfg,
-                 const TimingConfig& timingCfg,
-                 const FlagsConfig& flagsCfg,
-                 const UXConfig& uxCfg,
-                 const LoggingConfig& loggingCfg,
-                 const TargetConfig& targetCfg)
-        : strategy(strategyCfg),
-          risk(riskCfg),
-          timing(timingCfg),
-          flags(flagsCfg),
-          ux(uxCfg),
-          logging(loggingCfg),
-          target(targetCfg) {}
+    TraderConfig(const StrategyConfig& strategy_cfg,
+                 const RiskConfig& risk_cfg,
+                 const TimingConfig& timing_cfg,
+                 const FlagsConfig& flags_cfg,
+                 const UXConfig& ux_cfg,
+                 const LoggingConfig& logging_cfg,
+                 const TargetConfig& target_cfg)
+        : strategy(strategy_cfg),
+          risk(risk_cfg),
+          timing(timing_cfg),
+          flags(flags_cfg),
+          ux(ux_cfg),
+          logging(logging_cfg),
+          target(target_cfg) {}
 };
 
 #endif // TRADER_CONFIG_HPP

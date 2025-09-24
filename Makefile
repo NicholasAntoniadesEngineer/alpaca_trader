@@ -15,34 +15,35 @@ TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Source files (now in consolidated structure)
 SOURCES = src/main.cpp \
-          src/api/clock/market_clock.cpp \
-          src/api/market/market_data_client.cpp \
-          src/api/orders/order_client.cpp \
-          src/core/trader.cpp \
-          src/core/strategy_logic.cpp \
-          src/core/risk_logic.cpp \
-          src/core/market_processing.cpp \
-          src/core/system_manager.cpp \
-                 src/configs/component_configs.cpp \
-                 src/configs/config_loader.cpp \
-                 src/core/account_manager.cpp \
-          src/logging/account_logger.cpp \
-          src/utils/http_utils.cpp \
-          src/core/indicators.cpp \
-          src/logging/async_logger.cpp \
-          src/logging/trading_logger.cpp \
-          src/logging/thread_logger.cpp \
-          src/logging/startup_logger.cpp \
-          src/threads/config/thread_config.cpp \
-          src/threads/platform/thread_control.cpp \
-          src/threads/platform/linux/linux_thread_control.cpp \
-          src/threads/platform/macos/macos_thread_control.cpp \
-          src/threads/platform/windows/windows_thread_control.cpp \
-          src/threads/thread_manager.cpp \
-          src/threads/account_data_thread.cpp \
-          src/threads/market_data_thread.cpp \
-          src/threads/logging_thread.cpp \
-          src/threads/trader_thread.cpp
+  src/api/clock/market_clock.cpp \
+  src/api/market/market_data_client.cpp \
+  src/api/orders/order_client.cpp \
+  src/core/trader.cpp \
+  src/core/strategy_logic.cpp \
+  src/core/risk_logic.cpp \
+  src/core/market_processing.cpp \
+  src/core/system_manager.cpp \
+  src/configs/component_configs.cpp \
+  src/configs/config_loader.cpp \
+  src/core/account_manager.cpp \
+  src/utils/time_utils.cpp \
+  src/logging/account_logger.cpp \
+  src/utils/http_utils.cpp \
+  src/core/indicators.cpp \
+  src/logging/async_logger.cpp \
+  src/logging/trading_logger.cpp \
+  src/logging/thread_logger.cpp \
+  src/logging/startup_logger.cpp \
+  src/threads/config/thread_config.cpp \
+  src/threads/platform/thread_control.cpp \
+  src/threads/platform/linux/linux_thread_control.cpp \
+  src/threads/platform/macos/macos_thread_control.cpp \
+  src/threads/platform/windows/windows_thread_control.cpp \
+  src/threads/thread_manager.cpp \
+  src/threads/account_data_thread.cpp \
+  src/threads/market_data_thread.cpp \
+  src/threads/logging_thread.cpp \
+  src/threads/trader_thread.cpp
 
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)

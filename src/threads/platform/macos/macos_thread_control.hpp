@@ -3,7 +3,7 @@
 
 #ifdef __APPLE__
 
-#include "../../config/thread_config.hpp"
+#include "threads/config/thread_config.hpp"
 #include <thread>
 
 namespace ThreadSystem {

@@ -2,12 +2,15 @@
 #ifndef ALPACA_CLIENT_HPP
 #define ALPACA_CLIENT_HPP
 
-#include "../configs/component_configs.hpp"
-#include "../core/data_structures.hpp"
+#include "configs/component_configs.hpp"
+#include "core/data_structures.hpp"
 #include "clock/market_clock.hpp"
 #include "market/market_data_client.hpp"
 #include "orders/order_client.hpp"
 #include <vector>
+
+namespace AlpacaTrader {
+namespace API {
 
 /**
  * AlpacaClient - Unified API facade for Alpaca trading operations
@@ -18,9 +21,9 @@
  */
 class AlpacaClient {
 private:
-    MarketClock clock;
-    MarketDataClient market_data;
-    OrderClient orders;
+    Clock::MarketClock clock;
+    Market::MarketDataClient market_data;
+    Orders::OrderClient orders;
 
 public:
     explicit AlpacaClient(const AlpacaClientConfig& cfg)
@@ -31,12 +34,15 @@ public:
     bool is_within_fetch_window() const { return clock.is_within_fetch_window(); }
     
     // Market data operations
-    std::vector<Bar> get_recent_bars(const BarRequest& req) const { return market_data.get_recent_bars(req); }
+    std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& req) const { return market_data.get_recent_bars(req); }
     double get_current_price(const std::string& symbol) const { return market_data.get_current_price(symbol); }
     
     // Order management operations
-    void place_bracket_order(const OrderRequest& req) const { orders.place_bracket_order(req); }
-    void close_position(const ClosePositionRequest& req) const { orders.close_position(req); }
+    void place_bracket_order(const Core::OrderRequest& req) const { orders.place_bracket_order(req); }
+    void close_position(const Core::ClosePositionRequest& req) const { orders.close_position(req); }
 };
+
+} // namespace API
+} // namespace AlpacaTrader
 
 #endif // ALPACA_CLIENT_HPP

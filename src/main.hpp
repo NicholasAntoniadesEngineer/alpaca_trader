@@ -16,6 +16,7 @@
 #include "threads/thread_manager.hpp"
 #include "logging/async_logger.hpp"
 #include "utils/connectivity_manager.hpp"
+#include "namespaces.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
@@ -111,18 +112,18 @@ struct TradingSystemModules {
     std::unique_ptr<AccountManager> portfolio_manager;
     std::unique_ptr<AccountLogger> account_dashboard;
     std::unique_ptr<Trader> trading_engine;
-    std::unique_ptr<MarketDataThread> market_data_thread;
-    std::unique_ptr<AccountDataThread> account_data_thread;
-    std::unique_ptr<MarketGateThread> market_gate_thread;
-    std::unique_ptr<LoggingThread> logging_thread;
-    std::unique_ptr<TraderThread> trading_thread;
+    std::unique_ptr<AlpacaTrader::Threads::MarketDataThread> market_data_thread;
+    std::unique_ptr<AlpacaTrader::Threads::AccountDataThread> account_data_thread;
+    std::unique_ptr<AlpacaTrader::Threads::MarketGateThread> market_gate_thread;
+    std::unique_ptr<AlpacaTrader::Threads::LoggingThread> logging_thread;
+    std::unique_ptr<AlpacaTrader::Threads::TraderThread> trading_thread;
 };
 
 TradingSystemConfigurations build_trading_configurations(const SystemState& state);
 TradingSystemModules build_trading_modules(SystemState& state, const TradingSystemConfigurations& configs);
-SystemThreads boot_system(SystemState& system_state, TradingSystemModules& modules, AsyncLogger& logger);
+SystemThreads boot_system(SystemState& system_state, TradingSystemModules& modules, AlpacaTrader::Logging::AsyncLogger& logger);
 void run_and_shutdown_system(SystemState& system_state, SystemThreads& handles);
-void initialize_application(const SystemConfig& config, AsyncLogger& logger);
+void initialize_application(const SystemConfig& config, AlpacaTrader::Logging::AsyncLogger& logger);
 void run_market_gate(SystemState& state, AlpacaClient& client);
 
 #endif // MAIN_HPP

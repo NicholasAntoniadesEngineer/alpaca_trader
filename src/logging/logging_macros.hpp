@@ -72,11 +72,15 @@
 #define LOG_THREAD_STATUS_TABLE_FOOTER() LOG_THREAD_CONTENT("+----------+----------+----------+----------+----------+")
 
 // Inline status macros for terminal display (not saved to log files)
-#define LOG_INLINE_HALT_STATUS(seconds) log_inline_status(get_formatted_inline_message("|   TRADING HALTED - Next check in " + std::to_string(seconds) + "s"))
+#define LOG_INLINE_HALT_STATUS(seconds) log_inline_status(AlpacaTrader::Logging::get_formatted_inline_message("|   TRADING HALTED - Next check in " + std::to_string(seconds) + "s"))
 #define LOG_INLINE_NEXT_LOOP(seconds) log_inline_status("   ⏳ Next loop in " + std::to_string(seconds) + "s   ")
 
 // Formats inline messages with timestamp and thread tag
+namespace AlpacaTrader {
+namespace Logging {
 std::string get_formatted_inline_message(const std::string& content);
+} // namespace Logging
+} // namespace AlpacaTrader
 
 // Comprehensive table formatting macros for structured logging
 #define TABLE_HEADER_48(title, subtitle) do { \
