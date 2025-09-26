@@ -32,6 +32,8 @@ public:
     // Market hours and timing operations
     bool is_core_trading_hours() const { return clock.is_core_trading_hours(); }
     bool is_within_fetch_window() const { return clock.is_within_fetch_window(); }
+    bool is_approaching_market_close() const { return clock.is_approaching_market_close(); }
+    int get_minutes_until_market_close() const { return clock.get_minutes_until_market_close(); }
     
     // Market data operations
     std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& req) const { return market_data.get_recent_bars(req); }

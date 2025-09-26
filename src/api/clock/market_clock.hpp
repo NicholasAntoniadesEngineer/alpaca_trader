@@ -15,6 +15,8 @@ public:
     // Market hours and timing operations
     bool is_core_trading_hours() const;
     bool is_within_fetch_window() const;
+    bool is_approaching_market_close() const;
+    int get_minutes_until_market_close() const;
     
 private:
     // Helper methods for time parsing and validation

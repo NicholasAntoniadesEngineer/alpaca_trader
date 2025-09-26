@@ -27,6 +27,11 @@ risk.allow_multiple_positions,true
 risk.max_layers,5
 risk.close_on_reverse,false
 
+# PRICE BUFFER CONFIGURATION (Aggressive)
+strategy.price_buffer_pct,0.001
+strategy.min_price_buffer,0.01
+strategy.max_price_buffer,0.10
+
 # RISK/REWARD & TIMING (Lightning Fast)
 strategy.rr_ratio,1.5
 timing.sleep_interval_sec,1

@@ -74,7 +74,7 @@ void end_inline_status() {
     }
 }
 
-std::string AlpacaTrader::Logging::get_formatted_inline_message(const std::string& content) {
+std::string get_formatted_inline_message(const std::string& content) {
     std::string timestamp = TimeUtils::get_current_human_readable_time();
     std::stringstream ss;
     ss << timestamp << " [" << t_log_tag << "]   " << content;

@@ -23,6 +23,7 @@ struct TimingConfig {
     int bar_buffer;
     int pre_open_buffer_min;
     int post_close_buffer_min;
+    int market_close_buffer_min;
     int halt_sleep_min;
     int countdown_tick_sec;
     int monitoring_interval_sec;

@@ -108,6 +108,52 @@ std::tm MarketClock::parse_timestamp(const std::string& timestamp) const {
     return t;
 }
 
+bool MarketClock::is_approaching_market_close() const {
+    int minutes_until_close = get_minutes_until_market_close();
+    return minutes_until_close <= timing.market_close_buffer_min && minutes_until_close > 0;
+}
+
+int MarketClock::get_minutes_until_market_close() const {
+    HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
+    std::string response = http_get(req);
+    if (response.empty()) return -1;
+    
+    try {
+        json j = json::parse(response);
+        if (!j.contains("is_open") || j["is_open"].is_null()) return -1;
+        if (!j["is_open"]) return -1; // Market is closed
+        if (!j.contains("timestamp") || j["timestamp"].is_null()) return -1;
+        
+        std::string timestamp = j["timestamp"];
+        std::tm t = parse_timestamp(timestamp);
+        
+        // Check if timestamp already includes timezone info
+        bool has_timezone = timestamp.find_first_of("+-Z") != std::string::npos;
+        int hour, min;
+        
+        if (has_timezone) {
+            // Timestamp already includes timezone, use as-is
+            hour = t.tm_hour;
+            min = t.tm_min;
+        } else {
+            // Assume UTC and convert to ET
+            hour = t.tm_hour + session.et_utc_offset_hours;
+            min = t.tm_min;
+        }
+        
+        // Calculate minutes until market close
+        int current_minutes = hour * 60 + min;
+        int close_minutes = session.market_close_hour * 60 + session.market_close_minute;
+        int minutes_until_close = close_minutes - current_minutes;
+        
+        return minutes_until_close;
+    } catch (...) {
+        AlpacaTrader::Logging::log_message("Error parsing clock response for market close timing: " + response, logging.log_file);
+    }
+    return -1;
+}
+
 bool MarketClock::is_within_time_window(int hour, int minute, int open_hour, int open_minute, 
                                        int close_hour, int close_minute) const {
     bool after_open = (hour > open_hour) || (hour == open_hour && minute >= open_minute);

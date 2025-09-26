@@ -152,6 +152,24 @@ void TradingLogger::log_position_update(int current_quantity, double unrealized_
     log_message("POSITION", oss.str());
 }
 
+void TradingLogger::log_market_close_warning(int minutes_until_close) {
+    LOG_THREAD_SECTION_HEADER("MARKET CLOSE WARNING");
+    std::ostringstream oss;
+    oss << "Market closing in " << minutes_until_close << " minutes - preparing to close positions";
+    log_message("MARKET_CLOSE", oss.str());
+}
+
+void TradingLogger::log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side) {
+    std::ostringstream oss;
+    oss << "Closing position for market close: " << side << " " << std::abs(quantity) << " shares of " << symbol;
+    log_message("MARKET_CLOSE", oss.str());
+}
+
+void TradingLogger::log_market_close_complete() {
+    log_message("MARKET_CLOSE", "All positions closed for market close - trading halted until next session");
+    LOG_THREAD_SEPARATOR();
+}
+
 void TradingLogger::log_execution_time(const std::string& operation, long microseconds) {
     
     std::ostringstream oss;

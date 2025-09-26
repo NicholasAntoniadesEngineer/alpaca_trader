@@ -67,6 +67,7 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "timing.account_data_cache_duration_sec") cfg.timing.account_data_cache_duration_sec = std::stoi(value);
         else if (key == "timing.market_pre_open_buffer_minutes") cfg.timing.pre_open_buffer_min = std::stoi(value);
         else if (key == "timing.market_post_close_buffer_minutes") cfg.timing.post_close_buffer_min = std::stoi(value);
+        else if (key == "timing.market_close_buffer_minutes") cfg.timing.market_close_buffer_min = std::stoi(value);
         else if (key == "timing.trading_halt_sleep_minutes") cfg.timing.halt_sleep_min = std::stoi(value);
         else if (key == "timing.countdown_display_interval_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
         else if (key == "timing.thread_monitor_log_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
@@ -112,6 +113,9 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
         else if (key == "strategy.sell_allow_equal_close") cfg.strategy.sell_allow_equal_close = to_bool(value);
         else if (key == "strategy.sell_require_lower_low") cfg.strategy.sell_require_lower_low = to_bool(value);
         else if (key == "strategy.sell_require_lower_high") cfg.strategy.sell_require_lower_high = to_bool(value);
+        else if (key == "strategy.price_buffer_pct") cfg.strategy.price_buffer_pct = std::stod(value);
+        else if (key == "strategy.min_price_buffer") cfg.strategy.min_price_buffer = std::stod(value);
+        else if (key == "strategy.max_price_buffer") cfg.strategy.max_price_buffer = std::stod(value);
 
         // Risk parameters (can be overridden per strategy)
         else if (key == "risk.risk_per_trade") cfg.risk.risk_per_trade = std::stod(value);

@@ -247,6 +247,35 @@ void Trader::log_exit_target_debug(const std::string& side, double price, double
     TradingLogger::log_exit_targets_table(side, price, risk, rr, targets.stop_loss, targets.take_profit);
 }
 
+void Trader::handle_market_close_positions(const ProcessedData& data) {
+    // Check if we're approaching market close
+    if (!services.client.is_approaching_market_close()) {
+        return;
+    }
+    
+    int current_qty = data.pos_details.qty;
+    if (current_qty == 0) {
+        // No position to close
+        return;
+    }
+    
+    // Get minutes until market close for logging
+    int minutes_until_close = services.client.get_minutes_until_market_close();
+    if (minutes_until_close > 0) {
+        TradingLogger::log_market_close_warning(minutes_until_close);
+    }
+    
+    // Log the position closure action
+    std::string side = (current_qty > 0) ? "SELL" : "BUY";
+    TradingLogger::log_market_close_position_closure(current_qty, services.config.target.symbol, side);
+    
+    // Close the position using market order
+    services.client.close_position(ClosePositionRequest{current_qty});
+    
+    // Log completion
+    TradingLogger::log_market_close_complete();
+}
+
 void Trader::execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd) {
     LOG_THREAD_ORDER_EXECUTION_HEADER();
     
@@ -264,7 +293,7 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
         double current_price = get_real_time_price_with_fallback(data.curr.c);
         
         StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(
-            to_side_string(OrderSide::Buy), current_price, sizing.risk_amount, services.config.strategy.rr_ratio
+            to_side_string(OrderSide::Buy), current_price, sizing.risk_amount, services.config.strategy.rr_ratio, services.config
         );
         
         // Debug logging to verify exit target calculations
@@ -288,7 +317,7 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
         double current_price = get_real_time_price_with_fallback(data.curr.c);
         
         StrategyLogic::ExitTargets targets = StrategyLogic::compute_exit_targets(
-            to_side_string(OrderSide::Sell), current_price, sizing.risk_amount, services.config.strategy.rr_ratio
+            to_side_string(OrderSide::Sell), current_price, sizing.risk_amount, services.config.strategy.rr_ratio, services.config
         );
         
         // Debug logging to verify exit target calculations
@@ -424,6 +453,10 @@ void Trader::process_trading_cycle(const MarketSnapshot& market, const AccountSn
     pd.open_orders = account.open_orders;
     pd.exposure_pct = account.exposure_pct;
 
+    // First, check if we need to close positions due to market close
+    handle_market_close_positions(pd);
+    
+    // Then proceed with normal signal evaluation
     evaluate_and_execute_signal(pd, account.equity);
 }
 

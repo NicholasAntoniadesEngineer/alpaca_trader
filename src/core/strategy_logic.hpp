@@ -43,7 +43,7 @@ struct ExitTargets {
 SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& config);
 FilterResult evaluate_filters(const ProcessedData& data, const TraderConfig& config);
 PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const TraderConfig& config, double buying_power = 0.0);
-ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio);
+ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const TraderConfig& config);
 
 } // namespace StrategyLogic
 } // namespace Core

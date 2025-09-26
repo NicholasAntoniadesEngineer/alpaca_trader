@@ -9,14 +9,19 @@ struct StrategyConfig {
     double rr_ratio;
     int avg_atr_multiplier;
     
-    // Signal detection configuration
-    bool buy_allow_equal_close{true};        // Allow close >= open for buy signals
-    bool buy_require_higher_high{true};      // Require current high > previous high
-    bool buy_require_higher_low{false};      // Require current low >= previous low
+    // Price buffer configuration for order execution
+    double price_buffer_pct;                 // Percentage of entry price for buffer
+    double min_price_buffer;                 // Minimum buffer amount in dollars
+    double max_price_buffer;                 // Maximum buffer amount in dollars
     
-    bool sell_allow_equal_close{true};       // Allow close <= open for sell signals  
-    bool sell_require_lower_low{true};       // Require current low < previous low
-    bool sell_require_lower_high{false};     // Require current high <= previous high
+    // Signal detection configuration
+    bool buy_allow_equal_close;              // Allow close >= open for buy signals
+    bool buy_require_higher_high;            // Require current high > previous high
+    bool buy_require_higher_low;             // Require current low >= previous low
+    
+    bool sell_allow_equal_close;             // Allow close <= open for sell signals  
+    bool sell_require_lower_low;             // Require current low < previous low
+    bool sell_require_lower_high;            // Require current high <= previous high
 };
 
 #endif // STRATEGY_CONFIG_HPP

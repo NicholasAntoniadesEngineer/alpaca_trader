@@ -36,7 +36,7 @@ risk.buying_power_validation_factor,1.25
 timing.thread_market_data_poll_interval_sec,1
 timing.thread_account_data_poll_interval_sec,5
 timing.thread_market_gate_poll_interval_sec,15
-timing.thread_trader_poll_interval_sec,1
+timing.thread_trader_poll_interval_sec,2
 timing.thread_logging_poll_interval_sec,1
 
 // ========================================================================
@@ -51,6 +51,7 @@ timing.account_data_cache_duration_sec,10
 // ========================================================================
 timing.market_pre_open_buffer_minutes,5
 timing.market_post_close_buffer_minutes,5
+timing.market_close_buffer_minutes,15
 
 // ========================================================================
 // SYSTEM MONITORING CONFIGURATION

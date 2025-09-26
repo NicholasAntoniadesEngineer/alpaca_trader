@@ -61,6 +61,11 @@ public:
     static void log_order_result(const std::string& order_id, bool success, const std::string& reason = "");
     static void log_position_update(int current_quantity, double unrealized_pnl = 0.0);
     
+    // Market close position management
+    static void log_market_close_warning(int minutes_until_close);
+    static void log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side);
+    static void log_market_close_complete();
+    
     // Enhanced tabulated logging functions
     static void log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price);
     static void log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);

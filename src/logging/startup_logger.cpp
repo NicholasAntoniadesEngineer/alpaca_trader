@@ -108,7 +108,13 @@ void StartupLogger::log_strategy_configuration(const SystemConfig& config) {
 // APPLICATION INITIALIZATION
 // =============================================================================
 
-void StartupLogger::initialize_application_foundation(const SystemConfig& config, AsyncLogger& logger) {
+std::shared_ptr<AsyncLogger> StartupLogger::initialize_application_foundation(const SystemConfig& config) {
+    // Generate timestamped log filename
+    std::string timestamped_log_file = AlpacaTrader::Logging::generate_timestamped_log_filename(config.logging.log_file);
+    
+    // Create logger instance
+    auto logger = std::make_shared<AsyncLogger>(timestamped_log_file);
+    
     // Validate configuration
     std::string cfg_error;
     if (!validate_config(config, cfg_error)) {
@@ -118,9 +124,11 @@ void StartupLogger::initialize_application_foundation(const SystemConfig& config
     }
     
     // Initialize global logger (logger already created with timestamped filename)
-    initialize_global_logger(logger);
+    initialize_global_logger(*logger);
     set_log_thread_tag("MAIN  ");
     
     // Log application startup
     log_application_header();
+    
+    return logger;
 }

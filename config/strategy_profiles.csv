@@ -19,18 +19,23 @@ strategy.sell_allow_equal_close,true
 strategy.sell_require_lower_low,false
 strategy.sell_require_lower_high,false
 
-# FILTER THRESHOLDS (Very Low Standards)
-strategy.atr_multiplier_entry,0.1
+# FILTER THRESHOLDS (Increased for Larger Spreads)
+strategy.atr_multiplier_entry,1.0
 strategy.volume_multiplier,0.1
 strategy.atr_period,10
 strategy.avg_atr_multiplier,2
 
 # RISK MANAGEMENT (Aggressive but Controlled)
-risk.risk_per_trade,0.05
+risk.risk_per_trade,0.1
 risk.max_value_per_trade,1000
 risk.allow_multiple_positions,true
 risk.max_layers,3
 risk.close_on_reverse,false
+
+# PRICE BUFFER CONFIGURATION (Aggressive)
+strategy.price_buffer_pct,0.001
+strategy.min_price_buffer,0.02
+strategy.max_price_buffer,0.25
 
 # RISK/REWARD & TIMING
 strategy.rr_ratio,2.0

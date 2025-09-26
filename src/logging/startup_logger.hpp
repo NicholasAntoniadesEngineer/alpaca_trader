@@ -12,7 +12,7 @@
 class StartupLogger {
 public:
     // Application initialization
-    static void initialize_application_foundation(const SystemConfig& config, AlpacaTrader::Logging::AsyncLogger& logger);
+    static std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> initialize_application_foundation(const SystemConfig& config);
     
     // Application header and branding
     static void log_application_header();

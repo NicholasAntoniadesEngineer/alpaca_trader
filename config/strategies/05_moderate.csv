@@ -27,6 +27,11 @@ risk.allow_multiple_positions,true
 risk.max_layers,2
 risk.close_on_reverse,true
 
+# PRICE BUFFER CONFIGURATION (Moderate)
+strategy.price_buffer_pct,0.002
+strategy.min_price_buffer,0.05
+strategy.max_price_buffer,0.50
+
 # RISK/REWARD & TIMING
 strategy.rr_ratio,3.0
 timing.sleep_interval_sec,7

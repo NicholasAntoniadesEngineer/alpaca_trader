@@ -156,18 +156,19 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
  * @param rr_ratio Risk-reward ratio (e.g., 3.0 means 3:1 reward:risk)
  * @return ExitTargets struct containing calculated stop_loss and take_profit prices
  */
-ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio) {
+ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const TraderConfig& config) {
     ExitTargets targets;
     
-    // Conservative buffer system to handle data delays and market volatility
-    const double PRICE_BUFFER_PCT = 0.002;  // 0.2% of entry price
-    const double MIN_PRICE_BUFFER = 0.05;   // $0.05 minimum (vs Alpaca's $0.01)
-    const double MAX_PRICE_BUFFER = 0.50;   // $0.50 maximum for very high-priced stocks
+    // Dynamic buffer system to handle data delays and market volatility
+    // Values are now configurable per strategy
+    double price_buffer_pct = config.strategy.price_buffer_pct;
+    double min_price_buffer = config.strategy.min_price_buffer;
+    double max_price_buffer = config.strategy.max_price_buffer;
     
     // Calculate dynamic buffer based on entry price
     double price_buffer = std::min(
-        std::max(entry_price * PRICE_BUFFER_PCT, MIN_PRICE_BUFFER),
-        MAX_PRICE_BUFFER
+        std::max(entry_price * price_buffer_pct, min_price_buffer),
+        max_price_buffer
     );
     
     // Use the larger of risk_amount or calculated buffer for safety

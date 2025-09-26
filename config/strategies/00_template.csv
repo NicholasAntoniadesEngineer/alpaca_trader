@@ -30,6 +30,11 @@ risk.allow_multiple_positions,[true/false]
 risk.max_layers,[1-10]
 risk.close_on_reverse,[true/false]
 
+# PRICE BUFFER CONFIGURATION
+strategy.price_buffer_pct,[0.001-0.010]
+strategy.min_price_buffer,[0.01-0.10]
+strategy.max_price_buffer,[0.10-1.00]
+
 # RISK/REWARD & TIMING
 strategy.rr_ratio,[1.0-10.0]
 timing.sleep_interval_sec,[1-60]

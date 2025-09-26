@@ -74,6 +74,9 @@ private:
     double get_real_time_price_with_fallback(double fallback_price) const;
     void log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const;
     
+    // Market close position management
+    void handle_market_close_positions(const ProcessedData& data);
+    
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
 
 public:

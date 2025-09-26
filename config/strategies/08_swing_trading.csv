@@ -27,6 +27,11 @@ risk.allow_multiple_positions,false
 risk.max_layers,1
 risk.close_on_reverse,false
 
+# PRICE BUFFER CONFIGURATION (Conservative)
+strategy.price_buffer_pct,0.004
+strategy.min_price_buffer,0.15
+strategy.max_price_buffer,1.50
+
 # RISK/REWARD & TIMING (Patient)
 strategy.rr_ratio,6.0
 timing.sleep_interval_sec,30
