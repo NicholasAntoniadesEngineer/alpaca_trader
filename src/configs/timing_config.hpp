@@ -3,11 +3,11 @@
 #define TIMING_CONFIG_HPP
 
 struct ThreadPriorityConfig {
-    bool enable_thread_priorities = true;
-    bool enable_cpu_affinity = false;
-    int trader_cpu_affinity = 0;       // Pin trader to CPU 0
-    int market_data_cpu_affinity = 1;  // Pin market data to CPU 1
-    bool log_thread_info = true;       // Log thread priority info on startup
+    bool enable_thread_priorities;
+    bool enable_cpu_affinity;
+    int trader_cpu_affinity;       // Pin trader to CPU
+    int market_data_cpu_affinity;  // Pin market data to CPU
+    bool log_thread_info;       // Log thread priority info on startup
 };
 
 struct TimingConfig {

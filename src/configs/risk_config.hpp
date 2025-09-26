@@ -12,10 +12,10 @@ struct RiskConfig {
     double scale_in_multiplier;
     bool close_on_reverse;
     // Position sizing safety factors
-    double buying_power_usage_factor{0.8};  // Use 80% of available buying power
-    double buying_power_validation_factor{1.25}; // Require 125% of position value
+    double buying_power_usage_factor;  // Use percentage of available buying power
+    double buying_power_validation_factor; // Require percentage of position value
     // Maximum value per trade constraint
-    double max_value_per_trade{0.0}; // Maximum dollar value per individual trade (0 = no limit)
+    double max_value_per_trade; // Maximum dollar value per individual trade (0 = no limit)
 };
 
 #endif // RISK_CONFIG_HPP

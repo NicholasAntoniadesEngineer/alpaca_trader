@@ -9,18 +9,18 @@ namespace Core {
 namespace RiskLogic {
 
 struct TradeGateInput {
-    double initial_equity{0.0};
-    double current_equity{0.0};
-    double exposure_pct{0.0};
-    bool core_trading_hours{false};
+    double initial_equity;
+    double current_equity;
+    double exposure_pct;
+    bool core_trading_hours;
 };
 
 struct TradeGateResult {
-    bool allowed{false};
-    bool hours_ok{false};
-    bool pnl_ok{false};
-    bool exposure_ok{false};
-    double daily_pnl{0.0};
+    bool allowed;
+    bool hours_ok;
+    bool pnl_ok;
+    bool exposure_ok;
+    double daily_pnl;
 };
 
 TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const TraderConfig& config);
