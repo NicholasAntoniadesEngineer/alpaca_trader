@@ -15,12 +15,12 @@ using AlpacaTrader::Logging::g_inline_active;
 
 
 void LoggingThread::operator()() {
-    AlpacaTrader::Config::ThreadConfig config = AlpacaTrader::Config::ConfigProvider::get_default_config(AlpacaTrader::Config::Type::LOGGING);
-    ThreadSystem::Platform::ThreadControl::set_current_priority(config);
+    AlpacaTrader::Config::ThreadConfig thread_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::LOGGING, config);
+    ThreadSystem::Platform::ThreadControl::set_current_priority(thread_config);
     
     set_log_thread_tag("LOGGER");
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_startup_delay_ms));
     
     std::ofstream log_file(logger_ptr->get_file_path(), std::ios::app);
     logger_ptr->running.store(true);

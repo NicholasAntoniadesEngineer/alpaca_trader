@@ -55,7 +55,6 @@ struct ThreadConfigs {
 // Thread configuration provider
 class ConfigProvider {
 public:
-    static ThreadConfig get_default_config(Type type);
     static ThreadConfig get_config_from_system(Type type, const SystemConfig& system_config);
     static std::string priority_to_string(Priority priority);
     static Priority string_to_priority(const std::string& str);

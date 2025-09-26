@@ -16,6 +16,12 @@ struct RiskConfig {
     double buying_power_validation_factor; // Require percentage of position value
     // Maximum value per trade constraint
     double max_value_per_trade; // Maximum dollar value per individual trade (0 = no limit)
+    
+    // Precision configuration for logging and display
+    int percentage_precision;           // Decimal places for percentages (e.g., exposure_pct)
+    int exposure_precision;             // Decimal places for exposure values
+    int factor_precision;               // Decimal places for risk factors
+    int currency_precision;             // Decimal places for currency amounts
 };
 
 #endif // RISK_CONFIG_HPP

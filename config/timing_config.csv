@@ -1,0 +1,39 @@
+# ========================================================================
+# TIMING CONFIGURATION
+# ========================================================================
+# All timing-related settings for threads, data polling, and system monitoring
+# ========================================================================
+
+# Thread polling intervals
+timing.thread_market_data_poll_interval_sec,1
+timing.thread_account_data_poll_interval_sec,5
+timing.thread_market_gate_poll_interval_sec,15
+timing.thread_trader_poll_interval_sec,2
+timing.thread_logging_poll_interval_sec,1
+
+# Data polling configuration
+timing.historical_bars_fetch_minutes,120
+timing.historical_bars_buffer_count,20
+timing.account_data_cache_duration_sec,10
+
+# Market monitoring configuration
+timing.market_pre_open_buffer_minutes,5
+timing.market_post_close_buffer_minutes,5
+timing.market_close_buffer_minutes,15
+
+# System monitoring configuration
+timing.thread_monitor_log_interval_sec,60
+
+# Error handling configuration
+timing.trading_halt_sleep_minutes,1
+
+# User interface timing
+timing.countdown_display_interval_sec,1
+
+# Thread initialization delays
+timing.thread_initialization_delay_ms,200
+timing.thread_startup_delay_ms,300
+
+# PRECISION CONFIGURATION
+timing.cpu_usage_precision,1
+timing.rate_precision,1

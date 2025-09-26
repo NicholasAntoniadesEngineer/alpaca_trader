@@ -1,0 +1,11 @@
+# ========================================================================
+# MARKET SESSION CONFIGURATION
+# ========================================================================
+# Market hours and session timing settings
+# ========================================================================
+
+session.et_utc_offset_hours,-4
+session.market_open_hour,9
+session.market_open_minute,30
+session.market_close_hour,16
+session.market_close_minute,0

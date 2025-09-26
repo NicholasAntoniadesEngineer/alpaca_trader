@@ -28,8 +28,17 @@ struct TimingConfig {
     int countdown_tick_sec;
     int monitoring_interval_sec;
     int account_data_cache_duration_sec;
+    
+    // Thread initialization delays
+    int thread_initialization_delay_ms;     // Delay before setting thread priorities
+    int thread_startup_delay_ms;            // Delay for thread startup synchronization
+    
     // Thread priority configuration
     ThreadPriorityConfig thread_priorities;
+    
+    // Precision configuration for performance metrics
+    int cpu_usage_precision;             // Decimal places for CPU usage percentages
+    int rate_precision;                  // Decimal places for rates (e.g., iterations/sec)
 };
 
 #endif // TIMING_CONFIG_HPP

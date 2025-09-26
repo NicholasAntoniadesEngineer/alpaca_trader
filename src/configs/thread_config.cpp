@@ -4,30 +4,6 @@
 namespace AlpacaTrader {
 namespace Config {
 
-ThreadConfig ConfigProvider::get_default_config(Type type) {
-    switch (type) {
-        case Type::MAIN:
-            return ThreadConfig(Priority::NORMAL, -1, "MAIN", false);
-            
-        case Type::TRADER_DECISION:
-            return ThreadConfig(Priority::HIGHEST, -1, "TRADER", true);   
-            
-        case Type::MARKET_DATA:
-            return ThreadConfig(Priority::HIGH, -1, "MARKET", true);     
-            
-        case Type::ACCOUNT_DATA:
-            return ThreadConfig(Priority::NORMAL, -1, "ACCOUNT", false);   
-            
-        case Type::MARKET_GATE:
-            return ThreadConfig(Priority::LOW, -1, "GATE", false);        
-            
-        case Type::LOGGING:
-            return ThreadConfig(Priority::LOWEST, -1, "LOGGER", false);   
-            
-        default:
-            return ThreadConfig(Priority::NORMAL, -1, "UNKNOWN", false);
-    }
-}
 
 ThreadConfig ConfigProvider::get_config_from_system(Type type, const SystemConfig& system_config) {
     switch (type) {

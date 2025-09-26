@@ -1,0 +1,10 @@
+# ========================================================================
+# STRATEGY CONFIGURATION
+# ========================================================================
+# Strategy-specific settings and precision configuration
+# ========================================================================
+
+# PRECISION CONFIGURATION
+strategy.ratio_precision,2
+strategy.factor_precision,3
+strategy.atr_vol_precision,3

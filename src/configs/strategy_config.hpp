@@ -22,6 +22,11 @@ struct StrategyConfig {
     bool sell_allow_equal_close;             // Allow close <= open for sell signals  
     bool sell_require_lower_low;             // Require current low < previous low
     bool sell_require_lower_high;            // Require current high <= previous high
+    
+    // Precision configuration for logging and display
+    int ratio_precision;                     // Decimal places for ratios (e.g., rr_ratio)
+    int factor_precision;                    // Decimal places for factors (e.g., multipliers)
+    int atr_vol_precision;                   // Decimal places for ATR and volume values
 };
 
 #endif // STRATEGY_CONFIG_HPP

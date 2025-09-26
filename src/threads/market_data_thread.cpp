@@ -23,7 +23,7 @@ using AlpacaTrader::API::AlpacaClient;
 void MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
     
     while (running.load()) {
         if ((allow_fetch_ptr && !allow_fetch_ptr->load()) || !client.is_within_fetch_window()) {
@@ -35,7 +35,7 @@ void MarketDataThread::operator()() {
         auto bars = client.get_recent_bars(br);
         if (static_cast<int>(bars.size()) >= strategy.atr_period + 2) {
             // Compute indicators using the same implementation as Trader
-            TraderConfig minimal_cfg{StrategyConfig{strategy}, RiskConfig{}, TimingConfig{timing}, FlagsConfig{}, UXConfig{}, LoggingConfig{}, TargetConfig{target}};
+            TraderConfig minimal_cfg{StrategyConfig{strategy}, RiskConfig{}, TimingConfig{timing}, LoggingConfig{}, TargetConfig{target}};
             ProcessedData computed = AlpacaTrader::Core::MarketProcessing::compute_processed_data(bars, minimal_cfg);
 
             if (computed.atr != 0.0) {
@@ -68,7 +68,7 @@ void AlpacaTrader::Threads::run_market_gate(std::atomic<bool>& running,
                      std::atomic<unsigned long>* iteration_counter) {
     set_log_thread_tag("GATE  ");
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
     
     bool last_within = client.is_within_fetch_window();
     allow_fetch.store(last_within);

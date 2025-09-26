@@ -16,7 +16,7 @@ using AlpacaTrader::Core::AccountSnapshot;
 void AccountDataThread::operator()() {
     set_log_thread_tag("ACCOUNT");
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
     
     while (running.load()) {
         if (allow_fetch_ptr && !allow_fetch_ptr->load()) {

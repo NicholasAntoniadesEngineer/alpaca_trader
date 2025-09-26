@@ -82,6 +82,14 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "timing.trading_halt_sleep_minutes") cfg.timing.halt_sleep_min = std::stoi(value);
         else if (key == "timing.countdown_display_interval_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
         else if (key == "timing.thread_monitor_log_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
+        
+        // Thread initialization delays
+        else if (key == "timing.thread_initialization_delay_ms") cfg.timing.thread_initialization_delay_ms = std::stoi(value);
+        else if (key == "timing.thread_startup_delay_ms") cfg.timing.thread_startup_delay_ms = std::stoi(value);
+        
+        // Timing precision configuration
+        else if (key == "timing.cpu_usage_precision") cfg.timing.cpu_usage_precision = std::stoi(value);
+        else if (key == "timing.rate_precision") cfg.timing.rate_precision = std::stoi(value);
 
         // Session
         else if (key == "session.et_utc_offset_hours") cfg.session.et_utc_offset_hours = std::stoi(value);
@@ -90,9 +98,6 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "session.market_close_hour") cfg.session.market_close_hour = std::stoi(value);
         else if (key == "session.market_close_minute") cfg.session.market_close_minute = std::stoi(value);
 
-        // Flags/UX
-        else if (key == "flags.debug_mode") cfg.flags.debug_mode = to_bool(value);
-        else if (key == "ux.log_float_chars") cfg.ux.log_float_chars = std::stoi(value);
 
         // Logging
         else if (key == "logging.log_file") cfg.logging.log_file = value;
@@ -127,6 +132,11 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
         else if (key == "strategy.price_buffer_pct") cfg.strategy.price_buffer_pct = std::stod(value);
         else if (key == "strategy.min_price_buffer") cfg.strategy.min_price_buffer = std::stod(value);
         else if (key == "strategy.max_price_buffer") cfg.strategy.max_price_buffer = std::stod(value);
+        
+        // Strategy precision configuration
+        else if (key == "strategy.ratio_precision") cfg.strategy.ratio_precision = std::stoi(value);
+        else if (key == "strategy.factor_precision") cfg.strategy.factor_precision = std::stoi(value);
+        else if (key == "strategy.atr_vol_precision") cfg.strategy.atr_vol_precision = std::stoi(value);
 
         // Risk parameters (can be overridden per strategy)
         else if (key == "risk.risk_per_trade") cfg.risk.risk_per_trade = std::stod(value);
@@ -134,6 +144,12 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
         else if (key == "risk.allow_multiple_positions") cfg.risk.allow_multiple_positions = to_bool(value);
         else if (key == "risk.max_layers") cfg.risk.max_layers = std::stoi(value);
         else if (key == "risk.close_on_reverse") cfg.risk.close_on_reverse = to_bool(value);
+        
+        // Risk precision configuration
+        else if (key == "risk.percentage_precision") cfg.risk.percentage_precision = std::stoi(value);
+        else if (key == "risk.exposure_precision") cfg.risk.exposure_precision = std::stoi(value);
+        else if (key == "risk.factor_precision") cfg.risk.factor_precision = std::stoi(value);
+        else if (key == "risk.currency_precision") cfg.risk.currency_precision = std::stoi(value);
 
         // Timing parameters (can be overridden per strategy)
     }
@@ -187,23 +203,35 @@ bool load_thread_configs(SystemConfig& cfg, const std::string& thread_config_pat
 }
 
 int load_system_config(SystemConfig& config) {
-    std::string system_config_path = std::string("config/runtime_config.csv");
-    if (!load_config_from_csv(config, system_config_path)) {
-        // Log error using logging system
-        AlpacaTrader::Logging::log_message("ERROR: Failed to load config CSV from " + system_config_path, "");
-        return 1;
+    // Load configuration from separate logical files
+    std::vector<std::string> config_files = {
+        "config/api_config.csv",
+        "config/target_config.csv", 
+        "config/strategy_config.csv",
+        "config/risk_config.csv",
+        "config/timing_config.csv",
+        "config/session_config.csv",
+        "config/logging_config.csv"
+    };
+    
+    // Load each configuration file
+    for (const auto& config_path : config_files) {
+        if (!load_config_from_csv(config, config_path)) {
+            AlpacaTrader::Logging::log_message("ERROR: Failed to load config CSV from " + config_path, "");
+            return 1;
+        }
     }
     
+    // Load strategy profiles
     std::string strategy_path = std::string("config/strategy_profiles.csv");
     if (!load_strategy_profiles(config, strategy_path)) {
-        // Log error using logging system
         AlpacaTrader::Logging::log_message("ERROR: Failed to load strategy profiles from " + strategy_path, "");
         return 1;
     }
     
+    // Load thread configurations
     std::string thread_config_path = std::string("config/thread_config.csv");
     if (!load_thread_configs(config, thread_config_path)) {
-        // Log error using logging system
         AlpacaTrader::Logging::log_message("ERROR: Failed to load thread configurations from " + thread_config_path, "");
         return 1;
     }

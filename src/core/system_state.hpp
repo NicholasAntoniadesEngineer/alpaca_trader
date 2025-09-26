@@ -53,7 +53,7 @@ struct SystemState {
      * @brief Default constructor
      */
     SystemState() : trader_view(config.strategy, config.risk, config.timing,
-                                config.flags, config.ux, config.logging, config.target) {}
+                                config.logging, config.target) {}
     
     /**
      * @brief Constructor with custom configuration
@@ -62,7 +62,7 @@ struct SystemState {
     explicit SystemState(const SystemConfig& initial)
         : config(initial),
           trader_view(config.strategy, config.risk, config.timing,
-                      config.flags, config.ux, config.logging, config.target) {}
+                      config.logging, config.target) {}
 };
 
 #endif // SYSTEM_STATE_HPP

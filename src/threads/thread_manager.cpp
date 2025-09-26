@@ -159,10 +159,10 @@ SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared
     
     // Create remaining thread objects
     modules.logging_thread = std::make_unique<LoggingThread>(
-        logger, handles.logger_iterations
+        logger, handles.logger_iterations, config
     );
     modules.trading_thread = std::make_unique<TraderThread>(
-        *modules.trading_engine, handles.trader_iterations
+        *modules.trading_engine, handles.trader_iterations, config.timing
     );
     
     // Set iteration counters for all threads
@@ -181,7 +181,7 @@ SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared
     handles.logger = std::thread(std::ref(*modules.logging_thread));
     
     // Allow threads to initialize
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_initialization_delay_ms));
     
     // Configure thread priorities
     Manager::setup_thread_priorities(handles, config);

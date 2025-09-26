@@ -4,8 +4,6 @@
 #include "strategy_config.hpp"
 #include "risk_config.hpp"
 #include "timing_config.hpp"
-#include "flags_config.hpp"
-#include "ux_config.hpp"
 #include "logging_config.hpp"
 #include "target_config.hpp"
 #include "api_config.hpp"
@@ -20,8 +18,6 @@ struct SystemConfig {
     StrategyConfig strategy;
     RiskConfig risk;
     TimingConfig timing;
-    FlagsConfig flags;
-    UXConfig ux;
     LoggingConfig logging;
     TargetConfig target;
     ApiConfig api;
