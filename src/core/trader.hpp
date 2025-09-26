@@ -48,8 +48,6 @@ private:
     // Initialization and single-shot helpers
     double initialize_trader();
 
-    // Decision thread loop (moved to public for thread consistency)
-
     // Building blocks
     ProcessedData fetch_and_process_data();
     bool can_trade(double exposure_pct);
@@ -60,19 +58,14 @@ private:
     std::pair<MarketSnapshot, AccountSnapshot> get_current_snapshots();
     void display_loop_header();
     void handle_trading_halt();
-    void display_equity_status(double equity);
     void process_trading_cycle(const MarketSnapshot& market, const AccountSnapshot& account);
     void countdown_to_next_cycle();
 
-    // Signal evaluation breakdown
-    StrategyLogic::SignalDecision detect_signals(const ProcessedData& data) const;
-    StrategyLogic::FilterResult evaluate_filters(const ProcessedData& data) const;
-    StrategyLogic::PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power = 0.0) const;
+    // Signal evaluation breakdown (now inlined)
     bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
     
     // Real-time pricing helpers
     double get_real_time_price_with_fallback(double fallback_price) const;
-    void log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const;
     
     // Market close position management
     void handle_market_close_positions(const ProcessedData& data);
@@ -83,11 +76,7 @@ public:
     Trader(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
     ~Trader();
 
-    // Print header/config only
-    void run();
-
     // Expose decision loop for external thread management
-    void run_decision_loop();
     
     // Direct access to decision loop (for thread consistency)
     void decision_loop();

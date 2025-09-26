@@ -86,39 +86,39 @@ bool Trader::can_trade(double exposure_pct) {
 
 ProcessedData Trader::fetch_and_process_data() {
     ProcessedData data;
-    // TraderLogging::log_market_data_header(services.config);
+    TradingLogger::log_market_data_fetch_table(services.config.target.symbol);
 
     BarRequest br{services.config.target.symbol, services.config.strategy.atr_period + services.config.timing.bar_buffer};
     auto bars = services.client.get_recent_bars(br);
     if (bars.size() < static_cast<size_t>(services.config.strategy.atr_period + 2)) {
         if (bars.size() == 0) {
-            // TraderLogging::log_no_market_data(services.config);
+            TradingLogger::log_market_data_result_table("No market data available", false, 0);
         } else {
-            // TraderLogging::log_insufficient_data(bars.size(), services.config.strategy.atr_period + 2, services.config);
+            TradingLogger::log_market_data_result_table("Insufficient data for analysis", false, bars.size());
         }
-        // TraderLogging::log_market_data_collection_failed(services.config);
+        TradingLogger::log_market_data_result_table("Market data collection failed", false, bars.size());
         return data;
     }
 
-    // TraderLogging::log_computing_indicators_start(services.config);
+    TradingLogger::log_market_data_attempt_table("Computing indicators");
 
     data = MarketProcessing::compute_processed_data(bars, services.config);
     if (data.atr == 0.0) {
-        // TraderLogging::log_indicator_failure(services.config);
+        TradingLogger::log_market_data_result_table("Indicator computation failed", false, 0);
         return data;
     }
 
-    // TraderLogging::log_getting_position_and_account(services.config);
+    TradingLogger::log_market_data_attempt_table("Getting position and account data");
     SymbolRequest sr{services.config.target.symbol};
     data.pos_details = services.account_manager.get_position_details(sr);
     data.open_orders = services.account_manager.get_open_orders_count(sr);
     double equity = services.account_manager.get_equity();
     data.exposure_pct = (equity > 0.0) ? (std::abs(data.pos_details.current_value) / equity) * 100.0 : 0.0;
 
-    // TraderLogging::log_position_market_summary(data, services.config);
+    TradingLogger::log_current_positions_table(data.pos_details.qty, data.pos_details.current_value, data.pos_details.unrealized_pl, data.exposure_pct, data.open_orders);
 
     if (data.pos_details.qty != 0 && data.open_orders == 0) {
-        // TraderLogging::log_missing_bracket_warning(services.config);
+        TradingLogger::log_market_data_result_table("Missing bracket order warning", true, 0);
     }
 
     return data;
@@ -130,11 +130,11 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     int current_qty = data.pos_details.qty;
 
     // Step 1: Detect signals and log candle/signal info
-    StrategyLogic::SignalDecision signal_decision = detect_signals(data);
+    StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_signals(data, services.config);
     TradingLogger::log_candle_and_signals(data, signal_decision);
 
     // Step 2: Evaluate filters and log details
-    StrategyLogic::FilterResult filter_result = evaluate_filters(data);
+    StrategyLogic::FilterResult filter_result = StrategyLogic::evaluate_filters(data, services.config);
     TradingLogger::log_filters(filter_result,services.config);
     TradingLogger::log_summary(data, signal_decision, filter_result, services.config.target.symbol);
 
@@ -143,16 +143,16 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     
     // Early return if filters fail (with sizing preview)
     if (!filter_result.all_pass) {
-        StrategyLogic::PositionSizing preview_sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
+        StrategyLogic::PositionSizing preview_sizing = StrategyLogic::calculate_position_sizing(data, equity, current_qty, services.config, buying_power);
         TradingLogger::log_signal_analysis_complete();
         TradingLogger::log_filters_not_met_preview(preview_sizing.risk_amount, preview_sizing.quantity);
         return;
     }
-    // TraderLogging::log_filters_pass(services.config);
+    TradingLogger::log_market_data_result_table("Filters passed", true, 0);
 
     // Step 4: Calculate position sizing and validate
     TradingLogger::log_current_position(current_qty, services.config.target.symbol);
-    StrategyLogic::PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, buying_power);
+    StrategyLogic::PositionSizing sizing = StrategyLogic::calculate_position_sizing(data, equity, current_qty, services.config, buying_power);
     TradingLogger::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
     TradingLogger::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
     
@@ -171,19 +171,7 @@ void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equit
     execute_trade(data, current_qty, sizing, signal_decision);
 
     // Final completion log
-    // TraderLogging::log_signal_analysis_complete(services.config);
-}
-
-StrategyLogic::SignalDecision Trader::detect_signals(const ProcessedData& data) const {
-    return StrategyLogic::detect_signals(data, services.config);
-}
-
-StrategyLogic::FilterResult Trader::evaluate_filters(const ProcessedData& data) const {
-    return StrategyLogic::evaluate_filters(data, services.config);
-}
-
-StrategyLogic::PositionSizing Trader::calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power) const {
-    return StrategyLogic::calculate_position_sizing(data, equity, current_qty, services.config, buying_power);
+    TradingLogger::log_signal_analysis_complete();
 }
 
 bool Trader::validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const {
@@ -210,16 +198,6 @@ bool Trader::validate_trade_feasibility(const StrategyLogic::PositionSizing& siz
     return true;
 }
 
-/**
- * @brief Get best available price with realistic expectations
- * 
- * REALITY: "Free real-time data" is limited and unreliable for production trading.
- * This function attempts to get current quotes but gracefully falls back to delayed data
- * with appropriate logging to set realistic expectations.
- * 
- * @param fallback_price Delayed price from historical bars
- * @return Best available price (real-time if possible, fallback otherwise)
- */
 double Trader::get_real_time_price_with_fallback(double fallback_price) const {
     // Attempt to get current quote (may fail for many symbols on free plan)
     double current_price = services.client.get_current_price(services.config.target.symbol);
@@ -233,18 +211,6 @@ double Trader::get_real_time_price_with_fallback(double fallback_price) const {
     }
     
     return current_price;
-}
-
-/**
- * @brief Log exit target calculations for debugging purposes
- * @param side Order side ("BUY" or "SELL")
- * @param price Entry price used
- * @param risk Risk amount per share
- * @param rr Risk-reward ratio
- * @param targets Calculated exit targets
- */
-void Trader::log_exit_target_debug(const std::string& side, double price, double risk, double rr, const StrategyLogic::ExitTargets& targets) const {
-    TradingLogger::log_exit_targets_table(side, price, risk, rr, targets.stop_loss, targets.take_profit);
 }
 
 void Trader::handle_market_close_positions(const ProcessedData& data) {
@@ -283,9 +249,9 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
     bool is_short = current_qty < 0;
 
     if (sd.buy) {
-        // TraderLogging::log_buy_triggered(services.config);
+        TradingLogger::log_market_data_result_table("Buy signal triggered", true, 0);
         if (is_short && services.config.risk.close_on_reverse) {
-            // TraderLogging::log_close_position_first("long", services.config);
+            TradingLogger::log_market_data_result_table("Closing short position first for long signal", true, 0);
             services.client.close_position(ClosePositionRequest{current_qty});
         }
         // ATTEMPT: Get best available price (likely delayed on free plan)
@@ -297,20 +263,20 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
         );
         
         // Debug logging to verify exit target calculations
-        log_exit_target_debug("BUY", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets);
+        TradingLogger::log_exit_targets_table("BUY", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
         if (is_long && services.config.risk.allow_multiple_positions) {
-            // TraderLogging::log_open_position_details("Scaling into long position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
+            TradingLogger::log_order_intent("BUY", data.curr.c, targets.stop_loss, targets.take_profit);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Buy), sizing.quantity, targets.take_profit, targets.stop_loss});
         } else if (!is_long && !is_short) {
-            // TraderLogging::log_open_position_details("Opening new long position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
+            TradingLogger::log_order_intent("BUY", data.curr.c, targets.stop_loss, targets.take_profit);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Buy), sizing.quantity, targets.take_profit, targets.stop_loss});
         } else {
-            // TraderLogging::log_position_limits_reached("Buy", services.config);
+            TradingLogger::log_market_data_result_table("Position limits reached for Buy", false, 0);
         }
     } else if (sd.sell) {
-        // TraderLogging::log_sell_triggered(services.config);
+        TradingLogger::log_market_data_result_table("Sell signal triggered", true, 0);
         if (is_long && services.config.risk.close_on_reverse) {
-            // TraderLogging::log_close_position_first("short", services.config);
+            TradingLogger::log_market_data_result_table("Closing long position first for short signal", true, 0);
             services.client.close_position(ClosePositionRequest{current_qty});
         }
         // ATTEMPT: Get best available price (likely delayed on free plan)
@@ -321,28 +287,19 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
         );
         
         // Debug logging to verify exit target calculations
-        log_exit_target_debug("SELL", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets);
+        TradingLogger::log_exit_targets_table("SELL", current_price, sizing.risk_amount, services.config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
         if (is_short && services.config.risk.allow_multiple_positions) {
-            // TraderLogging::log_open_position_details("Scaling into short position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
+            TradingLogger::log_order_intent("SELL", data.curr.c, targets.stop_loss, targets.take_profit);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Sell), sizing.quantity, targets.take_profit, targets.stop_loss});
         } else if (!is_long && !is_short) {
-            // TraderLogging::log_open_position_details("Opening new short position", data.curr.c, targets.stop_loss, targets.take_profit, services.config);
+            TradingLogger::log_order_intent("SELL", data.curr.c, targets.stop_loss, targets.take_profit);
             services.client.place_bracket_order(OrderRequest{to_side_string(OrderSide::Sell), sizing.quantity, targets.take_profit, targets.stop_loss});
         } else {
-            // TraderLogging::log_position_limits_reached("Sell", services.config);
+            TradingLogger::log_market_data_result_table("Position limits reached for Sell", false, 0);
         }
     } else {
-        // TraderLogging::log_no_valid_pattern(services.config);
+        TradingLogger::log_market_data_result_table("No valid trading pattern detected", false, 0);
     }
-}
-
-void Trader::run_decision_loop() {
-    set_log_thread_tag("DECIDE");
-    log_message("   |  • Trader decision thread started: " + ThreadSystem::Platform::ThreadControl::get_thread_info(), "");
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    
-    decision_loop();
 }
 
 void Trader::decision_loop() {
@@ -365,8 +322,6 @@ void Trader::decision_loop() {
             continue;
         }
         
-        // Log current equity status
-        display_equity_status(account.equity);
         
         // Process data and execute signals
         process_trading_cycle(market, account);
@@ -383,7 +338,7 @@ void Trader::decision_loop() {
 
 void Trader::wait_for_fresh_data() {
     if (!(shared.mtx && shared.cv && shared.has_market && shared.has_account && shared.running)) {
-        // TraderLogging::log_no_valid_pattern(services.config); // reuse to log an error-like line
+        TradingLogger::log_market_data_result_table("Invalid shared state pointers", false, 0);
         return;
     }
     std::unique_lock<std::mutex> lock(*shared.mtx);
@@ -437,10 +392,6 @@ void Trader::handle_trading_halt() {
     end_inline_status();
 }
 
-void Trader::display_equity_status(double /* equity */) {
-    // TraderLogging::log_equity_status(equity, services.config);
-}
-
 void Trader::process_trading_cycle(const MarketSnapshot& market, const AccountSnapshot& account) {
     // Build ProcessedData from snapshots for decision function
     ProcessedData pd;
@@ -470,11 +421,6 @@ void Trader::countdown_to_next_cycle() {
     end_inline_status();
 }
 
-void Trader::run() {
-    // In new design, main() owns market/account threads and running flag.
-    // Configuration logging is now handled in the startup sequence
-}
-
 void Trader::attach_shared_state(std::mutex& mtx,
                                  std::condition_variable& cv,
                                  MarketSnapshot& market,
@@ -490,7 +436,7 @@ void Trader::attach_shared_state(std::mutex& mtx,
     shared.has_account = &has_account;
     shared.running = &running_flag;
     if (!(shared.mtx && shared.cv && shared.market && shared.account && shared.has_market && shared.has_account && shared.running)) {
-        // TraderLogging::log_no_valid_pattern(services.config);
+        TradingLogger::log_market_data_result_table("Invalid shared state configuration", false, 0);
     }
 }
 

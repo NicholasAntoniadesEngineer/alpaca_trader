@@ -61,7 +61,7 @@ void configure_trading_modules(SystemState& system_state, TradingSystemModules& 
     modules.trading_engine->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, 
                                               system_state.account, system_state.has_market, 
                                               system_state.has_account, system_state.running);
-    modules.trading_engine->run();
+    modules.trading_engine->start_decision_thread();
     
     // Configure thread modules
     modules.market_data_thread->set_allow_fetch_flag(system_state.allow_fetch);
