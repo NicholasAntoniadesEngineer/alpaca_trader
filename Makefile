@@ -34,7 +34,7 @@ SOURCES = src/main.cpp \
   src/logging/trading_logger.cpp \
   src/logging/thread_logger.cpp \
   src/logging/startup_logger.cpp \
-  src/threads/config/thread_config.cpp \
+  src/configs/thread_config.cpp \
   src/threads/platform/thread_control.cpp \
   src/threads/platform/linux/linux_thread_control.cpp \
   src/threads/platform/macos/macos_thread_control.cpp \
@@ -69,7 +69,6 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/utils
 	mkdir -p $(OBJ_DIR)/src/logging
 	mkdir -p $(OBJ_DIR)/src/threads
-	mkdir -p $(OBJ_DIR)/src/threads/config
 	mkdir -p $(OBJ_DIR)/src/threads/platform
 	mkdir -p $(OBJ_DIR)/src/threads/platform/linux
 	mkdir -p $(OBJ_DIR)/src/threads/platform/macos
