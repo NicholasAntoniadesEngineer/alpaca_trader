@@ -20,7 +20,7 @@ strategy.sell_require_lower_low,false
 strategy.sell_require_lower_high,false
 
 # FILTER THRESHOLDS (Increased for Larger Spreads)
-strategy.atr_multiplier_entry,0.8
+strategy.atr_multiplier_entry,0.7
 strategy.volume_multiplier,0.1
 strategy.atr_period,10
 strategy.avg_atr_multiplier,2

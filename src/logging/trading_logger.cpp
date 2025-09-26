@@ -45,13 +45,6 @@ void TradingLogger::log_shutdown(unsigned long total_loops, double final_equity)
     log_message("Final equity: " + format_currency(final_equity), "");
 }
 
-void TradingLogger::log_loop_start(unsigned long loop_number) {
-    log_message("Trading loop #" + std::to_string(loop_number) + " starting", "");
-}
-
-void TradingLogger::log_loop_complete() {
-    log_message("Trading loop complete", "");
-}
 
 void TradingLogger::log_market_status(bool is_open, const std::string& reason) {
     if (is_open) {
@@ -87,32 +80,30 @@ void TradingLogger::log_market_data_status(bool has_data, size_t data_points) {
     }
 }
 
-void TradingLogger::log_signal_analysis(const std::string& symbol, bool buy_signal, bool sell_signal) {
-    
+void TradingLogger::log_signal_triggered(const std::string& signal_type, bool triggered) {
     std::ostringstream oss;
-    oss << symbol << " signals - BUY: " << (buy_signal ? "YES" : "NO") 
-        << " | SELL: " << (sell_signal ? "YES" : "NO");
-    
+    oss << signal_type << " signal " << (triggered ? "TRIGGERED" : "not triggered");
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_filter_results(bool atr_pass, bool volume_pass, bool doji_pass) {
-    
+void TradingLogger::log_filters_passed() {
+    log_message("All filters passed - trade allowed", "");
+}
+
+void TradingLogger::log_position_closure(const std::string& reason, int quantity) {
     std::ostringstream oss;
-    oss << "Filters - ATR: " << (atr_pass ? "PASS" : "FAIL")
-        << " | VOL: " << (volume_pass ? "PASS" : "FAIL")
-        << " | DOJI: " << (doji_pass ? "PASS" : "FAIL");
-    
+    oss << "Position closure: " << reason << " (" << quantity << " shares)";
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_position_sizing(double risk_amount, int quantity) {
-    
+void TradingLogger::log_position_limits_reached(const std::string& side) {
     std::ostringstream oss;
-    oss << "Position sizing - Risk: " << format_currency(risk_amount) 
-        << " | Qty: " << quantity;
-    
+    oss << "Position limits reached for " << side << " - trade blocked";
     log_message(oss.str(), "");
+}
+
+void TradingLogger::log_no_trading_pattern() {
+    log_message("No valid trading pattern detected - no action taken", "");
 }
 
 void TradingLogger::log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit) {
@@ -140,16 +131,6 @@ void TradingLogger::log_order_result(const std::string& order_id, bool success, 
     }
 }
 
-void TradingLogger::log_position_update(int current_quantity, double unrealized_pnl) {
-    
-    std::ostringstream oss;
-    oss << "Position: " << current_quantity << " shares";
-    if (unrealized_pnl != 0.0) {
-        oss << " | Unrealized P/L: " << format_currency(unrealized_pnl);
-    }
-    
-    log_message("POSITION", oss.str());
-}
 
 void TradingLogger::log_market_close_warning(int minutes_until_close) {
     LOG_THREAD_SECTION_HEADER("MARKET CLOSE WARNING");
@@ -169,28 +150,6 @@ void TradingLogger::log_market_close_complete() {
     LOG_THREAD_SEPARATOR();
 }
 
-void TradingLogger::log_execution_time(const std::string& operation, long microseconds) {
-    
-    std::ostringstream oss;
-    oss << operation << " execution time: " << microseconds << "μs";
-    
-    log_message("PERF", oss.str());
-}
-
-void TradingLogger::log_system_health(const std::string& component, bool healthy, const std::string& details) {
-    
-    std::ostringstream oss;
-    oss << component << " health: " << (healthy ? "OK" : "ERROR");
-    if (!details.empty()) {
-        oss << " - " << details;
-    }
-    
-    if (healthy) {
-        log_message(oss.str(), "");
-    } else {
-        log_message(oss.str(), "");
-    }
-}
 
 // Detailed trading analysis logging
 
