@@ -1,8 +1,8 @@
 #ifndef THREAD_MANAGER_HPP
 #define THREAD_MANAGER_HPP
 
-#include "config/thread_config.hpp"
-#include "platform/thread_control.hpp"
+#include "threads/config/thread_config.hpp"
+#include "threads/platform/thread_control.hpp"
 #include "configs/timing_config.hpp"
 #include <vector>
 #include <tuple>

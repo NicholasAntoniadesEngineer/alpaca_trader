@@ -1,6 +1,9 @@
 // system_manager.cpp
 #include "core/system_manager.hpp"
-#include "main.hpp"
+#include "core/system_state.hpp"
+#include "core/system_threads.hpp"
+#include "core/trading_system_modules.hpp"
+#include "configs/system_config.hpp"
 #include "configs/component_configs.hpp"
 #include "threads/thread_manager.hpp"
 #include "logging/startup_logger.hpp"

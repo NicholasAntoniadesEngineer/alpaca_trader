@@ -8,19 +8,19 @@ ThreadConfig ConfigProvider::get_default_config(Type type) {
             return ThreadConfig(Priority::NORMAL, -1, "MAIN");
             
         case Type::TRADER_DECISION:
-            return ThreadConfig(Priority::HIGHEST, -1, "TRADER");  // Critical trading decisions
+            return ThreadConfig(Priority::HIGHEST, -1, "TRADER");   
             
         case Type::MARKET_DATA:
-            return ThreadConfig(Priority::HIGH, -1, "MARKET");     // Time-sensitive market data
+            return ThreadConfig(Priority::HIGH, -1, "MARKET");     
             
         case Type::ACCOUNT_DATA:
-            return ThreadConfig(Priority::NORMAL, -1, "ACCOUNT");  // Standard account polling
+            return ThreadConfig(Priority::NORMAL, -1, "ACCOUNT");   
             
         case Type::MARKET_GATE:
-            return ThreadConfig(Priority::LOW, -1, "GATE");        // Market timing control
+            return ThreadConfig(Priority::LOW, -1, "GATE");        
             
         case Type::LOGGING:
-            return ThreadConfig(Priority::LOWEST, -1, "LOGGER");   // Background logging
+            return ThreadConfig(Priority::LOWEST, -1, "LOGGER");   
             
         default:
             return ThreadConfig(Priority::NORMAL, -1, "UNKNOWN");

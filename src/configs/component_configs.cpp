@@ -1,6 +1,8 @@
 // component_configs.cpp
 #include "configs/component_configs.hpp"
-#include "main.hpp"
+#include "core/system_state.hpp"
+#include "core/trading_system_configurations.hpp"
+#include "core/trading_system_modules.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/account_manager.hpp"
 #include "logging/account_logger.hpp"
@@ -30,10 +32,10 @@ TradingSystemModules create_trading_modules(SystemState& state) {
     TradingSystemModules modules;
     
     // Create core trading modules
-    modules.market_connector = std::make_unique<AlpacaClient>(configs.market_connector);
-    modules.portfolio_manager = std::make_unique<AccountManager>(configs.portfolio_manager);
-    modules.account_dashboard = std::make_unique<AccountLogger>(state.config.logging, *modules.portfolio_manager);
-    modules.trading_engine = std::make_unique<Trader>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
+    modules.market_connector = std::make_unique<AlpacaTrader::API::AlpacaClient>(configs.market_connector);
+    modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(configs.portfolio_manager);
+    modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogger>(state.config.logging, *modules.portfolio_manager);
+    modules.trading_engine = std::make_unique<AlpacaTrader::Core::Trader>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
     
     // Create thread modules (but not thread objects yet)
     modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_connector, 

@@ -5,7 +5,11 @@
 #include "logging/startup_logger.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
-#include "main.hpp"  
+#include "configs/system_config.hpp"  
+#include "core/system_threads.hpp"
+#include "core/trading_system_modules.hpp"
+#include "threads/logging_thread.hpp"
+#include "threads/trader_thread.hpp"
 #include <vector>
 #include <chrono>
 #include <sstream>
@@ -68,20 +72,6 @@ void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig
         // Thread prioritization disabled - logged by system startup
         return;
     }
-    
-    // Priority setup header logged by centralized system
-    
-    // ╔═══════════════════════════════════════════════════════════════════════════════════╗
-    // ║                           THREAD CONFIGURATION TABLE                             ║
-    // ╠═══════════════════╦══════════════════╦══════════════╦═════════════╦═════════════╣
-    // ║ Thread Name       ║ Type             ║ Priority     ║ CPU Affinity║ Criticality ║
-    // ╠═══════════════════╬══════════════════╬══════════════╬═════════════╬═════════════╣
-    // ║ TRADER            ║ TRADER_DECISION  ║ HIGHEST      ║ Configurable║ CRITICAL    ║
-    // ║ MARKET            ║ MARKET_DATA      ║ HIGH         ║ Configurable║ HIGH        ║
-    // ║ ACCOUNT           ║ ACCOUNT_DATA     ║ NORMAL       ║ None        ║ NORMAL      ║
-    // ║ GATE              ║ MARKET_GATE      ║ LOW          ║ None        ║ LOW         ║
-    // ║ LOGGER            ║ LOGGING          ║ LOWEST       ║ None        ║ LOWEST      ║
-    // ╚═══════════════════╩══════════════════╩══════════════╩═════════════╩═════════════╝
     
     std::vector<ThreadSetup> thread_setups = {
         ThreadSetup("TRADER",  Type::TRADER_DECISION, handles.trader, "[CRITICAL]", true, config.thread_priorities.trader_cpu_affinity),

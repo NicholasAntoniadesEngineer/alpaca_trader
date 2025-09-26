@@ -124,8 +124,7 @@ ProcessedData Trader::fetch_and_process_data() {
     return data;
 }
 
-void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equity) 
-{
+void Trader::evaluate_and_execute_signal(const ProcessedData& data, double equity) {
     TradingLogger::log_signal_analysis_start(services.config.target.symbol);
     int current_qty = data.pos_details.qty;
 

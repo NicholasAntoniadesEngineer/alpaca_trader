@@ -1,10 +1,12 @@
 // main.cpp
-#include "main.hpp"
 #include "configs/config_loader.hpp"
-#include "logging/startup_logger.hpp"
-#include "logging/async_logger.hpp"
+#include "configs/system_config.hpp"
+#include "core/system_state.hpp"
+#include "core/system_threads.hpp"
 #include "core/system_manager.hpp"
-#include <memory>
+#include "core/trading_system_modules.hpp"
+#include "logging/startup_logger.hpp"
+
 
 // =============================================================================
 // MAIN APPLICATION ENTRY POINT

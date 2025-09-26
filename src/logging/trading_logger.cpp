@@ -3,7 +3,6 @@
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
 #include "configs/system_config.hpp"
-#include "main.hpp"
 #include <iomanip>
 #include <sstream>
 #include <climits>
