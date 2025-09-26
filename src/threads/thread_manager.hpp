@@ -1,7 +1,7 @@
 #ifndef THREAD_MANAGER_HPP
 #define THREAD_MANAGER_HPP
 
-#include "threads/config/thread_config.hpp"
+#include "configs/thread_config.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "configs/timing_config.hpp"
 #include <vector>
@@ -22,7 +22,7 @@ namespace ThreadSystem {
 class Manager {
 public:
     // Setup thread priorities for all system threads
-    static void setup_thread_priorities(SystemThreads& handles, const TimingConfig& config);
+    static void setup_thread_priorities(SystemThreads& handles, const SystemConfig& config);
     
     // Get collected thread status data
     static std::vector<std::tuple<std::string, std::string, bool>> get_thread_status_data();
@@ -35,19 +35,19 @@ private:
     // Internal thread setup structure
     struct ThreadSetup {
         std::string name;
-        Type type;
+        AlpacaTrader::Config::Type type;
         std::thread& handle;
         std::string priority_tag;
         bool uses_cpu_affinity;
         int cpu_core;
         
-        ThreadSetup(const std::string& n, Type t, std::thread& h, 
+        ThreadSetup(const std::string& n, AlpacaTrader::Config::Type t, std::thread& h, 
                     const std::string& tag, bool affinity = false, int core = -1)
             : name(n), type(t), handle(h), priority_tag(tag), uses_cpu_affinity(affinity), cpu_core(core) {}
     };
     
     // Configure a single thread
-    static void configure_single_thread(const ThreadSetup& setup, const TimingConfig& config);
+    static void configure_single_thread(const ThreadSetup& setup, const SystemConfig& config);
     
     // Static container to collect thread status data
     static std::vector<std::tuple<std::string, std::string, bool>> thread_status_data;

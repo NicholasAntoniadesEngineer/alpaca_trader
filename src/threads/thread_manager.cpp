@@ -1,5 +1,5 @@
 #include "threads/thread_manager.hpp"
-#include "threads/config/thread_config.hpp"
+#include "configs/thread_config.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "logging/thread_logger.hpp"
 #include "logging/startup_logger.hpp"
@@ -28,18 +28,18 @@ namespace ThreadSystem {
 std::vector<std::tuple<std::string, std::string, bool>> Manager::thread_status_data;
 
 // Configures thread priority and CPU affinity
-void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConfig& config) {
-    // Get default configuration for this thread type
-    ThreadConfig thread_config = ConfigProvider::get_default_config(setup.type);
+void Manager::configure_single_thread(const ThreadSetup& setup, const SystemConfig& config) {
+    // Get configuration for this thread type from loaded system config
+    AlpacaTrader::Config::ThreadConfig thread_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(setup.type, config);
     
     // Apply CPU affinity if enabled and this thread uses it
-    if (config.thread_priorities.enable_cpu_affinity && setup.uses_cpu_affinity) {
+    if (config.timing.thread_priorities.enable_cpu_affinity && setup.uses_cpu_affinity) {
         thread_config.cpu_affinity = setup.cpu_core;
     }
     
     // Apply priority with fallback scaling
-    Priority requested_priority = thread_config.priority;
-    Priority actual_priority = Platform::ThreadControl::set_priority_with_fallback(setup.handle, thread_config);
+    AlpacaTrader::Config::Priority requested_priority = thread_config.priority;
+    AlpacaTrader::Config::Priority actual_priority = Platform::ThreadControl::set_priority_with_fallback(setup.handle, thread_config);
     
     // Determine success based on whether we achieved the goal
     bool success = (actual_priority == requested_priority) || (thread_config.cpu_affinity < 0);
@@ -47,15 +47,15 @@ void Manager::configure_single_thread(const ThreadSetup& setup, const TimingConf
     // Store thread status data for dynamic table logging
     thread_status_data.push_back(std::make_tuple(
         setup.name,
-        ConfigProvider::priority_to_string(actual_priority),
+        AlpacaTrader::Config::ConfigProvider::priority_to_string(actual_priority),
         success
     ));
     
     // Log the result using the generic logging function
     ThreadLogger::log_priority_assignment(
         setup.name,
-        ConfigProvider::priority_to_string(requested_priority),
-        ConfigProvider::priority_to_string(actual_priority),
+        AlpacaTrader::Config::ConfigProvider::priority_to_string(requested_priority),
+        AlpacaTrader::Config::ConfigProvider::priority_to_string(actual_priority),
         success
     );
 }
@@ -64,21 +64,35 @@ std::vector<std::tuple<std::string, std::string, bool>> Manager::get_thread_stat
     return thread_status_data;
 }
 
-void Manager::setup_thread_priorities(SystemThreads& handles, const TimingConfig& config) {
+void Manager::setup_thread_priorities(SystemThreads& handles, const SystemConfig& config) {
     // Clear any previous thread status data
     thread_status_data.clear();
     
-    if (!config.thread_priorities.enable_thread_priorities) {
+    if (!config.timing.thread_priorities.enable_thread_priorities) {
         // Thread prioritization disabled - logged by system startup
         return;
     }
     
+    // Get thread configurations from loaded config
+    auto trader_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::TRADER_DECISION, config);
+    auto market_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::MARKET_DATA, config);
+    auto account_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::ACCOUNT_DATA, config);
+    auto gate_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::MARKET_GATE, config);
+    auto logger_config = AlpacaTrader::Config::ConfigProvider::get_config_from_system(AlpacaTrader::Config::Type::LOGGING, config);
+    
+    // Create priority tags from loaded priorities
+    std::string trader_tag = "[" + AlpacaTrader::Config::ConfigProvider::priority_to_string(trader_config.priority) + "]";
+    std::string market_tag = "[" + AlpacaTrader::Config::ConfigProvider::priority_to_string(market_config.priority) + "]";
+    std::string account_tag = "[" + AlpacaTrader::Config::ConfigProvider::priority_to_string(account_config.priority) + "]";
+    std::string gate_tag = "[" + AlpacaTrader::Config::ConfigProvider::priority_to_string(gate_config.priority) + "]";
+    std::string logger_tag = "[" + AlpacaTrader::Config::ConfigProvider::priority_to_string(logger_config.priority) + "]";
+    
     std::vector<ThreadSetup> thread_setups = {
-        ThreadSetup("TRADER",  Type::TRADER_DECISION, handles.trader, "[CRITICAL]", true, config.thread_priorities.trader_cpu_affinity),
-        ThreadSetup("MARKET",  Type::MARKET_DATA,     handles.market, "[HIGH]",     true, config.thread_priorities.market_data_cpu_affinity),
-        ThreadSetup("ACCOUNT", Type::ACCOUNT_DATA,    handles.account,"[NORMAL]",   false, -1),
-        ThreadSetup("GATE",    Type::MARKET_GATE,     handles.gate,   "[LOW]",      false, -1),
-        ThreadSetup("LOGGER",  Type::LOGGING,         handles.logger, "[LOWEST]",   false, -1)
+        ThreadSetup(trader_config.name,  AlpacaTrader::Config::Type::TRADER_DECISION, handles.trader, trader_tag, trader_config.use_cpu_affinity, trader_config.cpu_affinity),
+        ThreadSetup(market_config.name,  AlpacaTrader::Config::Type::MARKET_DATA,     handles.market, market_tag, market_config.use_cpu_affinity, market_config.cpu_affinity),
+        ThreadSetup(account_config.name, AlpacaTrader::Config::Type::ACCOUNT_DATA,    handles.account, account_tag, account_config.use_cpu_affinity, account_config.cpu_affinity),
+        ThreadSetup(gate_config.name,    AlpacaTrader::Config::Type::MARKET_GATE,     handles.gate,   gate_tag, gate_config.use_cpu_affinity, gate_config.cpu_affinity),
+        ThreadSetup(logger_config.name,  AlpacaTrader::Config::Type::LOGGING,         handles.logger, logger_tag, logger_config.use_cpu_affinity, logger_config.cpu_affinity)
     };
     
     // Configure each thread using the structured approach
@@ -170,7 +184,7 @@ SystemThreads setup_and_start_threads(TradingSystemModules& modules, std::shared
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     // Configure thread priorities
-    Manager::setup_thread_priorities(handles, config.timing);
+    Manager::setup_thread_priorities(handles, config);
     
     return handles;
 }

@@ -3,7 +3,11 @@
 
 #include <string>
 
-namespace ThreadSystem {
+// Forward declaration
+struct SystemConfig;
+
+namespace AlpacaTrader {
+namespace Config {
 
 // Thread priority levels (cross-platform abstraction)
 enum class Priority {
@@ -30,19 +34,34 @@ struct ThreadConfig {
     Priority priority;
     int cpu_affinity;  // -1 = no affinity, >=0 = specific core
     std::string name;
+    bool use_cpu_affinity;  // Whether this thread type should use CPU affinity
     
-    ThreadConfig(Priority p = Priority::NORMAL, int affinity = -1, const std::string& n = "")
-        : priority(p), cpu_affinity(affinity), name(n) {}
+    ThreadConfig(Priority p = Priority::NORMAL, int affinity = -1, const std::string& n = "", bool use_affinity = false)
+        : priority(p), cpu_affinity(affinity), name(n), use_cpu_affinity(use_affinity) {}
+};
+
+// Thread configuration container for all thread types
+struct ThreadConfigs {
+    ThreadConfig main;
+    ThreadConfig trader_decision;
+    ThreadConfig market_data;
+    ThreadConfig account_data;
+    ThreadConfig market_gate;
+    ThreadConfig logging;
+    
+    ThreadConfigs() = default;
 };
 
 // Thread configuration provider
 class ConfigProvider {
 public:
     static ThreadConfig get_default_config(Type type);
+    static ThreadConfig get_config_from_system(Type type, const SystemConfig& system_config);
     static std::string priority_to_string(Priority priority);
     static Priority string_to_priority(const std::string& str);
 };
 
-} // namespace ThreadSystem
+} // namespace Config
+} // namespace AlpacaTrader
 
 #endif // THREAD_CONFIG_HPP

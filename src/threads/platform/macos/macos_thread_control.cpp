@@ -1,6 +1,7 @@
 #ifdef __APPLE__
 
 #include "threads/platform/macos/macos_thread_control.hpp"
+#include "configs/thread_config.hpp"
 #include <pthread.h>
 #include <mach/thread_policy.h>
 #include <mach/thread_act.h>
@@ -11,24 +12,24 @@ namespace ThreadSystem {
 namespace Platform {
 namespace MacOS {
 
-int ThreadControl::priority_to_native(Priority priority) {
+int ThreadControl::priority_to_native(AlpacaTrader::Config::Priority priority) {
     switch (priority) {
-        case Priority::REALTIME: return 47;
-        case Priority::HIGHEST:  return 40;
-        case Priority::HIGH:     return 35;
-        case Priority::NORMAL:   return 31;  // Default macOS thread priority
-        case Priority::LOW:      return 25;
-        case Priority::LOWEST:   return 15;
+        case AlpacaTrader::Config::Priority::REALTIME: return 47;
+        case AlpacaTrader::Config::Priority::HIGHEST:  return 40;
+        case AlpacaTrader::Config::Priority::HIGH:     return 35;
+        case AlpacaTrader::Config::Priority::NORMAL:   return 31;  // Default macOS thread priority
+        case AlpacaTrader::Config::Priority::LOW:      return 25;
+        case AlpacaTrader::Config::Priority::LOWEST:   return 15;
         default:                 return 31;
     }
 }
 
-bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priority priority, int cpu_affinity) {
+bool ThreadControl::set_priority(std::thread::native_handle_type handle, AlpacaTrader::Config::Priority priority, int cpu_affinity) {
     pthread_t native_handle = handle;
     bool success = true;
     
     // macOS uses different approach with thread policies
-    if (priority >= Priority::HIGH) {
+    if (priority >= AlpacaTrader::Config::Priority::HIGH) {
         // Set time constraint policy for high priority threads
         thread_time_constraint_policy_data_t time_constraints;
         time_constraints.period = 1000000;      // 1ms in nanoseconds
@@ -72,11 +73,11 @@ bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priorit
     return success;
 }
 
-bool ThreadControl::set_current_priority(Priority priority, int cpu_affinity) {
+bool ThreadControl::set_current_priority(AlpacaTrader::Config::Priority priority, int cpu_affinity) {
     bool success = true;
     
 
-    if (priority >= Priority::HIGH) {
+    if (priority >= AlpacaTrader::Config::Priority::HIGH) {
         thread_time_constraint_policy_data_t time_constraints;
         time_constraints.period = 1000000;
         time_constraints.computation = 500000;

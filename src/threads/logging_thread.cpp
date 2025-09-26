@@ -1,7 +1,7 @@
 #include "threads/logging_thread.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/startup_logger.hpp"
-#include "config/thread_config.hpp"
+#include "configs/thread_config.hpp"
 #include "platform/thread_control.hpp"
 #include <iostream>
 #include <fstream>
@@ -15,7 +15,7 @@ using AlpacaTrader::Logging::g_inline_active;
 
 
 void LoggingThread::operator()() {
-    ThreadSystem::ThreadConfig config = ThreadSystem::ConfigProvider::get_default_config(ThreadSystem::Type::LOGGING);
+    AlpacaTrader::Config::ThreadConfig config = AlpacaTrader::Config::ConfigProvider::get_default_config(AlpacaTrader::Config::Type::LOGGING);
     ThreadSystem::Platform::ThreadControl::set_current_priority(config);
     
     set_log_thread_tag("LOGGER");

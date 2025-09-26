@@ -10,6 +10,7 @@
 #include "target_config.hpp"
 #include "api_config.hpp"
 #include "session_config.hpp"
+#include "thread_config.hpp"
 
 /**
  * Main trading system configuration.
@@ -25,6 +26,7 @@ struct SystemConfig {
     TargetConfig target;
     ApiConfig api;
     SessionConfig session;
+    AlpacaTrader::Config::ThreadConfigs thread;
 };
 
 #endif // SYSTEM_CONFIG_HPP

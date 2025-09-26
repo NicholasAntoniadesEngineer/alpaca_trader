@@ -11,7 +11,7 @@
 namespace ThreadSystem {
 namespace Platform {
 
-bool ThreadControl::set_priority(std::thread& thread, const ThreadConfig& config) {
+bool ThreadControl::set_priority(std::thread& thread, const AlpacaTrader::Config::ThreadConfig& config) {
 #ifdef __linux__
     return Linux::ThreadControl::set_priority(thread.native_handle(), config.priority, config.cpu_affinity);
 #elif __APPLE__
@@ -23,7 +23,7 @@ bool ThreadControl::set_priority(std::thread& thread, const ThreadConfig& config
 #endif
 }
 
-bool ThreadControl::set_current_priority(const ThreadConfig& config) {
+bool ThreadControl::set_current_priority(const AlpacaTrader::Config::ThreadConfig& config) {
 #ifdef __linux__
     return Linux::ThreadControl::set_current_priority(config.priority, config.cpu_affinity);
 #elif __APPLE__
@@ -35,19 +35,19 @@ bool ThreadControl::set_current_priority(const ThreadConfig& config) {
 #endif
 }
 
-Priority ThreadControl::set_priority_with_fallback(std::thread& thread, const ThreadConfig& config) {
+AlpacaTrader::Config::Priority ThreadControl::set_priority_with_fallback(std::thread& thread, const AlpacaTrader::Config::ThreadConfig& config) {
     // Try original priority first
     if (set_priority(thread, config)) {
         return config.priority;
     }
     
     // Create fallback configuration
-    ThreadConfig fallback_config = config;
+    AlpacaTrader::Config::ThreadConfig fallback_config = config;
     
     // Try progressively lower priorities
-    Priority priorities[] = {Priority::HIGH, Priority::NORMAL, Priority::LOW, Priority::LOWEST};
+    AlpacaTrader::Config::Priority priorities[] = {AlpacaTrader::Config::Priority::HIGH, AlpacaTrader::Config::Priority::NORMAL, AlpacaTrader::Config::Priority::LOW, AlpacaTrader::Config::Priority::LOWEST};
     
-    for (Priority current_priority : priorities) {
+    for (AlpacaTrader::Config::Priority current_priority : priorities) {
         if (current_priority >= config.priority) continue;  // Skip if not actually lower
         
         fallback_config.priority = current_priority;
@@ -69,22 +69,22 @@ Priority ThreadControl::set_priority_with_fallback(std::thread& thread, const Th
     }
     
     // If even LOWEST fails, return NORMAL as indication of partial success
-    return Priority::NORMAL;
+    return AlpacaTrader::Config::Priority::NORMAL;
 }
 
-Priority ThreadControl::set_current_priority_with_fallback(const ThreadConfig& config) {
+AlpacaTrader::Config::Priority ThreadControl::set_current_priority_with_fallback(const AlpacaTrader::Config::ThreadConfig& config) {
     // Try original priority first
     if (set_current_priority(config)) {
         return config.priority;
     }
     
     // Create fallback configuration
-    ThreadConfig fallback_config = config;
+    AlpacaTrader::Config::ThreadConfig fallback_config = config;
     
     // Try progressively lower priorities
-    Priority priorities[] = {Priority::HIGH, Priority::NORMAL, Priority::LOW, Priority::LOWEST};
+    AlpacaTrader::Config::Priority priorities[] = {AlpacaTrader::Config::Priority::HIGH, AlpacaTrader::Config::Priority::NORMAL, AlpacaTrader::Config::Priority::LOW, AlpacaTrader::Config::Priority::LOWEST};
     
-    for (Priority current_priority : priorities) {
+    for (AlpacaTrader::Config::Priority current_priority : priorities) {
         if (current_priority >= config.priority) continue;  // Skip if not actually lower
         
         fallback_config.priority = current_priority;
@@ -106,7 +106,7 @@ Priority ThreadControl::set_current_priority_with_fallback(const ThreadConfig& c
     }
     
     // If even LOWEST fails, return NORMAL as indication of partial success
-    return Priority::NORMAL;
+    return AlpacaTrader::Config::Priority::NORMAL;
 }
 
 std::string ThreadControl::get_thread_info() {
