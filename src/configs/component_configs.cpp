@@ -16,7 +16,7 @@
 
 TradingSystemConfigurations create_trading_configurations(const SystemState& state) {
     return TradingSystemConfigurations{
-        AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing},
+        AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing, state.config.orders},
         AccountManagerConfig{state.config.api, state.config.logging, state.config.target, state.config.timing},
         MarketDataThreadConfig{state.config.strategy, state.config.timing, state.config.target},
         AccountDataThreadConfig{state.config.timing}

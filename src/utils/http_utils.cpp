@@ -137,6 +137,56 @@ std::string http_post(const HttpRequest& req) {
     return response;
 }
 
+// Implement http_delete
+std::string http_delete(const HttpRequest& req) {
+    auto& connectivity = ConnectivityManager::instance();
+    
+    // Check if we should attempt connection
+    if (!connectivity.should_attempt_connection()) {
+        std::string status_msg = "Connectivity check failed - status: " + connectivity.get_status_string() + 
+                                ", retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s";
+        log_message(status_msg, *req.log_file);
+        return "";
+    }
+
+    CURL* curl = curl_easy_init();
+    std::string response;
+    if (curl) {
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, ("APCA-API-KEY-ID: " + *req.api_key).c_str());
+        headers = curl_slist_append(headers, ("APCA-API-SECRET-KEY: " + *req.api_secret).c_str());
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_URL, req.url.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, req.timeout_seconds);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, req.enable_ssl_verification ? 1L : 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, req.enable_ssl_verification ? 2L : 0L);
+        
+        // Rate limiting
+        if (req.rate_limit_delay_ms > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(req.rate_limit_delay_ms));
+        }
+        
+        CURLcode res = curl_easy_perform(curl);
+        bool success = (res == CURLE_OK);
+        
+        if (!success) {
+            std::string error_msg = "HTTP DELETE failed: " + std::string(curl_easy_strerror(res));
+            log_message(error_msg, *req.log_file);
+            connectivity.report_failure(error_msg);
+        } else {
+            connectivity.report_success();
+        }
+        
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+    }
+    return response;
+}
+
 // Implement get_iso_time_minus
 std::string get_iso_time_minus(int minutes) {
     return TimeUtils::get_iso_time_minus_minutes(minutes);

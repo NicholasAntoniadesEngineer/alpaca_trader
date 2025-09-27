@@ -34,6 +34,14 @@ timing.countdown_display_interval_sec,1
 timing.thread_initialization_delay_ms,200
 timing.thread_startup_delay_ms,300
 
+# Order cancellation timing
+timing.order_cancellation_wait_ms,500
+timing.position_verification_wait_ms,1000
+timing.position_settlement_wait_ms,2000
+
+# Order cancellation concurrency
+timing.max_concurrent_cancellations,10
+
 # PRECISION CONFIGURATION
 timing.cpu_usage_precision,1
 timing.rate_precision,1

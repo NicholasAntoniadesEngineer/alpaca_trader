@@ -9,6 +9,7 @@
 #include "timing_config.hpp"
 #include "strategy_config.hpp"
 #include "trader_config.hpp"
+#include "orders_config.hpp"
 
 // Grouped config for AlpacaClient
 struct AlpacaClientConfig {
@@ -17,6 +18,7 @@ struct AlpacaClientConfig {
     const LoggingConfig& logging;
     const TargetConfig& target;
     const TimingConfig& timing;
+    const OrdersConfig& orders;
 };
 
 // Grouped config for AccountManager

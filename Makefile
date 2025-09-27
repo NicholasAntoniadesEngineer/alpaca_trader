@@ -17,6 +17,7 @@ TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 SOURCES = src/main.cpp \
   src/api/clock/market_clock.cpp \
   src/api/market/market_data_client.cpp \
+  src/api/alpaca_client.cpp \
   src/api/orders/order_client.cpp \
   src/core/trader.cpp \
   src/core/strategy_logic.cpp \
@@ -42,6 +43,7 @@ SOURCES = src/main.cpp \
   src/threads/thread_manager.cpp \
   src/threads/account_data_thread.cpp \
   src/threads/market_data_thread.cpp \
+  src/threads/market_gate_thread.cpp \
   src/threads/logging_thread.cpp \
   src/threads/trader_thread.cpp
 

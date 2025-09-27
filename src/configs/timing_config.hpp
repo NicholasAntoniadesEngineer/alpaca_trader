@@ -33,6 +33,14 @@ struct TimingConfig {
     int thread_initialization_delay_ms;     // Delay before setting thread priorities
     int thread_startup_delay_ms;            // Delay for thread startup synchronization
     
+    // Order cancellation timing
+    int order_cancellation_wait_ms;         // Wait time after cancelling orders
+    int position_verification_wait_ms;      // Wait time for position verification
+    int position_settlement_wait_ms;        // Wait time for position settlement
+    
+    // Order cancellation concurrency
+    int max_concurrent_cancellations;       // Maximum concurrent order cancellations
+    
     // Thread priority configuration
     ThreadPriorityConfig thread_priorities;
     

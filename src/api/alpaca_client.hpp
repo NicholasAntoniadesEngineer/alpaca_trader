@@ -24,10 +24,16 @@ private:
     Clock::MarketClock clock;
     Market::MarketDataClient market_data;
     Orders::OrderClient orders;
+    
+    // Direct access to configuration for API methods
+    const AlpacaClientConfig& config;
 
 public:
     explicit AlpacaClient(const AlpacaClientConfig& cfg)
-        : clock(cfg), market_data(cfg), orders(cfg) {}
+        : clock(cfg), market_data(cfg), orders(cfg), config(cfg) {
+        // Set the API client reference in the orders component
+        orders.set_api_client(this);
+    }
 
     // Market hours and timing operations
     bool is_core_trading_hours() const { return clock.is_core_trading_hours(); }
@@ -42,6 +48,17 @@ public:
     // Order management operations
     void place_bracket_order(const Core::OrderRequest& req) const { orders.place_bracket_order(req); }
     void close_position(const Core::ClosePositionRequest& req) const { orders.close_position(req); }
+    void cancel_orders_for_signal(const std::string& signal_side) const { orders.cancel_orders_for_signal(signal_side); }
+    
+    // Order cancellation API methods
+    std::vector<std::string> get_open_orders(const std::string& symbol) const;
+    void cancel_order(const std::string& order_id) const;
+    void cancel_orders_batch(const std::vector<std::string>& order_ids) const;
+    
+    // Position management API methods
+    std::string get_positions() const;
+    int get_position_quantity(const std::string& symbol) const;
+    void submit_market_order(const std::string& symbol, const std::string& side, int quantity) const;
 };
 
 } // namespace API

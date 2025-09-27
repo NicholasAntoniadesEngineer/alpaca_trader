@@ -38,6 +38,8 @@ std::string http_get(const HttpRequest& req);
 
 std::string http_post(const HttpRequest& req);
 
+std::string http_delete(const HttpRequest& req);
+
 std::string get_iso_time_minus(int minutes);
 
 

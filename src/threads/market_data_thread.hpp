@@ -46,33 +46,14 @@ struct MarketDataThread {
 
     // Thread entrypoint
     void operator()();
+
+private:
+    // Main business logic methods
+    void market_data_loop();
+    void fetch_and_process_market_data();
+    void update_market_snapshot(const Core::ProcessedData& computed);
 };
 
-void run_market_gate(std::atomic<bool>& running,
-                     std::atomic<bool>& allow_fetch,
-                     const TimingConfig& timing,
-                     const LoggingConfig& logging,
-                      API::AlpacaClient& client,
-                     std::atomic<unsigned long>* iteration_counter = nullptr);
-
-struct MarketGateThread {
-    const TimingConfig& timing;
-    const LoggingConfig& logging;
-    std::atomic<bool>& allow_fetch;
-    std::atomic<bool>& running;
-    API::AlpacaClient& client;
-    std::atomic<unsigned long>* iteration_counter {nullptr};
-
-    MarketGateThread(const TimingConfig& timing_cfg,
-                   const LoggingConfig& logging_cfg,
-                   std::atomic<bool>& allow,
-                   std::atomic<bool>& running_flag,
-                   API::AlpacaClient& cli)
-        : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), client(cli) {}
-    
-    void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
-    void operator()();
-};
 
 } // namespace Threads
 } // namespace AlpacaTrader

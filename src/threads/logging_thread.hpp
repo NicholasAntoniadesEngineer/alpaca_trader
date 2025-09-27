@@ -27,6 +27,13 @@ public:
         : logger_ptr(logger), logger_iterations(iterations), config(system_config) {}
 
     void operator()();
+
+private:
+    // Main business logic methods
+    void setup_logging_thread();
+    void logging_loop();
+    void process_logging_queue(std::ofstream& log_file);
+    void output_log_line(const std::string& line, std::ofstream& log_file);
 };
 
 } // namespace Threads

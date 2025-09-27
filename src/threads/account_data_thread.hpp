@@ -39,6 +39,11 @@ struct AccountDataThread {
 
     // Thread entrypoint
     void operator()();
+
+private:
+    // Main business logic methods
+    void account_data_loop();
+    void fetch_and_update_account_data();
 };
 
 } // namespace Threads

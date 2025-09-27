@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <sstream>
 #include <climits>
+#include <string>
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -683,6 +684,156 @@ void TradingLogger::log_decision_summary_table(const std::string& symbol, double
     TABLE_ROW_48("Ratios", ratios_display);
     
     TABLE_FOOTER_48();
+}
+
+// Order cancellation logging methods
+void TradingLogger::log_cancellation_start(const std::string& strategy, const std::string& signal_side) {
+    TABLE_HEADER_48("ORDER CANCELLATION", strategy + " strategy");
+    if (!signal_side.empty()) {
+        TABLE_ROW_48("Signal", signal_side);
+    }
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_orders_found(int count, const std::string& symbol) {
+    TABLE_HEADER_48("ORDERS FOUND", symbol);
+    TABLE_ROW_48("Count", std::to_string(count));
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_orders_filtered(int count, const std::string& reason) {
+    TABLE_HEADER_48("ORDERS FILTERED", reason);
+    TABLE_ROW_48("Selected", std::to_string(count));
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_cancellation_complete(int cancelled_count, const std::string& symbol) {
+    TABLE_HEADER_48("CANCELLATION COMPLETE", symbol);
+    TABLE_ROW_48("Cancelled", std::to_string(cancelled_count));
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_no_orders_to_cancel() {
+    TABLE_HEADER_48("NO ORDERS TO CANCEL", "Current strategy");
+    TABLE_ROW_48("Status", "No orders found");
+    TABLE_FOOTER_48();
+}
+
+// Position management logging methods
+void TradingLogger::log_position_closure_start(int quantity) {
+    TABLE_HEADER_48("POSITION CLOSURE", "Starting process");
+    TABLE_ROW_48("Quantity", std::to_string(quantity));
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_fresh_position_data(int quantity) {
+    TABLE_HEADER_48("FRESH POSITION DATA", "Current quantity");
+    TABLE_ROW_48("Quantity", std::to_string(quantity));
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_position_already_closed() {
+    TABLE_HEADER_48("POSITION ALREADY CLOSED", "No action needed");
+    TABLE_ROW_48("Status", "Position closed");
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_closure_order_submitted(const std::string& side, int quantity) {
+    TABLE_HEADER_48("CLOSURE ORDER SUBMITTED", side + " order");
+    TABLE_ROW_48("Quantity", std::to_string(quantity));
+    TABLE_ROW_48("Side", side);
+    TABLE_FOOTER_48();
+}
+
+void TradingLogger::log_position_verification(int final_quantity) {
+    if (final_quantity == 0) {
+        TABLE_HEADER_48("POSITION VERIFICATION", "Success");
+        TABLE_ROW_48("Status", "Position closed");
+        TABLE_FOOTER_48();
+    } else {
+        TABLE_HEADER_48("POSITION VERIFICATION", "WARNING");
+        TABLE_ROW_48("Status", "Position still exists");
+        TABLE_ROW_48("Quantity", std::to_string(final_quantity));
+        TABLE_FOOTER_48();
+    }
+}
+
+// Debug and validation logging
+void TradingLogger::log_trade_validation_failed(const std::string& reason) {
+    log_message("Trade validation failed - " + reason, "");
+}
+
+void TradingLogger::log_position_sizing_skipped(const std::string& reason) {
+    log_message("Position sizing resulted in " + reason + ", skipping trade", "");
+}
+
+void TradingLogger::log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short) {
+    log_message("DEBUG: execute_trade - current_qty=" + std::to_string(current_qty), "");
+    log_message("DEBUG: execute_trade - position value=" + std::to_string(position_value), "");
+    log_message("DEBUG: execute_trade - position qty=" + std::to_string(position_qty), "");
+    log_message("DEBUG: execute_trade - is_long=" + std::to_string(is_long) + ", is_short=" + std::to_string(is_short), "");
+}
+
+void TradingLogger::log_debug_fresh_data_fetch(const std::string& position_type) {
+    log_message("Forcing fresh account data fetch before closing " + position_type + " position", "");
+}
+
+void TradingLogger::log_debug_fresh_position_data(int fresh_qty, int current_qty) {
+    log_message("Fresh position data: " + std::to_string(fresh_qty) + " (was: " + std::to_string(current_qty) + ")", "");
+}
+
+void TradingLogger::log_debug_account_details(int qty, double current_value) {
+    log_message("DEBUG: Fresh account details - qty=" + std::to_string(qty) + ", current_value=" + std::to_string(current_value), "");
+}
+
+void TradingLogger::log_debug_position_closure_attempt(int qty) {
+    log_message("Attempting to close fresh position: " + std::to_string(qty), "");
+}
+
+void TradingLogger::log_debug_position_closure_attempted() {
+    log_message("Position closure attempted, waiting for settlement", "");
+}
+
+void TradingLogger::log_debug_position_verification(int verify_qty) {
+    log_message("Position verification: " + std::to_string(verify_qty), "");
+}
+
+void TradingLogger::log_debug_position_still_exists(const std::string& side) {
+    log_message("Position still exists after closure attempt, skipping " + side + " order", "");
+}
+
+void TradingLogger::log_debug_no_position_found(const std::string& side) {
+    log_message("No " + side + " position found in fresh data, proceeding with " + side, "");
+}
+
+void TradingLogger::log_debug_trading_halt() {
+    log_message("DEBUG: Trading halted - calling handle_trading_halt()", "");
+}
+
+void TradingLogger::log_debug_trading_loop_stopped() {
+    log_message("Trading loop stopped - shared.running is false", "");
+}
+
+void TradingLogger::log_debug_skipping_trading_cycle() {
+    log_message("Skipping trading cycle - no fresh market data available", "");
+}
+
+// Inline status and countdown logging
+void TradingLogger::log_inline_halt_status(int seconds) {
+    log_inline_status(get_formatted_inline_message("|   TRADING HALTED - Next check in " + std::to_string(seconds) + "s"));
+}
+
+void TradingLogger::log_inline_next_loop(int seconds) {
+    log_inline_status("   ⏳ Next loop in " + std::to_string(seconds) + "s   ");
+}
+
+void TradingLogger::end_inline_status() {
+    AlpacaTrader::Logging::end_inline_status();
+}
+
+// Order execution header
+void TradingLogger::log_order_execution_header() {
+    LOG_THREAD_ORDER_EXECUTION_HEADER();
 }
 
 } // namespace Logging

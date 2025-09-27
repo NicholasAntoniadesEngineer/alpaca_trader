@@ -7,6 +7,7 @@
 #include "logging_macros.hpp"
 #include <vector>
 #include <tuple>
+#include <string>
 
 // Forward declarations
 struct SystemConfig;
@@ -59,6 +60,36 @@ public:
     static void log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit);
     static void log_order_result(const std::string& order_id, bool success, const std::string& reason = "");
     
+    // Order cancellation
+    static void log_cancellation_start(const std::string& strategy, const std::string& signal_side = "");
+    static void log_orders_found(int count, const std::string& symbol);
+    static void log_orders_filtered(int count, const std::string& reason);
+    static void log_cancellation_complete(int cancelled_count, const std::string& symbol);
+    static void log_no_orders_to_cancel();
+    
+    // Position management
+    static void log_position_closure_start(int quantity);
+    static void log_fresh_position_data(int quantity);
+    static void log_position_already_closed();
+    static void log_closure_order_submitted(const std::string& side, int quantity);
+    static void log_position_verification(int final_quantity);
+    
+    // Debug and validation logging
+    static void log_trade_validation_failed(const std::string& reason);
+    static void log_position_sizing_skipped(const std::string& reason);
+    static void log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short);
+    static void log_debug_fresh_data_fetch(const std::string& position_type);
+    static void log_debug_fresh_position_data(int fresh_qty, int current_qty);
+    static void log_debug_account_details(int qty, double current_value);
+    static void log_debug_position_closure_attempt(int qty);
+    static void log_debug_position_closure_attempted();
+    static void log_debug_position_verification(int verify_qty);
+    static void log_debug_position_still_exists(const std::string& side);
+    static void log_debug_no_position_found(const std::string& side);
+    static void log_debug_trading_halt();
+    static void log_debug_trading_loop_stopped();
+    static void log_debug_skipping_trading_cycle();
+    
     // Market close position management
     static void log_market_close_warning(int minutes_until_close);
     static void log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side);
@@ -96,6 +127,14 @@ public:
     static void log_market_data_result_table(const std::string& description, bool success, size_t bar_count);
     
     // Performance metrics
+    
+    // Inline status and countdown logging
+    static void log_inline_halt_status(int seconds);
+    static void log_inline_next_loop(int seconds);
+    static void end_inline_status();
+    
+    // Order execution header
+    static void log_order_execution_header();
     
 private:
     static std::string format_currency(double amount);

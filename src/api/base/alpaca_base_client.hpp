@@ -6,6 +6,7 @@
 #include "configs/logging_config.hpp"
 #include "configs/target_config.hpp"
 #include "configs/timing_config.hpp"
+#include "configs/orders_config.hpp"
 #include "configs/component_configs.hpp"
 
 namespace AlpacaTrader {
@@ -18,11 +19,12 @@ protected:
     const TimingConfig& timing;
     const LoggingConfig& logging;
     const TargetConfig& target;
+    const OrdersConfig& orders;
 
 public:
     explicit AlpacaBaseClient(const AlpacaClientConfig& cfg)
         : api(cfg.api), session(cfg.session), timing(cfg.timing), 
-          logging(cfg.logging), target(cfg.target) {}
+          logging(cfg.logging), target(cfg.target), orders(cfg.orders) {}
     
     virtual ~AlpacaBaseClient() {}
 };

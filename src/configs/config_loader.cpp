@@ -87,6 +87,12 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "timing.thread_initialization_delay_ms") cfg.timing.thread_initialization_delay_ms = std::stoi(value);
         else if (key == "timing.thread_startup_delay_ms") cfg.timing.thread_startup_delay_ms = std::stoi(value);
         
+        // Order cancellation timing
+        else if (key == "timing.order_cancellation_wait_ms") cfg.timing.order_cancellation_wait_ms = std::stoi(value);
+        else if (key == "timing.position_verification_wait_ms") cfg.timing.position_verification_wait_ms = std::stoi(value);
+        else if (key == "timing.position_settlement_wait_ms") cfg.timing.position_settlement_wait_ms = std::stoi(value);
+        else if (key == "timing.max_concurrent_cancellations") cfg.timing.max_concurrent_cancellations = std::stoi(value);
+        
         // Timing precision configuration
         else if (key == "timing.cpu_usage_precision") cfg.timing.cpu_usage_precision = std::stoi(value);
         else if (key == "timing.rate_precision") cfg.timing.rate_precision = std::stoi(value);
@@ -98,6 +104,22 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
         else if (key == "session.market_close_hour") cfg.session.market_close_hour = std::stoi(value);
         else if (key == "session.market_close_minute") cfg.session.market_close_minute = std::stoi(value);
 
+        // Orders
+        else if (key == "orders.min_quantity") cfg.orders.min_quantity = std::stoi(value);
+        else if (key == "orders.price_precision") cfg.orders.price_precision = std::stoi(value);
+        else if (key == "orders.default_time_in_force") cfg.orders.default_time_in_force = value;
+        else if (key == "orders.default_order_type") cfg.orders.default_order_type = value;
+        else if (key == "orders.position_closure_side_buy") cfg.orders.position_closure_side_buy = value;
+        else if (key == "orders.position_closure_side_sell") cfg.orders.position_closure_side_sell = value;
+        else if (key == "orders.orders_endpoint") cfg.orders.orders_endpoint = value;
+        else if (key == "orders.positions_endpoint") cfg.orders.positions_endpoint = value;
+        else if (key == "orders.orders_status_filter") cfg.orders.orders_status_filter = value;
+        else if (key == "orders.zero_quantity_check") cfg.orders.zero_quantity_check = to_bool(value);
+        else if (key == "orders.position_verification_enabled") cfg.orders.position_verification_enabled = to_bool(value);
+        else if (key == "orders.cancellation_mode") cfg.orders.cancellation_mode = value;
+        else if (key == "orders.cancel_opposite_side") cfg.orders.cancel_opposite_side = to_bool(value);
+        else if (key == "orders.cancel_same_side") cfg.orders.cancel_same_side = to_bool(value);
+        else if (key == "orders.max_orders_to_cancel") cfg.orders.max_orders_to_cancel = std::stoi(value);
 
         // Logging
         else if (key == "logging.log_file") cfg.logging.log_file = value;
@@ -211,7 +233,8 @@ int load_system_config(SystemConfig& config) {
         "config/risk_config.csv",
         "config/timing_config.csv",
         "config/session_config.csv",
-        "config/logging_config.csv"
+        "config/logging_config.csv",
+        "config/orders_config.csv"
     };
     
     // Load each configuration file
