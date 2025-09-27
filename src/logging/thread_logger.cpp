@@ -4,6 +4,7 @@
 #include "logging_macros.hpp"
 #include <sstream>
 #include <iomanip>
+#include <chrono>
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
@@ -75,4 +76,45 @@ void ThreadLogger::log_system_performance_summary(unsigned long total_iterations
     oss << "System performance summary - Total iterations: " << total_iterations;
     
     log_message("SUMMARY", oss.str());
+}
+
+
+void ThreadLogger::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thread_infos, 
+                                              const std::chrono::steady_clock::time_point& start_time) {
+    // Calculate total runtime
+    auto current_time = std::chrono::steady_clock::now();
+    auto runtime_duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time);
+    double runtime_seconds = runtime_duration.count();
+    
+    // Calculate total iterations across all threads
+    unsigned long total_iterations = 0;
+    for (const auto& thread_info : thread_infos) {
+        total_iterations += thread_info.iterations.load();
+    }
+    
+    // Calculate performance rate
+    double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
+    
+    // Use proper table macros for consistent formatting
+    TABLE_HEADER_48("Thread Monitor", "Iteration Counts & Performance");
+    
+    // Log each thread's iteration count
+    for (const auto& thread_info : thread_infos) {
+        TABLE_ROW_48(thread_info.name, std::to_string(thread_info.iterations.load()) + " iterations");
+    }
+    
+    TABLE_SEPARATOR_48();
+    
+    // Performance summary
+    std::string runtime_display = std::to_string((int)runtime_seconds) + " seconds";
+    TABLE_ROW_48("Runtime", runtime_display);
+    
+    std::string total_display = std::to_string(total_iterations) + " total";
+    TABLE_ROW_48("Total Iterations", total_display);
+    
+    std::ostringstream rate_stream;
+    rate_stream << std::fixed << std::setprecision(1) << iterations_per_second << "/sec";
+    TABLE_ROW_48("Performance Rate", rate_stream.str());
+    
+    TABLE_FOOTER_48();
 }

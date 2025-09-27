@@ -2,6 +2,8 @@
 #define THREAD_CONFIG_HPP
 
 #include <string>
+#include <atomic>
+#include <functional>
 
 // Forward declaration
 struct SystemConfig;
@@ -58,6 +60,18 @@ public:
     static ThreadConfig get_config_from_system(Type type, const SystemConfig& system_config);
     static std::string priority_to_string(Priority priority);
     static Priority string_to_priority(const std::string& str);
+};
+
+// Thread manager configuration structure
+struct ThreadManagerConfig {
+    std::string name;
+    std::function<void()> thread_function;
+    std::atomic<unsigned long>& iteration_counter;
+    Type config_type;
+    
+    ThreadManagerConfig(const std::string& n, std::function<void()> func, 
+                       std::atomic<unsigned long>& counter, Type type)
+        : name(n), thread_function(std::move(func)), iteration_counter(counter), config_type(type) {}
 };
 
 } // namespace Config

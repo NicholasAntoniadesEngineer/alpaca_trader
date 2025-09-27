@@ -24,6 +24,7 @@ SOURCES = src/main.cpp \
   src/core/risk_logic.cpp \
   src/core/market_processing.cpp \
   src/core/system_manager.cpp \
+ \
   src/configs/component_configs.cpp \
   src/configs/config_loader.cpp \
   src/core/account_manager.cpp \

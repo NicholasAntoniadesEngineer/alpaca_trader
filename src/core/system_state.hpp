@@ -4,10 +4,12 @@
 #include "configs/system_config.hpp"
 #include "core/data_structures.hpp"
 #include "configs/trader_config.hpp"
+#include "logging/thread_logger.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <vector>
 
 // Forward declarations
 struct TradingSystemModules;
@@ -44,6 +46,7 @@ struct SystemState {
     SystemConfig config;                    // Complete system configuration
     TraderConfig trader_view;               // Trader-specific configuration view
     std::unique_ptr<TradingSystemModules> trading_modules;  // All system modules
+    std::vector<ThreadLogger::ThreadInfo> thread_infos;  // Thread monitoring information
 
     // =========================================================================
     // CONSTRUCTORS

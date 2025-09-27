@@ -90,9 +90,8 @@ void StartupLogger::log_thread_system_startup(const TimingConfig& timing_config)
 
 
 void StartupLogger::log_thread_system_complete() {
-    // Get dynamic thread status data from ThreadSystem::Manager
-    auto thread_status_data = ThreadSystem::Manager::get_thread_status_data();
-    TradingLogger::log_thread_priorities_table(thread_status_data);
+    // Thread system setup complete
+    log_message("Thread system setup complete", "system_startup.log");
 }
 
 

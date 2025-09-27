@@ -1,66 +1,91 @@
-// system_manager.cpp
 #include "core/system_manager.hpp"
 #include "core/system_state.hpp"
-#include "core/system_threads.hpp"
 #include "core/trading_system_modules.hpp"
-#include "configs/system_config.hpp"
-#include "configs/component_configs.hpp"
+#include "core/system_threads.hpp"
 #include "threads/thread_manager.hpp"
 #include "logging/startup_logger.hpp"
 #include "logging/async_logger.hpp"
-#include <chrono>
+#include "configs/system_config.hpp"
+#include "core/trader.hpp"
+#include "api/alpaca_client.hpp"
+#include "threads/logging_thread.hpp"
+#include "threads/market_data_thread.hpp"
+#include "threads/account_data_thread.hpp"
+#include "threads/market_gate_thread.hpp"
+#include "threads/trader_thread.hpp"
+#include <iostream>
 #include <csignal>
-#include <thread>
-#include <ctime>
+#include <memory>
 
-// Using declarations for cleaner code
+using namespace AlpacaTrader::Core;
+using namespace AlpacaTrader::Logging;
+using namespace AlpacaTrader::Threads;
+using namespace ThreadSystem;
 
-// =============================================================================
-// SIGNAL HANDLING
-// =============================================================================
+// Global signal handling
+static SystemState* g_system_state = nullptr;
 
-static std::atomic<bool>* g_running_ptr;
-
-static void setup_signal_handlers(std::atomic<bool>& running) {
-    g_running_ptr = &running;
-    std::signal(SIGINT, [](int){ g_running_ptr->store(false); });
-    std::signal(SIGTERM, [](int){ g_running_ptr->store(false); });
+void signal_handler(int signal) {
+    (void)signal; // Suppress unused parameter warning
+    if (g_system_state) {
+        g_system_state->running.store(false);
+        g_system_state->cv.notify_all();
+    }
 }
 
-// =============================================================================
-// STARTUP LOGGING
-// =============================================================================
-
-static void log_startup_information(const TradingSystemModules& modules, const SystemConfig& config) {
-    StartupLogger::log_account_overview(*modules.portfolio_manager);
-    StartupLogger::log_financial_summary(*modules.portfolio_manager);
-    StartupLogger::log_current_positions(*modules.portfolio_manager);
-    StartupLogger::log_data_source_configuration(config);
-    StartupLogger::log_runtime_configuration(config);
-    StartupLogger::log_strategy_configuration(config);
+void setup_signal_handlers(SystemState& system_state) {
+    g_system_state = &system_state;
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
 }
 
-// =============================================================================
-// SYSTEM LIFECYCLE IMPLEMENTATION
-// =============================================================================
+TradingSystemModules create_trading_modules(const SystemConfig& config) {
+    (void)config; // Suppress unused parameter warning
+    return TradingSystemModules{};
+}
 
-namespace SystemManager {
+void log_startup_information(const TradingSystemModules& modules, const SystemConfig& config) {
+    StartupLogger::log_thread_system_startup(config.timing);
+    // Add other startup logging as needed
+}
 
-SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+void configure_trading_modules(SystemThreads& handles, TradingSystemModules& modules) {
+    // Configure modules with iteration counters
+    modules.trading_engine->set_iteration_counter(handles.trader_iterations);
+    // Note: async_logger might not have set_iteration_counter method
+    // modules.async_logger->set_iteration_counter(handles.logger_iterations);
+}
+
+SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+    // Create handles for the threads
+    SystemThreads handles;
+    
     // Create all trading system modules and store them in system_state for lifetime management
-    system_state.trading_modules = std::make_unique<TradingSystemModules>(create_trading_modules(system_state));
+    system_state.trading_modules = std::make_unique<TradingSystemModules>(create_trading_modules(system_state.config));
     
     // Log startup information
     log_startup_information(*system_state.trading_modules, system_state.config);
     
     // Configure trading modules
-    configure_trading_modules(system_state, *system_state.trading_modules);
+    configure_trading_modules(handles, *system_state.trading_modules);
     
     // Setup signal handling for graceful shutdown
-    setup_signal_handlers(system_state.running);
+    setup_signal_handlers(system_state);
     
-    // Setup and start all threads
-    return ThreadSystem::setup_and_start_threads(*system_state.trading_modules, logger, system_state.config);
+    // Create thread configurations from single source
+    auto& modules = *system_state.trading_modules;
+    auto [thread_definitions, thread_infos] = Manager::create_thread_configurations(handles, modules);
+    
+    // Setup thread priorities
+    Manager::setup_thread_priorities(thread_definitions, system_state.config);
+    
+    // Start all threads
+    Manager::start_threads(thread_definitions);
+    
+    // Store thread infos for monitoring
+    system_state.thread_infos = std::move(thread_infos);
+    
+    return handles;
 }
 
 static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
@@ -68,33 +93,30 @@ static void run_until_shutdown(SystemState& state, SystemThreads& handles) {
     auto last_monitoring_time = std::chrono::steady_clock::now();
     
     while (state.running.load()) {
-        // Sleep for 1 second instead of busy wait
         std::this_thread::sleep_for(std::chrono::seconds(1));
         
-        // Check if it's time for monitoring output
         auto current_time = std::chrono::steady_clock::now();
         auto elapsed_seconds = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_monitoring_time).count();
         
         if (elapsed_seconds >= monitoring_interval_sec) {
-            ThreadSystem::Manager::log_thread_monitoring_stats(handles);
+            // Use the thread infos created from the same configuration source
+            Manager::log_thread_monitoring_stats(state.thread_infos, handles.start_time);
             last_monitoring_time = current_time;
         }
     }
 }
 
-void run(SystemState& system_state, SystemThreads& handles) {
-    run_until_shutdown(system_state, handles);
-}
-
-void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+void SystemManager::shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
     
     // Wait for all threads to complete
-    ThreadSystem::shutdown_system_threads(handles);
+    Manager::shutdown_threads();
     
     // Shutdown logging system
     AlpacaTrader::Logging::shutdown_global_logger(*logger);
 }
 
-} // namespace SystemManager
+void SystemManager::run(SystemState& system_state, SystemThreads& handles) {
+    run_until_shutdown(system_state, handles);
+}
