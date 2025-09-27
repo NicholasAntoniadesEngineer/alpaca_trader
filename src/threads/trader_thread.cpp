@@ -1,6 +1,6 @@
 #include "threads/trader_thread.hpp"
 #include "logging/async_logger.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/startup_logs.hpp"
 #include <chrono>
 #include <thread>
 

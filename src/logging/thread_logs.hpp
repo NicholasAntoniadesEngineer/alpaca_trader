@@ -1,7 +1,8 @@
-#ifndef THREAD_LOGGER_HPP
-#define THREAD_LOGGER_HPP
+#ifndef THREAD_LOGS_HPP
+#define THREAD_LOGS_HPP
 
 #include "configs/timing_config.hpp"
+#include "configs/thread_config.hpp"
 #include <string>
 #include <atomic>
 #include <vector>
@@ -11,7 +12,7 @@
  * High-performance thread monitoring and logging system.
  * Tracks thread lifecycle, priorities, and performance metrics.
  */
-class ThreadLogger {
+class ThreadLogs {
 public:
     // Thread system initialization
     static void log_system_startup(const TimingConfig& config);
@@ -25,6 +26,16 @@ public:
                                       const std::string& requested_priority,
                                       const std::string& actual_priority,
                                       bool success);
+    
+    // Thread configuration
+    static void log_thread_configuration_skipped(const std::string& thread_name, const std::string& reason);
+    static void log_thread_cpu_affinity_configured(const std::string& thread_name, int cpu_core);
+    static void log_thread_priority_configured(const std::string& thread_name);
+    static void log_thread_cpu_affinity_failed(const std::string& thread_name);
+    static void log_thread_priority_failed(const std::string& thread_name);
+    static void log_configuration_result(const std::string& thread_name, 
+                                       const AlpacaTrader::Config::ThreadConfig& platform_config, 
+                                       bool success);
     
     // Performance monitoring
     static void log_thread_performance(const std::string& thread_name,
@@ -54,4 +65,4 @@ private:
                                             bool success);
 };
 
-#endif // THREAD_LOGGER_HPP
+#endif // THREAD_LOGS_HPP

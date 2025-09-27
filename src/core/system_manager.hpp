@@ -4,11 +4,14 @@
 
 #include <mutex>
 #include <memory>
+#include <vector>
 #include "logging/async_logger.hpp"
+#include "configs/thread_config.hpp"
 
 // Forward declarations
 struct SystemState;
 struct SystemThreads;
+struct TradingSystemModules;
 
 namespace SystemManager {
 
@@ -46,6 +49,20 @@ void run(SystemState& system_state, SystemThreads& handles);
  * @param logger The logger to shutdown
  */
 void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
+
+// =============================================================================
+// THREAD CONFIGURATION HELPERS
+// =============================================================================
+
+/**
+ * Create thread configuration list for the trading system
+ * - Defines all system threads with their functions and iteration counters
+ * - System-specific thread configuration
+ * @param handles System thread handles containing iteration counters
+ * @param modules Trading system modules containing thread objects
+ * @return Vector of thread manager configurations
+ */
+std::vector<AlpacaTrader::Config::ThreadManagerConfig> create_thread_config_list(SystemThreads& handles, TradingSystemModules& modules);
 
 } // namespace SystemManager
 

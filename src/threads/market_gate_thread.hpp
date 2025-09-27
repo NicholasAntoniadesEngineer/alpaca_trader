@@ -29,7 +29,6 @@ struct MarketGateThread {
     void operator()();
 
 private:
-    // Main business logic methods
     void market_gate_loop();
     void check_and_update_fetch_window(bool& last_within);
     void check_and_report_connectivity_status(ConnectivityManager& connectivity,

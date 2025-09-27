@@ -4,7 +4,7 @@
 #include "configs/thread_config.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "configs/timing_config.hpp"
-#include "logging/thread_logger.hpp"
+#include "logging/thread_logs.hpp"
 #include <vector>
 #include <tuple>
 #include <string>
@@ -44,15 +44,15 @@ public:
     static void shutdown_threads();
     
     // Thread monitoring and logging
-    static void log_thread_monitoring_stats(const std::vector<ThreadLogger::ThreadInfo>& thread_infos, 
+    static void log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadInfo>& thread_infos, 
                                           const std::chrono::steady_clock::time_point& start_time);
     
     // Thread priority management
     static void setup_thread_priorities(const std::vector<ThreadDefinition>& thread_definitions, const SystemConfig& config);
     
     // Utility functions
-    static std::vector<ThreadLogger::ThreadInfo> create_thread_info_vector(const std::vector<ThreadDefinition>& thread_definitions);
-    static std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogger::ThreadInfo>> create_thread_configurations(SystemThreads& handles, TradingSystemModules& modules);
+    static std::vector<ThreadLogs::ThreadInfo> create_thread_info_vector(const std::vector<ThreadDefinition>& thread_definitions);
+    static std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogs::ThreadInfo>> create_thread_configurations(SystemThreads& handles, TradingSystemModules& modules);
     
     
 private:
@@ -63,14 +63,9 @@ private:
     static bool apply_thread_configuration(const ThreadDefinition& thread_def, 
                                           const AlpacaTrader::Config::ThreadConfig& platform_config, 
                                           const SystemConfig& config);
-    static void log_configuration_result(const ThreadDefinition& thread_def,
-                                        const AlpacaTrader::Config::ThreadConfig& platform_config,
-                                        bool success,
-                                        const SystemConfig& config);
     
     // Thread configuration helpers
-    static std::vector<AlpacaTrader::Config::ThreadManagerConfig> create_thread_config_list(SystemThreads& handles, TradingSystemModules& modules);
-    static std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogger::ThreadInfo>> 
+    static std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogs::ThreadInfo>> 
         build_thread_objects(const std::vector<AlpacaTrader::Config::ThreadManagerConfig>& configs);
     
     // Thread status tracking

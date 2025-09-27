@@ -3,7 +3,7 @@
 #include "core/trading_system_modules.hpp"
 #include "core/system_threads.hpp"
 #include "threads/thread_manager.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/startup_logs.hpp"
 #include "logging/async_logger.hpp"
 #include "configs/system_config.hpp"
 #include "core/trader.hpp"
@@ -45,7 +45,7 @@ TradingSystemModules create_trading_modules(const SystemConfig& config) {
 }
 
 void log_startup_information(const TradingSystemModules& modules, const SystemConfig& config) {
-    StartupLogger::log_thread_system_startup(config.timing);
+    StartupLogs::log_thread_system_startup(config.timing);
     // Add other startup logging as needed
 }
 
@@ -115,6 +115,53 @@ void SystemManager::shutdown(SystemState& system_state, SystemThreads& handles, 
     
     // Shutdown logging system
     AlpacaTrader::Logging::shutdown_global_logger(*logger);
+}
+
+std::vector<AlpacaTrader::Config::ThreadManagerConfig> SystemManager::create_thread_config_list(SystemThreads& handles, TradingSystemModules& modules) {
+    std::vector<AlpacaTrader::Config::ThreadManagerConfig> configs;
+    configs.reserve(5);
+    
+    // Market data processing thread
+    configs.emplace_back(
+        "Market Thread",
+        [&modules]() { (*modules.market_data_thread)(); },
+        handles.market_iterations,
+        AlpacaTrader::Config::Type::MARKET_DATA
+    );
+    
+    // Account data processing thread
+    configs.emplace_back(
+        "Account Thread",
+        [&modules]() { (*modules.account_data_thread)(); },
+        handles.account_iterations,
+        AlpacaTrader::Config::Type::ACCOUNT_DATA
+    );
+    
+    // Market gate control thread
+    configs.emplace_back(
+        "Gate Thread",
+        [&modules]() { (*modules.market_gate_thread)(); },
+        handles.gate_iterations,
+        AlpacaTrader::Config::Type::MARKET_GATE
+    );
+    
+    // Main trading logic thread
+    configs.emplace_back(
+        "Trader Thread",
+        [&modules]() { (*modules.trading_thread)(); },
+        handles.trader_iterations,
+        AlpacaTrader::Config::Type::TRADER_DECISION
+    );
+    
+    // Logging system thread
+    configs.emplace_back(
+        "Logger Thread",
+        [&modules]() { (*modules.logging_thread)(); },
+        handles.logger_iterations,
+        AlpacaTrader::Config::Type::LOGGING
+    );
+    
+    return configs;
 }
 
 void SystemManager::run(SystemState& system_state, SystemThreads& handles) {

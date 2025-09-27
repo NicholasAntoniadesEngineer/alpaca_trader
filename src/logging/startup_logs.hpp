@@ -1,5 +1,5 @@
-#ifndef STARTUP_LOGGER_HPP
-#define STARTUP_LOGGER_HPP
+#ifndef STARTUP_LOGS_HPP
+#define STARTUP_LOGS_HPP
 
 #include "configs/system_config.hpp"
 #include "core/account_manager.hpp"
@@ -9,10 +9,8 @@
  * Specialized logging for application startup sequence.
  * Handles all startup-related logging in a consistent format.
  */
-class StartupLogger {
+class StartupLogs {
 public:
-    // Application initialization
-    static std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> initialize_application_foundation(const SystemConfig& config);
     
     // Application header and branding
     static void log_application_header();
@@ -38,5 +36,5 @@ private:
     static std::string format_currency(double amount);
 };
 
-#endif // STARTUP_LOGGER_HPP
+#endif // STARTUP_LOGS_HPP
 

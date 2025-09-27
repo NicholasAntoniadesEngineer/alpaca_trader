@@ -48,7 +48,7 @@ struct MarketDataThread {
     void operator()();
 
 private:
-    // Main business logic methods
+
     void market_data_loop();
     void fetch_and_process_market_data();
     void update_market_snapshot(const Core::ProcessedData& computed);

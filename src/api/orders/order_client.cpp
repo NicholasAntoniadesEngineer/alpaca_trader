@@ -2,7 +2,7 @@
 #include "api/alpaca_client.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
-#include "logging/trading_logger.hpp"
+#include "logging/trading_logs.hpp"
 #include "utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <cmath>
@@ -21,7 +21,7 @@ namespace API {
 namespace Orders {
 
 // Using declarations for cleaner code
-using AlpacaTrader::Logging::TradingLogger;
+using AlpacaTrader::Logging::TradingLogs;
 
 // Helper function to round price to valid penny increments.
 std::string round_price_to_penny(double price) {
@@ -80,11 +80,11 @@ void OrderClient::place_bracket_order(const Core::OrderRequest& oreq) const {
 
 void OrderClient::close_position(const Core::ClosePositionRequest& creq) const {
     if (creq.current_qty == 0) {
-        TradingLogger::log_position_already_closed();
+        TradingLogs::log_position_already_closed();
         return;
     }
     
-    TradingLogger::log_position_closure_start(creq.current_qty);
+    TradingLogs::log_position_closure_start(creq.current_qty);
     
     // Step 1: Cancel orders and wait
     cancel_orders_and_wait();
@@ -92,7 +92,7 @@ void OrderClient::close_position(const Core::ClosePositionRequest& creq) const {
     // Step 2: Get fresh position data
     int actual_qty = get_fresh_position_quantity();
     if (actual_qty == 0) {
-        TradingLogger::log_position_already_closed();
+        TradingLogs::log_position_already_closed();
         return;
     }
     
@@ -104,7 +104,7 @@ void OrderClient::close_position(const Core::ClosePositionRequest& creq) const {
 }
 
 void OrderClient::log_order_result(const std::string& operation, const std::string& response) const {
-    TradingLogger::log_order_result_table(operation, response);
+    TradingLogs::log_order_result_table(operation, response);
 }
 
 std::string OrderClient::format_order_log(const std::string& operation, const std::string& details) const {
@@ -112,12 +112,12 @@ std::string OrderClient::format_order_log(const std::string& operation, const st
 }
 
 void OrderClient::cancel_orders(const std::string& new_signal_side) const {
-    TradingLogger::log_cancellation_start(orders.cancellation_mode, new_signal_side);
+    TradingLogs::log_cancellation_start(orders.cancellation_mode, new_signal_side);
     
     // Step 1: Fetch all open orders
     std::vector<std::string> all_order_ids = fetch_open_orders();
     if (all_order_ids.empty()) {
-        TradingLogger::log_no_orders_to_cancel();
+        TradingLogs::log_no_orders_to_cancel();
         return;
     }
     
@@ -128,7 +128,7 @@ void OrderClient::cancel_orders(const std::string& new_signal_side) const {
     if (!orders_to_cancel.empty()) {
         execute_cancellations(orders_to_cancel);
     } else {
-        TradingLogger::log_no_orders_to_cancel();
+        TradingLogs::log_no_orders_to_cancel();
     }
 }
 
@@ -176,7 +176,7 @@ std::vector<std::string> OrderClient::fetch_open_orders() const {
     
     auto* client = static_cast<AlpacaTrader::API::AlpacaClient*>(client_ptr);
     std::vector<std::string> order_ids = client->get_open_orders(target.symbol);
-    TradingLogger::log_orders_found(order_ids.size(), target.symbol);
+    TradingLogs::log_orders_found(order_ids.size(), target.symbol);
     return order_ids;
 }
 
@@ -209,14 +209,14 @@ std::vector<std::string> OrderClient::filter_orders_for_cancellation(const std::
         Logging::log_message("WARNING: Limited to " + std::to_string(orders.max_orders_to_cancel) + " orders due to max_orders_to_cancel setting", logging.log_file);
     }
     
-    TradingLogger::log_orders_filtered(filtered_orders.size(), cancellation_reason);
+    TradingLogs::log_orders_filtered(filtered_orders.size(), cancellation_reason);
     
     return filtered_orders;
 }
 
 void OrderClient::execute_cancellations(const std::vector<std::string>& order_ids) const {
     if (order_ids.empty()) {
-        TradingLogger::log_no_orders_to_cancel();
+        TradingLogs::log_no_orders_to_cancel();
         return;
     }
     
@@ -229,7 +229,7 @@ void OrderClient::execute_cancellations(const std::vector<std::string>& order_id
     auto* client = static_cast<AlpacaTrader::API::AlpacaClient*>(client_ptr);
     // Use the API client to cancel orders in batch
     client->cancel_orders_batch(order_ids);
-    TradingLogger::log_cancellation_complete(order_ids.size(), target.symbol);
+    TradingLogs::log_cancellation_complete(order_ids.size(), target.symbol);
 }
 
 bool OrderClient::should_cancel_order(const std::string& order_side, const std::string& signal_side) const {
@@ -267,7 +267,7 @@ void OrderClient::cancel_orders_and_wait() const {
 int OrderClient::get_fresh_position_quantity() const {
     std::string positions_response = get_positions();
     int actual_qty = parse_position_quantity(positions_response);
-    TradingLogger::log_fresh_position_data(actual_qty);
+    TradingLogs::log_fresh_position_data(actual_qty);
     return actual_qty;
 }
 
@@ -282,7 +282,7 @@ void OrderClient::submit_position_closure_order(int quantity) const {
     std::string side = (quantity > 0) ? orders.position_closure_side_sell : orders.position_closure_side_buy;
     int abs_qty = std::abs(quantity);
     
-    TradingLogger::log_closure_order_submitted(side, abs_qty);
+    TradingLogs::log_closure_order_submitted(side, abs_qty);
     
     // Use the API client to submit the market order
     client->submit_market_order(target.symbol, side, abs_qty);
@@ -296,7 +296,7 @@ void OrderClient::verify_position_closure() const {
     std::this_thread::sleep_for(std::chrono::milliseconds(timing.position_verification_wait_ms));
     
     int verify_qty = get_fresh_position_quantity();
-    TradingLogger::log_position_verification(verify_qty);
+    TradingLogs::log_position_verification(verify_qty);
 }
 
 } // namespace Orders

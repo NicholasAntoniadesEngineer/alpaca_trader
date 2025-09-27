@@ -1,13 +1,13 @@
 #include "threads/thread_manager.hpp"
 #include "threads/platform/thread_control.hpp"
-#include "logging/startup_logger.hpp"
-#include "logging/thread_logger.hpp"
+#include "logging/startup_logs.hpp"
+#include "logging/thread_logs.hpp"
 #include "core/system_threads.hpp"
 #include "core/trading_system_modules.hpp"
+#include "core/system_manager.hpp"
 #include <iostream>
 
 // Using declarations for cleaner code
-using AlpacaTrader::Logging::log_message;
 using AlpacaTrader::Logging::AsyncLogger;
 using ThreadSystem::Platform::ThreadControl;
 
@@ -18,13 +18,11 @@ std::vector<std::tuple<std::string, std::string, bool>> Manager::thread_status_d
 std::vector<std::thread> Manager::active_threads_;
 
 void Manager::start_threads(const std::vector<ThreadDefinition>& thread_definitions) {
-    // Clear any existing threads
+
     active_threads_.clear();
     
-    // Log thread system startup
-    StartupLogger::log_thread_system_startup(TimingConfig{}); // You might want to pass actual timing config
+    StartupLogs::log_thread_system_startup(TimingConfig{}); // You might want to pass actual timing config
     
-    // Start all threads
     for (const auto& thread_def : thread_definitions) {
         active_threads_.emplace_back(thread_def.thread_function);
         std::cout << "Started thread: " << thread_def.name << std::endl;
@@ -40,9 +38,9 @@ void Manager::shutdown_threads() {
     active_threads_.clear();
 }
 
-void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogger::ThreadInfo>& thread_infos, 
+void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadInfo>& thread_infos, 
                                         const std::chrono::steady_clock::time_point& start_time) {
-    ThreadLogger::log_thread_monitoring_stats(thread_infos, start_time);
+    ThreadLogs::log_thread_monitoring_stats(thread_infos, start_time);
 }
 
 void Manager::setup_thread_priorities(const std::vector<ThreadDefinition>& thread_definitions, const SystemConfig& config) {
@@ -54,81 +52,33 @@ void Manager::setup_thread_priorities(const std::vector<ThreadDefinition>& threa
     for (const auto& thread_def : thread_definitions) {
         configure_single_thread(thread_def, config);
     }
-    StartupLogger::log_thread_system_complete();
+    StartupLogs::log_thread_system_complete();
 }
 
-std::vector<ThreadLogger::ThreadInfo> Manager::create_thread_info_vector(const std::vector<ThreadDefinition>& thread_definitions) {
-    std::vector<ThreadLogger::ThreadInfo> thread_infos;
+std::vector<ThreadLogs::ThreadInfo> Manager::create_thread_info_vector(const std::vector<ThreadDefinition>& thread_definitions) {
+    std::vector<ThreadLogs::ThreadInfo> thread_infos;
     for (const auto& thread_def : thread_definitions) {
         thread_infos.emplace_back(thread_def.name, thread_def.iteration_counter);
     }
     return thread_infos;
 }
 
-std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogger::ThreadInfo>> Manager::create_thread_configurations(SystemThreads& handles, TradingSystemModules& modules) {
-    // Create thread configuration list
-    auto thread_configs = create_thread_config_list(handles, modules);
+std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogs::ThreadInfo>> Manager::create_thread_configurations(SystemThreads& handles, TradingSystemModules& modules) {
+
+    auto thread_configs = SystemManager::create_thread_config_list(handles, modules);
     
-    // Build thread objects from configuration
     return build_thread_objects(thread_configs);
 }
 
-std::vector<AlpacaTrader::Config::ThreadManagerConfig> Manager::create_thread_config_list(SystemThreads& handles, TradingSystemModules& modules) {
-    std::vector<AlpacaTrader::Config::ThreadManagerConfig> configs;
-    configs.reserve(5);
-    
-    // Market data processing thread
-    configs.emplace_back(
-        "Market Thread",
-        [&modules]() { (*modules.market_data_thread)(); },
-        handles.market_iterations,
-        AlpacaTrader::Config::Type::MARKET_DATA
-    );
-    
-    // Account data processing thread
-    configs.emplace_back(
-        "Account Thread",
-        [&modules]() { (*modules.account_data_thread)(); },
-        handles.account_iterations,
-        AlpacaTrader::Config::Type::ACCOUNT_DATA
-    );
-    
-    // Market gate control thread
-    configs.emplace_back(
-        "Gate Thread",
-        [&modules]() { (*modules.market_gate_thread)(); },
-        handles.gate_iterations,
-        AlpacaTrader::Config::Type::MARKET_GATE
-    );
-    
-    // Main trading logic thread
-    configs.emplace_back(
-        "Trader Thread",
-        [&modules]() { (*modules.trading_thread)(); },
-        handles.trader_iterations,
-        AlpacaTrader::Config::Type::TRADER_DECISION
-    );
-    
-    // Logging system thread
-    configs.emplace_back(
-        "Logger Thread",
-        [&modules]() { (*modules.logging_thread)(); },
-        handles.logger_iterations,
-        AlpacaTrader::Config::Type::LOGGING
-    );
-    
-    return configs;
-}
 
-std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogger::ThreadInfo>> 
+std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogs::ThreadInfo>> 
 Manager::build_thread_objects(const std::vector<AlpacaTrader::Config::ThreadManagerConfig>& configs) {
     std::vector<ThreadDefinition> thread_definitions;
-    std::vector<ThreadLogger::ThreadInfo> thread_infos;
+    std::vector<ThreadLogs::ThreadInfo> thread_infos;
     
     thread_definitions.reserve(configs.size());
     thread_infos.reserve(configs.size());
     
-    // Generate both thread definitions and thread infos from the same configuration
     for (const auto& config : configs) {
         thread_definitions.emplace_back(
             config.name, 
@@ -149,8 +99,7 @@ Manager::build_thread_objects(const std::vector<AlpacaTrader::Config::ThreadMana
 void Manager::configure_single_thread(const ThreadDefinition& thread_def, const SystemConfig& config) {
     // Early return if no active threads available
     if (active_threads_.empty()) {
-        log_message("Thread " + thread_def.name + " configuration skipped - no active threads", 
-                   config.logging.log_file);
+        ThreadLogs::log_thread_configuration_skipped(thread_def.name, "no active threads");
         thread_status_data.emplace_back(thread_def.name, "NORMAL", false);
         return;
     }
@@ -197,33 +146,10 @@ bool Manager::apply_thread_configuration(const ThreadDefinition& thread_def,
     bool success = ThreadControl::set_priority_with_fallback(active_threads_.back(), platform_config) >= platform_config.priority;
     
     // Log configuration result
-    log_configuration_result(thread_def, platform_config, success, config);
+    ThreadLogs::log_configuration_result(thread_def.name, platform_config, success);
     
     return success;
 }
 
-void Manager::log_configuration_result(const ThreadDefinition& thread_def,
-                                     const AlpacaTrader::Config::ThreadConfig& platform_config,
-                                     bool success,
-                                     const SystemConfig& config) {
-    if (success) {
-        if (platform_config.cpu_affinity >= 0) {
-            log_message("Thread " + thread_def.name + " configured for CPU core " + 
-                       std::to_string(platform_config.cpu_affinity) + " with priority NORMAL", 
-                       config.logging.log_file);
-        } else {
-            log_message("Thread " + thread_def.name + " configured with priority NORMAL", 
-                       config.logging.log_file);
-        }
-    } else {
-        if (platform_config.cpu_affinity >= 0) {
-            log_message("Thread " + thread_def.name + " CPU affinity configuration failed, using fallback priority", 
-                       config.logging.log_file);
-        } else {
-            log_message("Thread " + thread_def.name + " priority configuration failed", 
-                       config.logging.log_file);
-        }
-    }
-}
 
 } // namespace ThreadSystem

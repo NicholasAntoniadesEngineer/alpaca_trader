@@ -1,8 +1,7 @@
-#include "logging/trading_logger.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/trading_logs.hpp"
+#include "logging/startup_logs.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
-#include "configs/system_config.hpp"
 #include <iomanip>
 #include <sstream>
 #include <climits>
@@ -11,25 +10,24 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-// Using declarations for cleaner code
 using AlpacaTrader::Core::AccountManager;
 using AlpacaTrader::Core::ProcessedData;
 using AlpacaTrader::Core::StrategyLogic::SignalDecision;
 using AlpacaTrader::Core::StrategyLogic::FilterResult;
 
-std::string TradingLogger::format_currency(double amount) {
+std::string TradingLogs::format_currency(double amount) {
     std::ostringstream oss;
     oss << "$" << std::fixed << std::setprecision(2) << amount;
     return oss.str();
 }
 
-std::string TradingLogger::format_percentage(double percentage) {
+std::string TradingLogs::format_percentage(double percentage) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3) << percentage << "%";
     return oss.str();
 }
 
-void TradingLogger::log_startup(const TraderConfig& config, double initial_equity) {
+void TradingLogs::log_startup(const TraderConfig& config, double initial_equity) {
     log_trader_startup_table(
         config.target.symbol,
         initial_equity,
@@ -39,7 +37,7 @@ void TradingLogger::log_startup(const TraderConfig& config, double initial_equit
     );
 }
 
-void TradingLogger::log_shutdown(unsigned long total_loops, double final_equity) {
+void TradingLogs::log_shutdown(unsigned long total_loops, double final_equity) {
     
     log_message("Trading session complete", "");
     log_message("Total loops executed: " + std::to_string(total_loops), "");
@@ -47,7 +45,7 @@ void TradingLogger::log_shutdown(unsigned long total_loops, double final_equity)
 }
 
 
-void TradingLogger::log_market_status(bool is_open, const std::string& reason) {
+void TradingLogs::log_market_status(bool is_open, const std::string& reason) {
     if (is_open) {
         log_message("Market is OPEN - trading allowed", "");
     } else {
@@ -59,12 +57,12 @@ void TradingLogger::log_market_status(bool is_open, const std::string& reason) {
     }
 }
 
-void TradingLogger::log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const TraderConfig& config) {
+void TradingLogs::log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const TraderConfig& config) {
     LOG_THREAD_TRADING_CONDITIONS_HEADER();
     log_trading_conditions_table(daily_pnl * 100.0, config.risk.daily_max_loss * 100.0, config.risk.daily_profit_target * 100.0, exposure_pct, config.risk.max_exposure_pct, allowed);
 }
 
-void TradingLogger::log_equity_update(double current_equity) {
+void TradingLogs::log_equity_update(double current_equity) {
     LOG_THREAD_SECTION_HEADER("EQUITY UPDATE");
     std::ostringstream oss;
     oss << "Current Equity: " << format_currency(current_equity) << " (acct poll=5s)";
@@ -72,7 +70,7 @@ void TradingLogger::log_equity_update(double current_equity) {
     LOG_THREAD_SECTION_FOOTER();
 }
 
-void TradingLogger::log_market_data_status(bool has_data, size_t data_points) {
+void TradingLogs::log_market_data_status(bool has_data, size_t data_points) {
     
     if (has_data) {
         log_message("Market data available (" + std::to_string(data_points) + " points)", "");
@@ -81,33 +79,33 @@ void TradingLogger::log_market_data_status(bool has_data, size_t data_points) {
     }
 }
 
-void TradingLogger::log_signal_triggered(const std::string& signal_type, bool triggered) {
+void TradingLogs::log_signal_triggered(const std::string& signal_type, bool triggered) {
     std::ostringstream oss;
     oss << signal_type << " signal " << (triggered ? "TRIGGERED" : "not triggered");
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_filters_passed() {
+void TradingLogs::log_filters_passed() {
     log_message("All filters passed - trade allowed", "");
 }
 
-void TradingLogger::log_position_closure(const std::string& reason, int quantity) {
+void TradingLogs::log_position_closure(const std::string& reason, int quantity) {
     std::ostringstream oss;
     oss << "Position closure: " << reason << " (" << quantity << " shares)";
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_position_limits_reached(const std::string& side) {
+void TradingLogs::log_position_limits_reached(const std::string& side) {
     std::ostringstream oss;
     oss << "Position limits reached for " << side << " - trade blocked";
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_no_trading_pattern() {
+void TradingLogs::log_no_trading_pattern() {
     log_message("No valid trading pattern detected - no action taken", "");
 }
 
-void TradingLogger::log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit) {
+void TradingLogs::log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit) {
     
     std::ostringstream oss;
     oss << side << " order intent - Entry: " << format_currency(entry_price)
@@ -117,7 +115,7 @@ void TradingLogger::log_order_intent(const std::string& side, double entry_price
     log_message("ORDER", oss.str());
 }
 
-void TradingLogger::log_order_result(const std::string& order_id, bool success, const std::string& reason) {
+void TradingLogs::log_order_result(const std::string& order_id, bool success, const std::string& reason) {
     
     std::ostringstream oss;
     oss << "Order " << order_id << " - " << (success ? "SUCCESS" : "FAILED");
@@ -133,20 +131,20 @@ void TradingLogger::log_order_result(const std::string& order_id, bool success, 
 }
 
 
-void TradingLogger::log_market_close_warning(int minutes_until_close) {
+void TradingLogs::log_market_close_warning(int minutes_until_close) {
     LOG_THREAD_SECTION_HEADER("MARKET CLOSE WARNING");
     std::ostringstream oss;
     oss << "Market closing in " << minutes_until_close << " minutes - preparing to close positions";
     log_message("MARKET_CLOSE", oss.str());
 }
 
-void TradingLogger::log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side) {
+void TradingLogs::log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side) {
     std::ostringstream oss;
     oss << "Closing position for market close: " << side << " " << std::abs(quantity) << " shares of " << symbol;
     log_message("MARKET_CLOSE", oss.str());
 }
 
-void TradingLogger::log_market_close_complete() {
+void TradingLogs::log_market_close_complete() {
     log_message("MARKET_CLOSE", "All positions closed for market close - trading halted until next session");
     LOG_THREAD_SEPARATOR();
 }
@@ -154,45 +152,45 @@ void TradingLogger::log_market_close_complete() {
 
 // Detailed trading analysis logging
 
-void TradingLogger::log_loop_header(unsigned long loop_number, const std::string& symbol) {
+void TradingLogs::log_loop_header(unsigned long loop_number, const std::string& symbol) {
     LOG_TRADING_LOOP_HEADER(loop_number, symbol);
 }
 
 
-void TradingLogger::log_candle_and_signals(const ProcessedData& data, const SignalDecision& signals) {
+void TradingLogs::log_candle_and_signals(const ProcessedData& data, const SignalDecision& signals) {
     log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
     log_signals_table(signals.buy, signals.sell);
 }
 
-void TradingLogger::log_filters(const FilterResult& filters, const TraderConfig& config) {
+void TradingLogs::log_filters(const FilterResult& filters, const TraderConfig& config) {
     log_filters_table(filters.atr_pass, filters.atr_ratio, config.strategy.atr_multiplier_entry, 
                      filters.vol_pass, filters.vol_ratio, config.strategy.volume_multiplier, 
                      filters.doji_pass);
 }
 
-void TradingLogger::log_summary(const ProcessedData& data, const SignalDecision& signals, const FilterResult& filters, const std::string& symbol) {
+void TradingLogs::log_summary(const ProcessedData& data, const SignalDecision& signals, const FilterResult& filters, const std::string& symbol) {
     std::string display_symbol = symbol.empty() ? "SPY" : symbol;
     log_decision_summary_table(display_symbol, data.curr.c, signals.buy, signals.sell, 
                               filters.atr_pass, filters.vol_pass, filters.doji_pass, 
                               data.exposure_pct, filters.atr_ratio, filters.vol_ratio);
 }
 
-void TradingLogger::log_signal_analysis_start(const std::string& symbol) {
+void TradingLogs::log_signal_analysis_start(const std::string& symbol) {
     LOG_THREAD_SIGNAL_ANALYSIS_HEADER(symbol);
     LOG_THREAD_SEPARATOR();
 }
 
-void TradingLogger::log_signal_analysis_complete() {
+void TradingLogs::log_signal_analysis_complete() {
     LOG_THREAD_SEPARATOR();
     LOG_SIGNAL_ANALYSIS_COMPLETE();
     log_message("", "");
 }
 
-void TradingLogger::log_filters_not_met_preview(double risk_amount, int quantity) {
+void TradingLogs::log_filters_not_met_preview(double risk_amount, int quantity) {
     log_filters_not_met_table(risk_amount, quantity);
 }
 
-void TradingLogger::log_filters_not_met_table(double risk_amount, int quantity) {
+void TradingLogs::log_filters_not_met_table(double risk_amount, int quantity) {
     TABLE_HEADER_48("Filters Failed", "Trade Skipped - Position Preview");
     
     TABLE_ROW_48("Risk Amount", format_currency(risk_amount) + "/share");
@@ -205,22 +203,22 @@ void TradingLogger::log_filters_not_met_table(double risk_amount, int quantity) 
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_position_size(double risk_amount, int quantity) {
+void TradingLogs::log_position_size(double risk_amount, int quantity) {
     std::ostringstream oss;
     oss << "Position sizing - Risk: " << format_currency(risk_amount) << " | Qty: " << quantity;
     log_message(oss.str(), "");
 }
 
-void TradingLogger::log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price) {
+void TradingLogs::log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price) {
     LOG_THREAD_POSITION_SIZING_HEADER();
     log_position_sizing_table(risk_amount, quantity, buying_power, current_price);
 }
 
-void TradingLogger::log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
+void TradingLogs::log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
     log_sizing_analysis_table(risk_based_qty, exposure_based_qty, max_value_qty, buying_power_qty, final_qty);
 }
 
-void TradingLogger::log_current_position(int quantity, const std::string& symbol) {
+void TradingLogs::log_current_position(int quantity, const std::string& symbol) {
     LOG_THREAD_CURRENT_POSITION_HEADER();
     std::ostringstream oss;
     if (quantity == 0) {
@@ -238,7 +236,7 @@ void TradingLogger::log_current_position(int quantity, const std::string& symbol
 // Enhanced Tabulated Logging Functions
 // ========================================================================
 
-void TradingLogger::log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price) {
+void TradingLogs::log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price) {
     double position_value = quantity * current_price;
     
     TABLE_HEADER_30("Parameter", "Value");
@@ -250,7 +248,7 @@ void TradingLogger::log_position_sizing_table(double risk_amount, int quantity, 
     log_message("", "");
 }
 
-void TradingLogger::log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
+void TradingLogs::log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
     TABLE_HEADER_30("Sizing Analysis", "Calculated Quantities");
     
     TABLE_ROW_30("Risk-Based", std::to_string(risk_based_qty) + " shares");
@@ -281,7 +279,7 @@ void TradingLogger::log_sizing_analysis_table(int risk_based_qty, int exposure_b
     TABLE_FOOTER_30();
 }
 
-void TradingLogger::log_exit_targets_table(const std::string& side, double price, double risk, double rr, double stop_loss, double take_profit) {
+void TradingLogs::log_exit_targets_table(const std::string& side, double price, double risk, double rr, double stop_loss, double take_profit) {
     TABLE_HEADER_30("Exit Targets", "Calculated Prices");
     
     TABLE_ROW_30("Order Side", side);
@@ -297,7 +295,7 @@ void TradingLogger::log_exit_targets_table(const std::string& side, double price
     TABLE_FOOTER_30();
 }
 
-void TradingLogger::log_order_result_table(const std::string& operation, const std::string& response) {
+void TradingLogs::log_order_result_table(const std::string& operation, const std::string& response) {
     TABLE_HEADER_48("Order Result", "Execution Status");
     
     // Parse operation for multiline display
@@ -373,7 +371,7 @@ void TradingLogger::log_order_result_table(const std::string& operation, const s
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_data_source_info_table(const std::string& source, double price, const std::string& status) {
+void TradingLogs::log_data_source_info_table(const std::string& source, double price, const std::string& status) {
     TABLE_HEADER_48("Data Source", "Market Information");
     TABLE_ROW_48("Feed", source);
     TABLE_ROW_48("Price", format_currency(price));
@@ -385,15 +383,15 @@ void TradingLogger::log_data_source_info_table(const std::string& source, double
 // Market Data Fetching Tables
 // ========================================================================
 
-void TradingLogger::log_market_data_fetch_table(const std::string& /* symbol */) {
+void TradingLogs::log_market_data_fetch_table(const std::string& /* symbol */) {
     // No initial table needed - just show the result when done
 }
 
-void TradingLogger::log_market_data_attempt_table(const std::string& /* description */) {
+void TradingLogs::log_market_data_attempt_table(const std::string& /* description */) {
     // Simplified - no separate attempt logging
 }
 
-void TradingLogger::log_market_data_result_table(const std::string& description, bool success, size_t bar_count) {
+void TradingLogs::log_market_data_result_table(const std::string& description, bool success, size_t bar_count) {
     if (success) {
         TABLE_HEADER_48("Market Data", "Connection Result");
         TABLE_ROW_48("Source", description);
@@ -407,7 +405,7 @@ void TradingLogger::log_market_data_result_table(const std::string& description,
 // System Startup and Status Tables
 // ========================================================================
 
-void TradingLogger::log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval) {
+void TradingLogs::log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval) {
     TABLE_HEADER_48("Trading Overview", "Current Session");
     
     TABLE_ROW_48("Trading Symbol", symbol);
@@ -425,7 +423,7 @@ void TradingLogger::log_trader_startup_table(const std::string& symbol, double i
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_account_overview_table(const std::string& account_number, const std::string& status, const std::string& currency, bool pattern_day_trader, const std::string& created_date) {
+void TradingLogs::log_account_overview_table(const std::string& account_number, const std::string& status, const std::string& currency, bool pattern_day_trader, const std::string& created_date) {
     TABLE_HEADER_48("Account Overview", "Details");
     
     TABLE_ROW_48("Account Number", account_number);
@@ -439,7 +437,7 @@ void TradingLogger::log_account_overview_table(const std::string& account_number
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_financial_summary_table(double equity, double last_equity, double cash, double buying_power, double long_market_value, double short_market_value, double initial_margin, double maintenance_margin, double sma, int day_trade_count, double regt_buying_power, double day_trading_buying_power) {
+void TradingLogs::log_financial_summary_table(double equity, double last_equity, double cash, double buying_power, double long_market_value, double short_market_value, double initial_margin, double maintenance_margin, double sma, int day_trade_count, double regt_buying_power, double day_trading_buying_power) {
     TABLE_HEADER_48("Financial Summary", "Account Values");
     
     TABLE_ROW_48("Equity", format_currency(equity));
@@ -458,7 +456,7 @@ void TradingLogger::log_financial_summary_table(double equity, double last_equit
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_current_positions_table(int quantity, double current_value, double unrealized_pnl, double exposure_pct, int open_orders) {
+void TradingLogs::log_current_positions_table(int quantity, double current_value, double unrealized_pnl, double exposure_pct, int open_orders) {
     TABLE_HEADER_48("Current Position", "Portfolio Status");
     
     std::string position_display;
@@ -480,7 +478,7 @@ void TradingLogger::log_current_positions_table(int quantity, double current_val
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_data_source_table(const std::string& symbol, const std::string& account_type) {
+void TradingLogs::log_data_source_table(const std::string& symbol, const std::string& account_type) {
     TABLE_HEADER_48("Data Sources", "Feed Configuration");
     
     TABLE_ROW_48("Historical Bars", "IEX Feed (15-min delayed)");
@@ -492,7 +490,7 @@ void TradingLogger::log_data_source_table(const std::string& symbol, const std::
 }
 
 
-void TradingLogger::log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled) {
+void TradingLogs::log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled) {
     TABLE_HEADER_48("Thread System", "Performance Settings");
     
     std::string priorities_display = priorities_enabled ? "ENABLED" : "DISABLED";
@@ -504,7 +502,7 @@ void TradingLogger::log_thread_system_table(bool priorities_enabled, bool cpu_af
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses) {
+void TradingLogs::log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses) {
     TABLE_HEADER_48("Thread Priorities", "Status");
     
     if (thread_statuses.empty()) {
@@ -528,7 +526,7 @@ void TradingLogger::log_thread_priorities_table(const std::vector<std::tuple<std
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_runtime_config_table(const SystemConfig& config) {
+void TradingLogs::log_runtime_config_table(const SystemConfig& config) {
     TABLE_HEADER_48("Runtime Config", "System Settings");
     
     // API Configuration
@@ -559,7 +557,7 @@ void TradingLogger::log_runtime_config_table(const SystemConfig& config) {
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_strategy_config_table(const SystemConfig& config) {
+void TradingLogs::log_strategy_config_table(const SystemConfig& config) {
     TABLE_HEADER_48("Strategy Config", "Trading Strategy Settings");
     
     // Signal Detection
@@ -609,7 +607,7 @@ void TradingLogger::log_strategy_config_table(const SystemConfig& config) {
 // Trading Decision Tables
 // ========================================================================
 
-void TradingLogger::log_trading_conditions_table(double daily_pnl_pct, double daily_loss_limit, double daily_profit_target, double exposure_pct, double max_exposure_pct, bool conditions_met) {
+void TradingLogs::log_trading_conditions_table(double daily_pnl_pct, double daily_loss_limit, double daily_profit_target, double exposure_pct, double max_exposure_pct, bool conditions_met) {
     TABLE_HEADER_48("Trading Conditions", "Current Values");
     
     std::ostringstream pnl_oss;
@@ -630,7 +628,7 @@ void TradingLogger::log_trading_conditions_table(double daily_pnl_pct, double da
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_candle_data_table(double open, double high, double low, double close) {
+void TradingLogs::log_candle_data_table(double open, double high, double low, double close) {
     TABLE_HEADER_48("Candle Data", "OHLC Values");
     TABLE_ROW_48("Open", format_currency(open));
     TABLE_ROW_48("High", format_currency(high));
@@ -639,14 +637,14 @@ void TradingLogger::log_candle_data_table(double open, double high, double low, 
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_signals_table(bool buy_signal, bool sell_signal) {
+void TradingLogs::log_signals_table(bool buy_signal, bool sell_signal) {
     TABLE_HEADER_48("Signal Analysis", "Detection Results");
     TABLE_ROW_48("BUY Signal", (buy_signal ? "YES" : "NO"));
     TABLE_ROW_48("SELL Signal", (sell_signal ? "YES" : "NO"));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_filters_table(bool atr_pass, double atr_ratio, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass) {
+void TradingLogs::log_filters_table(bool atr_pass, double atr_ratio, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass) {
     TABLE_HEADER_48("Filter Analysis", "Validation Results");
     
     std::string atr_status = atr_pass ? "PASS" : "FAIL";
@@ -665,7 +663,7 @@ void TradingLogger::log_filters_table(bool atr_pass, double atr_ratio, double at
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_decision_summary_table(const std::string& symbol, double price, bool buy_signal, bool sell_signal, bool atr_pass, bool volume_pass, bool doji_pass, double exposure_pct, double atr_ratio, double volume_ratio) {
+void TradingLogs::log_decision_summary_table(const std::string& symbol, double price, bool buy_signal, bool sell_signal, bool atr_pass, bool volume_pass, bool doji_pass, double exposure_pct, double atr_ratio, double volume_ratio) {
     TABLE_HEADER_48("Decision Summary", "Trading Analysis Results");
     
     std::string price_display = symbol + " @ " + format_currency(price);
@@ -687,7 +685,7 @@ void TradingLogger::log_decision_summary_table(const std::string& symbol, double
 }
 
 // Order cancellation logging methods
-void TradingLogger::log_cancellation_start(const std::string& strategy, const std::string& signal_side) {
+void TradingLogs::log_cancellation_start(const std::string& strategy, const std::string& signal_side) {
     TABLE_HEADER_48("ORDER CANCELLATION", strategy + " strategy");
     if (!signal_side.empty()) {
         TABLE_ROW_48("Signal", signal_side);
@@ -695,57 +693,57 @@ void TradingLogger::log_cancellation_start(const std::string& strategy, const st
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_orders_found(int count, const std::string& symbol) {
+void TradingLogs::log_orders_found(int count, const std::string& symbol) {
     TABLE_HEADER_48("ORDERS FOUND", symbol);
     TABLE_ROW_48("Count", std::to_string(count));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_orders_filtered(int count, const std::string& reason) {
+void TradingLogs::log_orders_filtered(int count, const std::string& reason) {
     TABLE_HEADER_48("ORDERS FILTERED", reason);
     TABLE_ROW_48("Selected", std::to_string(count));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_cancellation_complete(int cancelled_count, const std::string& symbol) {
+void TradingLogs::log_cancellation_complete(int cancelled_count, const std::string& symbol) {
     TABLE_HEADER_48("CANCELLATION COMPLETE", symbol);
     TABLE_ROW_48("Cancelled", std::to_string(cancelled_count));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_no_orders_to_cancel() {
+void TradingLogs::log_no_orders_to_cancel() {
     TABLE_HEADER_48("NO ORDERS TO CANCEL", "Current strategy");
     TABLE_ROW_48("Status", "No orders found");
     TABLE_FOOTER_48();
 }
 
 // Position management logging methods
-void TradingLogger::log_position_closure_start(int quantity) {
+void TradingLogs::log_position_closure_start(int quantity) {
     TABLE_HEADER_48("POSITION CLOSURE", "Starting process");
     TABLE_ROW_48("Quantity", std::to_string(quantity));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_fresh_position_data(int quantity) {
+void TradingLogs::log_fresh_position_data(int quantity) {
     TABLE_HEADER_48("FRESH POSITION DATA", "Current quantity");
     TABLE_ROW_48("Quantity", std::to_string(quantity));
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_position_already_closed() {
+void TradingLogs::log_position_already_closed() {
     TABLE_HEADER_48("POSITION ALREADY CLOSED", "No action needed");
     TABLE_ROW_48("Status", "Position closed");
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_closure_order_submitted(const std::string& side, int quantity) {
+void TradingLogs::log_closure_order_submitted(const std::string& side, int quantity) {
     TABLE_HEADER_48("CLOSURE ORDER SUBMITTED", side + " order");
     TABLE_ROW_48("Quantity", std::to_string(quantity));
     TABLE_ROW_48("Side", side);
     TABLE_FOOTER_48();
 }
 
-void TradingLogger::log_position_verification(int final_quantity) {
+void TradingLogs::log_position_verification(int final_quantity) {
     if (final_quantity == 0) {
         TABLE_HEADER_48("POSITION VERIFICATION", "Success");
         TABLE_ROW_48("Status", "Position closed");
@@ -759,80 +757,80 @@ void TradingLogger::log_position_verification(int final_quantity) {
 }
 
 // Debug and validation logging
-void TradingLogger::log_trade_validation_failed(const std::string& reason) {
+void TradingLogs::log_trade_validation_failed(const std::string& reason) {
     log_message("Trade validation failed - " + reason, "");
 }
 
-void TradingLogger::log_position_sizing_skipped(const std::string& reason) {
+void TradingLogs::log_position_sizing_skipped(const std::string& reason) {
     log_message("Position sizing resulted in " + reason + ", skipping trade", "");
 }
 
-void TradingLogger::log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short) {
+void TradingLogs::log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short) {
     log_message("DEBUG: execute_trade - current_qty=" + std::to_string(current_qty), "");
     log_message("DEBUG: execute_trade - position value=" + std::to_string(position_value), "");
     log_message("DEBUG: execute_trade - position qty=" + std::to_string(position_qty), "");
     log_message("DEBUG: execute_trade - is_long=" + std::to_string(is_long) + ", is_short=" + std::to_string(is_short), "");
 }
 
-void TradingLogger::log_debug_fresh_data_fetch(const std::string& position_type) {
+void TradingLogs::log_debug_fresh_data_fetch(const std::string& position_type) {
     log_message("Forcing fresh account data fetch before closing " + position_type + " position", "");
 }
 
-void TradingLogger::log_debug_fresh_position_data(int fresh_qty, int current_qty) {
+void TradingLogs::log_debug_fresh_position_data(int fresh_qty, int current_qty) {
     log_message("Fresh position data: " + std::to_string(fresh_qty) + " (was: " + std::to_string(current_qty) + ")", "");
 }
 
-void TradingLogger::log_debug_account_details(int qty, double current_value) {
+void TradingLogs::log_debug_account_details(int qty, double current_value) {
     log_message("DEBUG: Fresh account details - qty=" + std::to_string(qty) + ", current_value=" + std::to_string(current_value), "");
 }
 
-void TradingLogger::log_debug_position_closure_attempt(int qty) {
+void TradingLogs::log_debug_position_closure_attempt(int qty) {
     log_message("Attempting to close fresh position: " + std::to_string(qty), "");
 }
 
-void TradingLogger::log_debug_position_closure_attempted() {
+void TradingLogs::log_debug_position_closure_attempted() {
     log_message("Position closure attempted, waiting for settlement", "");
 }
 
-void TradingLogger::log_debug_position_verification(int verify_qty) {
+void TradingLogs::log_debug_position_verification(int verify_qty) {
     log_message("Position verification: " + std::to_string(verify_qty), "");
 }
 
-void TradingLogger::log_debug_position_still_exists(const std::string& side) {
+void TradingLogs::log_debug_position_still_exists(const std::string& side) {
     log_message("Position still exists after closure attempt, skipping " + side + " order", "");
 }
 
-void TradingLogger::log_debug_no_position_found(const std::string& side) {
+void TradingLogs::log_debug_no_position_found(const std::string& side) {
     log_message("No " + side + " position found in fresh data, proceeding with " + side, "");
 }
 
-void TradingLogger::log_debug_trading_halt() {
+void TradingLogs::log_debug_trading_halt() {
     log_message("DEBUG: Trading halted - calling handle_trading_halt()", "");
 }
 
-void TradingLogger::log_debug_trading_loop_stopped() {
+void TradingLogs::log_debug_trading_loop_stopped() {
     log_message("Trading loop stopped - shared.running is false", "");
 }
 
-void TradingLogger::log_debug_skipping_trading_cycle() {
+void TradingLogs::log_debug_skipping_trading_cycle() {
     log_message("Skipping trading cycle - no fresh market data available", "");
 }
 
 // Inline status and countdown logging
-void TradingLogger::log_inline_halt_status(int seconds) {
+void TradingLogs::log_inline_halt_status(int seconds) {
     log_inline_status(get_formatted_inline_message("|   TRADING HALTED - Next check in " + std::to_string(seconds) + "s"));
 }
 
-void TradingLogger::log_inline_next_loop(int seconds) {
+void TradingLogs::log_inline_next_loop(int seconds) {
     log_inline_status("   ⏳ Next loop in " + std::to_string(seconds) + "s   ");
 }
 
-void TradingLogger::end_inline_status() {
+void TradingLogs::end_inline_status() {
     AlpacaTrader::Logging::end_inline_status();
 }
 
 // Order execution header
-void TradingLogger::log_order_execution_header() {
+void TradingLogs::log_order_execution_header() {
     LOG_THREAD_ORDER_EXECUTION_HEADER();
 }
 

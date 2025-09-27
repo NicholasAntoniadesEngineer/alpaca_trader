@@ -4,7 +4,7 @@
  */
 #include "threads/market_data_thread.hpp"
 #include "logging/async_logger.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/startup_logs.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "core/market_processing.hpp"
 #include "utils/connectivity_manager.hpp"
@@ -39,7 +39,6 @@ void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
         
         fetch_and_process_market_data();
         
-        // Increment iteration counter for monitoring
         if (iteration_counter) {
             iteration_counter->fetch_add(1);
         }

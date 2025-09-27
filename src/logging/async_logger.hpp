@@ -7,6 +7,10 @@
 #include <queue>
 #include <atomic>
 #include <thread>
+#include <memory>
+
+// Forward declaration
+struct SystemConfig;
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -58,6 +62,9 @@ std::string generate_timestamped_log_filename(const std::string& base_filename);
 // Global lifecycle helpers
 void initialize_global_logger(AsyncLogger& logger);
 void shutdown_global_logger(AsyncLogger& logger);
+
+// Application foundation initialization
+std::shared_ptr<AsyncLogger> initialize_application_foundation(const SystemConfig& config);
 
 } // namespace Logging
 } // namespace AlpacaTrader

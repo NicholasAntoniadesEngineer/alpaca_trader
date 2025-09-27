@@ -15,11 +15,6 @@ namespace AlpacaTrader {
 namespace Threads {
 
 class LoggingThread {
-private:
-    std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger_ptr;
-    std::atomic<unsigned long>& logger_iterations;
-    const SystemConfig& config;
-
 public:
     LoggingThread(std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger,
                   std::atomic<unsigned long>& iterations,
@@ -29,7 +24,10 @@ public:
     void operator()();
 
 private:
-    // Main business logic methods
+    std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger_ptr;
+    std::atomic<unsigned long>& logger_iterations;
+    const SystemConfig& config;
+    
     void setup_logging_thread();
     void logging_loop();
     void process_logging_queue(std::ofstream& log_file);

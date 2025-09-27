@@ -29,13 +29,13 @@ SOURCES = src/main.cpp \
   src/configs/config_loader.cpp \
   src/core/account_manager.cpp \
   src/utils/time_utils.cpp \
-  src/logging/account_logger.cpp \
+  src/logging/account_logs.cpp \
   src/utils/http_utils.cpp \
   src/core/indicators.cpp \
   src/logging/async_logger.cpp \
-  src/logging/trading_logger.cpp \
-  src/logging/thread_logger.cpp \
-  src/logging/startup_logger.cpp \
+  src/logging/trading_logs.cpp \
+  src/logging/thread_logs.cpp \
+  src/logging/startup_logs.cpp \
   src/configs/thread_config.cpp \
   src/threads/platform/thread_control.cpp \
   src/threads/platform/linux/linux_thread_control.cpp \

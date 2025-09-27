@@ -5,7 +5,7 @@
 #include "core/system_threads.hpp"
 #include "core/system_manager.hpp"
 #include "core/trading_system_modules.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/startup_logs.hpp"
 
 
 // =============================================================================
@@ -21,7 +21,7 @@ int main() {
     SystemState system_state(initial_config);
     
     // Initialize application foundation (logging, validation)
-    auto logger = StartupLogger::initialize_application_foundation(system_state.config);
+    auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
     
     // Start the complete trading system
     SystemThreads thread_handles = SystemManager::startup(system_state, logger);

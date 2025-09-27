@@ -2,6 +2,8 @@
  * Asynchronous logging system for high-performance trading operations.
  */
 #include "logging/async_logger.hpp"
+#include "configs/system_config.hpp"
+#include "configs/config_loader.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "utils/time_utils.hpp"
 #include <iostream>
@@ -148,6 +150,28 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
         queue.push(formatted_line);
     }
     cv.notify_one();
+}
+
+std::shared_ptr<AsyncLogger> initialize_application_foundation(const SystemConfig& config) {
+    // Generate timestamped log filename
+    std::string timestamped_log_file = generate_timestamped_log_filename(config.logging.log_file);
+    
+    // Create logger instance
+    auto logger = std::make_shared<AsyncLogger>(timestamped_log_file);
+    
+    // Validate configuration
+    std::string cfg_error;
+    if (!validate_config(config, cfg_error)) {
+        // Log error using logging system
+        log_message("ERROR: Config error: " + cfg_error, "");
+        exit(1);
+    }
+    
+    // Initialize global logger (logger already created with timestamped filename)
+    initialize_global_logger(*logger);
+    set_log_thread_tag("MAIN  ");
+    
+    return logger;
 }
 
 } // namespace Logging

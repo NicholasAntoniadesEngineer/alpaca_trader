@@ -4,7 +4,7 @@
 #include "api/alpaca_client.hpp"
 #include "core/account_manager.hpp"
 #include "core/trader.hpp"
-#include "logging/account_logger.hpp"
+#include "logging/account_logs.hpp"
 #include "threads/market_data_thread.hpp"
 #include "threads/market_gate_thread.hpp"
 #include "threads/account_data_thread.hpp"
@@ -28,7 +28,7 @@ struct TradingSystemModules {
     // =========================================================================
     // LOGGING AND MONITORING
     // =========================================================================
-    std::unique_ptr<AlpacaTrader::Logging::AccountLogger> account_dashboard;  // Account status logging
+    std::unique_ptr<AlpacaTrader::Logging::AccountLogs> account_dashboard;  // Account status logging
     
     // =========================================================================
     // THREADING COMPONENTS

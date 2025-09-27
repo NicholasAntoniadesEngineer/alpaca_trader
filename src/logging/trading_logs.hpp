@@ -1,7 +1,8 @@
-#ifndef TRADING_LOGGER_HPP
-#define TRADING_LOGGER_HPP
+#ifndef TRADING_LOGS_HPP
+#define TRADING_LOGS_HPP
 
 #include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
 #include "core/data_structures.hpp"
 #include "core/strategy_logic.hpp"
 #include "logging_macros.hpp"
@@ -9,19 +10,14 @@
 #include <tuple>
 #include <string>
 
-// Forward declarations
-struct SystemConfig;
-
 namespace AlpacaTrader {
 namespace Logging {
-
-// Forward declarations
 
 /**
  * Specialized high-performance logging for trading operations.
  * Optimized for minimal latency in critical trading paths.
  */
-class TradingLogger {
+class TradingLogs {
 public:
     // Application lifecycle
     static void log_startup(const TraderConfig& config, double initial_equity);
@@ -144,4 +140,4 @@ private:
 } // namespace Logging
 } // namespace AlpacaTrader
 
-#endif // TRADING_LOGGER_HPP
+#endif // TRADING_LOGS_HPP

@@ -1,5 +1,5 @@
-#include "thread_logger.hpp"
-#include "startup_logger.hpp"
+#include "thread_logs.hpp"
+#include "startup_logs.hpp"
 #include "async_logger.hpp"
 #include "logging_macros.hpp"
 #include <sstream>
@@ -9,7 +9,7 @@
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
 
-std::string ThreadLogger::format_priority_status(const std::string& thread_name,
+std::string ThreadLogs::format_priority_status(const std::string& thread_name,
                                                 const std::string& priority,
                                                 bool success) {
     std::ostringstream oss;
@@ -17,20 +17,20 @@ std::string ThreadLogger::format_priority_status(const std::string& thread_name,
     return oss.str();
 }
 
-void ThreadLogger::log_system_startup(const TimingConfig& config) {
-    StartupLogger::log_thread_system_startup(config);
+void ThreadLogs::log_system_startup(const TimingConfig& config) {
+    StartupLogs::log_thread_system_startup(config);
 }
 
-void ThreadLogger::log_system_shutdown() {
+void ThreadLogs::log_system_shutdown() {
     log_message("THREADS", "Thread system shutdown complete");
 }
 
 
-void ThreadLogger::log_thread_stopped(const std::string& thread_name) {
+void ThreadLogs::log_thread_stopped(const std::string& thread_name) {
     log_message("THREAD", thread_name + " thread stopped");
 }
 
-void ThreadLogger::log_priority_assignment(const std::string& thread_name,
+void ThreadLogs::log_priority_assignment(const std::string& thread_name,
                                           const std::string& requested_priority,
                                           const std::string& actual_priority,
                                           bool success) {
@@ -41,7 +41,7 @@ void ThreadLogger::log_priority_assignment(const std::string& thread_name,
     }
 }
 
-void ThreadLogger::log_thread_performance(const std::string& thread_name,
+void ThreadLogs::log_thread_performance(const std::string& thread_name,
                                          unsigned long iterations,
                                          double cpu_usage) {
     
@@ -55,7 +55,7 @@ void ThreadLogger::log_thread_performance(const std::string& thread_name,
     log_message("PERF", oss.str());
 }
 
-void ThreadLogger::log_thread_health(const std::string& thread_name, bool healthy, const std::string& details) {
+void ThreadLogs::log_thread_health(const std::string& thread_name, bool healthy, const std::string& details) {
     
     std::ostringstream oss;
     oss << thread_name << " health: " << (healthy ? "OK" : "ERROR");
@@ -70,7 +70,7 @@ void ThreadLogger::log_thread_health(const std::string& thread_name, bool health
     }
 }
 
-void ThreadLogger::log_system_performance_summary(unsigned long total_iterations) {
+void ThreadLogs::log_system_performance_summary(unsigned long total_iterations) {
     
     std::ostringstream oss;
     oss << "System performance summary - Total iterations: " << total_iterations;
@@ -79,7 +79,7 @@ void ThreadLogger::log_system_performance_summary(unsigned long total_iterations
 }
 
 
-void ThreadLogger::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thread_infos, 
+void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thread_infos, 
                                               const std::chrono::steady_clock::time_point& start_time) {
     // Calculate total runtime
     auto current_time = std::chrono::steady_clock::now();
@@ -117,4 +117,44 @@ void ThreadLogger::log_thread_monitoring_stats(const std::vector<ThreadInfo>& th
     TABLE_ROW_48("Performance Rate", rate_stream.str());
     
     TABLE_FOOTER_48();
+}
+
+// Thread configuration logging methods
+void ThreadLogs::log_thread_configuration_skipped(const std::string& thread_name, const std::string& reason) {
+    log_message("THREAD_CONFIG", "Thread " + thread_name + " configuration skipped - " + reason);
+}
+
+void ThreadLogs::log_thread_cpu_affinity_configured(const std::string& thread_name, int cpu_core) {
+    log_message("THREAD_CONFIG", "Thread " + thread_name + " configured for CPU core " + 
+               std::to_string(cpu_core) + " with priority NORMAL");
+}
+
+void ThreadLogs::log_thread_priority_configured(const std::string& thread_name) {
+    log_message("THREAD_CONFIG", "Thread " + thread_name + " configured with priority NORMAL");
+}
+
+void ThreadLogs::log_thread_cpu_affinity_failed(const std::string& thread_name) {
+    log_message("THREAD_CONFIG", "Thread " + thread_name + " CPU affinity configuration failed, using fallback priority");
+}
+
+void ThreadLogs::log_thread_priority_failed(const std::string& thread_name) {
+    log_message("THREAD_CONFIG", "Thread " + thread_name + " priority configuration failed");
+}
+
+void ThreadLogs::log_configuration_result(const std::string& thread_name, 
+                                          const AlpacaTrader::Config::ThreadConfig& platform_config, 
+                                          bool success) {
+    if (success) {
+        if (platform_config.cpu_affinity >= 0) {
+            log_thread_cpu_affinity_configured(thread_name, platform_config.cpu_affinity);
+        } else {
+            log_thread_priority_configured(thread_name);
+        }
+    } else {
+        if (platform_config.cpu_affinity >= 0) {
+            log_thread_cpu_affinity_failed(thread_name);
+        } else {
+            log_thread_priority_failed(thread_name);
+        }
+    }
 }

@@ -1,5 +1,5 @@
 // account_logger.cpp
-#include "logging/account_logger.hpp"
+#include "logging/account_logs.hpp"
 #include "logging/async_logger.hpp"
 #include <string>
 #include <iomanip>
@@ -8,10 +8,10 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-AccountLogger::AccountLogger(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr)
+AccountLogs::AccountLogs(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr)
     : logging(logging_cfg), account_manager(account_mgr) {}
 
-void AccountLogger::display_account_status() const {
+void AccountLogs::display_account_status() const {
     log_message("", logging.log_file);
     log_message("================================================================================", logging.log_file);
     log_message("                              ACCOUNT STATUS SUMMARY", logging.log_file);
@@ -25,7 +25,7 @@ void AccountLogger::display_account_status() const {
     log_message("", logging.log_file);
 }
 
-void AccountLogger::display_account_overview() const {
+void AccountLogs::display_account_overview() const {
     auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     log_message("+-- ACCOUNT OVERVIEW", logging.log_file);
@@ -55,7 +55,7 @@ void AccountLogger::display_account_overview() const {
     log_message("|", logging.log_file);
 }
 
-void AccountLogger::display_financial_summary() const {
+void AccountLogs::display_financial_summary() const {
     auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     log_message("+-- FINANCIAL SUMMARY", logging.log_file);
@@ -82,7 +82,7 @@ void AccountLogger::display_financial_summary() const {
     log_message("|", logging.log_file);
 }
 
-void AccountLogger::display_positions() const {
+void AccountLogs::display_positions() const {
     auto [account_info, snapshot] = account_manager.get_account_data_bundled();
     
     log_message("+-- CURRENT POSITIONS", logging.log_file);

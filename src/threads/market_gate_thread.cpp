@@ -4,7 +4,7 @@
  */
 #include "threads/market_gate_thread.hpp"
 #include "logging/async_logger.hpp"
-#include "logging/startup_logger.hpp"
+#include "logging/startup_logs.hpp"
 #include "threads/platform/thread_control.hpp"
 #include "utils/connectivity_manager.hpp"
 #include <chrono>

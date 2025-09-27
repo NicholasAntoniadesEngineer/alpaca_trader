@@ -1,6 +1,6 @@
 #include "api/market/market_data_client.hpp"
 #include "logging/async_logger.hpp"
-#include "logging/trading_logger.hpp"
+#include "logging/trading_logs.hpp"
 #include "logging/logging_macros.hpp"
 #include "utils/http_utils.hpp"
 #include "utils/time_utils.hpp"
@@ -17,13 +17,13 @@ namespace Market {
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
-using AlpacaTrader::Logging::TradingLogger;
+using AlpacaTrader::Logging::TradingLogs;
 
 std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest& req_bars) const {
     std::string start = TimeUtils::get_iso_time_minus_minutes(timing.bar_fetch_minutes);
     std::string end = TimeUtils::get_current_iso_time_with_z();
 
-    TradingLogger::log_market_data_fetch_table(req_bars.symbol);
+    TradingLogs::log_market_data_fetch_table(req_bars.symbol);
 
     std::vector<std::string> urls;
     urls.push_back(build_bars_url(req_bars.symbol, start, end, req_bars.limit, "iex"));
@@ -106,11 +106,11 @@ std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& 
 }
 
 void MarketDataClient::log_fetch_attempt(const std::string& /* symbol */, const std::string& description) const {
-    TradingLogger::log_market_data_attempt_table(description);
+    TradingLogs::log_market_data_attempt_table(description);
 }
 
 void MarketDataClient::log_fetch_result(const std::string& description, bool success, size_t bar_count) const {
-    TradingLogger::log_market_data_result_table(description, success, bar_count);
+    TradingLogs::log_market_data_result_table(description, success, bar_count);
 }
 
 void MarketDataClient::log_fetch_failure() const {
@@ -159,7 +159,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
             if (j.contains("quote") && j["quote"].contains("ap") && !j["quote"]["ap"].is_null()) {
                 double ask_price = j["quote"]["ap"].get<double>();
                 if (ask_price > 0) {
-                    TradingLogger::log_data_source_info_table("IEX FREE QUOTE (ASK)", ask_price, "LIMITED COVERAGE");
+                    TradingLogs::log_data_source_info_table("IEX FREE QUOTE (ASK)", ask_price, "LIMITED COVERAGE");
                     return ask_price;
                 }
             }
@@ -168,7 +168,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
         if (j.contains("quote") && j["quote"].contains("bp") && !j["quote"]["bp"].is_null()) {
             double bid_price = j["quote"]["bp"].get<double>();
             if (bid_price > 0) {
-                TradingLogger::log_data_source_info_table("IEX FREE QUOTE (BID)", bid_price, "LIMITED COVERAGE");
+                TradingLogs::log_data_source_info_table("IEX FREE QUOTE (BID)", bid_price, "LIMITED COVERAGE");
                 return bid_price;
             }
         }
