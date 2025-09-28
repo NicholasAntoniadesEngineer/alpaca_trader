@@ -11,6 +11,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <vector>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -69,9 +70,23 @@ private:
     // Data synchronization state (set by TradingOrchestrator)
     MarketDataSyncState* sync_state_ptr = nullptr;
     
+    // Cached market data for processing
+    std::vector<Bar> cached_bars;
+    
     // Data validation methods
     bool validate_sync_state_pointers(MarketDataSyncState& sync_state) const;
     void mark_data_as_consumed(MarketDataSyncState& sync_state) const;
+    
+    // Data fetching helper methods
+    bool fetch_and_validate_market_bars(ProcessedData& data);
+    bool compute_technical_indicators(ProcessedData& data);
+    void fetch_account_and_position_data(ProcessedData& data);
+    void log_position_data_and_warnings(const ProcessedData& data);
+    double calculate_exposure_percentage(double current_value, double equity) const;
+    
+    // Synchronization helper methods
+    bool is_sync_state_valid() const;
+    bool wait_for_data_availability(MarketDataSyncState& sync_state);
 };
 
 } // namespace Core
