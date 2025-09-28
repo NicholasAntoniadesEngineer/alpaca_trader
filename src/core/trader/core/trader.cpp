@@ -31,6 +31,14 @@ void TradingOrchestrator::execute_trading_loop() {
     try {
         while (data_sync.running && data_sync.running->load()) {
             try {
+                // Check connectivity status
+                if (!check_connectivity_status()) {
+                    trading_engine.handle_trading_halt("Connectivity issues detected");
+                    countdown_to_next_cycle();
+                    continue;
+                }
+
+                // Wait for fresh market data to be available and check if we should continue running
                 data_fetcher.wait_for_fresh_data(*reinterpret_cast<MarketDataSyncState*>(&data_sync));
                 if (!data_sync.running->load()) break;
 
@@ -102,6 +110,16 @@ void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& confi
     if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
         TradingLogs::log_market_data_result_table("Invalid data sync configuration", false, 0);
     }
+}
+
+bool TradingOrchestrator::check_connectivity_status() {
+    auto& connectivity = ConnectivityManager::instance();
+    if (connectivity.is_connectivity_outage()) {
+        std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
+        TradingLogs::log_market_status(false, connectivity_msg);
+        return false;
+    }
+    return true;
 }
 
 } // namespace Core

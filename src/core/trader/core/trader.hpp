@@ -9,6 +9,7 @@
 #include "trading_engine.hpp"
 #include "risk_manager.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -56,6 +57,7 @@ private:
 
     double initialize_trading_session();
     void countdown_to_next_cycle();
+    bool check_connectivity_status();
 
 public:
     TradingOrchestrator(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);

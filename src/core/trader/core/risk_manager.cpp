@@ -1,19 +1,14 @@
 #include "risk_manager.hpp"
-#include "core/utils/connectivity_manager.hpp"
 #include "core/logging/async_logger.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
 
-using AlpacaTrader::Logging::TradingLogs;
+using AlpacaTrader::Logging::RiskLogs;
 
 RiskManager::RiskManager(const TraderConfig& cfg) : config(cfg) {}
 
 bool RiskManager::validate_trading_permissions(const ProcessedData& data, double equity) {
-    if (!check_connectivity_status()) {
-        return false;
-    }
-    
     if (!check_daily_limits(equity, 0.0)) {
         return false;
     }
@@ -48,27 +43,9 @@ bool RiskManager::check_daily_limits(double current_equity, double initial_equit
     return daily_pnl > config.risk.daily_max_loss && daily_pnl < config.risk.daily_profit_target;
 }
 
-bool RiskManager::check_connectivity_status() {
-    auto& connectivity = ConnectivityManager::instance();
-    if (connectivity.is_connectivity_outage()) {
-        std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
-        TradingLogs::log_market_status(false, connectivity_msg);
-        return false;
-    }
-    return true;
-}
 
 void RiskManager::log_risk_assessment(const ProcessedData& data, double equity, bool allowed) {
-    RiskLogic::TradeGateInput input = build_risk_input(data, equity);
-    RiskLogic::TradeGateResult result = RiskLogic::evaluate_trade_gate(input, config);
-    
-    log_risk_conditions(result, data);
-    
-    if (allowed) {
-        TradingLogs::log_market_status(true);
-    } else {
-        TradingLogs::log_market_status(false, "Risk limits exceeded");
-    }
+    RiskLogs::log_risk_assessment(data, equity, allowed, config);
 }
 
 RiskLogic::TradeGateInput RiskManager::build_risk_input(const ProcessedData& data, double equity) {
@@ -84,9 +61,6 @@ bool RiskManager::evaluate_risk_gate(const RiskLogic::TradeGateInput& input) {
     return result.pnl_ok && result.exposure_ok;
 }
 
-void RiskManager::log_risk_conditions(const RiskLogic::TradeGateResult& result, const ProcessedData& data) {
-    TradingLogs::log_trading_conditions(result.daily_pnl, data.exposure_pct, result.allowed, config);
-}
 
 } // namespace Core
 } // namespace AlpacaTrader
