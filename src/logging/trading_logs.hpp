@@ -82,8 +82,6 @@ public:
     static void log_debug_position_verification(int verify_qty);
     static void log_debug_position_still_exists(const std::string& side);
     static void log_debug_no_position_found(const std::string& side);
-    static void log_debug_trading_halt();
-    static void log_debug_trading_loop_stopped();
     static void log_debug_skipping_trading_cycle();
     
     // Market close position management
@@ -114,8 +112,8 @@ public:
     static void log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled);
     static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses = {});
     static void log_data_source_info_table(const std::string& source, double price, const std::string& status);
-    static void log_runtime_config_table(const struct SystemConfig& config);
-    static void log_strategy_config_table(const struct SystemConfig& config);
+    static void log_runtime_config_table(const AlpacaTrader::Config::SystemConfig& config);
+    static void log_strategy_config_table(const AlpacaTrader::Config::SystemConfig& config);
     
     // Market data fetching tables
     static void log_market_data_fetch_table(const std::string& symbol);

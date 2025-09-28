@@ -21,16 +21,15 @@ public:
     static void log_current_positions(const AlpacaTrader::Core::AccountManager& account_manager);
     
     // Data source configuration
-    static void log_data_source_configuration(const SystemConfig& config);
+    static void log_data_source_configuration(const AlpacaTrader::Config::SystemConfig& config);
     
     // Thread system startup
     static void log_thread_system_startup(const TimingConfig& timing_config);
-    static void log_thread_system_complete();
     
     
     // System configuration tables
-    static void log_runtime_configuration(const SystemConfig& config);
-    static void log_strategy_configuration(const SystemConfig& config);
+    static void log_runtime_configuration(const AlpacaTrader::Config::SystemConfig& config);
+    static void log_strategy_configuration(const AlpacaTrader::Config::SystemConfig& config);
     
 private:
     static std::string format_currency(double amount);

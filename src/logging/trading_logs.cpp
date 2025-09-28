@@ -53,6 +53,7 @@ void TradingLogs::log_market_status(bool is_open, const std::string& reason) {
         if (!reason.empty()) {
             msg += " - " + reason;
         }
+        
         log_message(msg, "");
     }
 }
@@ -135,17 +136,17 @@ void TradingLogs::log_market_close_warning(int minutes_until_close) {
     LOG_THREAD_SECTION_HEADER("MARKET CLOSE WARNING");
     std::ostringstream oss;
     oss << "Market closing in " << minutes_until_close << " minutes - preparing to close positions";
-    log_message("MARKET_CLOSE", oss.str());
+    log_message(oss.str(), "");
 }
 
 void TradingLogs::log_market_close_position_closure(int quantity, const std::string& symbol, const std::string& side) {
     std::ostringstream oss;
     oss << "Closing position for market close: " << side << " " << std::abs(quantity) << " shares of " << symbol;
-    log_message("MARKET_CLOSE", oss.str());
+    log_message(oss.str(), "");
 }
 
 void TradingLogs::log_market_close_complete() {
-    log_message("MARKET_CLOSE", "All positions closed for market close - trading halted until next session");
+    log_message("All positions closed for market close - trading halted until next session", "");
     LOG_THREAD_SEPARATOR();
 }
 
@@ -526,7 +527,7 @@ void TradingLogs::log_thread_priorities_table(const std::vector<std::tuple<std::
     TABLE_FOOTER_48();
 }
 
-void TradingLogs::log_runtime_config_table(const SystemConfig& config) {
+void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemConfig& config) {
     TABLE_HEADER_48("Runtime Config", "System Settings");
     
     // API Configuration
@@ -557,7 +558,7 @@ void TradingLogs::log_runtime_config_table(const SystemConfig& config) {
     TABLE_FOOTER_48();
 }
 
-void TradingLogs::log_strategy_config_table(const SystemConfig& config) {
+void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemConfig& config) {
     TABLE_HEADER_48("Strategy Config", "Trading Strategy Settings");
     
     // Signal Detection
@@ -772,6 +773,11 @@ void TradingLogs::log_debug_position_data(int current_qty, double position_value
     log_message("DEBUG: execute_trade - is_long=" + std::to_string(is_long) + ", is_short=" + std::to_string(is_short), "");
 }
 
+void TradingLogs::log_debug_account_details(int qty, double current_value) {
+    log_message("DEBUG: Fresh account details - qty=" + std::to_string(qty) + ", current_value=" + std::to_string(current_value), "");
+}
+
+
 void TradingLogs::log_debug_fresh_data_fetch(const std::string& position_type) {
     log_message("Forcing fresh account data fetch before closing " + position_type + " position", "");
 }
@@ -780,9 +786,6 @@ void TradingLogs::log_debug_fresh_position_data(int fresh_qty, int current_qty) 
     log_message("Fresh position data: " + std::to_string(fresh_qty) + " (was: " + std::to_string(current_qty) + ")", "");
 }
 
-void TradingLogs::log_debug_account_details(int qty, double current_value) {
-    log_message("DEBUG: Fresh account details - qty=" + std::to_string(qty) + ", current_value=" + std::to_string(current_value), "");
-}
 
 void TradingLogs::log_debug_position_closure_attempt(int qty) {
     log_message("Attempting to close fresh position: " + std::to_string(qty), "");
@@ -804,14 +807,6 @@ void TradingLogs::log_debug_no_position_found(const std::string& side) {
     log_message("No " + side + " position found in fresh data, proceeding with " + side, "");
 }
 
-void TradingLogs::log_debug_trading_halt() {
-    log_message("DEBUG: Trading halted - calling handle_trading_halt()", "");
-}
-
-void TradingLogs::log_debug_trading_loop_stopped() {
-    log_message("Trading loop stopped - shared.running is false", "");
-}
-
 void TradingLogs::log_debug_skipping_trading_cycle() {
     log_message("Skipping trading cycle - no fresh market data available", "");
 }
@@ -822,7 +817,7 @@ void TradingLogs::log_inline_halt_status(int seconds) {
 }
 
 void TradingLogs::log_inline_next_loop(int seconds) {
-    log_inline_status("   ⏳ Next loop in " + std::to_string(seconds) + "s   ");
+    log_inline_status(get_formatted_inline_message("   ⏳ Next loop in " + std::to_string(seconds) + "s   "));
 }
 
 void TradingLogs::end_inline_status() {

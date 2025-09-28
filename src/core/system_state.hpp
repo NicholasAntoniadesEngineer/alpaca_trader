@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 // Forward declarations
 struct TradingSystemModules;
@@ -38,12 +39,12 @@ struct SystemState {
     std::atomic<bool> has_market{false};    // Indicates if market data is available
     std::atomic<bool> has_account{false};   // Indicates if account data is available
     std::atomic<bool> running{true};        // Main system running flag
-    std::atomic<bool> allow_fetch{true};    // Controls data fetching operations
+    std::atomic<bool> allow_fetch{false};   // Controls data fetching operations (default: no trading)
     
     // =========================================================================
     // CONFIGURATION AND MODULES
     // =========================================================================
-    SystemConfig config;                    // Complete system configuration
+    AlpacaTrader::Config::SystemConfig config;                    // Complete system configuration
     TraderConfig trader_view;               // Trader-specific configuration view
     std::unique_ptr<TradingSystemModules> trading_modules;  // All system modules
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
@@ -62,10 +63,15 @@ struct SystemState {
      * @brief Constructor with custom configuration
      * @param initial System configuration
      */
-    explicit SystemState(const SystemConfig& initial)
+    explicit SystemState(const AlpacaTrader::Config::SystemConfig& initial)
         : config(initial),
           trader_view(config.strategy, config.risk, config.timing,
-                      config.logging, config.target) {}
+                      config.logging, config.target) {
+        // Verify that the symbol was loaded correctly
+        if (config.target.symbol.empty()) {
+            std::cerr << "WARNING: Target symbol is empty! Config may not be loaded properly." << std::endl;
+        }
+    }
 };
 
 #endif // SYSTEM_STATE_HPP

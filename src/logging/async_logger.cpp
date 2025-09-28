@@ -4,7 +4,7 @@
 #include "logging/async_logger.hpp"
 #include "configs/system_config.hpp"
 #include "configs/config_loader.hpp"
-#include "threads/platform/thread_control.hpp"
+#include "threads/thread_logic/platform/thread_control.hpp"
 #include "utils/time_utils.hpp"
 #include <iostream>
 #include <chrono>
@@ -18,13 +18,13 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-static AsyncLogger* g_async_logger = nullptr;
+static std::atomic<AsyncLogger*> g_async_logger{nullptr};
 static thread_local std::string t_log_tag = "MAIN  ";
 std::mutex g_console_mtx;
 std::atomic<bool> g_inline_active{false};
 
 void set_async_logger(AsyncLogger* logger) {
-    g_async_logger = logger;
+    g_async_logger.store(logger);
 }
 
 void set_log_thread_tag(const std::string& tag6) {
@@ -36,28 +36,58 @@ void set_log_thread_tag(const std::string& tag6) {
 
 
 void log_message(const std::string& message, const std::string& log_file_path) {
-    std::string timestamp = TimeUtils::get_current_human_readable_time();
-    std::stringstream ss;
-    ss << timestamp << " [" << t_log_tag << "]   " << message << std::endl;
-    std::string log_str = ss.str();
-
-    if (g_async_logger) {
-        g_async_logger->enqueue(log_str);
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> cguard(g_console_mtx);
-        if (g_inline_active.load()) {
-            std::cout << std::endl;
-            g_inline_active.store(false);
+    try {
+        // Basic fallback if time utils fails
+        std::string timestamp;
+        try {
+            timestamp = TimeUtils::get_current_human_readable_time();
+        } catch (...) {
+            timestamp = "ERROR-TIME";
         }
-        std::cout << log_str;
-    }
-    std::ofstream log_file(log_file_path, std::ios::app);
-    if (log_file.is_open()) {
-        log_file << log_str;
-        log_file.close();
+        
+        std::stringstream ss;
+        ss << timestamp << " [" << t_log_tag << "]   " << message << std::endl;
+        std::string log_str = ss.str();
+
+        AsyncLogger* logger = g_async_logger.load();
+        if (logger) {
+            try {
+                logger->enqueue(log_str);
+                return;
+            } catch (...) {
+                // Fall through to console logging if async logger fails
+            }
+        }
+
+        {
+            try {
+                std::lock_guard<std::mutex> cguard(g_console_mtx);
+                if (g_inline_active.load()) {
+                    std::cout << std::endl;
+                    g_inline_active.store(false);
+                }
+                std::cout << log_str;
+            } catch (...) {
+                // Fall back to basic console output
+                std::cout << message << std::endl;
+            }
+        }
+        
+        // Only write to file if log_file_path is not empty
+        if (!log_file_path.empty()) {
+            try {
+                std::ofstream log_file(log_file_path, std::ios::app);
+                if (log_file.is_open()) {
+                    log_file << log_str;
+                    log_file.close();
+                }
+            } catch (...) {
+                // Ignore file logging errors
+            }
+        }
+    } catch (...) {
+        // Ultimate fallback - just output the message
+        std::cout << message << std::endl;
     }
 }
 
@@ -152,7 +182,7 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
     cv.notify_one();
 }
 
-std::shared_ptr<AsyncLogger> initialize_application_foundation(const SystemConfig& config) {
+std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config) {
     // Generate timestamped log filename
     std::string timestamped_log_file = generate_timestamped_log_filename(config.logging.log_file);
     

@@ -7,7 +7,11 @@ std::string get_current_iso_time_with_z() {
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), ISO_8601_WITH_Z);
+    
+    // Use thread-safe gmtime_r instead of gmtime
+    struct tm timeinfo;
+    gmtime_r(&in_time_t, &timeinfo);
+    ss << std::put_time(&timeinfo, ISO_8601_WITH_Z);
     return ss.str();
 }
 
@@ -15,7 +19,11 @@ std::string get_current_iso_time_without_z() {
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), ISO_8601_WITHOUT_Z);
+    
+    // Use thread-safe gmtime_r instead of gmtime
+    struct tm timeinfo;
+    gmtime_r(&in_time_t, &timeinfo);
+    ss << std::put_time(&timeinfo, ISO_8601_WITHOUT_Z);
     return ss.str();
 }
 
@@ -23,7 +31,11 @@ std::string get_current_human_readable_time() {
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), HUMAN_READABLE);
+    
+    // Use thread-safe localtime_r instead of localtime
+    struct tm timeinfo;
+    localtime_r(&in_time_t, &timeinfo);
+    ss << std::put_time(&timeinfo, HUMAN_READABLE);
     return ss.str();
 }
 
@@ -31,7 +43,11 @@ std::string get_iso_time_minus_minutes(int minutes) {
     auto now = std::chrono::system_clock::now() - std::chrono::minutes(minutes);
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), ISO_8601_WITH_Z);
+    
+    // Use thread-safe gmtime_r instead of gmtime
+    struct tm timeinfo;
+    gmtime_r(&in_time_t, &timeinfo);
+    ss << std::put_time(&timeinfo, ISO_8601_WITH_Z);
     return ss.str();
 }
 
@@ -39,7 +55,11 @@ std::string get_iso_time_plus_minutes(int minutes) {
     auto now = std::chrono::system_clock::now() + std::chrono::minutes(minutes);
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::gmtime(&in_time_t), ISO_8601_WITH_Z);
+    
+    // Use thread-safe gmtime_r instead of gmtime
+    struct tm timeinfo;
+    gmtime_r(&in_time_t, &timeinfo);
+    ss << std::put_time(&timeinfo, ISO_8601_WITH_Z);
     return ss.str();
 }
 

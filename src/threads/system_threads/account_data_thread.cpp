@@ -2,14 +2,15 @@
  * Account data polling thread.
  * Maintains current account state for trading decisions.
  */
-#include "threads/account_data_thread.hpp"
+#include "account_data_thread.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/startup_logs.hpp"
-#include "threads/platform/thread_control.hpp"
+#include "../thread_logic/platform/thread_control.hpp"
 #include <chrono>
 
 using AlpacaTrader::Threads::AccountDataThread;
 using AlpacaTrader::Logging::set_log_thread_tag;
+using AlpacaTrader::Logging::log_message;
 using AlpacaTrader::Core::AccountSnapshot;
 
 void AlpacaTrader::Threads::AccountDataThread::operator()() {
@@ -27,13 +28,13 @@ void AlpacaTrader::Threads::AccountDataThread::account_data_loop() {
             std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
             continue;
         }
-        
+
         fetch_and_update_account_data();
-        
+
         if (iteration_counter) {
             iteration_counter->fetch_add(1);
         }
-        
+
         std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
     }
 }

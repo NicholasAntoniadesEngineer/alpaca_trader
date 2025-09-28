@@ -2,10 +2,10 @@
  * Market gate control thread.
  * Manages when market data fetching is allowed based on market hours and connectivity.
  */
-#include "threads/market_gate_thread.hpp"
+#include "market_gate_thread.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/startup_logs.hpp"
-#include "threads/platform/thread_control.hpp"
+#include "../thread_logic/platform/thread_control.hpp"
 #include "utils/connectivity_manager.hpp"
 #include <chrono>
 
@@ -33,6 +33,7 @@ void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
     ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity.get_status();
     
     while (running.load()) {
+        
         check_and_update_fetch_window(last_within);
         
         check_and_report_connectivity_status(connectivity, last_connectivity_status);
@@ -44,6 +45,8 @@ void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
         
         std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
     }
+    
+    log_message("MarketGateThread loop exited", "trading_system.log");
 }
 
 void AlpacaTrader::Threads::MarketGateThread::check_and_update_fetch_window(bool& last_within) {

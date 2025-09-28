@@ -27,15 +27,6 @@ public:
                                       const std::string& actual_priority,
                                       bool success);
     
-    // Thread configuration
-    static void log_thread_configuration_skipped(const std::string& thread_name, const std::string& reason);
-    static void log_thread_cpu_affinity_configured(const std::string& thread_name, int cpu_core);
-    static void log_thread_priority_configured(const std::string& thread_name);
-    static void log_thread_cpu_affinity_failed(const std::string& thread_name);
-    static void log_thread_priority_failed(const std::string& thread_name);
-    static void log_configuration_result(const std::string& thread_name, 
-                                       const AlpacaTrader::Config::ThreadConfig& platform_config, 
-                                       bool success);
     
     // Performance monitoring
     static void log_thread_performance(const std::string& thread_name,
@@ -55,14 +46,39 @@ public:
             : name(thread_name), iterations(iter_count) {}
     };
     
+    
     // Generic thread monitoring for any number of threads
     static void log_thread_monitoring_stats(const std::vector<ThreadInfo>& thread_infos, 
                                           const std::chrono::steady_clock::time_point& start_time);
     
-private:
-    static std::string format_priority_status(const std::string& thread_name,
-                                            const std::string& priority,
-                                            bool success);
+    // Thread status table logging
+    static void log_thread_status_table(const std::vector<AlpacaTrader::Config::ThreadStatusData>& thread_status_data);
+    
+    // Thread registry error handling
+    static void log_thread_registry_error(const std::string& error_msg);
+    static void log_thread_registry_warning(const std::string& warning_msg);
+    static void log_thread_registry_validation_success(const std::string& details);
+    
+    // Thread exception handling
+    static void log_thread_exception(const std::string& thread_name, const std::string& exception_msg);
+    static void log_thread_unknown_exception(const std::string& thread_name);
+    
+    // Thread configuration errors
+    static void log_thread_config_error(const std::string& thread_name, const std::string& error_msg);
+    static void log_thread_config_warning(const std::string& thread_name, const std::string& warning_msg);
+    
+    // Thread lifecycle errors
+    static void log_thread_startup_error(const std::string& thread_name, const std::string& error_msg);
+    static void log_thread_shutdown_error(const std::string& thread_name, const std::string& error_msg);
+    
+    // Centralized error message construction
+    static std::string build_unknown_thread_type_error(const std::string& type_name, int enum_value);
+    static std::string build_unknown_thread_identifier_error(const std::string& identifier);
+    static std::string build_unknown_thread_type_enum_error(int enum_value);
+    static std::string build_duplicate_thread_type_error(int enum_value);
+    static std::string build_duplicate_thread_identifier_error(const std::string& identifier);
+    static std::string build_empty_thread_identifier_error(int enum_value);
+    
 };
 
 #endif // THREAD_LOGS_HPP

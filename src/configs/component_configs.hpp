@@ -10,6 +10,7 @@
 #include "strategy_config.hpp"
 #include "trader_config.hpp"
 #include "orders_config.hpp"
+#include "logging/async_logger.hpp"
 
 // Grouped config for AlpacaClient
 struct AlpacaClientConfig {
@@ -53,7 +54,7 @@ struct TradingSystemConfigurations;
 
 // Trading system module creation and configuration functions
 TradingSystemConfigurations create_trading_configurations(const SystemState& state);
-TradingSystemModules create_trading_modules(SystemState& state);
+TradingSystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
 void configure_trading_modules(SystemState& system_state, TradingSystemModules& modules);
 
 #endif // COMPONENT_CONFIGS_HPP

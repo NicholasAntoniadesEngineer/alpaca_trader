@@ -10,11 +10,11 @@
 
 // Grouped configuration for Trader class.
 struct TraderConfig {
-    const StrategyConfig& strategy;
-    const RiskConfig& risk;
-    const TimingConfig& timing;
-    const LoggingConfig& logging;
-    const TargetConfig& target;
+    StrategyConfig strategy;
+    RiskConfig risk;
+    TimingConfig timing;
+    LoggingConfig logging;
+    TargetConfig target;
 
     TraderConfig(const StrategyConfig& strategy_cfg,
                  const RiskConfig& risk_cfg,

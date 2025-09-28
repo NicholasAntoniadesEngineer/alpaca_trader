@@ -12,12 +12,10 @@ struct TradeGateInput {
     double initial_equity;
     double current_equity;
     double exposure_pct;
-    bool core_trading_hours;
 };
 
 struct TradeGateResult {
     bool allowed;
-    bool hours_ok;
     bool pnl_ok;
     bool exposure_ok;
     double daily_pnl;

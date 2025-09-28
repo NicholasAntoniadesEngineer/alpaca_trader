@@ -32,6 +32,7 @@ private:
         std::atomic<bool>* has_market = nullptr;
         std::atomic<bool>* has_account = nullptr;
         std::atomic<bool>* running = nullptr;
+        std::atomic<bool>* allow_fetch = nullptr;
     };
 
     struct RuntimeState {
@@ -82,7 +83,7 @@ public:
     void decision_loop();
 
     // Configure shared state pointers from main
-    void attach_shared_state(std::mutex& mtx, std::condition_variable& cv,  MarketSnapshot& market, AccountSnapshot& account, std::atomic<bool>& has_market, std::atomic<bool>& has_account, std::atomic<bool>& running_flag);
+    void attach_shared_state(std::mutex& mtx, std::condition_variable& cv,  MarketSnapshot& market, AccountSnapshot& account, std::atomic<bool>& has_market, std::atomic<bool>& has_account, std::atomic<bool>& running_flag, std::atomic<bool>& allow_fetch_flag);
 
     // Start only the decision thread
     void start_decision_thread();

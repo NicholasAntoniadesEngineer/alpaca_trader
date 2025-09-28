@@ -6,6 +6,9 @@
 #include <sstream>
 #include <algorithm>
 
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+
 namespace {
     inline std::string trim(const std::string& s) {
         const char* ws = " \t\r\n";
@@ -31,7 +34,7 @@ namespace {
     }
 }
 
-bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
+bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::string& csv_path) {
     std::ifstream in(csv_path);
     if (!in.is_open()) return false;
     std::string line;
@@ -127,7 +130,7 @@ bool load_config_from_csv(SystemConfig& cfg, const std::string& csv_path) {
     return true;
 }
 
-bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profiles_path) {
+bool load_strategy_profiles(AlpacaTrader::Config::SystemConfig& cfg, const std::string& strategy_profiles_path) {
     std::ifstream in(strategy_profiles_path);
     if (!in.is_open()) return false;
     std::string line;
@@ -178,7 +181,7 @@ bool load_strategy_profiles(SystemConfig& cfg, const std::string& strategy_profi
     return true;
 }
 
-bool load_thread_configs(SystemConfig& cfg, const std::string& thread_config_path) {
+bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::string& thread_config_path) {
     std::ifstream in(thread_config_path);
     if (!in.is_open()) return false;
     std::string line;
@@ -191,40 +194,40 @@ bool load_thread_configs(SystemConfig& cfg, const std::string& thread_config_pat
         key = trim(key); value = trim(value);
 
         // Thread configurations
-        if (key == "thread.main.priority") cfg.thread.main.priority = string_to_priority(value);
-        else if (key == "thread.main.cpu_affinity") cfg.thread.main.cpu_affinity = std::stoi(value);
-        else if (key == "thread.main.name") cfg.thread.main.name = value;
-        else if (key == "thread.main.use_cpu_affinity") cfg.thread.main.use_cpu_affinity = to_bool(value);
+        if (key == "thread.main.priority") cfg.thread_registry.main.priority = string_to_priority(value);
+        else if (key == "thread.main.cpu_affinity") cfg.thread_registry.main.cpu_affinity = std::stoi(value);
+        else if (key == "thread.main.name") cfg.thread_registry.main.name = value;
+        else if (key == "thread.main.use_cpu_affinity") cfg.thread_registry.main.use_cpu_affinity = to_bool(value);
         
-        else if (key == "thread.trader_decision.priority") cfg.thread.trader_decision.priority = string_to_priority(value);
-        else if (key == "thread.trader_decision.cpu_affinity") cfg.thread.trader_decision.cpu_affinity = std::stoi(value);
-        else if (key == "thread.trader_decision.name") cfg.thread.trader_decision.name = value;
-        else if (key == "thread.trader_decision.use_cpu_affinity") cfg.thread.trader_decision.use_cpu_affinity = to_bool(value);
+        else if (key == "thread.trader_decision.priority") cfg.thread_registry.trader_decision.priority = string_to_priority(value);
+        else if (key == "thread.trader_decision.cpu_affinity") cfg.thread_registry.trader_decision.cpu_affinity = std::stoi(value);
+        else if (key == "thread.trader_decision.name") cfg.thread_registry.trader_decision.name = value;
+        else if (key == "thread.trader_decision.use_cpu_affinity") cfg.thread_registry.trader_decision.use_cpu_affinity = to_bool(value);
         
-        else if (key == "thread.market_data.priority") cfg.thread.market_data.priority = string_to_priority(value);
-        else if (key == "thread.market_data.cpu_affinity") cfg.thread.market_data.cpu_affinity = std::stoi(value);
-        else if (key == "thread.market_data.name") cfg.thread.market_data.name = value;
-        else if (key == "thread.market_data.use_cpu_affinity") cfg.thread.market_data.use_cpu_affinity = to_bool(value);
+        else if (key == "thread.market_data.priority") cfg.thread_registry.market_data.priority = string_to_priority(value);
+        else if (key == "thread.market_data.cpu_affinity") cfg.thread_registry.market_data.cpu_affinity = std::stoi(value);
+        else if (key == "thread.market_data.name") cfg.thread_registry.market_data.name = value;
+        else if (key == "thread.market_data.use_cpu_affinity") cfg.thread_registry.market_data.use_cpu_affinity = to_bool(value);
         
-        else if (key == "thread.account_data.priority") cfg.thread.account_data.priority = string_to_priority(value);
-        else if (key == "thread.account_data.cpu_affinity") cfg.thread.account_data.cpu_affinity = std::stoi(value);
-        else if (key == "thread.account_data.name") cfg.thread.account_data.name = value;
-        else if (key == "thread.account_data.use_cpu_affinity") cfg.thread.account_data.use_cpu_affinity = to_bool(value);
+        else if (key == "thread.account_data.priority") cfg.thread_registry.account_data.priority = string_to_priority(value);
+        else if (key == "thread.account_data.cpu_affinity") cfg.thread_registry.account_data.cpu_affinity = std::stoi(value);
+        else if (key == "thread.account_data.name") cfg.thread_registry.account_data.name = value;
+        else if (key == "thread.account_data.use_cpu_affinity") cfg.thread_registry.account_data.use_cpu_affinity = to_bool(value);
         
-        else if (key == "thread.market_gate.priority") cfg.thread.market_gate.priority = string_to_priority(value);
-        else if (key == "thread.market_gate.cpu_affinity") cfg.thread.market_gate.cpu_affinity = std::stoi(value);
-        else if (key == "thread.market_gate.name") cfg.thread.market_gate.name = value;
-        else if (key == "thread.market_gate.use_cpu_affinity") cfg.thread.market_gate.use_cpu_affinity = to_bool(value);
+        else if (key == "thread.market_gate.priority") cfg.thread_registry.market_gate.priority = string_to_priority(value);
+        else if (key == "thread.market_gate.cpu_affinity") cfg.thread_registry.market_gate.cpu_affinity = std::stoi(value);
+        else if (key == "thread.market_gate.name") cfg.thread_registry.market_gate.name = value;
+        else if (key == "thread.market_gate.use_cpu_affinity") cfg.thread_registry.market_gate.use_cpu_affinity = to_bool(value);
         
-        else if (key == "thread.logging.priority") cfg.thread.logging.priority = string_to_priority(value);
-        else if (key == "thread.logging.cpu_affinity") cfg.thread.logging.cpu_affinity = std::stoi(value);
-        else if (key == "thread.logging.name") cfg.thread.logging.name = value;
-        else if (key == "thread.logging.use_cpu_affinity") cfg.thread.logging.use_cpu_affinity = to_bool(value);
+        else if (key == "thread.logging.priority") cfg.thread_registry.logging.priority = string_to_priority(value);
+        else if (key == "thread.logging.cpu_affinity") cfg.thread_registry.logging.cpu_affinity = std::stoi(value);
+        else if (key == "thread.logging.name") cfg.thread_registry.logging.name = value;
+        else if (key == "thread.logging.use_cpu_affinity") cfg.thread_registry.logging.use_cpu_affinity = to_bool(value);
     }
     return true;
 }
 
-int load_system_config(SystemConfig& config) {
+int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
     // Load configuration from separate logical files
     std::vector<std::string> config_files = {
         "config/api_config.csv",
@@ -240,7 +243,7 @@ int load_system_config(SystemConfig& config) {
     // Load each configuration file
     for (const auto& config_path : config_files) {
         if (!load_config_from_csv(config, config_path)) {
-            AlpacaTrader::Logging::log_message("ERROR: Failed to load config CSV from " + config_path, "");
+            log_message("ERROR: Failed to load config CSV from " + config_path, "");
             return 1;
         }
     }
@@ -248,21 +251,21 @@ int load_system_config(SystemConfig& config) {
     // Load strategy profiles
     std::string strategy_path = std::string("config/strategy_profiles.csv");
     if (!load_strategy_profiles(config, strategy_path)) {
-        AlpacaTrader::Logging::log_message("ERROR: Failed to load strategy profiles from " + strategy_path, "");
+        log_message("ERROR: Failed to load strategy profiles from " + strategy_path, "");
         return 1;
     }
     
     // Load thread configurations
     std::string thread_config_path = std::string("config/thread_config.csv");
     if (!load_thread_configs(config, thread_config_path)) {
-        AlpacaTrader::Logging::log_message("ERROR: Failed to load thread configurations from " + thread_config_path, "");
+        log_message("ERROR: Failed to load thread configurations from " + thread_config_path, "");
         return 1;
     }
     
     return 0;
 }
 
-bool validate_config(const SystemConfig& config, std::string& error_message) {
+bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::string& error_message) {
     if (config.api.api_key.empty() || config.api.api_secret.empty()) {
         error_message = "API credentials missing (provide via CONFIG_CSV)";
         return false;

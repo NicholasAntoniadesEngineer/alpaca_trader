@@ -5,11 +5,11 @@
 #include "core/account_manager.hpp"
 #include "core/trader.hpp"
 #include "logging/account_logs.hpp"
-#include "threads/market_data_thread.hpp"
-#include "threads/market_gate_thread.hpp"
-#include "threads/account_data_thread.hpp"
-#include "threads/logging_thread.hpp"
-#include "threads/trader_thread.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
+#include "threads/system_threads/market_gate_thread.hpp"
+#include "threads/system_threads/account_data_thread.hpp"
+#include "threads/system_threads/logging_thread.hpp"
+#include "threads/system_threads/trader_thread.hpp"
 #include <memory>
 
 /**

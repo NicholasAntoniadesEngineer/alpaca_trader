@@ -3,7 +3,7 @@
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
 #include "configs/timing_config.hpp"
-#include "threads/thread_manager.hpp"
+#include "threads/thread_logic/thread_manager.hpp"
 #include "configs/config_loader.hpp"
 #include <iomanip>
 #include <sstream>
@@ -75,7 +75,7 @@ void StartupLogs::log_current_positions(const AccountManager& account_manager) {
 }
 
 
-void StartupLogs::log_data_source_configuration(const SystemConfig& config) {
+void StartupLogs::log_data_source_configuration(const AlpacaTrader::Config::SystemConfig& config) {
     std::string account_type = (config.api.base_url.find("paper") != std::string::npos) ? "PAPER TRADING" : "LIVE TRADING";
     TradingLogs::log_data_source_table(config.target.symbol, account_type);
 }
@@ -87,16 +87,12 @@ void StartupLogs::log_thread_system_startup(const TimingConfig& timing_config) {
     );
 }
 
-void StartupLogs::log_thread_system_complete() {
-    // Thread system setup complete
-    log_message("Thread system setup complete", "system_startup.log");
-}
 
-void StartupLogs::log_runtime_configuration(const SystemConfig& config) {
+void StartupLogs::log_runtime_configuration(const AlpacaTrader::Config::SystemConfig& config) {
     TradingLogs::log_runtime_config_table(config);
 }
 
-void StartupLogs::log_strategy_configuration(const SystemConfig& config) {
+void StartupLogs::log_strategy_configuration(const AlpacaTrader::Config::SystemConfig& config) {
     TradingLogs::log_strategy_config_table(config);
 }
 

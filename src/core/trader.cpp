@@ -8,7 +8,7 @@
 #include "logging/async_logger.hpp"
 #include "logging/logging_macros.hpp"
 #include "logging/trading_logs.hpp"
-#include "threads/platform/thread_control.hpp"
+#include "threads/thread_logic/platform/thread_control.hpp"
 #include "utils/connectivity_manager.hpp"
 #include <thread>
 #include <cmath>
@@ -31,6 +31,7 @@ using AlpacaTrader::Logging::set_log_thread_tag;
 
 Trader::Trader(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
     : services{cfg, client_ref, account_mgr} {
+    
     runtime.initial_equity = initialize_trader();
 }
 
@@ -38,45 +39,39 @@ Trader::~Trader() {}
 
 double Trader::initialize_trader() {
     double eq = services.account_manager.get_equity();
-    TradingLogs::log_startup(services.config, eq);
     return eq;
 }
 
 bool Trader::can_trade(double exposure_pct) {
-    // Check connectivity first - if we're in a connectivity outage, halt trading
+    // Check MARKET_GATE permission first - if not allowed, halt trading
+    if (!shared.allow_fetch || !shared.allow_fetch->load()) {
+        TradingLogs::log_market_status(false, "Market gate restriction - trading not allowed");
+        return false;
+    }
+
+    // Check connectivity - if we're in a connectivity outage, halt trading
     auto& connectivity = ConnectivityManager::instance();
     if (connectivity.is_connectivity_outage()) {
         std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
         TradingLogs::log_market_status(false, connectivity_msg);
-        TradingLogs::log_debug_trading_halt();
         return false;
     }
 
-    // Trading conditions will be logged by the new centralized system
     RiskLogic::TradeGateInput in;
     in.initial_equity = runtime.initial_equity;
     in.current_equity = services.account_manager.get_equity();
     in.exposure_pct = exposure_pct;
-    in.core_trading_hours = services.client.is_core_trading_hours();
 
     RiskLogic::TradeGateResult res = RiskLogic::evaluate_trade_gate(in, services.config);
-
-    if (!res.hours_ok) {
-        TradingLogs::log_market_status(false, "Market hours restriction");
-        TradingLogs::log_debug_trading_halt();
-        return false;
-    }
 
     bool trading_allowed = res.pnl_ok && res.exposure_ok;
     TradingLogs::log_trading_conditions(res.daily_pnl, exposure_pct, trading_allowed, services.config);
     
     if (!res.pnl_ok) {
-        TradingLogs::log_debug_trading_halt();
         return false;
     }
 
     if (!res.exposure_ok) {
-        TradingLogs::log_debug_trading_halt();
         return false;
     }
 
@@ -286,7 +281,6 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
                 // Still have short position, try to close it
                 TradingLogs::log_debug_position_closure_attempt(fresh_qty);
                 services.client.close_position(ClosePositionRequest{fresh_qty});
-                TradingLogs::log_debug_position_closure_attempted();
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                 
                 // Verify position is actually closed before placing bracket order
@@ -346,7 +340,6 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
                 // Still have long position, try to close it
                 TradingLogs::log_debug_position_closure_attempt(fresh_qty);
                 services.client.close_position(ClosePositionRequest{fresh_qty});
-                TradingLogs::log_debug_position_closure_attempted();
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                 
                 // Verify position is actually closed before placing bracket order
@@ -376,60 +369,85 @@ void Trader::execute_trade(const ProcessedData& data, int current_qty, const Str
 }
 
 void Trader::decision_loop() {
-    while (shared.running && shared.running->load()) {
-        // Wait for fresh data
-        wait_for_fresh_data();
-        if (!shared.running->load()) break;
-        
-        // Get current market and account snapshots
-        auto snapshots = get_current_snapshots();
-        MarketSnapshot market = snapshots.first;
-        AccountSnapshot account = snapshots.second;
-        
-        // Log trading loop start
-        display_loop_header();
-        
-        // Check if we can trade
-        if (!can_trade(account.exposure_pct)) {
-            TradingLogs::log_debug_trading_halt();
-            handle_trading_halt();
-            continue;
+    try {
+
+        while (shared.running && shared.running->load()) {
+            try {
+                // Wait for fresh data
+                wait_for_fresh_data();
+                if (!shared.running->load()) break;
+
+                // Get current market and account snapshots
+                auto snapshots = get_current_snapshots();
+                MarketSnapshot market = snapshots.first;
+                AccountSnapshot account = snapshots.second;
+
+                // Log trading loop start
+                display_loop_header();
+
+                // Check if we can trade
+                if (!can_trade(account.exposure_pct)) {
+                    handle_trading_halt();
+                    continue;
+                }
+
+                // Process data and execute signals
+                process_trading_cycle(market, account);
+
+                // Increment iteration counter for monitoring
+                if (runtime.iteration_counter) {
+                    runtime.iteration_counter->fetch_add(1);
+                }
+
+                // Countdown to next cycle
+                countdown_to_next_cycle();
+
+            } catch (const std::exception& e) {
+                TradingLogs::log_market_data_result_table("Exception in trading cycle: " + std::string(e.what()), false, 0);
+                std::this_thread::sleep_for(std::chrono::seconds(1)); // Brief pause before retry
+            } catch (...) {
+                TradingLogs::log_market_data_result_table("Unknown exception in trading cycle", false, 0);
+                std::this_thread::sleep_for(std::chrono::seconds(1)); // Brief pause before retry
+            }
         }
-        
-        
-        // Process data and execute signals
-        process_trading_cycle(market, account);
-        
-        // Increment iteration counter for monitoring
-        if (runtime.iteration_counter) {
-            runtime.iteration_counter->fetch_add(1);
-        }
-        
-        // Countdown to next cycle
-        countdown_to_next_cycle();
+
+
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_data_result_table("Critical exception in decision_loop: " + std::string(e.what()), false, 0);
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Critical unknown exception in decision_loop", false, 0);
     }
 }
 
 void Trader::wait_for_fresh_data() {
-    if (!(shared.mtx && shared.cv && shared.has_market && shared.has_account && shared.running)) {
-        TradingLogs::log_market_data_result_table("Invalid shared state pointers", false, 0);
+    try {
+        if (!(shared.mtx && shared.cv && shared.has_market && shared.has_account && shared.running)) {
+            TradingLogs::log_market_data_result_table("Invalid shared state pointers", false, 0);
+            return;
+        }
+        
+        std::unique_lock<std::mutex> lock(*shared.mtx);
+        shared.cv->wait_for(lock, std::chrono::seconds(1), [&]{
+            return (shared.has_market && shared.has_market->load()) && (shared.has_account && shared.has_account->load());
+        });
+        
+        if (!shared.running->load()) {
+            return;
+        }
+        if (!shared.has_market->load()) {
+            return;
+        }
+        
+        shared.has_market->store(false);
+        lock.unlock();
+        
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_data_result_table("Exception in wait_for_fresh_data: " + std::string(e.what()), false, 0);
+        return;
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown exception in wait_for_fresh_data", false, 0);
         return;
     }
-    std::unique_lock<std::mutex> lock(*shared.mtx);
-    shared.cv->wait_for(lock, std::chrono::seconds(1), [&]{
-        return (shared.has_market && shared.has_market->load()) && (shared.has_account && shared.has_account->load());
-    });
-    if (!shared.running->load()) {
-        TradingLogs::log_debug_trading_loop_stopped();
-        return;
-    }
-    if (!shared.has_market->load()) {
-        TradingLogs::log_debug_skipping_trading_cycle();
-        return;
-    }
-    
-    shared.has_market->store(false);
-    lock.unlock();
 }
 
 std::pair<MarketSnapshot, AccountSnapshot> Trader::get_current_snapshots() {
@@ -443,7 +461,23 @@ std::pair<MarketSnapshot, AccountSnapshot> Trader::get_current_snapshots() {
 
 void Trader::display_loop_header() {
     runtime.loop_counter.fetch_add(1);
-    TradingLogs::log_loop_header(runtime.loop_counter.load(), services.config.target.symbol);
+    std::string symbol = services.config.target.symbol.empty() ? "UNKNOWN" : services.config.target.symbol;
+    
+    // Add safety check to prevent crash
+    if (symbol.empty()) {
+        symbol = "UNKNOWN";
+    }
+    
+    // Use safe logging with error handling
+    try {
+        TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
+    } catch (const std::exception& e) {
+        // Fallback to simple console output if logging fails
+        std::cout << "Trading loop #" << runtime.loop_counter.load() << " - " << symbol << std::endl;
+    } catch (...) {
+        // Ultimate fallback
+        std::cout << "Trading loop #" << runtime.loop_counter.load() << " - UNKNOWN" << std::endl;
+    }
 }
 
 void Trader::handle_trading_halt() {    
@@ -507,7 +541,8 @@ void Trader::attach_shared_state(std::mutex& mtx,
                                  AccountSnapshot& account,
                                  std::atomic<bool>& has_market,
                                  std::atomic<bool>& has_account,
-                                 std::atomic<bool>& running_flag) {
+                                 std::atomic<bool>& running_flag,
+                                 std::atomic<bool>& allow_fetch_flag) {
     shared.mtx = &mtx;
     shared.cv = &cv;
     shared.market = &market;
@@ -515,7 +550,8 @@ void Trader::attach_shared_state(std::mutex& mtx,
     shared.has_market = &has_market;
     shared.has_account = &has_account;
     shared.running = &running_flag;
-    if (!(shared.mtx && shared.cv && shared.market && shared.account && shared.has_market && shared.has_account && shared.running)) {
+    shared.allow_fetch = &allow_fetch_flag;
+    if (!(shared.mtx && shared.cv && shared.market && shared.account && shared.has_market && shared.has_account && shared.running && shared.allow_fetch)) {
         TradingLogs::log_market_data_result_table("Invalid shared state configuration", false, 0);
     }
 }

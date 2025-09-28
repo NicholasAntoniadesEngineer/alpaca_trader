@@ -13,24 +13,34 @@
 // =============================================================================
 
 int main() {
-    // Load system configuration
-    SystemConfig initial_config;
-    if (int result = load_system_config(initial_config)) return result;
-    
-    // Create system state
-    SystemState system_state(initial_config);
-    
-    // Initialize application foundation (logging, validation)
-    auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
-    
-    // Start the complete trading system
-    SystemThreads thread_handles = SystemManager::startup(system_state, logger);
-    
-    // Run until shutdown signal
-    SystemManager::run(system_state, thread_handles);
-    
-    // Clean shutdown
-    SystemManager::shutdown(system_state, thread_handles, logger);
-    
-    return 0;
+    try {
+        // Load system configuration
+        AlpacaTrader::Config::SystemConfig initial_config;
+        if (int result = load_system_config(initial_config)) {
+            std::cerr << "Config load failed with result: " << result << std::endl;
+            return result;
+        }
+        
+        // Create system state
+        SystemState system_state(initial_config);
+        
+        // Initialize application foundation (logging, validation)
+        auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
+        
+        // Start the complete trading system
+        SystemThreads thread_handles = SystemManager::startup(system_state, logger);
+        
+        // Run until shutdown signal
+        SystemManager::run(system_state, thread_handles);
+        
+        // Clean shutdown
+        SystemManager::shutdown(system_state, thread_handles, logger);
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 1;
+    } catch (...) {
+        std::cerr << "Unknown fatal error" << std::endl;
+        return 1;
+    }
 }

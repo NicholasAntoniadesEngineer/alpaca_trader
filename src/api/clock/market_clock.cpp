@@ -9,6 +9,9 @@
 
 using json = nlohmann::json;
 
+// Using declarations for cleaner code
+using AlpacaTrader::Logging::log_message;
+
 namespace AlpacaTrader {
 namespace API {
 namespace Clock {
@@ -45,7 +48,7 @@ bool MarketClock::is_core_trading_hours() const {
         return is_within_time_window(hour, min, session.market_open_hour, session.market_open_minute, 
                                    session.market_close_hour, session.market_close_minute);
     } catch (...) {
-        AlpacaTrader::Logging::log_message("Error parsing clock response: " + response, logging.log_file);
+        log_message("Error parsing clock response: " + response, logging.log_file);
     }
     return false;
 }
@@ -81,7 +84,7 @@ bool MarketClock::is_within_fetch_window() const {
             }
         }
     } catch (...) {
-        AlpacaTrader::Logging::log_message("Error parsing clock response for fetch window: " + response, logging.log_file);
+        log_message("Error parsing clock response for fetch window: " + response, logging.log_file);
     }
     return false;
 }
@@ -149,7 +152,7 @@ int MarketClock::get_minutes_until_market_close() const {
         
         return minutes_until_close;
     } catch (...) {
-        AlpacaTrader::Logging::log_message("Error parsing clock response for market close timing: " + response, logging.log_file);
+        log_message("Error parsing clock response for market close timing: " + response, logging.log_file);
     }
     return -1;
 }

@@ -11,14 +11,14 @@ namespace Platform {
 class ThreadControl {
 public:
     // Set priority for a specific thread handle
-    static bool set_priority(std::thread& thread, const AlpacaTrader::Config::ThreadConfig& config);
+    static bool set_priority(std::thread& thread, const AlpacaTrader::Config::ThreadSettings& config);
     
     // Set priority for the current thread
-    static bool set_current_priority(const AlpacaTrader::Config::ThreadConfig& config);
+    static bool set_current_priority(const AlpacaTrader::Config::ThreadSettings& config);
     
     // Set priority with automatic fallback to lower priorities
-    static AlpacaTrader::Config::Priority set_priority_with_fallback(std::thread& thread, const AlpacaTrader::Config::ThreadConfig& config);
-    static AlpacaTrader::Config::Priority set_current_priority_with_fallback(const AlpacaTrader::Config::ThreadConfig& config);
+    static AlpacaTrader::Config::Priority set_priority_with_fallback(std::thread& thread, const AlpacaTrader::Config::ThreadSettings& config);
+    static AlpacaTrader::Config::Priority set_current_priority_with_fallback(const AlpacaTrader::Config::ThreadSettings& config);
     
     // Thread information utilities
     static std::string get_thread_info();

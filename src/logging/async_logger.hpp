@@ -10,7 +10,7 @@
 #include <memory>
 
 // Forward declaration
-struct SystemConfig;
+namespace AlpacaTrader { namespace Config { struct SystemConfig; } }
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -64,7 +64,7 @@ void initialize_global_logger(AsyncLogger& logger);
 void shutdown_global_logger(AsyncLogger& logger);
 
 // Application foundation initialization
-std::shared_ptr<AsyncLogger> initialize_application_foundation(const SystemConfig& config);
+std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config);
 
 } // namespace Logging
 } // namespace AlpacaTrader

@@ -1,6 +1,6 @@
 #ifdef __APPLE__
 
-#include "threads/platform/macos/macos_thread_control.hpp"
+#include "macos_thread_control.hpp"
 #include "configs/thread_config.hpp"
 #include <pthread.h>
 #include <mach/thread_policy.h>

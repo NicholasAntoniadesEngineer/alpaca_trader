@@ -9,25 +9,18 @@
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
 
-std::string ThreadLogs::format_priority_status(const std::string& thread_name,
-                                                const std::string& priority,
-                                                bool success) {
-    std::ostringstream oss;
-    oss << thread_name << ": " << priority << " priority [" << (success ? "OK" : "FAIL") << "]";
-    return oss.str();
-}
 
 void ThreadLogs::log_system_startup(const TimingConfig& config) {
     StartupLogs::log_thread_system_startup(config);
 }
 
 void ThreadLogs::log_system_shutdown() {
-    log_message("THREADS", "Thread system shutdown complete");
+    log_message("Thread system shutdown complete", "");
 }
 
 
 void ThreadLogs::log_thread_stopped(const std::string& thread_name) {
-    log_message("THREAD", thread_name + " thread stopped");
+    log_message(thread_name + " thread stopped", "");
 }
 
 void ThreadLogs::log_priority_assignment(const std::string& thread_name,
@@ -52,7 +45,7 @@ void ThreadLogs::log_thread_performance(const std::string& thread_name,
         oss << " | CPU: " << std::fixed << std::setprecision(1) << cpu_usage << "%";
     }
     
-    log_message("PERF", oss.str());
+    log_message(oss.str(), "");
 }
 
 void ThreadLogs::log_thread_health(const std::string& thread_name, bool healthy, const std::string& details) {
@@ -64,9 +57,9 @@ void ThreadLogs::log_thread_health(const std::string& thread_name, bool healthy,
     }
     
     if (healthy) {
-        log_message("HEALTH", oss.str());
+        log_message(oss.str(), "");
     } else {
-        log_message("HEALTH", oss.str());
+        log_message(oss.str(), "");
     }
 }
 
@@ -75,86 +68,187 @@ void ThreadLogs::log_system_performance_summary(unsigned long total_iterations) 
     std::ostringstream oss;
     oss << "System performance summary - Total iterations: " << total_iterations;
     
-    log_message("SUMMARY", oss.str());
+    log_message(oss.str(), "");
 }
 
 
 void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thread_infos, 
                                               const std::chrono::steady_clock::time_point& start_time) {
-    // Calculate total runtime
-    auto current_time = std::chrono::steady_clock::now();
-    auto runtime_duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time);
-    double runtime_seconds = runtime_duration.count();
-    
-    // Calculate total iterations across all threads
-    unsigned long total_iterations = 0;
-    for (const auto& thread_info : thread_infos) {
-        total_iterations += thread_info.iterations.load();
+    try {
+        // Calculate total runtime
+        auto current_time = std::chrono::steady_clock::now();
+        auto runtime_duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time);
+        double runtime_seconds = runtime_duration.count();
+        
+        // Calculate total iterations across all threads with error handling
+        unsigned long total_iterations = 0;
+        for (const auto& thread_info : thread_infos) {
+            try {
+                total_iterations += thread_info.iterations.load();
+            } catch (const std::exception& e) {
+                // Skip invalid thread info and continue
+                continue;
+            }
+        }
+        
+        // Calculate performance rate
+        double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
+        
+        // Use proper table macros for consistent formatting
+        TABLE_HEADER_48("Thread Monitor", "Iteration Counts & Performance");
+        
+        // Log each thread's iteration count with error handling
+        for (const auto& thread_info : thread_infos) {
+            try {
+                unsigned long iterations = thread_info.iterations.load();
+                TABLE_ROW_48(thread_info.name, std::to_string(iterations) + " iterations");
+            } catch (const std::exception& e) {
+                // Skip invalid thread info and continue
+                TABLE_ROW_48(thread_info.name, "ERROR: Invalid reference");
+            }
+        }
+        
+        TABLE_SEPARATOR_48();
+        
+        // Performance summary
+        std::string runtime_display = std::to_string((int)runtime_seconds) + " seconds";
+        TABLE_ROW_48("Runtime", runtime_display);
+        
+        std::string total_display = std::to_string(total_iterations) + " total";
+        TABLE_ROW_48("Total Iterations", total_display);
+        
+        std::ostringstream rate_stream;
+        rate_stream << std::fixed << std::setprecision(1) << iterations_per_second << "/sec";
+        TABLE_ROW_48("Performance Rate", rate_stream.str());
+        
+        TABLE_FOOTER_48();
+    } catch (const std::exception& e) {
+        // Log error and continue
+        log_message("ERROR in thread monitoring stats: " + std::string(e.what()), "trading_system.log");
+    } catch (...) {
+        // Log unknown error and continue
+        log_message("Unknown error in thread monitoring stats", "trading_system.log");
     }
+}
+
+
+void ThreadLogs::log_thread_status_table(const std::vector<AlpacaTrader::Config::ThreadStatusData>& thread_status_data) {
+    TABLE_HEADER_48("Thread Configuration", "Priority    | CPU Affinity | Status");
     
-    // Calculate performance rate
-    double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
-    
-    // Use proper table macros for consistent formatting
-    TABLE_HEADER_48("Thread Monitor", "Iteration Counts & Performance");
-    
-    // Log each thread's iteration count
-    for (const auto& thread_info : thread_infos) {
-        TABLE_ROW_48(thread_info.name, std::to_string(thread_info.iterations.load()) + " iterations");
+    for (const auto& status : thread_status_data) {
+        std::string status_text = status.success ? "OK" : "ERROR";
+        std::string cpu_text = (status.cpu_core >= 0) ? "CPU " + std::to_string(status.cpu_core) : "None";
+        
+        // Format with proper spacing for alignment
+        std::string priority_padded = status.priority;
+        if (priority_padded.length() < 10) priority_padded += std::string(10 - priority_padded.length(), ' ');
+        
+        std::string cpu_padded = cpu_text;
+        if (cpu_padded.length() < 13) cpu_padded += std::string(13 - cpu_padded.length(), ' ');
+        
+        std::string details = priority_padded + " | " + cpu_padded + " | " + status_text;
+        
+        TABLE_ROW_48(status.name, details);
     }
-    
-    TABLE_SEPARATOR_48();
-    
-    // Performance summary
-    std::string runtime_display = std::to_string((int)runtime_seconds) + " seconds";
-    TABLE_ROW_48("Runtime", runtime_display);
-    
-    std::string total_display = std::to_string(total_iterations) + " total";
-    TABLE_ROW_48("Total Iterations", total_display);
-    
-    std::ostringstream rate_stream;
-    rate_stream << std::fixed << std::setprecision(1) << iterations_per_second << "/sec";
-    TABLE_ROW_48("Performance Rate", rate_stream.str());
     
     TABLE_FOOTER_48();
 }
 
-// Thread configuration logging methods
-void ThreadLogs::log_thread_configuration_skipped(const std::string& thread_name, const std::string& reason) {
-    log_message("THREAD_CONFIG", "Thread " + thread_name + " configuration skipped - " + reason);
+// Thread registry error handling
+void ThreadLogs::log_thread_registry_error(const std::string& error_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD REGISTRY ERROR");
+    LOG_THREAD_CONTENT("ERROR: " + error_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD REGISTRY ERROR: " + error_msg, "trading_system.log");
 }
 
-void ThreadLogs::log_thread_cpu_affinity_configured(const std::string& thread_name, int cpu_core) {
-    log_message("THREAD_CONFIG", "Thread " + thread_name + " configured for CPU core " + 
-               std::to_string(cpu_core) + " with priority NORMAL");
+void ThreadLogs::log_thread_registry_warning(const std::string& warning_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD REGISTRY WARNING");
+    LOG_THREAD_CONTENT("WARNING: " + warning_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD REGISTRY WARNING: " + warning_msg, "trading_system.log");
 }
 
-void ThreadLogs::log_thread_priority_configured(const std::string& thread_name) {
-    log_message("THREAD_CONFIG", "Thread " + thread_name + " configured with priority NORMAL");
+void ThreadLogs::log_thread_registry_validation_success(const std::string& details) {
+    LOG_THREAD_SECTION_HEADER("THREAD REGISTRY VALIDATION");
+    LOG_THREAD_CONTENT("SUCCESS: " + details);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD REGISTRY VALIDATION: " + details, "trading_system.log");
 }
 
-void ThreadLogs::log_thread_cpu_affinity_failed(const std::string& thread_name) {
-    log_message("THREAD_CONFIG", "Thread " + thread_name + " CPU affinity configuration failed, using fallback priority");
+// Thread exception handling
+void ThreadLogs::log_thread_exception(const std::string& thread_name, const std::string& exception_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD EXCEPTION");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("EXCEPTION: " + exception_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message(thread_name + " exception: " + exception_msg, "trading_system.log");
 }
 
-void ThreadLogs::log_thread_priority_failed(const std::string& thread_name) {
-    log_message("THREAD_CONFIG", "Thread " + thread_name + " priority configuration failed");
+void ThreadLogs::log_thread_unknown_exception(const std::string& thread_name) {
+    LOG_THREAD_SECTION_HEADER("THREAD UNKNOWN EXCEPTION");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("EXCEPTION: Unknown exception occurred");
+    LOG_THREAD_SECTION_FOOTER();
+    log_message(thread_name + " unknown exception", "trading_system.log");
 }
 
-void ThreadLogs::log_configuration_result(const std::string& thread_name, 
-                                          const AlpacaTrader::Config::ThreadConfig& platform_config, 
-                                          bool success) {
-    if (success) {
-        if (platform_config.cpu_affinity >= 0) {
-            log_thread_cpu_affinity_configured(thread_name, platform_config.cpu_affinity);
-        } else {
-            log_thread_priority_configured(thread_name);
-        }
-    } else {
-        if (platform_config.cpu_affinity >= 0) {
-            log_thread_cpu_affinity_failed(thread_name);
-        } else {
-            log_thread_priority_failed(thread_name);
-        }
-    }
+// Thread configuration errors
+void ThreadLogs::log_thread_config_error(const std::string& thread_name, const std::string& error_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD CONFIG ERROR");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("ERROR: " + error_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD CONFIG ERROR [" + thread_name + "]: " + error_msg, "trading_system.log");
+}
+
+void ThreadLogs::log_thread_config_warning(const std::string& thread_name, const std::string& warning_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD CONFIG WARNING");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("WARNING: " + warning_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD CONFIG WARNING [" + thread_name + "]: " + warning_msg, "trading_system.log");
+}
+
+// Thread lifecycle errors
+void ThreadLogs::log_thread_startup_error(const std::string& thread_name, const std::string& error_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD STARTUP ERROR");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("ERROR: " + error_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD STARTUP ERROR [" + thread_name + "]: " + error_msg, "trading_system.log");
+}
+
+void ThreadLogs::log_thread_shutdown_error(const std::string& thread_name, const std::string& error_msg) {
+    LOG_THREAD_SECTION_HEADER("THREAD SHUTDOWN ERROR");
+    LOG_THREAD_CONTENT("THREAD: " + thread_name);
+    LOG_THREAD_CONTENT("ERROR: " + error_msg);
+    LOG_THREAD_SECTION_FOOTER();
+    log_message("THREAD SHUTDOWN ERROR [" + thread_name + "]: " + error_msg, "trading_system.log");
+}
+
+// Centralized error message construction
+std::string ThreadLogs::build_unknown_thread_type_error(const std::string& type_name, int enum_value) {
+    return "CRITICAL ERROR: Unknown thread type requested: " + type_name + 
+           " (enum value: " + std::to_string(enum_value) + ")";
+}
+
+std::string ThreadLogs::build_unknown_thread_identifier_error(const std::string& identifier) {
+    return "CRITICAL ERROR: Unknown thread identifier: '" + identifier + "'";
+}
+
+std::string ThreadLogs::build_unknown_thread_type_enum_error(int enum_value) {
+    return "CRITICAL ERROR: Unknown thread type enum: " + std::to_string(enum_value);
+}
+
+std::string ThreadLogs::build_duplicate_thread_type_error(int enum_value) {
+    return "CRITICAL ERROR: Duplicate thread type found in registry: " + std::to_string(enum_value);
+}
+
+std::string ThreadLogs::build_duplicate_thread_identifier_error(const std::string& identifier) {
+    return "CRITICAL ERROR: Duplicate thread identifier found in registry: '" + identifier + "'";
+}
+
+std::string ThreadLogs::build_empty_thread_identifier_error(int enum_value) {
+    return "CRITICAL ERROR: Empty thread identifier found for type: " + std::to_string(enum_value);
 }

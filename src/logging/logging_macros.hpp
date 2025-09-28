@@ -2,6 +2,7 @@
 #define LOGGING_MACROS_HPP
 
 #include "async_logger.hpp"
+#include <iostream>
 
 // Standard indentation levels
 #define LOG_INDENT_L0 ""                    // No indentation

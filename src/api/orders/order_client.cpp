@@ -22,6 +22,7 @@ namespace Orders {
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::TradingLogs;
+using AlpacaTrader::Logging::log_message;
 
 // Helper function to round price to valid penny increments.
 std::string round_price_to_penny(double price) {
@@ -44,7 +45,6 @@ void* OrderClient::get_api_client() const {
 }
 
 void OrderClient::cancel_orders_for_signal(const std::string& signal_side) const {
-    Logging::log_message("DEBUG: cancel_orders_for_signal - Canceling orders for " + signal_side + " signal", logging.log_file);
     cancel_orders(signal_side);
 }
 
@@ -135,7 +135,7 @@ void OrderClient::cancel_orders(const std::string& new_signal_side) const {
 std::string OrderClient::get_positions() const {
     void* client_ptr = get_api_client();
     if (!client_ptr) {
-        Logging::log_message("ERROR: get_positions - API client not set", logging.log_file);
+        log_message("ERROR: get_positions - API client not set", logging.log_file);
         return "[]";
     }
     
@@ -152,17 +152,13 @@ int OrderClient::parse_position_quantity(const std::string& positions_response) 
                     if (position.contains("qty")) {
                         std::string qty_str = position["qty"].get<std::string>();
                         int qty = std::stoi(qty_str);
-                        Logging::log_message("DEBUG: parse_position_quantity - Found position for " + target.symbol + ": " + qty_str, logging.log_file);
                         return qty;
                     }
                 }
             }
-            Logging::log_message("DEBUG: parse_position_quantity - No position found for " + target.symbol, logging.log_file);
         } else {
-            Logging::log_message("DEBUG: parse_position_quantity - Positions response is not an array", logging.log_file);
         }
     } catch (const std::exception& e) {
-        Logging::log_message("DEBUG: parse_position_quantity - Error parsing positions: " + std::string(e.what()), logging.log_file);
     }
     return 0;
 }
@@ -170,7 +166,7 @@ int OrderClient::parse_position_quantity(const std::string& positions_response) 
 std::vector<std::string> OrderClient::fetch_open_orders() const {
     void* client_ptr = get_api_client();
     if (!client_ptr) {
-        Logging::log_message("ERROR: fetch_open_orders - API client not set", logging.log_file);
+        log_message("ERROR: fetch_open_orders - API client not set", logging.log_file);
         return {};
     }
     
@@ -206,7 +202,7 @@ std::vector<std::string> OrderClient::filter_orders_for_cancellation(const std::
     // Limit number of orders to cancel
     if (filtered_orders.size() > static_cast<size_t>(orders.max_orders_to_cancel)) {
         filtered_orders.resize(orders.max_orders_to_cancel);
-        Logging::log_message("WARNING: Limited to " + std::to_string(orders.max_orders_to_cancel) + " orders due to max_orders_to_cancel setting", logging.log_file);
+        log_message("WARNING: Limited to " + std::to_string(orders.max_orders_to_cancel) + " orders due to max_orders_to_cancel setting", logging.log_file);
     }
     
     TradingLogs::log_orders_filtered(filtered_orders.size(), cancellation_reason);
@@ -222,7 +218,7 @@ void OrderClient::execute_cancellations(const std::vector<std::string>& order_id
     
     void* client_ptr = get_api_client();
     if (!client_ptr) {
-        Logging::log_message("ERROR: execute_cancellations - API client not set", logging.log_file);
+        log_message("ERROR: execute_cancellations - API client not set", logging.log_file);
         return;
     }
     
@@ -257,10 +253,8 @@ bool OrderClient::should_cancel_order(const std::string& order_side, const std::
 }
 
 void OrderClient::cancel_orders_and_wait() const {
-    Logging::log_message("DEBUG: cancel_orders_and_wait - Canceling all existing orders", logging.log_file);
     cancel_orders();
     
-    Logging::log_message("DEBUG: cancel_orders_and_wait - Waiting for cancellations to process", logging.log_file);
     std::this_thread::sleep_for(std::chrono::milliseconds(timing.order_cancellation_wait_ms));
 }
 
@@ -274,7 +268,7 @@ int OrderClient::get_fresh_position_quantity() const {
 void OrderClient::submit_position_closure_order(int quantity) const {
     void* client_ptr = get_api_client();
     if (!client_ptr) {
-        Logging::log_message("ERROR: submit_position_closure_order - API client not set", logging.log_file);
+        log_message("ERROR: submit_position_closure_order - API client not set", logging.log_file);
         return;
     }
     

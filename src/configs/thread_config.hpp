@@ -5,6 +5,10 @@
 #include <atomic>
 #include <functional>
 
+// Forward declarations
+struct TradingSystemModules;
+struct SystemThreads;
+
 // Forward declaration
 struct SystemConfig;
 
@@ -21,57 +25,48 @@ enum class Priority {
     LOWEST
 };
 
-// Thread types in the system
-enum class Type {
-    MAIN,
-    TRADER_DECISION,
-    MARKET_DATA,
-    ACCOUNT_DATA,
-    MARKET_GATE,
-    LOGGING
-};
-
-// Generic thread configuration
-struct ThreadConfig {
+struct ThreadSettings {
     Priority priority;
-    int cpu_affinity;  // -1 = no affinity, >=0 = specific core
+    int cpu_affinity;  
     std::string name;
-    bool use_cpu_affinity;  // Whether this thread type should use CPU affinity
+    bool use_cpu_affinity;   
     
-    ThreadConfig(Priority p = Priority::NORMAL, int affinity = -1, const std::string& n = "", bool use_affinity = false)
+    ThreadSettings(Priority p = Priority::NORMAL, int affinity = -1, const std::string& n = "", bool use_affinity = false)
         : priority(p), cpu_affinity(affinity), name(n), use_cpu_affinity(use_affinity) {}
 };
 
-// Thread configuration container for all thread types
-struct ThreadConfigs {
-    ThreadConfig main;
-    ThreadConfig trader_decision;
-    ThreadConfig market_data;
-    ThreadConfig account_data;
-    ThreadConfig market_gate;
-    ThreadConfig logging;
-    
-    ThreadConfigs() = default;
-};
 
-// Thread configuration provider
 class ConfigProvider {
 public:
-    static ThreadConfig get_config_from_system(Type type, const SystemConfig& system_config);
     static std::string priority_to_string(Priority priority);
     static Priority string_to_priority(const std::string& str);
 };
 
-// Thread manager configuration structure
-struct ThreadManagerConfig {
+struct ThreadStatusData {
     std::string name;
-    std::function<void()> thread_function;
-    std::atomic<unsigned long>& iteration_counter;
-    Type config_type;
+    std::string priority;
+    bool success;
+    int cpu_core;
+    std::string status_message;
     
-    ThreadManagerConfig(const std::string& n, std::function<void()> func, 
-                       std::atomic<unsigned long>& counter, Type type)
-        : name(n), thread_function(std::move(func)), iteration_counter(counter), config_type(type) {}
+    ThreadStatusData(const std::string& thread_name, const std::string& priority_level, bool config_success, int cpu = -1, const std::string& message = "")
+        : name(thread_name), priority(priority_level), success(config_success), cpu_core(cpu), status_message(message) {}
+};
+
+struct ThreadMetadata {
+    std::string identifier;  // Single source of truth (e.g., "MARKET", "ACCOUNT", etc.)
+    std::function<void(TradingSystemModules&)> get_function;
+    std::function<std::atomic<unsigned long>&(SystemThreads&)> get_counter;
+    
+    // All thread-specific information derived from identifier
+    std::string get_display_name() const;
+    std::string get_config_type() const;
+    std::string get_log_tag() const;
+    
+    ThreadMetadata(const std::string& thread_id,
+                   std::function<void(TradingSystemModules&)> func,
+                   std::function<std::atomic<unsigned long>&(SystemThreads&)> counter)
+        : identifier(thread_id), get_function(func), get_counter(counter) {}
 };
 
 } // namespace Config

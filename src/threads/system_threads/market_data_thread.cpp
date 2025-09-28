@@ -2,15 +2,16 @@
  * Market data collection and processing thread.
  * Fetches real-time market data for trading decisions.
  */
-#include "threads/market_data_thread.hpp"
+#include "market_data_thread.hpp"
 #include "logging/async_logger.hpp"
 #include "logging/startup_logs.hpp"
-#include "threads/platform/thread_control.hpp"
+#include "../thread_logic/platform/thread_control.hpp"
 #include "core/market_processing.hpp"
 #include "utils/connectivity_manager.hpp"
 #include "configs/component_configs.hpp"
 #include <atomic>
 #include <chrono>
+#include <iostream>
 
 // Using declarations for cleaner code
 using AlpacaTrader::Threads::MarketDataThread;
@@ -32,17 +33,17 @@ void AlpacaTrader::Threads::MarketDataThread::operator()() {
 
 void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
     while (running.load()) {
-        if ((allow_fetch_ptr && !allow_fetch_ptr->load()) || !client.is_within_fetch_window()) {
+        if (!allow_fetch_ptr || !allow_fetch_ptr->load()) {
             std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
             continue;
         }
-        
+
         fetch_and_process_market_data();
-        
+
         if (iteration_counter) {
             iteration_counter->fetch_add(1);
         }
-        
+
         std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
     }
 }

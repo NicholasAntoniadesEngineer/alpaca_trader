@@ -3,8 +3,8 @@
 
 #include "api/alpaca_client.hpp"
 #include "core/account_manager.hpp"
-#include "threads/market_data_thread.hpp"
-#include "threads/account_data_thread.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
+#include "threads/system_threads/account_data_thread.hpp"
 
 /**
  * @brief Configuration bundle for system components

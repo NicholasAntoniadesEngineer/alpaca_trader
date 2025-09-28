@@ -7,8 +7,8 @@
 #include "core/account_manager.hpp"
 #include "logging/account_logs.hpp"
 #include "core/trader.hpp"
-#include "threads/market_data_thread.hpp"
-#include "threads/account_data_thread.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
+#include "threads/system_threads/account_data_thread.hpp"
 
 // =============================================================================
 // TRADING SYSTEM MODULE CONFIGURATION CREATION
@@ -27,7 +27,7 @@ TradingSystemConfigurations create_trading_configurations(const SystemState& sta
 // TRADING SYSTEM MODULE INSTANCE CREATION
 // =============================================================================
 
-TradingSystemModules create_trading_modules(SystemState& state) {
+TradingSystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     TradingSystemConfigurations configs = create_trading_configurations(state);
     TradingSystemModules modules;
     
@@ -37,19 +37,29 @@ TradingSystemModules create_trading_modules(SystemState& state) {
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
     modules.trading_engine = std::make_unique<AlpacaTrader::Core::Trader>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
     
-    // Create thread modules (but not thread objects yet)
+    // Create thread modules
+    
+    // Create MARKET_DATA thread
     modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_connector, 
                                                                    state.mtx, state.cv, state.market, 
                                                                    state.has_market, state.running);
+    
+    // Create ACCOUNT_DATA thread
     modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.portfolio_manager, 
                                                                      state.mtx, state.cv, state.account, 
                                                                      state.has_account, state.running);
-    modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging, 
-                                                                    state.allow_fetch, state.running, *modules.market_connector);
     
-    // Thread objects will be created in thread manager
-    modules.logging_thread = nullptr;
-    modules.trading_thread = nullptr;
+    // Create MARKET_GATE thread
+    modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging, 
+                                                                   state.allow_fetch, state.running, *modules.market_connector);
+    
+    // Create LOGGING thread
+    static std::atomic<unsigned long> logging_iterations{0};
+    modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, logging_iterations, state.config);
+    
+    // Create TRADER_DECISION thread
+    static std::atomic<unsigned long> trader_iterations{0};
+    modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(*modules.trading_engine, trader_iterations, state.config.timing);
     
     return modules;
 }
@@ -62,7 +72,7 @@ void configure_trading_modules(SystemState& system_state, TradingSystemModules& 
     // Configure trading engine with shared state
     modules.trading_engine->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, 
                                               system_state.account, system_state.has_market, 
-                                              system_state.has_account, system_state.running);
+                                              system_state.has_account, system_state.running, system_state.allow_fetch);
     modules.trading_engine->start_decision_thread();
     
     // Configure thread modules

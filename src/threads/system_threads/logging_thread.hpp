@@ -18,7 +18,7 @@ class LoggingThread {
 public:
     LoggingThread(std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger,
                   std::atomic<unsigned long>& iterations,
-                  const SystemConfig& system_config)
+                  const AlpacaTrader::Config::SystemConfig& system_config)
         : logger_ptr(logger), logger_iterations(iterations), config(system_config) {}
 
     void operator()();
@@ -26,7 +26,7 @@ public:
 private:
     std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger_ptr;
     std::atomic<unsigned long>& logger_iterations;
-    const SystemConfig& config;
+    const AlpacaTrader::Config::SystemConfig& config;
     
     void setup_logging_thread();
     void logging_loop();
