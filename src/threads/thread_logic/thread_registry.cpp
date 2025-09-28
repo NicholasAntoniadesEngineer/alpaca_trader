@@ -71,6 +71,14 @@ AlpacaTrader::Config::ThreadSettings ThreadRegistry::get_config_for_type(Type ty
     return get_thread_config(type, system_config);
 }
 
+void ThreadRegistry::configure_thread_iteration_counters(SystemThreads& handles, TradingSystemModules& modules) {
+    for (const auto& entry : THREAD_REGISTRY) {
+        if (entry.set_iteration_counter) {
+            entry.set_iteration_counter(modules, entry.get_counter(handles));
+        }
+    }
+}
+
 ThreadRegistry::Type ThreadRegistry::string_to_type(const std::string& identifier) {
     for (const auto& entry : THREAD_REGISTRY) {
         if (entry.identifier == identifier) {

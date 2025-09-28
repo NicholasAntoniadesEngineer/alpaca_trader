@@ -7,6 +7,7 @@
 #include <fstream>
 #include <memory>
 #include <chrono>
+#include <thread>
 
 using AlpacaTrader::Threads::LoggingThread;
 using AlpacaTrader::Logging::set_log_thread_tag;
@@ -41,6 +42,8 @@ void AlpacaTrader::Threads::LoggingThread::logging_loop() {
 
     while (logger_ptr->running.load()) {
         process_logging_queue(log_file);
+        logger_iterations->fetch_add(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay to prevent busy waiting
     }
 }
 
@@ -51,7 +54,6 @@ void AlpacaTrader::Threads::LoggingThread::process_logging_queue(std::ofstream& 
     while (!logger_ptr->queue.empty()) {
         std::string line = std::move(logger_ptr->queue.front());
         logger_ptr->queue.pop();
-        logger_iterations++;
         lock.unlock();
         
         output_log_line(line, log_file);

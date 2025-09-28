@@ -38,6 +38,7 @@ public:
         std::function<void(TradingSystemModules&)> get_function;
         std::function<std::atomic<unsigned long>&(SystemThreads&)> get_counter;
         std::function<AlpacaTrader::Config::ThreadSettings(const AlpacaTrader::Config::SystemConfig&)> get_config;
+        std::function<void(TradingSystemModules&, std::atomic<unsigned long>&)> set_iteration_counter;
     };
     
     static AlpacaTrader::Config::ThreadSettings get_thread_config(Type type, const AlpacaTrader::Config::SystemConfig& system_config);
@@ -45,6 +46,7 @@ public:
     static std::vector<Type> create_thread_types();
     static std::vector<ThreadLogs::ThreadInfo> create_thread_infos(const std::vector<ThreadDefinition>& definitions);
     static AlpacaTrader::Config::ThreadSettings get_config_for_type(Type type, const AlpacaTrader::Config::SystemConfig& system_config);
+    static void configure_thread_iteration_counters(SystemThreads& handles, TradingSystemModules& modules);
 
 private:
     // Single source of truth - add new threads here only

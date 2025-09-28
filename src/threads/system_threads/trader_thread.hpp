@@ -10,14 +10,15 @@ namespace Threads {
 
 struct TraderThread {
     Core::Trader& trader;
-    std::atomic<unsigned long>& trader_iterations;
+    std::atomic<unsigned long>* trader_iterations;
     const TimingConfig& timing;
 
     TraderThread(Core::Trader& t, std::atomic<unsigned long>& iterations, const TimingConfig& timing_config)
-        : trader(t), trader_iterations(iterations), timing(timing_config) {}
+        : trader(t), trader_iterations(&iterations), timing(timing_config) {}
 
     // Thread entrypoint
     void operator()();
+    void set_iteration_counter(std::atomic<unsigned long>& counter) { trader_iterations = &counter; }
 };
 
 } // namespace Threads

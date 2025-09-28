@@ -84,6 +84,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.market_close_buffer_minutes") cfg.timing.market_close_buffer_min = std::stoi(value);
         else if (key == "timing.trading_halt_sleep_minutes") cfg.timing.halt_sleep_min = std::stoi(value);
         else if (key == "timing.countdown_display_interval_sec") cfg.timing.countdown_tick_sec = std::stoi(value);
+        else if (key == "timing.enable_thread_monitoring") cfg.timing.enable_thread_monitoring = (value == "true");
         else if (key == "timing.thread_monitor_log_interval_sec") cfg.timing.monitoring_interval_sec = std::stoi(value);
         
         // Thread initialization delays

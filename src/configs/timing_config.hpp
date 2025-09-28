@@ -26,6 +26,7 @@ struct TimingConfig {
     int market_close_buffer_min;
     int halt_sleep_min;
     int countdown_tick_sec;
+    bool enable_thread_monitoring;
     int monitoring_interval_sec;
     int account_data_cache_duration_sec;
     

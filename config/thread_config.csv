@@ -32,12 +32,12 @@ thread.account_data.use_cpu_affinity,true
 
 # Market gate thread configuration
 thread.market_gate.priority,LOW
-thread.market_gate.cpu_affinity,-1
+thread.market_gate.cpu_affinity,1
 thread.market_gate.name,GATE
-thread.market_gate.use_cpu_affinity,false
+thread.market_gate.use_cpu_affinity,true
 
 # Logging thread configuration
 thread.logging.priority,LOWEST
-thread.logging.cpu_affinity,-1
+thread.logging.cpu_affinity,1
 thread.logging.name,LOGGER
-thread.logging.use_cpu_affinity,false
+thread.logging.use_cpu_affinity,true

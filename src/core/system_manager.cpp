@@ -75,10 +75,8 @@ void log_startup_information(const TradingSystemModules& modules, const AlpacaTr
 }
 
 void configure_trading_modules(SystemThreads& handles, TradingSystemModules& modules) {
-    // Configure modules with iteration counters
-    if (modules.trading_engine) {
-        modules.trading_engine->set_iteration_counter(handles.trader_iterations);
-    }
+    // Configure thread iteration counters using the generic registry approach
+    AlpacaTrader::Core::ThreadRegistry::configure_thread_iteration_counters(handles, modules);
 }
 
 SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
@@ -135,7 +133,6 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
 }
 
 static void run_until_shutdown(SystemState& state, SystemThreads& /*handles*/) {
-    // Simple main loop without thread monitoring to prevent crashes
     try {
         // Ensure running flag is properly initialized
         if (!state.running.load()) {
@@ -143,8 +140,28 @@ static void run_until_shutdown(SystemState& state, SystemThreads& /*handles*/) {
             state.running.store(true);
         }
         
+        auto start_time = std::chrono::steady_clock::now();
+        auto last_monitor_time = start_time;
+        
         while (state.running.load()) {
             try {
+                auto now = std::chrono::steady_clock::now();
+                
+                // Check if thread monitoring is enabled and it's time to log stats
+                if (state.config.timing.enable_thread_monitoring && 
+                    !state.thread_infos.empty() &&
+                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.timing.monitoring_interval_sec) {
+                    
+                    try {
+                        ThreadSystem::Manager::log_thread_monitoring_stats(state.thread_infos, start_time);
+                        last_monitor_time = now;
+                    } catch (const std::exception& e) {
+                        std::cerr << "Error logging thread monitoring stats: " << e.what() << std::endl;
+                    } catch (...) {
+                        std::cerr << "Unknown error logging thread monitoring stats" << std::endl;
+                    }
+                }
+                
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             } catch (const std::exception& e) {
                 // Log error and continue

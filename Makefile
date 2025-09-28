@@ -24,7 +24,7 @@ SOURCES = src/main.cpp \
   src/core/risk_logic.cpp \
   src/core/market_processing.cpp \
   src/core/system_manager.cpp \
-  src/core/thread_registry.cpp \
+  src/threads/thread_register.cpp \
  \
   src/configs/component_configs.cpp \
   src/configs/config_loader.cpp \
@@ -38,16 +38,17 @@ SOURCES = src/main.cpp \
   src/logging/thread_logs.cpp \
   src/logging/startup_logs.cpp \
   src/configs/thread_config.cpp \
-  src/threads/platform/thread_control.cpp \
-  src/threads/platform/linux/linux_thread_control.cpp \
-  src/threads/platform/macos/macos_thread_control.cpp \
-  src/threads/platform/windows/windows_thread_control.cpp \
-  src/threads/thread_manager.cpp \
-  src/threads/account_data_thread.cpp \
-  src/threads/market_data_thread.cpp \
-  src/threads/market_gate_thread.cpp \
-  src/threads/logging_thread.cpp \
-  src/threads/trader_thread.cpp
+  src/threads/thread_logic/platform/thread_control.cpp \
+  src/threads/thread_logic/platform/linux/linux_thread_control.cpp \
+  src/threads/thread_logic/platform/macos/macos_thread_control.cpp \
+  src/threads/thread_logic/platform/windows/windows_thread_control.cpp \
+  src/threads/thread_logic/thread_manager.cpp \
+  src/threads/thread_logic/thread_registry.cpp \
+  src/threads/system_threads/account_data_thread.cpp \
+  src/threads/system_threads/market_data_thread.cpp \
+  src/threads/system_threads/market_gate_thread.cpp \
+  src/threads/system_threads/logging_thread.cpp \
+  src/threads/system_threads/trader_thread.cpp
 
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
@@ -73,10 +74,12 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/utils
 	mkdir -p $(OBJ_DIR)/src/logging
 	mkdir -p $(OBJ_DIR)/src/threads
-	mkdir -p $(OBJ_DIR)/src/threads/platform
-	mkdir -p $(OBJ_DIR)/src/threads/platform/linux
-	mkdir -p $(OBJ_DIR)/src/threads/platform/macos
-	mkdir -p $(OBJ_DIR)/src/threads/platform/windows
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/linux
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/macos
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/windows
+	mkdir -p $(OBJ_DIR)/src/threads/system_threads
 
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
