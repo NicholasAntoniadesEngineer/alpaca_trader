@@ -63,7 +63,7 @@ void TradingOrchestrator::execute_trading_loop() {
                     countdown_to_next_cycle();
                     continue;
                 }
-                ProcessedData processed_data = trading_engine.create_processed_data(market, account);
+                ProcessedData processed_data(market, account);
                 trading_engine.handle_market_close_positions(processed_data);
                 trading_engine.execute_trading_decision(processed_data, account.equity);
 

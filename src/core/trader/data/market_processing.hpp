@@ -19,6 +19,7 @@ struct IndicatorInputs {
 
 IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars);
 ProcessedData compute_processed_data(const std::vector<Bar>& bars, const TraderConfig& cfg);
+ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account);
 
 } // namespace MarketProcessing
 } // namespace Core

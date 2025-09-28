@@ -25,17 +25,6 @@ struct PositionDetails {
     double current_value = 0.0;
 };
 
-struct ProcessedData {
-    double atr = 0.0;
-    double avg_atr = 0.0;
-    double avg_vol = 0.0;
-    Bar curr;
-    Bar prev;
-    PositionDetails pos_details;
-    int open_orders = 0;
-    double exposure_pct = 0.0;
-};
-
 // Optional split views for multi-threading.
 struct MarketSnapshot {
     double atr = 0.0;
@@ -50,6 +39,26 @@ struct AccountSnapshot {
     PositionDetails pos_details{};
     int open_orders = 0;
     double exposure_pct = 0.0;
+};
+
+struct ProcessedData {
+    double atr = 0.0;
+    double avg_atr = 0.0;
+    double avg_vol = 0.0;
+    Bar curr;
+    Bar prev;
+    PositionDetails pos_details;
+    int open_orders = 0;
+    double exposure_pct = 0.0;
+    
+    // Default constructor
+    ProcessedData() = default;
+    
+    // Constructor from MarketSnapshot and AccountSnapshot
+    ProcessedData(const MarketSnapshot& market, const AccountSnapshot& account)
+        : atr(market.atr), avg_atr(market.avg_atr), avg_vol(market.avg_vol),
+          curr(market.curr), prev(market.prev), pos_details(account.pos_details),
+          open_orders(account.open_orders), exposure_pct(account.exposure_pct) {}
 };
 
 // Request objects (to avoid multi-parameter functions).

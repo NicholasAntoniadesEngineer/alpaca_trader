@@ -40,6 +40,7 @@ SOURCES = src/main.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/account_logs.cpp \
   src/core/logging/market_data_logs.cpp \
+  src/core/logging/risk_logs.cpp \
   src/core/utils/http_utils.cpp \
   src/core/logging/async_logger.cpp \
   src/core/logging/trading_logs.cpp \

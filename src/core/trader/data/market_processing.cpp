@@ -37,6 +37,10 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const TraderC
     return data;
 }
 
+ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) {
+    return ProcessedData(market, account);
+}
+
 } // namespace MarketProcessing
 } // namespace Core
 } // namespace AlpacaTrader

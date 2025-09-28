@@ -76,7 +76,6 @@ bool TradingEngine::validate_risk_conditions(const ProcessedData& data, double e
     return true;
 }
 
-// Core validation methods
 bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
     if (market.curr.c <= 0.0 || market.atr <= 0.0) {
         TradingLogs::log_market_status(false, "Invalid market data - price or ATR is zero");
@@ -95,7 +94,6 @@ bool TradingEngine::check_connectivity() {
     return true;
 }
 
-// Trading decision methods
 void TradingEngine::process_signal_analysis(const ProcessedData& data, double /*equity*/) {
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
     TradingLogs::log_candle_and_signals(data, signal_decision);
@@ -136,20 +134,6 @@ void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int curren
     }
     
     order_engine.execute_trade(data, current_qty, sizing, signal_decision);
-}
-
-// Utility methods
-ProcessedData TradingEngine::create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) const {
-    ProcessedData pd;
-    pd.atr = market.atr;
-    pd.avg_atr = market.avg_atr;
-    pd.avg_vol = market.avg_vol;
-    pd.curr = market.curr;
-    pd.prev = market.prev;
-    pd.pos_details = account.pos_details;
-    pd.open_orders = account.open_orders;
-    pd.exposure_pct = account.exposure_pct;
-    return pd;
 }
 
 void TradingEngine::perform_halt_countdown(int seconds) const {

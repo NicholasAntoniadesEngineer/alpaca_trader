@@ -25,7 +25,6 @@ public:
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
     bool validate_market_data(const MarketSnapshot& market) const;
-    ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) const;
     void handle_market_close_positions(const ProcessedData& data);
 
 private:
