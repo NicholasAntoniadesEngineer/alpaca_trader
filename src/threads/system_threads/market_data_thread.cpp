@@ -9,9 +9,7 @@
 #include "core/market_processing.hpp"
 #include "utils/connectivity_manager.hpp"
 #include "configs/component_configs.hpp"
-#include <atomic>
 #include <chrono>
-#include <iostream>
 
 // Using declarations for cleaner code
 using AlpacaTrader::Threads::MarketDataThread;

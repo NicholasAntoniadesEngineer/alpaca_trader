@@ -72,64 +72,6 @@ AlpacaTrader::Config::Priority ThreadControl::set_priority_with_fallback(std::th
     return AlpacaTrader::Config::Priority::NORMAL;
 }
 
-AlpacaTrader::Config::Priority ThreadControl::set_current_priority_with_fallback(const AlpacaTrader::Config::ThreadSettings& config) {
-    // Try original priority first
-    if (set_current_priority(config)) {
-        return config.priority;
-    }
-    
-    // Create fallback configuration
-    AlpacaTrader::Config::ThreadSettings fallback_config = config;
-    
-    // Try progressively lower priorities
-    AlpacaTrader::Config::Priority priorities[] = {AlpacaTrader::Config::Priority::HIGH, AlpacaTrader::Config::Priority::NORMAL, AlpacaTrader::Config::Priority::LOW, AlpacaTrader::Config::Priority::LOWEST};
-    
-    for (AlpacaTrader::Config::Priority current_priority : priorities) {
-        if (current_priority >= config.priority) continue;  // Skip if not actually lower
-        
-        fallback_config.priority = current_priority;
-        
-        // Try with CPU affinity first
-        if (set_current_priority(fallback_config)) {
-            return current_priority;
-        }
-        
-        // If that fails, try without CPU affinity
-        if (fallback_config.cpu_affinity >= 0) {
-            fallback_config.cpu_affinity = -1; // Disable affinity
-            if (set_current_priority(fallback_config)) {
-                return current_priority;
-            }
-            // Reset affinity for next iteration
-            fallback_config.cpu_affinity = config.cpu_affinity;
-        }
-    }
-    
-    // If even LOWEST fails, return NORMAL as indication of partial success
-    return AlpacaTrader::Config::Priority::NORMAL;
-}
-
-std::string ThreadControl::get_thread_info() {
-#ifdef __linux__
-    return Linux::ThreadControl::get_thread_info();
-#elif __APPLE__
-    return MacOS::ThreadControl::get_thread_info();
-#elif _WIN32
-    return Windows::ThreadControl::get_thread_info();
-#else
-    return "TID:unknown";
-#endif
-}
-
-void ThreadControl::set_thread_name(const std::string& name) {
-#ifdef __linux__
-    Linux::ThreadControl::set_thread_name(name);
-#elif __APPLE__
-    MacOS::ThreadControl::set_thread_name(name);
-#elif _WIN32
-    Windows::ThreadControl::set_thread_name(name);
-#endif
-}
 
 } // namespace Platform
 } // namespace ThreadSystem

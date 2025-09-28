@@ -6,7 +6,6 @@
 #include <mach/thread_policy.h>
 #include <mach/thread_act.h>
 #include <mach/mach.h>
-#include <sstream>
 
 namespace ThreadSystem {
 namespace Platform {
@@ -122,17 +121,6 @@ bool ThreadControl::set_current_priority(AlpacaTrader::Config::Priority priority
     return success;
 }
 
-std::string ThreadControl::get_thread_info() {
-    std::ostringstream oss;
-    uint64_t tid;
-    pthread_threadid_np(NULL, &tid);
-    oss << "TID:" << tid;
-    return oss.str();
-}
-
-void ThreadControl::set_thread_name(const std::string& name) {
-    pthread_setname_np(name.c_str());
-}
 
 } // namespace MacOS
 } // namespace Platform

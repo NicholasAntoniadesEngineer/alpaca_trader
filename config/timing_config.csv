@@ -23,7 +23,7 @@ timing.market_close_buffer_minutes,15
 
 # System monitoring configuration
 timing.enable_thread_monitoring,true
-timing.thread_monitor_log_interval_sec,120
+timing.thread_monitor_log_interval_sec,30
 
 # Error handling configuration
 timing.trading_halt_sleep_minutes,1

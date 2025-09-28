@@ -14,8 +14,6 @@ class ThreadControl {
 public:
     static bool set_priority(std::thread::native_handle_type handle, AlpacaTrader::Config::Priority priority, int cpu_affinity);
     static bool set_current_priority(AlpacaTrader::Config::Priority priority, int cpu_affinity);
-    static std::string get_thread_info();
-    static void set_thread_name(const std::string& name);
     
 private:
     static int priority_to_native(AlpacaTrader::Config::Priority priority);

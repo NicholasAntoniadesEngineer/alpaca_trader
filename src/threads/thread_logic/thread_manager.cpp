@@ -5,10 +5,7 @@
 #include "core/system_threads.hpp"
 #include "core/trading_system_modules.hpp"
 #include "thread_registry.hpp"
-#include <iostream>
 
-using AlpacaTrader::Logging::AsyncLogger;
-using AlpacaTrader::Logging::log_message;
 using ThreadSystem::Platform::ThreadControl;
 
 namespace ThreadSystem {

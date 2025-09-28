@@ -1,27 +1,26 @@
 #ifdef _WIN32
 
-#include "threads/platform/windows/windows_thread_control.hpp"
+#include "windows_thread_control.hpp"
 #include <windows.h>
 #include <processthreadsapi.h>
-#include <sstream>
 
 namespace ThreadSystem {
 namespace Platform {
 namespace Windows {
 
-int ThreadControl::priority_to_native(Priority priority) {
+int ThreadControl::priority_to_native(AlpacaTrader::Config::Priority priority) {
     switch (priority) {
-        case Priority::REALTIME: return THREAD_PRIORITY_TIME_CRITICAL;
-        case Priority::HIGHEST:  return THREAD_PRIORITY_HIGHEST;
-        case Priority::HIGH:     return THREAD_PRIORITY_ABOVE_NORMAL;
-        case Priority::NORMAL:   return THREAD_PRIORITY_NORMAL;
-        case Priority::LOW:      return THREAD_PRIORITY_BELOW_NORMAL;
-        case Priority::LOWEST:   return THREAD_PRIORITY_LOWEST;
+        case AlpacaTrader::Config::Priority::REALTIME: return THREAD_PRIORITY_TIME_CRITICAL;
+        case AlpacaTrader::Config::Priority::HIGHEST:  return THREAD_PRIORITY_HIGHEST;
+        case AlpacaTrader::Config::Priority::HIGH:     return THREAD_PRIORITY_ABOVE_NORMAL;
+        case AlpacaTrader::Config::Priority::NORMAL:   return THREAD_PRIORITY_NORMAL;
+        case AlpacaTrader::Config::Priority::LOW:      return THREAD_PRIORITY_BELOW_NORMAL;
+        case AlpacaTrader::Config::Priority::LOWEST:   return THREAD_PRIORITY_LOWEST;
         default:                 return THREAD_PRIORITY_NORMAL;
     }
 }
 
-bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priority priority, int cpu_affinity) {
+bool ThreadControl::set_priority(std::thread::native_handle_type handle, AlpacaTrader::Config::Priority priority, int cpu_affinity) {
     HANDLE thread_handle = static_cast<HANDLE>(handle);
     bool success = true;
     
@@ -41,7 +40,7 @@ bool ThreadControl::set_priority(std::thread::native_handle_type handle, Priorit
     return success;
 }
 
-bool ThreadControl::set_current_priority(Priority priority, int cpu_affinity) {
+bool ThreadControl::set_current_priority(AlpacaTrader::Config::Priority priority, int cpu_affinity) {
     HANDLE current_thread = GetCurrentThread();
     bool success = true;
     
@@ -60,18 +59,6 @@ bool ThreadControl::set_current_priority(Priority priority, int cpu_affinity) {
     return success;
 }
 
-std::string ThreadControl::get_thread_info() {
-    std::ostringstream oss;
-    DWORD tid = GetCurrentThreadId();
-    oss << "TID:" << tid;
-    return oss.str();
-}
-
-void ThreadControl::set_thread_name(const std::string& name) {
-    // Windows thread naming requires more complex setup
-    // For now, we'll skip it to keep the implementation simple
-    (void)name; // Suppress unused parameter warning
-}
 
 } // namespace Windows
 } // namespace Platform

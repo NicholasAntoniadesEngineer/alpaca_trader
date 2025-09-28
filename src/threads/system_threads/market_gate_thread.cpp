@@ -13,7 +13,6 @@
 using AlpacaTrader::Threads::MarketGateThread;
 using AlpacaTrader::Logging::set_log_thread_tag;
 using AlpacaTrader::Logging::log_message;
-using AlpacaTrader::API::AlpacaClient;
 
 void AlpacaTrader::Threads::MarketGateThread::operator()() {
     set_log_thread_tag("GATE  ");

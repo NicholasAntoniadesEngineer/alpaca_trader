@@ -50,9 +50,6 @@ public:
     // Thread priority management
     static void setup_thread_priorities(const std::vector<ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config);
     
-    // Utility functions
-    static std::vector<ThreadLogs::ThreadInfo> create_thread_info_vector(const std::vector<ThreadDefinition>& thread_definitions);
-    static std::pair<std::vector<ThreadDefinition>, std::vector<ThreadLogs::ThreadInfo>> create_thread_configurations(SystemThreads& handles, TradingSystemModules& modules);
     
     // Exception-safe thread execution
     template<typename ThreadFunction>

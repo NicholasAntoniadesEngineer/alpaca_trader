@@ -5,7 +5,6 @@
 #include "../thread_logic/platform/thread_control.hpp"
 #include <iostream>
 #include <fstream>
-#include <memory>
 #include <chrono>
 #include <thread>
 

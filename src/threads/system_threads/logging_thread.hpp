@@ -2,9 +2,6 @@
 #define LOGGING_THREAD_HPP
 
 #include <string>
-#include <mutex>
-#include <condition_variable>
-#include <queue>
 #include <atomic>
 #include <fstream>
 #include <memory>

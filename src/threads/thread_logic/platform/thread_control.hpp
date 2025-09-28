@@ -18,11 +18,6 @@ public:
     
     // Set priority with automatic fallback to lower priorities
     static AlpacaTrader::Config::Priority set_priority_with_fallback(std::thread& thread, const AlpacaTrader::Config::ThreadSettings& config);
-    static AlpacaTrader::Config::Priority set_current_priority_with_fallback(const AlpacaTrader::Config::ThreadSettings& config);
-    
-    // Thread information utilities
-    static std::string get_thread_info();
-    static void set_thread_name(const std::string& name);
     
 private:
     // Platform-specific implementations
