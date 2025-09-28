@@ -1,5 +1,4 @@
 # Modern C++ Trading System Build Configuration
-# Consolidated project structure - no more include/src duplication!
 
 # Compiler and flags
 CXX = g++
