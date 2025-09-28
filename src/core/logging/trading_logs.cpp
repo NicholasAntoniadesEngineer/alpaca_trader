@@ -762,6 +762,14 @@ void TradingLogs::log_trade_validation_failed(const std::string& reason) {
     log_message("Trade validation failed - " + reason, "");
 }
 
+void TradingLogs::log_insufficient_buying_power(double required_buying_power, double available_buying_power, int quantity, double current_price) {
+    std::ostringstream oss;
+    oss << "Insufficient buying power: Need $" << std::fixed << std::setprecision(2) << required_buying_power 
+        << ", Have $" << std::fixed << std::setprecision(2) << available_buying_power 
+        << " (Position: " << quantity << " @ $" << std::fixed << std::setprecision(2) << current_price << ")";
+    log_message(oss.str(), "");
+}
+
 void TradingLogs::log_position_sizing_skipped(const std::string& reason) {
     log_message("Position sizing resulted in " + reason + ", skipping trade", "");
 }

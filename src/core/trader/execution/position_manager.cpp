@@ -1,5 +1,6 @@
 #include "position_manager.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/trader/data/data_structures.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
@@ -24,7 +25,7 @@ void PositionManager::handle_market_close_positions(const ProcessedData& data) {
         TradingLogs::log_market_close_warning(minutes_until_close);
     }
     
-    std::string side = (current_qty > 0) ? "SELL" : "BUY";
+    std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
     TradingLogs::log_market_close_position_closure(current_qty, config.target.symbol, side);
     
     client.close_position(ClosePositionRequest{current_qty});

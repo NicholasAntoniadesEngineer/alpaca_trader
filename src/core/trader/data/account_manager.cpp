@@ -1,5 +1,6 @@
 #include "account_manager.hpp"
 #include "core/logging/async_logger.hpp"
+#include "core/logging/account_logs.hpp"
 #include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <cmath>
@@ -9,7 +10,7 @@ using json = nlohmann::json;
 namespace AlpacaTrader {
 namespace Core {
 
-using AlpacaTrader::Logging::log_message;
+using AlpacaTrader::Logging::AccountLogs;
 
 AccountManager::AccountManager(const AccountManagerConfig& cfg)
     : api(cfg.api), logging(cfg.logging), target(cfg.target), 
@@ -21,22 +22,22 @@ double AccountManager::fetch_account_equity() const {
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
-        log_message("ERROR: Unable to retrieve account information (empty response)", logging.log_file);
+        AccountLogs::log_account_empty_response(logging.log_file);
         return 0.0;
     }
     try {
         json j = json::parse(response);
         if (j.contains("message")) {
-            log_message("ERROR: Account API error: " + j["message"].get<std::string>(), logging.log_file);
+            AccountLogs::log_account_api_error(j["message"].get<std::string>(), logging.log_file);
             return 0.0;
         }
         if (j.contains("equity") && !j["equity"].is_null()) {
             return std::stod(j["equity"].get<std::string>());
         } else {
-            log_message("ERROR: Equity field missing in account response", logging.log_file);
+            AccountLogs::log_account_field_missing("Equity", logging.log_file);
         }
     } catch (const std::exception& e) {
-        log_message("ERROR: Failed to parse account data: " + std::string(e.what()) + "; raw: " + response, logging.log_file);
+        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
     }
     return 0.0;
 }
@@ -46,22 +47,22 @@ double AccountManager::fetch_buying_power() const {
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
-        log_message("ERROR: Unable to retrieve account information (empty response)", logging.log_file);
+        AccountLogs::log_account_empty_response(logging.log_file);
         return 0.0;
     }
     try {
         json j = json::parse(response);
         if (j.contains("message")) {
-            log_message("ERROR: Account API error: " + j["message"].get<std::string>(), logging.log_file);
+            AccountLogs::log_account_api_error(j["message"].get<std::string>(), logging.log_file);
             return 0.0;
         }
         if (j.contains("buying_power") && !j["buying_power"].is_null()) {
             return std::stod(j["buying_power"].get<std::string>());
         } else {
-            log_message("ERROR: Buying power field missing in account response", logging.log_file);
+            AccountLogs::log_account_field_missing("Buying power", logging.log_file);
         }
     } catch (const std::exception& e) {
-        log_message("ERROR: Failed to parse account data: " + std::string(e.what()) + "; raw: " + response, logging.log_file);
+        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
     }
     return 0.0;
 }
@@ -84,8 +85,7 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
             details.current_value = std::stod(j["market_value"].get<std::string>());
         }
     } catch (const std::exception& e) {
-        log_message("Error parsing position details: " + std::string(e.what()), logging.log_file);
-        log_message("Raw position response: " + response, logging.log_file);
+        AccountLogs::log_position_parse_error(e.what(), response, logging.log_file);
     }
     return details;
 }
@@ -103,8 +103,7 @@ int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const 
         }
         return 0;
     } catch (const std::exception& e) {
-        log_message("Error parsing open orders: " + std::string(e.what()), logging.log_file);
-        log_message("Raw orders response: " + response, logging.log_file);
+        AccountLogs::log_orders_parse_error(e.what(), response, logging.log_file);
         return 0;
     }
 }
@@ -142,14 +141,14 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_ac
     std::string response = http_get(req);
     
     if (response.empty()) {
-        log_message("ERROR: Unable to retrieve account information (empty response)", logging.log_file);
+        AccountLogs::log_account_empty_response(logging.log_file);
         return {info, snapshot};
     }
     
     try {
         json account = json::parse(response);
         if (account.contains("message")) {
-            log_message("ERROR: API returned error: " + account["message"].get<std::string>(), logging.log_file);
+            AccountLogs::log_account_api_error(account["message"].get<std::string>(), logging.log_file);
             return {info, snapshot};
         }
         
@@ -224,7 +223,7 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_ac
         snapshot.exposure_pct = (snapshot.equity > 0.0) ? (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0 : 0.0;
         
     } catch (const std::exception& e) {
-        log_message("ERROR: Failed to parse account data: " + std::string(e.what()), logging.log_file);
+        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
     }
     
     return {info, snapshot};

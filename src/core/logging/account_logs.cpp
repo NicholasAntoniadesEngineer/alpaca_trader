@@ -1,6 +1,7 @@
 // account_logger.cpp
 #include "account_logs.hpp"
 #include "async_logger.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include <string>
 #include <iomanip>
 #include <sstream>
@@ -93,7 +94,7 @@ void AccountLogs::display_positions() const {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);
         
-        std::string side = (snapshot.pos_details.qty > 0) ? "LONG" : "SHORT";
+        std::string side = (snapshot.pos_details.qty > 0) ? POSITION_LONG : POSITION_SHORT;
         oss << "|   Position: " << side << " " << std::abs(snapshot.pos_details.qty) << " shares";
         log_message(oss.str(), logging.log_file);
         
@@ -115,6 +116,33 @@ void AccountLogs::display_positions() const {
     }
     
     log_message("|", logging.log_file);
+}
+
+// Error logging functions
+void AccountLogs::log_account_api_error(const std::string& message, const std::string& log_file) {
+    log_message("ERROR: Account API error: " + message, log_file);
+}
+
+void AccountLogs::log_account_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file) {
+    log_message("ERROR: Failed to parse account data: " + error + "; raw: " + raw_response, log_file);
+}
+
+void AccountLogs::log_account_field_missing(const std::string& field_name, const std::string& log_file) {
+    log_message("ERROR: " + field_name + " field missing in account response", log_file);
+}
+
+void AccountLogs::log_account_empty_response(const std::string& log_file) {
+    log_message("ERROR: Unable to retrieve account information (empty response)", log_file);
+}
+
+void AccountLogs::log_position_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file) {
+    log_message("Error parsing position details: " + error, log_file);
+    log_message("Raw position response: " + raw_response, log_file);
+}
+
+void AccountLogs::log_orders_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file) {
+    log_message("Error parsing open orders: " + error, log_file);
+    log_message("Raw orders response: " + raw_response, log_file);
 }
 
 } // namespace Logging

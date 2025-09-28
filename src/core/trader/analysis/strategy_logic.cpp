@@ -1,5 +1,6 @@
 #include "strategy_logic.hpp"
 #include "indicators.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include <cmath>
 #include <climits>
 

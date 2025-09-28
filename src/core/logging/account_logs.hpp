@@ -17,6 +17,14 @@ public:
 
     void display_account_status() const;
     
+    // Error logging functions
+    static void log_account_api_error(const std::string& message, const std::string& log_file);
+    static void log_account_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file);
+    static void log_account_field_missing(const std::string& field_name, const std::string& log_file);
+    static void log_account_empty_response(const std::string& log_file);
+    static void log_position_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file);
+    static void log_orders_parse_error(const std::string& error, const std::string& raw_response, const std::string& log_file);
+    
 private:
     void display_account_overview() const;
     void display_financial_summary() const;

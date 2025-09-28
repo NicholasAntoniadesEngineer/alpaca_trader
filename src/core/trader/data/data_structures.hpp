@@ -3,6 +3,14 @@
 
 #include <string>
 
+// Trading signal constants
+#define SIGNAL_BUY "BUY"
+#define SIGNAL_SELL "SELL"
+
+// Position side constants
+#define POSITION_LONG "LONG"
+#define POSITION_SHORT "SHORT"
+
 namespace AlpacaTrader {
 namespace Core {
 

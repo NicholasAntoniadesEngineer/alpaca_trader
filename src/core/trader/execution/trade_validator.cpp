@@ -1,7 +1,5 @@
 #include "trade_validator.hpp"
 #include "core/logging/trading_logs.hpp"
-#include <sstream>
-#include <iomanip>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -19,11 +17,7 @@ bool TradeValidator::validate_trade_feasibility(const StrategyLogic::PositionSiz
     double required_buying_power = position_value * config.risk.buying_power_validation_factor;
     
     if (buying_power < required_buying_power) {
-        std::ostringstream oss;
-        oss << "Insufficient buying power: Need $" << std::fixed << std::setprecision(2) << required_buying_power 
-            << ", Have $" << std::fixed << std::setprecision(2) << buying_power 
-            << " (Position: " << sizing.quantity << " @ $" << std::fixed << std::setprecision(2) << current_price << ")";
-        TradingLogs::log_trade_validation_failed(oss.str());
+        TradingLogs::log_insufficient_buying_power(required_buying_power, buying_power, sizing.quantity, current_price);
         return false;
     }
     

@@ -1,5 +1,6 @@
 #include "order_execution_engine.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include <thread>
 #include <chrono>
 
@@ -23,10 +24,10 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
     TradingLogs::log_debug_position_data(current_qty, 0.0, current_qty, is_long, is_short);
 
     if (sd.buy) {
-        TradingLogs::log_signal_triggered("BUY", true);
+        TradingLogs::log_signal_triggered(SIGNAL_BUY, true);
         execute_order(OrderSide::Buy, data, current_qty, sizing);
     } else if (sd.sell) {
-        TradingLogs::log_signal_triggered("SELL", true);
+        TradingLogs::log_signal_triggered(SIGNAL_SELL, true);
         execute_order(OrderSide::Sell, data, current_qty, sizing);
     } else {
         TradingLogs::log_no_trading_pattern();
@@ -161,11 +162,11 @@ StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSid
 
 // Utility methods
 std::string OrderExecutionEngine::to_side_string(OrderSide side) const {
-    return (side == OrderSide::Buy) ? "buy" : "sell";
+    return (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
 }
 
 std::string OrderExecutionEngine::to_opposite_side_string(OrderSide side) const {
-    return (side == OrderSide::Buy) ? "SHORT" : "LONG";
+    return (side == OrderSide::Buy) ? POSITION_SHORT : POSITION_LONG;
 }
 
 bool OrderExecutionEngine::is_long_position(int qty) const {

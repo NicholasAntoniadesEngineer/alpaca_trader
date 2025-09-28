@@ -72,6 +72,7 @@ public:
     
     // Debug and validation logging
     static void log_trade_validation_failed(const std::string& reason);
+    static void log_insufficient_buying_power(double required_buying_power, double available_buying_power, int quantity, double current_price);
     static void log_position_sizing_skipped(const std::string& reason);
     static void log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short);
     static void log_debug_fresh_data_fetch(const std::string& position_type);
