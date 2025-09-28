@@ -6,7 +6,7 @@
 #include "configs/target_config.hpp"
 #include "core/threads/thread_register.hpp"
 #include "api/alpaca_client.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "core/logging/async_logger.hpp"
 #include <atomic>
 #include <mutex>

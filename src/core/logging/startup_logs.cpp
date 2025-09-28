@@ -4,7 +4,7 @@
 #include "logging_macros.hpp"
 #include "configs/timing_config.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
-#include "core/trader/config_loader.hpp"
+#include "core/trader/config/config_loader.hpp"
 #include <iomanip>
 #include <sstream>
 
@@ -32,7 +32,7 @@ void StartupLogs::log_application_header() {
 
 
 void StartupLogs::log_account_overview(const AccountManager& account_manager) {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     TradingLogs::log_account_overview_table(
         account_info.account_number,
@@ -44,7 +44,7 @@ void StartupLogs::log_account_overview(const AccountManager& account_manager) {
 }
 
 void StartupLogs::log_financial_summary(const AccountManager& account_manager) {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     TradingLogs::log_financial_summary_table(
         account_info.equity,
@@ -63,7 +63,7 @@ void StartupLogs::log_financial_summary(const AccountManager& account_manager) {
 }
 
 void StartupLogs::log_current_positions(const AccountManager& account_manager) {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     TradingLogs::log_current_positions_table(
         snapshot.pos_details.qty,

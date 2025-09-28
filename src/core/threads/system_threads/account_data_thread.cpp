@@ -62,7 +62,7 @@ void AlpacaTrader::Threads::AccountDataThread::account_data_loop() {
 }
 
 void AlpacaTrader::Threads::AccountDataThread::fetch_and_update_account_data() {
-    AccountSnapshot temp = account_manager.get_account_snapshot();
+    AccountSnapshot temp = account_manager.fetch_account_snapshot();
     {
         std::lock_guard<std::mutex> lock(state_mtx);
         account_snapshot = temp;

@@ -3,8 +3,8 @@
 
 #include "configs/trader_config.hpp"
 #include "configs/system_config.hpp"
-#include "core/trader/data_structures.hpp"
-#include "core/trader/strategy_logic.hpp"
+#include "core/trader/data/data_structures.hpp"
+#include "core/trader/analysis/strategy_logic.hpp"
 #include "logging_macros.hpp"
 #include <vector>
 #include <tuple>

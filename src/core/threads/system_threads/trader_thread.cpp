@@ -1,5 +1,5 @@
 #include "trader_thread.hpp"
-#include "core/trader/trader.hpp"
+#include "core/trader/core/trader.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
 #include "core/logging/thread_logs.hpp"
@@ -22,7 +22,7 @@ void TraderThread::operator()() {
         std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms + 2000)); // Extra 2 seconds
 
         // Start the trader's decision loop
-        trader.decision_loop();
+        trader.execute_trading_loop();
     } catch (const std::exception& e) {
         ThreadLogs::log_thread_exception("TraderThread", std::string(e.what()));
         log_message("TraderThread exception: " + std::string(e.what()), "trading_system.log");

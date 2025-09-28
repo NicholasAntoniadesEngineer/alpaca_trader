@@ -1,4 +1,3 @@
-// risk_logic.cpp
 #include "risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 

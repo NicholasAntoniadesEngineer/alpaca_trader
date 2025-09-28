@@ -1,6 +1,5 @@
-// market_processing.cpp
 #include "market_processing.hpp"
-#include "indicators.hpp"
+#include "../analysis/indicators.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
@@ -29,10 +28,10 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const TraderC
     if (static_cast<int>(bars.size()) < atr_period + 2) return data;
 
     IndicatorInputs inputs = extract_inputs_from_bars(bars);
-    data.atr = calculate_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
+    data.atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
     if (data.atr == 0.0) return data;
-    data.avg_atr = calculate_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.avg_atr_multiplier);
-    data.avg_vol = calculate_avg_volume(inputs.volumes, atr_period);
+    data.avg_atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.avg_atr_multiplier);
+    data.avg_vol = compute_average_volume(inputs.volumes, atr_period);
     data.curr = bars.back();
     data.prev = bars[bars.size() - 2];
     return data;

@@ -2,8 +2,8 @@
 #define ACCOUNT_DATA_THREAD_HPP
 
 #include "configs/timing_config.hpp"
-#include "core/trader/account_manager.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/account_manager.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "configs/component_configs.hpp"
 #include <atomic>
 #include <mutex>

@@ -2,7 +2,7 @@
 #define STARTUP_LOGS_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/account_manager.hpp"
+#include "core/trader/data/account_manager.hpp"
 #include "core/logging/async_logger.hpp"
 
 /**

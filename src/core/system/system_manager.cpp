@@ -9,15 +9,15 @@
 #include "core/logging/account_logs.hpp"
 #include "configs/system_config.hpp"
 #include "core/system/system_configurations.hpp"
-#include "core/trader/trader.hpp"
-#include "core/trader/account_manager.hpp"
+#include "core/trader/core/trader.hpp"
+#include "core/trader/data/account_manager.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/threads/system_threads/logging_thread.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/system_threads/market_gate_thread.hpp"
 #include "core/threads/system_threads/trader_thread.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "core/threads/thread_register.hpp"
 #include <iostream>
 #include <csignal>
@@ -92,7 +92,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     modules.market_connector = std::make_unique<AlpacaTrader::API::AlpacaClient>(configs.market_connector);
     modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(configs.portfolio_manager);
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
-    modules.trading_engine = std::make_unique<AlpacaTrader::Core::Trader>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
+    modules.trading_engine = std::make_unique<AlpacaTrader::Core::TradingOrchestrator>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
     
     // Create thread modules
     

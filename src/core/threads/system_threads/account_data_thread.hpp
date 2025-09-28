@@ -3,8 +3,8 @@
 
 #include "configs/timing_config.hpp"
 #include "core/threads/thread_register.hpp"
-#include "core/trader/account_manager.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/account_manager.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>

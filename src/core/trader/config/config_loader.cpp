@@ -1,4 +1,4 @@
-#include "core/trader/config_loader.hpp"
+#include "config_loader.hpp"
 #include "configs/system_config.hpp"
 #include "configs/thread_config.hpp"
 #include "core/logging/logging_macros.hpp"
@@ -6,7 +6,6 @@
 #include <sstream>
 #include <algorithm>
 
-// Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
 
 namespace {

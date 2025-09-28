@@ -1,4 +1,3 @@
-// AccountManager.cpp
 #include "account_manager.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/utils/http_utils.hpp"
@@ -10,7 +9,6 @@ using json = nlohmann::json;
 namespace AlpacaTrader {
 namespace Core {
 
-// Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
 
 AccountManager::AccountManager(const AccountManagerConfig& cfg)
@@ -18,7 +16,7 @@ AccountManager::AccountManager(const AccountManagerConfig& cfg)
       cache_duration_seconds(cfg.timing.account_data_cache_duration_sec),
       last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_sec + 1)) {}
 
-double AccountManager::get_equity() const {
+double AccountManager::fetch_account_equity() const {
     HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
@@ -43,7 +41,7 @@ double AccountManager::get_equity() const {
     return 0.0;
 }
 
-double AccountManager::get_buying_power() const {
+double AccountManager::fetch_buying_power() const {
     HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
@@ -68,7 +66,7 @@ double AccountManager::get_buying_power() const {
     return 0.0;
 }
 
-PositionDetails AccountManager::get_position_details(const SymbolRequest& req_sym) const {
+PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_sym) const {
     PositionDetails details;
     HttpRequest req(api.base_url + "/v2/positions/" + req_sym.symbol, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
@@ -92,7 +90,7 @@ PositionDetails AccountManager::get_position_details(const SymbolRequest& req_sy
     return details;
 }
 
-int AccountManager::get_open_orders_count(const SymbolRequest& req_sym) const {
+int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const {
     std::string url = api.base_url + "/v2/orders?status=open&symbols=" + req_sym.symbol;
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
@@ -111,7 +109,7 @@ int AccountManager::get_open_orders_count(const SymbolRequest& req_sym) const {
     }
 }
 
-AccountSnapshot AccountManager::get_account_snapshot() const {
+AccountSnapshot AccountManager::fetch_account_snapshot() const {
     std::lock_guard<std::mutex> lock(cache_mutex);
     
     // Check if cache is still valid
@@ -124,7 +122,7 @@ AccountSnapshot AccountManager::get_account_snapshot() const {
     }
     
     // Cache expired, fetch fresh data
-    auto [account_info, snapshot] = get_account_data_bundled();
+    auto [account_info, snapshot] = fetch_account_data_bundled();
     
     // Update cache
     cached_data = {account_info, snapshot};
@@ -134,7 +132,7 @@ AccountSnapshot AccountManager::get_account_snapshot() const {
 }
 
 // Optimized method to get both account info and snapshot with minimal API calls
-std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::get_account_data_bundled() const {
+std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_account_data_bundled() const {
     AccountInfo info = {};
     AccountSnapshot snapshot;
     
@@ -221,8 +219,8 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::get_acco
         
         // Get position details and orders (these are different endpoints)
         SymbolRequest sreq{target.symbol};
-        snapshot.pos_details = get_position_details(sreq);
-        snapshot.open_orders = get_open_orders_count(sreq);
+        snapshot.pos_details = fetch_position_details(sreq);
+        snapshot.open_orders = fetch_open_orders_count(sreq);
         snapshot.exposure_pct = (snapshot.equity > 0.0) ? (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0 : 0.0;
         
     } catch (const std::exception& e) {
@@ -232,7 +230,7 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::get_acco
     return {info, snapshot};
 }
 
-AccountManager::AccountInfo AccountManager::get_account_info() const {
+AccountManager::AccountInfo AccountManager::fetch_account_info() const {
     std::lock_guard<std::mutex> lock(cache_mutex);
     
     // Check if cache is still valid
@@ -245,7 +243,7 @@ AccountManager::AccountInfo AccountManager::get_account_info() const {
     }
     
     // Cache expired, fetch fresh data
-    auto [account_info, snapshot] = get_account_data_bundled();
+    auto [account_info, snapshot] = fetch_account_data_bundled();
     
     // Update cache
     cached_data = {account_info, snapshot};

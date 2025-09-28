@@ -26,7 +26,7 @@ void AccountLogs::display_account_status() const {
 }
 
 void AccountLogs::display_account_overview() const {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     log_message("+-- ACCOUNT OVERVIEW", logging.log_file);
     if (!account_info.account_number.empty()) {
@@ -56,7 +56,7 @@ void AccountLogs::display_account_overview() const {
 }
 
 void AccountLogs::display_financial_summary() const {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     log_message("+-- FINANCIAL SUMMARY", logging.log_file);
     
@@ -83,7 +83,7 @@ void AccountLogs::display_financial_summary() const {
 }
 
 void AccountLogs::display_positions() const {
-    auto [account_info, snapshot] = account_manager.get_account_data_bundled();
+    auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();
     
     log_message("+-- CURRENT POSITIONS", logging.log_file);
     

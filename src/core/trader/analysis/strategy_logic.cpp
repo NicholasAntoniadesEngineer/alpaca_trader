@@ -1,4 +1,3 @@
-// strategy_logic.cpp
 #include "strategy_logic.hpp"
 #include "indicators.hpp"
 #include <cmath>
@@ -9,7 +8,7 @@ namespace Core {
 
 namespace StrategyLogic {
 
-SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& config) {
+SignalDecision detect_trading_signals(const ProcessedData& data, const TraderConfig& config) {
     SignalDecision decision;
     
     // Configurable BUY signal conditions
@@ -45,11 +44,11 @@ SignalDecision detect_signals(const ProcessedData& data, const TraderConfig& con
     return decision;
 }
 
-FilterResult evaluate_filters(const ProcessedData& data, const TraderConfig& config) {
+FilterResult evaluate_trading_filters(const ProcessedData& data, const TraderConfig& config) {
     FilterResult result;
     result.atr_pass = data.atr > config.strategy.atr_multiplier_entry * data.avg_atr;
     result.vol_pass = data.curr.v > config.strategy.volume_multiplier * data.avg_vol;
-    result.doji_pass = !is_doji(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
+    result.doji_pass = !detect_doji_pattern(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
     result.all_pass = result.atr_pass && result.vol_pass && result.doji_pass;
     result.atr_ratio = (data.avg_atr > 0.0) ? (data.atr / data.avg_atr) : 0.0;
     result.vol_ratio = (data.avg_vol > 0.0) ? (static_cast<double>(data.curr.v) / data.avg_vol) : 0.0;
@@ -79,58 +78,55 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
     PositionSizing sizing;
     sizing.risk_amount = data.atr;  // Use ATR as risk per share
     
+    // Early return if price is invalid (zero or negative)
+    if (data.curr.c <= 0.0 || sizing.risk_amount <= 0.0) {
+        sizing.quantity = 0;
+        sizing.risk_based_qty = 0;
+        sizing.exposure_based_qty = 0;
+        sizing.max_value_qty = 0;
+        sizing.buying_power_qty = 0;
+        return sizing;
+    }
+    
     // Determine size multiplier for scaling in/out of positions
     sizing.size_multiplier = (current_qty != 0 && config.risk.allow_multiple_positions)
                                  ? config.risk.scale_in_multiplier
                                  : 1.0;
     
-    // CONSTRAINT 1: Risk-based sizing (risk_per_trade % of equity)
     int equity_based_qty = static_cast<int>(std::floor(
         (equity * config.risk.risk_per_trade * sizing.size_multiplier) / sizing.risk_amount
     ));
     
-    // CONSTRAINT 2: Exposure-based sizing (max_exposure_pct % of equity total)
     double max_total_exposure_value = equity * (config.risk.max_exposure_pct / 100.0);
     double current_exposure_value = std::abs(data.pos_details.current_value);
     double available_exposure_value = max_total_exposure_value - current_exposure_value;
     
-    // Prevent negative available exposure
     available_exposure_value = std::max(0.0, available_exposure_value);
     
     int exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
     
-    // Take the minimum of risk-based and exposure-based constraints
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
-    // CONSTRAINT 3: Maximum value per trade limitation (if configured)
-    int max_value_qty = INT_MAX; // Default to no max value constraint
+    int max_value_qty = INT_MAX;
     if (config.risk.max_value_per_trade > 0.0) {
         max_value_qty = static_cast<int>(std::floor(config.risk.max_value_per_trade / data.curr.c));
-        
-        // Apply the most restrictive constraint so far
         sizing.quantity = std::min(sizing.quantity, max_value_qty);
     }
     
-    // CONSTRAINT 4: Buying power limitation (if provided)
-    int buying_power_qty = INT_MAX; // Default to no buying power constraint
+    int buying_power_qty = INT_MAX;
     if (buying_power > 0.0) {
-        // Apply configurable safety factor (default 80% of buying power)
         double usable_buying_power = buying_power * config.risk.buying_power_usage_factor;
         buying_power_qty = static_cast<int>(std::floor(usable_buying_power / data.curr.c));
-        
-        // Apply the most restrictive constraint
         sizing.quantity = std::min(sizing.quantity, buying_power_qty);
     }
     
-    // Store debug information for logging
     sizing.risk_based_qty = equity_based_qty;
     sizing.exposure_based_qty = exposure_based_qty;
     sizing.max_value_qty = max_value_qty;
     sizing.buying_power_qty = buying_power_qty;
     
-    // Final validation: ensure we have a valid quantity
     if (sizing.quantity < 1 && equity_based_qty > 0) {
-        sizing.quantity = 0; // Will trigger validation failure in trader
+        sizing.quantity = 0;
     }
     
     return sizing;

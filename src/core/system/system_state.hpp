@@ -2,7 +2,7 @@
 #define SYSTEM_STATE_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "configs/trader_config.hpp"
 #include "core/logging/thread_logs.hpp"
 #include "core/system/system_modules.hpp"
@@ -37,8 +37,8 @@ struct SystemState {
     std::atomic<bool> has_market{false};    // Indicates if market data is available
     std::atomic<bool> has_account{false};   // Indicates if account data is available
     std::atomic<bool> running{true};        // Main system running flag
-    std::atomic<bool> allow_fetch{false};   // Controls data fetching operations (default: no trading)
-    
+    std::atomic<bool> allow_fetch{false};    // Controls data fetching operations 
+
     // =========================================================================
     // CONFIGURATION AND MODULES
     // =========================================================================

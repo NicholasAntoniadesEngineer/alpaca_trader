@@ -19,20 +19,27 @@ SOURCES = src/main.cpp \
   src/api/market/market_data_client.cpp \
   src/api/alpaca_client.cpp \
   src/api/orders/order_client.cpp \
-  src/core/trader/trader.cpp \
-  src/core/trader/strategy_logic.cpp \
-  src/core/trader/risk_logic.cpp \
-  src/core/trader/market_processing.cpp \
+  src/core/trader/core/trader.cpp \
+  src/core/trader/core/trading_engine.cpp \
+  src/core/trader/core/risk_manager.cpp \
+  src/core/trader/execution/order_execution_engine.cpp \
+  src/core/trader/execution/position_manager.cpp \
+  src/core/trader/execution/trade_validator.cpp \
+  src/core/trader/analysis/strategy_logic.cpp \
+  src/core/trader/analysis/risk_logic.cpp \
+  src/core/trader/analysis/indicators.cpp \
+  src/core/trader/analysis/price_manager.cpp \
+  src/core/trader/data/market_processing.cpp \
+  src/core/trader/data/market_data_fetcher.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
  \
-  src/core/trader/config_loader.cpp \
-  src/core/trader/account_manager.cpp \
+  src/core/trader/config/config_loader.cpp \
+  src/core/trader/data/account_manager.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/account_logs.cpp \
   src/core/utils/http_utils.cpp \
-  src/core/trader/indicators.cpp \
   src/core/logging/async_logger.cpp \
   src/core/logging/trading_logs.cpp \
   src/core/logging/thread_logs.cpp \
@@ -70,7 +77,11 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/api/orders
 	mkdir -p $(OBJ_DIR)/src/core
 	mkdir -p $(OBJ_DIR)/src/core/system
-	mkdir -p $(OBJ_DIR)/src/core/trader
+	mkdir -p $(OBJ_DIR)/src/core/trader/core
+	mkdir -p $(OBJ_DIR)/src/core/trader/analysis
+	mkdir -p $(OBJ_DIR)/src/core/trader/config
+	mkdir -p $(OBJ_DIR)/src/core/trader/data
+	mkdir -p $(OBJ_DIR)/src/core/trader/execution
 	mkdir -p $(OBJ_DIR)/src/core/logging
 	mkdir -p $(OBJ_DIR)/src/core/utils
 	mkdir -p $(OBJ_DIR)/src/core/threads

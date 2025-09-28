@@ -2,7 +2,7 @@
 #define TRADING_SYSTEM_CONFIGURATIONS_HPP
 
 #include "api/alpaca_client.hpp"
-#include "core/trader/account_manager.hpp"
+#include "core/trader/data/account_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/thread_register.hpp"

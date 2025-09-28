@@ -2,8 +2,8 @@
 #define SYSTEM_MODULES_HPP
 
 #include "api/alpaca_client.hpp"
-#include "core/trader/account_manager.hpp"
-#include "core/trader/trader.hpp"
+#include "core/trader/data/account_manager.hpp"
+#include "core/trader/core/trader.hpp"
 #include "core/logging/account_logs.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/market_gate_thread.hpp"
@@ -23,7 +23,7 @@ struct SystemModules {
     // =========================================================================
     std::unique_ptr<AlpacaTrader::API::AlpacaClient> market_connector;    // Market data API client
     std::unique_ptr<AlpacaTrader::Core::AccountManager> portfolio_manager; // Account and portfolio management
-    std::unique_ptr<AlpacaTrader::Core::Trader> trading_engine;            // Core trading logic engine
+    std::unique_ptr<AlpacaTrader::Core::TradingOrchestrator> trading_engine;            // Core trading logic engine
     
     // =========================================================================
     // LOGGING AND MONITORING

@@ -43,19 +43,14 @@ public:
     
     explicit AccountManager(const AccountManagerConfig& cfg);
 
-    // Account data operations (moved from AlpacaClient)
-    double get_equity() const;
-    double get_buying_power() const;
-    PositionDetails get_position_details(const SymbolRequest& req_sym) const;
-    int get_open_orders_count(const SymbolRequest& req_sym) const;
+    double fetch_account_equity() const;
+    double fetch_buying_power() const;
+    PositionDetails fetch_position_details(const SymbolRequest& req_sym) const;
+    int fetch_open_orders_count(const SymbolRequest& req_sym) const;
     
-    // Account data aggregation
-    AccountSnapshot get_account_snapshot() const;
-    
-    // Optimized bundled data retrieval (reduces API calls)
-    std::pair<AccountInfo, AccountSnapshot> get_account_data_bundled() const;
-    
-    AccountInfo get_account_info() const;
+    AccountSnapshot fetch_account_snapshot() const;
+    std::pair<AccountInfo, AccountSnapshot> fetch_account_data_bundled() const;
+    AccountInfo fetch_account_info() const;
 
 private:
     const ApiConfig& api;

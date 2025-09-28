@@ -3,7 +3,7 @@
 #define ALPACA_CLIENT_HPP
 
 #include "core/threads/thread_register.hpp"
-#include "core/trader/data_structures.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "clock/market_clock.hpp"
 #include "market/market_data_client.hpp"
 #include "orders/order_client.hpp"
