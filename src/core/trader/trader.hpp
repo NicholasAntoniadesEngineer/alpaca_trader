@@ -3,11 +3,11 @@
 
 #include "configs/trader_config.hpp"
 #include "api/alpaca_client.hpp"
-#include "../data/account_manager.hpp"
-#include "../data/data_structures.hpp"
-#include "../data/market_data_fetcher.hpp"
-#include "trading_engine.hpp"
-#include "risk_manager.hpp"
+#include "data/account_manager.hpp"
+#include "data/data_structures.hpp"
+#include "data/market_data_fetcher.hpp"
+#include "trading_engine/trading_engine.hpp"
+#include "analysis/risk_manager.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <thread>

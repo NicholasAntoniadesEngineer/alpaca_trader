@@ -9,7 +9,7 @@
 #include "core/logging/account_logs.hpp"
 #include "configs/system_config.hpp"
 #include "core/system/system_configurations.hpp"
-#include "core/trader/core/trader.hpp"
+#include "core/trader/trader.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/data/market_data_fetcher.hpp"
 #include "api/alpaca_client.hpp"

@@ -1,5 +1,5 @@
 #include "trader_thread.hpp"
-#include "core/trader/core/trader.hpp"
+#include "core/trader/trader.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
 #include "core/logging/thread_logs.hpp"

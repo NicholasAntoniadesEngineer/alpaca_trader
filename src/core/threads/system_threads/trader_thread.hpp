@@ -2,7 +2,7 @@
 #define TRADER_THREAD_HPP
 
 #include "configs/timing_config.hpp"
-#include "core/trader/core/trader.hpp"
+#include "core/trader/trader.hpp"
 #include <atomic>
 
 namespace AlpacaTrader {
