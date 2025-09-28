@@ -1,7 +1,7 @@
 #ifndef ALPACA_BASE_CLIENT_HPP
 #define ALPACA_BASE_CLIENT_HPP
 
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 
 namespace AlpacaTrader {
 namespace API {

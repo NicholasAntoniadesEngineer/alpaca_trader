@@ -9,7 +9,7 @@
 #include "api_config.hpp"
 #include "session_config.hpp"
 #include "orders_config.hpp"
-#include "thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 
 namespace AlpacaTrader {
 namespace Config {

@@ -50,7 +50,10 @@ std::vector<ThreadRegistry::ThreadDefinition> ThreadRegistry::create_thread_defi
             entry.get_config,
             entry.get_counter(handles)
         );
-        // Don't set thread_function here - it will be set when the thread is actually started
+        // Set up the thread function with the modules parameter
+        def.set_thread_function([&entry, &modules]() { 
+            entry.get_function(modules); 
+        });
         definitions.push_back(def);
     }
     

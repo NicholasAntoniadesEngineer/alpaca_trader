@@ -1,13 +1,13 @@
 #pragma once
 
 #include "core/threads/thread_logic/thread_types.hpp"
-#include "strategy_config.hpp"
-#include "timing_config.hpp"
-#include "target_config.hpp"
-#include "api_config.hpp"
-#include "session_config.hpp"
-#include "logging_config.hpp"
-#include "orders_config.hpp"
+#include "configs/strategy_config.hpp"
+#include "configs/timing_config.hpp"
+#include "configs/target_config.hpp"
+#include "configs/api_config.hpp"
+#include "configs/session_config.hpp"
+#include "configs/logging_config.hpp"
+#include "configs/orders_config.hpp"
 
 namespace AlpacaTrader {
 namespace Config {

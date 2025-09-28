@@ -1,4 +1,4 @@
-#include "configs/config_loader.hpp"
+#include "core/trader/config_loader.hpp"
 #include "configs/system_config.hpp"
 #include "configs/thread_config.hpp"
 #include "core/logging/logging_macros.hpp"

@@ -2,7 +2,7 @@
 #ifndef ALPACA_CLIENT_HPP
 #define ALPACA_CLIENT_HPP
 
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include "core/trader/data_structures.hpp"
 #include "clock/market_clock.hpp"
 #include "market/market_data_client.hpp"

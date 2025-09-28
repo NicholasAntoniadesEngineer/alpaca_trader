@@ -53,11 +53,8 @@ void Manager::setup_thread_priorities(const std::vector<AlpacaTrader::Core::Thre
     for (size_t i = 0; i < thread_definitions.size() && i < thread_types.size(); ++i) {
         configure_single_thread(thread_definitions[i], thread_types[i], config);
     }
-    
-    ThreadLogs::log_thread_status_table(thread_status_data);
-    
+    ThreadLogs::log_thread_status_table(thread_status_data);    
 }
-
 
 void Manager::configure_single_thread(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config) 
 {    
@@ -86,7 +83,6 @@ AlpacaTrader::Config::ThreadSettings Manager::create_platform_config(const Alpac
     return platform_config;
 }
 
-
 bool Manager::apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& /*thread_def*/, 
                                        const AlpacaTrader::Config::ThreadSettings& platform_config, 
                                        const AlpacaTrader::Config::SystemConfig& /*config*/) 
@@ -96,7 +92,6 @@ bool Manager::apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem:
     
     return success;
 }
-
 
 } // namespace ThreadSystem
 } // namespace Core

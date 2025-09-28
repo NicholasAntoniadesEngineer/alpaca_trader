@@ -23,11 +23,11 @@ SOURCES = src/main.cpp \
   src/core/trader/strategy_logic.cpp \
   src/core/trader/risk_logic.cpp \
   src/core/trader/market_processing.cpp \
+  src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
  \
-  src/configs/component_configs.cpp \
-  src/configs/config_loader.cpp \
+  src/core/trader/config_loader.cpp \
   src/core/trader/account_manager.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/account_logs.cpp \

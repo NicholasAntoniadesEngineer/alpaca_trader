@@ -7,7 +7,7 @@
 #include "logging/startup_logs.hpp"
 #include "../thread_logic/platform/thread_control.hpp"
 #include "core/trader/market_processing.hpp"
-#include "utils/connectivity_manager.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include "configs/component_configs.hpp"
 #include <chrono>
 

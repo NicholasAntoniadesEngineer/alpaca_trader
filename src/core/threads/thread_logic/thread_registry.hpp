@@ -2,7 +2,7 @@
 #define THREAD_REGISTRY_HPP
 
 #include "configs/thread_config.hpp"
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include "core/system/system_modules.hpp"
 #include "core/system/system_threads.hpp"
 #include "configs/system_config.hpp"

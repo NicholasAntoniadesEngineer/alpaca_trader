@@ -5,7 +5,7 @@
 #include "core/trader/account_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 
 using AlpacaClientConfig = AlpacaTrader::Config::AlpacaClientConfig;
 using AccountManagerConfig = AlpacaTrader::Config::AccountManagerConfig;

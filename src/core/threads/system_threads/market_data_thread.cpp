@@ -8,7 +8,6 @@
 #include "../thread_logic/platform/thread_control.hpp"
 #include "core/trader/market_processing.hpp"
 #include "core/utils/connectivity_manager.hpp"
-#include "configs/component_configs.hpp"
 #include <chrono>
 
 // Using declarations for cleaner code

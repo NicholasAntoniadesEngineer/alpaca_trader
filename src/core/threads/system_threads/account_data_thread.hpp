@@ -2,7 +2,7 @@
 #define ACCOUNT_DATA_THREAD_HPP
 
 #include "configs/timing_config.hpp"
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include "core/trader/account_manager.hpp"
 #include "core/trader/data_structures.hpp"
 #include <atomic>

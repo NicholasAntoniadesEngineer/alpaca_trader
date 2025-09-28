@@ -1,6 +1,6 @@
 // HttpUtils.cpp
 #include "http_utils.hpp"
-#include "connectivity_manager.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include "core/logging/async_logger.hpp"
 #include "time_utils.hpp"
 #include <iostream>

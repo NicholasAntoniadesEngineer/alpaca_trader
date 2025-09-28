@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "core/trader/data_structures.hpp"
-#include "connectivity_manager.hpp"
+#include "core/utils/connectivity_manager.hpp"
 
 // HTTP request wrapper to avoid multi-parameter functions
 struct HttpRequest {

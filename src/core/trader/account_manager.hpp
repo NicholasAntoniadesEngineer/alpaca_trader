@@ -4,7 +4,7 @@
 #include "configs/api_config.hpp"
 #include "configs/logging_config.hpp"
 #include "configs/target_config.hpp"
-#include "configs/thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include "data_structures.hpp"
 #include <string>
 #include <chrono>

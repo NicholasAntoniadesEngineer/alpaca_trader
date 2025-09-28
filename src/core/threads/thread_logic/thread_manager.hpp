@@ -21,8 +21,6 @@ namespace AlpacaTrader {
 namespace Core {
 namespace ThreadSystem {
 
-
-
 // High-level thread management interface
 class Manager {
 public:
@@ -48,8 +46,7 @@ public:
         } catch (...) {
             ThreadLogs::log_thread_unknown_exception(thread_name);
         }
-    }
-    
+    }  
     
 private:
     // Thread setup utilities

@@ -4,7 +4,7 @@
 #include <string>
 #include <atomic>
 #include <functional>
-#include "thread_register_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include "core/system/system_modules.hpp"
 #include "core/system/system_threads.hpp"
 #include "system_config.hpp"
