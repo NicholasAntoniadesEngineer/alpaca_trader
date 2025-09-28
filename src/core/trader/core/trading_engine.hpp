@@ -24,9 +24,12 @@ public:
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
-    void process_trading_cycle(const MarketSnapshot& market, const AccountSnapshot& account);
+    bool validate_market_data(const MarketSnapshot& market) const;
+    ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) const;
+    void handle_market_close_positions(const ProcessedData& data);
 
 private:
+    // Core dependencies
     const TraderConfig& config;
     AccountManager& account_manager;
     OrderExecutionEngine order_engine;
@@ -35,11 +38,21 @@ private:
     PriceManager price_manager;
     MarketDataFetcher data_fetcher;
     
+    // Configuration constants
+    static constexpr int HALT_SLEEP_SECONDS = 1;
+    static constexpr int CONNECTIVITY_RETRY_SECONDS = 1;
+    
+    // Core validation methods
     bool validate_risk_conditions(const ProcessedData& data, double equity);
-    void process_trading_signals(const ProcessedData& data, double equity);
-    bool check_market_conditions();
     bool check_connectivity();
-    void log_trading_conditions(bool allowed, const std::string& reason);
+    
+    // Trading decision methods
+    void process_signal_analysis(const ProcessedData& data, double equity);
+    void process_position_sizing(const ProcessedData& data, double equity, int current_qty);
+    void execute_trade_if_valid(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& signal_decision);
+    
+    // Utility methods
+    void perform_halt_countdown(int seconds) const;
 };
 
 } // namespace Core

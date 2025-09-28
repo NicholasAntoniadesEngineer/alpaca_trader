@@ -11,6 +11,7 @@
 #include "core/system/system_configurations.hpp"
 #include "core/trader/core/trader.hpp"
 #include "core/trader/data/account_manager.hpp"
+#include "core/trader/data/market_data_fetcher.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/threads/system_threads/logging_thread.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
@@ -138,8 +139,10 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     // Create all trading system modules and store them in system_state for lifetime management
     system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger));
     
-    // Attach shared state to trader
-    system_state.trading_modules->trading_engine->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, system_state.account, system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch);
+        // Set up data synchronization for trading orchestrator
+        DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
+                                   system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch);
+        system_state.trading_modules->trading_engine->setup_data_synchronization(sync_config);
     
     // Log startup information
     log_startup_information(*system_state.trading_modules, system_state.config);

@@ -1,6 +1,9 @@
 #include "market_data_fetcher.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/system/system_state.hpp"
 #include <cmath>
+#include <thread>
+#include <chrono>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -48,6 +51,69 @@ ProcessedData MarketDataFetcher::fetch_and_process_data() {
     }
 
     return data;
+}
+
+std::pair<MarketSnapshot, AccountSnapshot> MarketDataFetcher::fetch_current_snapshots() {
+    if (!sync_state_ptr) {
+        TradingLogs::log_market_data_result_table("No sync state available", false, 0);
+        return {MarketSnapshot{}, AccountSnapshot{}};
+    }
+    
+    if (!sync_state_ptr->market || !sync_state_ptr->account) {
+        TradingLogs::log_market_data_result_table("Invalid snapshot pointers", false, 0);
+        return {MarketSnapshot{}, AccountSnapshot{}};
+    }
+    
+    return {*sync_state_ptr->market, *sync_state_ptr->account};
+}
+
+void MarketDataFetcher::wait_for_fresh_data(MarketDataSyncState& sync_state) {
+    try {
+        if (!validate_sync_state_pointers(sync_state)) {
+            TradingLogs::log_market_data_result_table("Invalid sync state pointers", false, 0);
+            return;
+        }
+        
+        std::unique_lock<std::mutex> lock(*sync_state.mtx);
+        sync_state.cv->wait_for(lock, std::chrono::seconds(1), [&]{
+            return (sync_state.has_market && sync_state.has_market->load()) && 
+                   (sync_state.has_account && sync_state.has_account->load());
+        });
+        
+        if (!sync_state.has_market || !sync_state.has_account || 
+            !sync_state.has_market->load() || !sync_state.has_account->load()) {
+            TradingLogs::log_market_data_result_table("Timeout waiting for fresh data", false, 0);
+            return;
+        }
+        
+        TradingLogs::log_market_data_result_table("Fresh data available", true, 0);
+        
+        mark_data_as_consumed(sync_state);
+        lock.unlock();
+        
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_data_result_table("Exception in wait_for_fresh_data: " + std::string(e.what()), false, 0);
+        return;
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown exception in wait_for_fresh_data", false, 0);
+        return;
+    }
+}
+
+void MarketDataFetcher::set_sync_state_references(MarketDataSyncState& sync_state) {
+    sync_state_ptr = &sync_state;
+}
+
+bool MarketDataFetcher::validate_sync_state_pointers(MarketDataSyncState& sync_state) const {
+    return sync_state.mtx && sync_state.cv && 
+           sync_state.has_market && sync_state.has_account && 
+           sync_state.running;
+}
+
+void MarketDataFetcher::mark_data_as_consumed(MarketDataSyncState& sync_state) const {
+    if (sync_state.has_market) {
+        sync_state.has_market->store(false);
+    }
 }
 
 } // namespace Core

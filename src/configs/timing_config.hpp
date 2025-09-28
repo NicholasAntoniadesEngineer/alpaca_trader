@@ -11,6 +11,18 @@ struct ThreadPriorityConfig {
 };
 
 struct TimingConfig {
+    // Default constructor to initialize all values to 0
+    TimingConfig() : thread_market_data_poll_interval_sec(0), thread_account_data_poll_interval_sec(0), 
+                     thread_market_gate_poll_interval_sec(0), thread_trader_poll_interval_sec(0), 
+                     thread_logging_poll_interval_sec(0), bar_fetch_minutes(0), bar_buffer(0),
+                     pre_open_buffer_min(0), post_close_buffer_min(0), market_close_buffer_min(0),
+                     halt_sleep_min(0), countdown_tick_sec(0), enable_thread_monitoring(false),
+                     monitoring_interval_sec(0), account_data_cache_duration_sec(0),
+                     thread_initialization_delay_ms(0), thread_startup_delay_ms(0),
+                     order_cancellation_wait_ms(0), position_verification_wait_ms(0),
+                     position_settlement_wait_ms(0), max_concurrent_cancellations(0),
+                     cpu_usage_precision(0), rate_precision(0) {}
+    
     // Thread polling intervals
     int thread_market_data_poll_interval_sec;
     int thread_account_data_poll_interval_sec;

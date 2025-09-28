@@ -15,7 +15,8 @@ using AlpacaTrader::Logging::set_log_thread_tag;
 TradingOrchestrator::TradingOrchestrator(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr),
       trading_engine(cfg, client_ref, account_mgr),
-      risk_manager(cfg) {
+      risk_manager(cfg),
+      data_fetcher(client_ref, account_mgr, cfg) {
     
     runtime.initial_equity = initialize_trading_session();
 }
@@ -28,24 +29,37 @@ double TradingOrchestrator::initialize_trading_session() {
 
 void TradingOrchestrator::execute_trading_loop() {
     try {
-        while (shared.running && shared.running->load()) {
+        while (data_sync.running && data_sync.running->load()) {
             try {
-                wait_for_fresh_data();
-                if (!shared.running->load()) break;
+                data_fetcher.wait_for_fresh_data(*reinterpret_cast<MarketDataSyncState*>(&data_sync));
+                if (!data_sync.running->load()) break;
 
-                auto snapshots = fetch_current_market_data();
+                // Fetch current market and account data
+                auto snapshots = data_fetcher.fetch_current_snapshots();
                 MarketSnapshot market = snapshots.first;
                 AccountSnapshot account = snapshots.second;
 
-                display_trading_loop_header();
+                // Display trading loop header and increment counter
+                runtime.loop_counter.fetch_add(1);
+                std::string symbol = config.target.symbol.empty() ? "UNKNOWN" : config.target.symbol;
+                TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
 
+                // Validate trading permissions
                 if (!risk_manager.validate_trading_permissions(ProcessedData{}, account.equity)) {
-                    handle_trading_halt();
+                    trading_engine.handle_trading_halt("Trading conditions not met");
                     continue;
                 }
 
-                process_trading_cycle(market, account);
+                // Process trading cycle
+                if (!trading_engine.validate_market_data(market)) {
+                    countdown_to_next_cycle();
+                    continue;
+                }
+                ProcessedData processed_data = trading_engine.create_processed_data(market, account);
+                trading_engine.handle_market_close_positions(processed_data);
+                trading_engine.execute_trading_decision(processed_data, account.equity);
 
+                // Increment iteration counter
                 if (runtime.iteration_counter) {
                     runtime.iteration_counter->fetch_add(1);
                 }
@@ -67,111 +81,27 @@ void TradingOrchestrator::execute_trading_loop() {
     }
 }
 
-void TradingOrchestrator::wait_for_fresh_data() {
-    try {
-        if (!(shared.mtx && shared.cv && shared.has_market && shared.has_account && shared.running)) {
-            TradingLogs::log_market_data_result_table("Invalid shared state pointers", false, 0);
-            return;
-        }
-        
-        std::unique_lock<std::mutex> lock(*shared.mtx);
-        shared.cv->wait_for(lock, std::chrono::seconds(1), [&]{
-            return (shared.has_market && shared.has_market->load()) && (shared.has_account && shared.has_account->load());
-        });
-        
-        if (!shared.running->load()) {
-            return;
-        }
-        if (!shared.has_market->load()) {
-            return;
-        }
-        
-        shared.has_market->store(false);
-        lock.unlock();
-        
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("Exception in wait_for_fresh_data: " + std::string(e.what()), false, 0);
-        return;
-    } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown exception in wait_for_fresh_data", false, 0);
-        return;
-    }
-}
-
-std::pair<MarketSnapshot, AccountSnapshot> TradingOrchestrator::fetch_current_market_data() {
-    if (!(shared.market && shared.account)) {
-        return {MarketSnapshot{}, AccountSnapshot{}};
-    }
-    MarketSnapshot market = *shared.market;
-    AccountSnapshot account = *shared.account;
-    return {market, account};
-}
-
-void TradingOrchestrator::display_trading_loop_header() {
-    runtime.loop_counter.fetch_add(1);
-    std::string symbol = config.target.symbol.empty() ? "UNKNOWN" : config.target.symbol;
-    
-    if (symbol.empty()) {
-        symbol = "UNKNOWN";
-    }
-    
-    try {
-        TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
-    } catch (const std::exception& e) {
-        std::cout << "Trading loop #" << runtime.loop_counter.load() << " - " << symbol << std::endl;
-    } catch (...) {
-        std::cout << "Trading loop #" << runtime.loop_counter.load() << " - UNKNOWN" << std::endl;
-    }
-}
-
-void TradingOrchestrator::handle_trading_halt() {
-    trading_engine.handle_trading_halt("Trading conditions not met");
-}
-
-void TradingOrchestrator::process_trading_cycle(const MarketSnapshot& market, const AccountSnapshot& account) {
-    trading_engine.process_trading_cycle(market, account);
-}
-
 void TradingOrchestrator::countdown_to_next_cycle() {
     int sleep_secs = config.timing.thread_trader_poll_interval_sec;
-    for (int s = sleep_secs; s > 0 && shared.running->load(); --s) {
+    
+    for (int s = sleep_secs; s > 0 && data_sync.running->load(); --s) {
         TradingLogs::log_inline_next_loop(s);
-        std::this_thread::sleep_for(std::chrono::seconds(config.timing.countdown_tick_sec));
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // Always sleep 1 second between countdown displays
     }
     TradingLogs::end_inline_status();
 }
 
-void TradingOrchestrator::attach_shared_state(std::mutex& mtx,
-                                             std::condition_variable& cv,
-                                             MarketSnapshot& market,
-                                             AccountSnapshot& account,
-                                             std::atomic<bool>& has_market,
-                                             std::atomic<bool>& has_account,
-                                             std::atomic<bool>& running_flag,
-                                             std::atomic<bool>& allow_fetch_flag) {
-    shared.mtx = &mtx;
-    shared.cv = &cv;
-    shared.market = &market;
-    shared.account = &account;
-    shared.has_market = &has_market;
-    shared.has_account = &has_account;
-    shared.running = &running_flag;
-    shared.allow_fetch = &allow_fetch_flag;
-    if (!(shared.mtx && shared.cv && shared.market && shared.account && shared.has_market && shared.has_account && shared.running && shared.allow_fetch)) {
-        TradingLogs::log_market_data_result_table("Invalid shared state configuration", false, 0);
+void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& config) {
+    
+    // Initialize data synchronization references with the provided configuration
+    data_sync = DataSyncReferences(config);
+    
+    // Set up MarketDataFetcher with sync state
+    data_fetcher.set_sync_state_references(*reinterpret_cast<MarketDataSyncState*>(&data_sync));
+    
+    if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
+        TradingLogs::log_market_data_result_table("Invalid data sync configuration", false, 0);
     }
-}
-
-void TradingOrchestrator::start_decision_thread() {
-    runtime.decision_thread = std::thread([](){ set_log_thread_tag("DECIDE"); });
-}
-
-void TradingOrchestrator::join_decision_thread() {
-    if (runtime.decision_thread.joinable()) runtime.decision_thread.join();
-}
-
-void TradingOrchestrator::set_iteration_counter(std::atomic<unsigned long>& counter) {
-    runtime.iteration_counter = &counter;
 }
 
 } // namespace Core

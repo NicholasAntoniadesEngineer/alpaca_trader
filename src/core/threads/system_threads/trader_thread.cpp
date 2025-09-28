@@ -15,9 +15,6 @@ void TraderThread::operator()() {
     set_log_thread_tag("DECIDE");
 
     try {
-        // Set iteration counter for monitoring
-        trader.set_iteration_counter(*trader_iterations);
-
         // Wait for main thread to complete priority setup and other threads to initialize
         std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms + 2000)); // Extra 2 seconds
 
