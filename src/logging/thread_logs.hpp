@@ -57,7 +57,6 @@ public:
     // Thread registry error handling
     static void log_thread_registry_error(const std::string& error_msg);
     static void log_thread_registry_warning(const std::string& warning_msg);
-    static void log_thread_registry_validation_success(const std::string& details);
     
     // Thread exception handling
     static void log_thread_exception(const std::string& thread_name, const std::string& exception_msg);
@@ -73,11 +72,6 @@ public:
     
     // Centralized error message construction
     static std::string build_unknown_thread_type_error(const std::string& type_name, int enum_value);
-    static std::string build_unknown_thread_identifier_error(const std::string& identifier);
-    static std::string build_unknown_thread_type_enum_error(int enum_value);
-    static std::string build_duplicate_thread_type_error(int enum_value);
-    static std::string build_duplicate_thread_identifier_error(const std::string& identifier);
-    static std::string build_empty_thread_identifier_error(int enum_value);
     
 };
 

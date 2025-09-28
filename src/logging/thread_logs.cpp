@@ -169,12 +169,6 @@ void ThreadLogs::log_thread_registry_warning(const std::string& warning_msg) {
     log_message("THREAD REGISTRY WARNING: " + warning_msg, "trading_system.log");
 }
 
-void ThreadLogs::log_thread_registry_validation_success(const std::string& details) {
-    LOG_THREAD_SECTION_HEADER("THREAD REGISTRY VALIDATION");
-    LOG_THREAD_CONTENT("SUCCESS: " + details);
-    LOG_THREAD_SECTION_FOOTER();
-    log_message("THREAD REGISTRY VALIDATION: " + details, "trading_system.log");
-}
 
 // Thread exception handling
 void ThreadLogs::log_thread_exception(const std::string& thread_name, const std::string& exception_msg) {
@@ -233,22 +227,3 @@ std::string ThreadLogs::build_unknown_thread_type_error(const std::string& type_
            " (enum value: " + std::to_string(enum_value) + ")";
 }
 
-std::string ThreadLogs::build_unknown_thread_identifier_error(const std::string& identifier) {
-    return "CRITICAL ERROR: Unknown thread identifier: '" + identifier + "'";
-}
-
-std::string ThreadLogs::build_unknown_thread_type_enum_error(int enum_value) {
-    return "CRITICAL ERROR: Unknown thread type enum: " + std::to_string(enum_value);
-}
-
-std::string ThreadLogs::build_duplicate_thread_type_error(int enum_value) {
-    return "CRITICAL ERROR: Duplicate thread type found in registry: " + std::to_string(enum_value);
-}
-
-std::string ThreadLogs::build_duplicate_thread_identifier_error(const std::string& identifier) {
-    return "CRITICAL ERROR: Duplicate thread identifier found in registry: '" + identifier + "'";
-}
-
-std::string ThreadLogs::build_empty_thread_identifier_error(int enum_value) {
-    return "CRITICAL ERROR: Empty thread identifier found for type: " + std::to_string(enum_value);
-}

@@ -26,12 +26,8 @@ namespace Core {
 class ThreadRegistry {
 public:
     using ThreadDefinition = ThreadSystem::ThreadDefinition;
-    
-    // Thread types - single source of truth
-    // Use ThreadType from thread_register_config.hpp
     using Type = AlpacaTrader::Config::ThreadType;
     
-    // Unified thread registry entry
     struct ThreadEntry {
         Type type;
         std::string identifier;
@@ -49,15 +45,7 @@ public:
     static void configure_thread_iteration_counters(SystemThreads& handles, TradingSystemModules& modules);
 
 private:
-    // Single source of truth - add new threads here only
     static const std::vector<ThreadEntry> THREAD_REGISTRY;
-    
-    // Helper methods
-    static Type string_to_type(const std::string& identifier);
-    static std::string type_to_string(Type type);
-    
-    // Error handling and validation
-    static void validate_registry_consistency();
 };
 
 } // namespace Core
