@@ -24,27 +24,49 @@ using AlpacaTrader::API::AlpacaClient;
 void AlpacaTrader::Threads::MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
     
-    // Wait for main thread to complete priority setup
-    std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
-    
-    // Start the market data collection loop
-    market_data_loop();
+    try {
+        // Wait for main thread to complete priority setup
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
+        
+        // Start the market data collection loop
+        market_data_loop();
+    } catch (const std::exception& e) {
+        log_message("MarketDataThread exception: " + std::string(e.what()), "trading_system.log");
+    } catch (...) {
+        log_message("MarketDataThread unknown exception", "trading_system.log");
+    }
 }
 
 void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
-    while (running.load()) {
-        if (!allow_fetch_ptr || !allow_fetch_ptr->load()) {
-            std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
-            continue;
+    try {
+        while (running.load()) {
+            try {
+                if (!allow_fetch_ptr || !allow_fetch_ptr->load()) {
+                    std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
+                    continue;
+                }
+
+                fetch_and_process_market_data();
+
+                if (iteration_counter) {
+                    iteration_counter->fetch_add(1);
+                }
+
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
+            } catch (const std::exception& e) {
+                log_message("MarketDataThread loop iteration exception: " + std::string(e.what()), "trading_system.log");
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
+            } catch (...) {
+                log_message("MarketDataThread loop iteration unknown exception", "trading_system.log");
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
+            }
         }
-
-        fetch_and_process_market_data();
-
-        if (iteration_counter) {
-            iteration_counter->fetch_add(1);
-        }
-
-        std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
+    } catch (const std::exception& e) {
+        log_message("MarketDataThread market_data_loop exception: " + std::string(e.what()), "trading_system.log");
+    } catch (...) {
+        log_message("MarketDataThread market_data_loop unknown exception", "trading_system.log");
     }
 }
 

@@ -18,35 +18,56 @@ using AlpacaTrader::API::AlpacaClient;
 void AlpacaTrader::Threads::MarketGateThread::operator()() {
     set_log_thread_tag("GATE  ");
     
-    // Wait for main thread to complete priority setup
-    std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
-    
-    // Start the market gate monitoring loop
-    market_gate_loop();
+    try {
+        // Wait for main thread to complete priority setup
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
+        
+        // Start the market gate monitoring loop
+        market_gate_loop();
+    } catch (const std::exception& e) {
+        log_message("MarketGateThread exception: " + std::string(e.what()), logging.log_file);
+    } catch (...) {
+        log_message("MarketGateThread unknown exception", logging.log_file);
+    }
 }
 
 void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
-    bool last_within = client.is_within_fetch_window();
-    allow_fetch.store(last_within);
-    
-    auto& connectivity = ConnectivityManager::instance();
-    ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity.get_status();
-    
-    while (running.load()) {
+    try {
+        bool last_within = client.is_within_fetch_window();
+        allow_fetch.store(last_within);
         
-        check_and_update_fetch_window(last_within);
+        auto& connectivity = ConnectivityManager::instance();
+        ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity.get_status();
         
-        check_and_report_connectivity_status(connectivity, last_connectivity_status);
-        
-        // Increment iteration counter for monitoring
-        if (iteration_counter) {
-            iteration_counter->fetch_add(1);
+        while (running.load()) {
+            try {
+                check_and_update_fetch_window(last_within);
+                
+                check_and_report_connectivity_status(connectivity, last_connectivity_status);
+                
+                // Increment iteration counter for monitoring
+                if (iteration_counter) {
+                    iteration_counter->fetch_add(1);
+                }
+                
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
+            } catch (const std::exception& e) {
+                log_message("MarketGateThread loop iteration exception: " + std::string(e.what()), logging.log_file);
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
+            } catch (...) {
+                log_message("MarketGateThread loop iteration unknown exception", logging.log_file);
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
+            }
         }
         
-        std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
+        log_message("MarketGateThread loop exited", "trading_system.log");
+    } catch (const std::exception& e) {
+        log_message("MarketGateThread market_gate_loop exception: " + std::string(e.what()), logging.log_file);
+    } catch (...) {
+        log_message("MarketGateThread market_gate_loop unknown exception", logging.log_file);
     }
-    
-    log_message("MarketGateThread loop exited", "trading_system.log");
 }
 
 void AlpacaTrader::Threads::MarketGateThread::check_and_update_fetch_window(bool& last_within) {

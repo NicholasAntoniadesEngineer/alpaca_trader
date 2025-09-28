@@ -24,7 +24,9 @@ void TraderThread::operator()() {
         trader.decision_loop();
     } catch (const std::exception& e) {
         ThreadLogs::log_thread_exception("TraderThread", std::string(e.what()));
+        log_message("TraderThread exception: " + std::string(e.what()), "trading_system.log");
     } catch (...) {
         ThreadLogs::log_thread_unknown_exception("TraderThread");
+        log_message("TraderThread unknown exception", "trading_system.log");
     }
 }

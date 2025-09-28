@@ -17,16 +17,21 @@ using AlpacaTrader::Logging::g_inline_active;
 
 
 void AlpacaTrader::Threads::LoggingThread::operator()() {
-    
-    setup_logging_thread();
-    
-    // Wait for main thread to complete priority setup
-    std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_startup_delay_ms));
-    
-    
-    logging_loop();
-    
-    log_message("LoggingThread exited", "trading_system.log");
+    try {
+        setup_logging_thread();
+        
+        // Wait for main thread to complete priority setup
+        std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_startup_delay_ms));
+        
+        
+        logging_loop();
+        
+        log_message("LoggingThread exited", "trading_system.log");
+    } catch (const std::exception& e) {
+        log_message("LoggingThread exception: " + std::string(e.what()), "trading_system.log");
+    } catch (...) {
+        log_message("LoggingThread unknown exception", "trading_system.log");
+    }
 }
 
 void AlpacaTrader::Threads::LoggingThread::setup_logging_thread() {
@@ -37,13 +42,29 @@ void AlpacaTrader::Threads::LoggingThread::setup_logging_thread() {
 }
 
 void AlpacaTrader::Threads::LoggingThread::logging_loop() {
-    std::ofstream log_file(logger_ptr->get_file_path(), std::ios::app);
-    logger_ptr->running.store(true);
+    try {
+        std::ofstream log_file(logger_ptr->get_file_path(), std::ios::app);
+        logger_ptr->running.store(true);
 
-    while (logger_ptr->running.load()) {
-        process_logging_queue(log_file);
-        logger_iterations->fetch_add(1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay to prevent busy waiting
+        while (logger_ptr->running.load()) {
+            try {
+                process_logging_queue(log_file);
+                logger_iterations->fetch_add(1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay to prevent busy waiting
+            } catch (const std::exception& e) {
+                log_message("LoggingThread loop iteration exception: " + std::string(e.what()), "trading_system.log");
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            } catch (...) {
+                log_message("LoggingThread loop iteration unknown exception", "trading_system.log");
+                // Continue running - don't exit the thread
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+    } catch (const std::exception& e) {
+        log_message("LoggingThread logging_loop exception: " + std::string(e.what()), "trading_system.log");
+    } catch (...) {
+        log_message("LoggingThread logging_loop unknown exception", "trading_system.log");
     }
 }
 
