@@ -2,7 +2,7 @@
 #define MARKET_CLOCK_HPP
 
 #include "api/base/alpaca_base_client.hpp"
-#include "core/data_structures.hpp"
+#include "core/trader/data_structures.hpp"
 
 namespace AlpacaTrader {
 namespace API {

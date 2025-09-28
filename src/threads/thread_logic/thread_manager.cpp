@@ -2,8 +2,8 @@
 #include "platform/thread_control.hpp"
 #include "logging/startup_logs.hpp"
 #include "logging/thread_logs.hpp"
-#include "core/system_threads.hpp"
-#include "core/trading_system_modules.hpp"
+#include "core/system/system_threads.hpp"
+#include "core/system/system_modules.hpp"
 #include "thread_registry.hpp"
 
 using ThreadSystem::Platform::ThreadControl;

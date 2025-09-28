@@ -1,7 +1,7 @@
 #include "api/clock/market_clock.hpp"
-#include "logging/async_logger.hpp"
-#include "utils/http_utils.hpp"
-#include "utils/time_utils.hpp"
+#include "core/logging/async_logger.hpp"
+#include "core/utils/http_utils.hpp"
+#include "core/utils/time_utils.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>

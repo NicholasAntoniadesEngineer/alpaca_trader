@@ -1,9 +1,9 @@
 #include "api/market/market_data_client.hpp"
-#include "logging/async_logger.hpp"
-#include "logging/trading_logs.hpp"
-#include "logging/logging_macros.hpp"
-#include "utils/http_utils.hpp"
-#include "utils/time_utils.hpp"
+#include "core/logging/async_logger.hpp"
+#include "core/logging/trading_logs.hpp"
+#include "core/logging/logging_macros.hpp"
+#include "core/utils/http_utils.hpp"
+#include "core/utils/time_utils.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>

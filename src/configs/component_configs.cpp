@@ -1,21 +1,21 @@
 // component_configs.cpp
 #include "configs/component_configs.hpp"
-#include "core/system_state.hpp"
-#include "core/trading_system_configurations.hpp"
-#include "core/trading_system_modules.hpp"
+#include "core/system/system_state.hpp"
+#include "core/system/system_configurations.hpp"
+#include "core/system/system_modules.hpp"
 #include "api/alpaca_client.hpp"
-#include "core/account_manager.hpp"
-#include "logging/account_logs.hpp"
-#include "core/trader.hpp"
-#include "threads/system_threads/market_data_thread.hpp"
-#include "threads/system_threads/account_data_thread.hpp"
+#include "core/trader/account_manager.hpp"
+#include "core/logging/account_logs.hpp"
+#include "core/trader/trader.hpp"
+#include "core/threads/system_threads/market_data_thread.hpp"
+#include "core/threads/system_threads/account_data_thread.hpp"
 
 // =============================================================================
 // TRADING SYSTEM MODULE CONFIGURATION CREATION
 // =============================================================================
 
-TradingSystemConfigurations create_trading_configurations(const SystemState& state) {
-    return TradingSystemConfigurations{
+SystemConfigurations create_trading_configurations(const SystemState& state) {
+    return SystemConfigurations{
         AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing, state.config.orders},
         AccountManagerConfig{state.config.api, state.config.logging, state.config.target, state.config.timing},
         MarketDataThreadConfig{state.config.strategy, state.config.timing, state.config.target},
@@ -27,9 +27,9 @@ TradingSystemConfigurations create_trading_configurations(const SystemState& sta
 // TRADING SYSTEM MODULE INSTANCE CREATION
 // =============================================================================
 
-TradingSystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
-    TradingSystemConfigurations configs = create_trading_configurations(state);
-    TradingSystemModules modules;
+SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+    SystemConfigurations configs = create_trading_configurations(state);
+    SystemModules modules;
     
     // Create core trading modules
     modules.market_connector = std::make_unique<AlpacaTrader::API::AlpacaClient>(configs.market_connector);
@@ -68,7 +68,7 @@ TradingSystemModules create_trading_modules(SystemState& state, std::shared_ptr<
 // TRADING SYSTEM MODULE CONFIGURATION
 // =============================================================================
 
-void configure_trading_modules(SystemState& system_state, TradingSystemModules& modules) {
+void configure_trading_modules(SystemState& system_state, SystemModules& modules) {
     // Configure trading engine with shared state
     modules.trading_engine->attach_shared_state(system_state.mtx, system_state.cv, system_state.market, 
                                               system_state.account, system_state.has_market, 

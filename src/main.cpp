@@ -1,11 +1,11 @@
 // main.cpp
 #include "configs/config_loader.hpp"
 #include "configs/system_config.hpp"
-#include "core/system_state.hpp"
-#include "core/system_threads.hpp"
-#include "core/system_manager.hpp"
-#include "core/trading_system_modules.hpp"
-#include "logging/startup_logs.hpp"
+#include "core/system/system_state.hpp"
+#include "core/system/system_threads.hpp"
+#include "core/system/system_manager.hpp"
+#include "core/system/system_modules.hpp"
+#include "core/logging/startup_logs.hpp"
 
 
 // =============================================================================

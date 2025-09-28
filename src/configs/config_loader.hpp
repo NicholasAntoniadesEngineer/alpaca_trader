@@ -2,8 +2,7 @@
 #define CONFIG_LOADER_HPP
 
 #include <string>
-
-namespace AlpacaTrader { namespace Config { struct SystemConfig; } }
+#include "system_config.hpp"
 
 // Load key,value CSV into SystemConfig. Unknown keys are ignored. Returns true on success.
 bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::string& csv_path);

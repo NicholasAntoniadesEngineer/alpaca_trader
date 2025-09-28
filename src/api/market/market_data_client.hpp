@@ -2,7 +2,7 @@
 #define MARKET_DATA_CLIENT_HPP
 
 #include "api/base/alpaca_base_client.hpp"
-#include "core/data_structures.hpp"
+#include "core/trader/data_structures.hpp"
 #include <vector>
 
 namespace AlpacaTrader {

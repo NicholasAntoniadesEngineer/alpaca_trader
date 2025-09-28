@@ -1,5 +1,5 @@
 #include "alpaca_client.hpp"
-#include "utils/http_utils.hpp"
+#include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <thread>
 #include <chrono>

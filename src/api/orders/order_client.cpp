@@ -1,9 +1,9 @@
 #include "api/orders/order_client.hpp"
 #include "api/alpaca_client.hpp"
-#include "logging/async_logger.hpp"
-#include "logging/logging_macros.hpp"
-#include "logging/trading_logs.hpp"
-#include "utils/http_utils.hpp"
+#include "core/logging/async_logger.hpp"
+#include "core/logging/logging_macros.hpp"
+#include "core/logging/trading_logs.hpp"
+#include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <cmath>
 #include <iomanip>

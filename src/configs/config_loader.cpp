@@ -1,7 +1,7 @@
 #include "configs/config_loader.hpp"
 #include "configs/system_config.hpp"
 #include "configs/thread_config.hpp"
-#include "logging/logging_macros.hpp"
+#include "core/logging/logging_macros.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>

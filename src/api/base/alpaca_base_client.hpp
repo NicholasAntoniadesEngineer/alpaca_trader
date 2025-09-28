@@ -1,16 +1,12 @@
 #ifndef ALPACA_BASE_CLIENT_HPP
 #define ALPACA_BASE_CLIENT_HPP
 
-#include "configs/api_config.hpp"
-#include "configs/session_config.hpp"
-#include "configs/logging_config.hpp"
-#include "configs/target_config.hpp"
-#include "configs/timing_config.hpp"
-#include "configs/orders_config.hpp"
-#include "configs/component_configs.hpp"
+#include "configs/thread_register_config.hpp"
 
 namespace AlpacaTrader {
 namespace API {
+
+using AlpacaClientConfig = AlpacaTrader::Config::AlpacaClientConfig;
 
 class AlpacaBaseClient {
 protected:

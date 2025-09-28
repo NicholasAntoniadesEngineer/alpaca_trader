@@ -19,36 +19,36 @@ SOURCES = src/main.cpp \
   src/api/market/market_data_client.cpp \
   src/api/alpaca_client.cpp \
   src/api/orders/order_client.cpp \
-  src/core/trader.cpp \
-  src/core/strategy_logic.cpp \
-  src/core/risk_logic.cpp \
-  src/core/market_processing.cpp \
-  src/core/system_manager.cpp \
-  src/threads/thread_register.cpp \
+  src/core/trader/trader.cpp \
+  src/core/trader/strategy_logic.cpp \
+  src/core/trader/risk_logic.cpp \
+  src/core/trader/market_processing.cpp \
+  src/core/system/system_manager.cpp \
+  src/core/threads/thread_register.cpp \
  \
   src/configs/component_configs.cpp \
   src/configs/config_loader.cpp \
-  src/core/account_manager.cpp \
-  src/utils/time_utils.cpp \
-  src/logging/account_logs.cpp \
-  src/utils/http_utils.cpp \
-  src/core/indicators.cpp \
-  src/logging/async_logger.cpp \
-  src/logging/trading_logs.cpp \
-  src/logging/thread_logs.cpp \
-  src/logging/startup_logs.cpp \
+  src/core/trader/account_manager.cpp \
+  src/core/utils/time_utils.cpp \
+  src/core/logging/account_logs.cpp \
+  src/core/utils/http_utils.cpp \
+  src/core/trader/indicators.cpp \
+  src/core/logging/async_logger.cpp \
+  src/core/logging/trading_logs.cpp \
+  src/core/logging/thread_logs.cpp \
+  src/core/logging/startup_logs.cpp \
   src/configs/thread_config.cpp \
-  src/threads/thread_logic/platform/thread_control.cpp \
-  src/threads/thread_logic/platform/linux/linux_thread_control.cpp \
-  src/threads/thread_logic/platform/macos/macos_thread_control.cpp \
-  src/threads/thread_logic/platform/windows/windows_thread_control.cpp \
-  src/threads/thread_logic/thread_manager.cpp \
-  src/threads/thread_logic/thread_registry.cpp \
-  src/threads/system_threads/account_data_thread.cpp \
-  src/threads/system_threads/market_data_thread.cpp \
-  src/threads/system_threads/market_gate_thread.cpp \
-  src/threads/system_threads/logging_thread.cpp \
-  src/threads/system_threads/trader_thread.cpp
+  src/core/threads/thread_logic/platform/thread_control.cpp \
+  src/core/threads/thread_logic/platform/linux/linux_thread_control.cpp \
+  src/core/threads/thread_logic/platform/macos/macos_thread_control.cpp \
+  src/core/threads/thread_logic/platform/windows/windows_thread_control.cpp \
+  src/core/threads/thread_logic/thread_manager.cpp \
+  src/core/threads/thread_logic/thread_registry.cpp \
+  src/core/threads/system_threads/account_data_thread.cpp \
+  src/core/threads/system_threads/market_data_thread.cpp \
+  src/core/threads/system_threads/market_gate_thread.cpp \
+  src/core/threads/system_threads/logging_thread.cpp \
+  src/core/threads/system_threads/trader_thread.cpp
 
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
@@ -69,17 +69,19 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/api/market
 	mkdir -p $(OBJ_DIR)/src/api/orders
 	mkdir -p $(OBJ_DIR)/src/core
+	mkdir -p $(OBJ_DIR)/src/core/system
+	mkdir -p $(OBJ_DIR)/src/core/trader
+	mkdir -p $(OBJ_DIR)/src/core/logging
+	mkdir -p $(OBJ_DIR)/src/core/utils
+	mkdir -p $(OBJ_DIR)/src/core/threads
+	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic
+	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform
+	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/linux
+	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/macos
+	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/windows
+	mkdir -p $(OBJ_DIR)/src/core/threads/system_threads
 	mkdir -p $(OBJ_DIR)/src/configs
 	mkdir -p $(OBJ_DIR)/src/json
-	mkdir -p $(OBJ_DIR)/src/utils
-	mkdir -p $(OBJ_DIR)/src/logging
-	mkdir -p $(OBJ_DIR)/src/threads
-	mkdir -p $(OBJ_DIR)/src/threads/thread_logic
-	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform
-	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/linux
-	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/macos
-	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/windows
-	mkdir -p $(OBJ_DIR)/src/threads/system_threads
 
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)

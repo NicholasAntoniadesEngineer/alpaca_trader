@@ -8,8 +8,8 @@
 #include "target_config.hpp"
 #include "api_config.hpp"
 #include "session_config.hpp"
-#include "thread_register_config.hpp"
 #include "orders_config.hpp"
+#include "thread_register_config.hpp"
 
 namespace AlpacaTrader {
 namespace Config {
