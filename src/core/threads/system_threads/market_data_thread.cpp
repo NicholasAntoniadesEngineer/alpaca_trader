@@ -5,6 +5,7 @@
 #include "market_data_thread.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
+#include "core/logging/logging_macros.hpp"
 #include "../thread_logic/platform/thread_control.hpp"
 #include "core/trader/data/market_processing.hpp"
 #include "core/utils/connectivity_manager.hpp"
@@ -68,19 +69,36 @@ void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
 }
 
 void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
+    LOG_THREAD_SECTION_HEADER("MARKET DATA FETCH - " + target.symbol);
+    
     int num_bars = strategy.atr_period + timing.bar_buffer;
     BarRequest br{target.symbol, num_bars};
+    LOG_THREAD_CONTENT("Requesting " + std::to_string(num_bars) + " bars");
+    
     auto bars = client.get_recent_bars(br);
+    LOG_THREAD_CONTENT("Received " + std::to_string(bars.size()) + " bars");
     
     if (static_cast<int>(bars.size()) >= strategy.atr_period + 2) {
+        LOG_THREAD_CONTENT("Sufficient bars, computing indicators");
+        
         // Compute indicators using the same implementation as Trader
         TraderConfig minimal_cfg{StrategyConfig{strategy}, RiskConfig{}, TimingConfig{timing}, LoggingConfig{}, TargetConfig{target}};
         ProcessedData computed = AlpacaTrader::Core::MarketProcessing::compute_processed_data(bars, minimal_cfg);
 
+        LOG_THREAD_CONTENT("ATR computed: " + std::to_string(computed.atr));
+        LOG_THREAD_CONTENT("Current price: $" + std::to_string(computed.curr.c));
+
         if (computed.atr != 0.0) {
+            LOG_THREAD_CONTENT("Updating market snapshot");
             update_market_snapshot(computed);
+        } else {
+            LOG_THREAD_CONTENT("ATR is zero, not updating snapshot");
         }
+    } else {
+        LOG_THREAD_CONTENT("Insufficient bars (" + std::to_string(bars.size()) + " < " + std::to_string(strategy.atr_period + 2) + ")");
     }
+    
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void AlpacaTrader::Threads::MarketDataThread::update_market_snapshot(const ProcessedData& computed) {

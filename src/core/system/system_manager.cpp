@@ -54,6 +54,9 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
     // Log application header
     StartupLogs::log_application_header();
     
+    // Log API endpoints table
+    StartupLogs::log_api_endpoints_table(config.api.base_url, config.api.data_url, config.orders.orders_endpoint);
+    
     // Note: Main startup logging is handled separately to avoid duplication
     
     // Log account information if available
@@ -122,9 +125,17 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     return modules;
 }
 
-void configure_trading_modules(SystemThreads& handles, SystemModules& modules) {
+void configure_trading_modules(SystemThreads& handles, SystemModules& modules, SystemState& state) {
     // Configure thread iteration counters using the generic registry approach
     AlpacaTrader::Core::ThreadRegistry::configure_thread_iteration_counters(handles, modules);
+    
+    // Configure allow_fetch_ptr for threads that need it
+    if (modules.market_data_thread) {
+        modules.market_data_thread->set_allow_fetch_flag(state.allow_fetch);
+    }
+    if (modules.account_data_thread) {
+        modules.account_data_thread->set_allow_fetch_flag(state.allow_fetch);
+    }
 }
 
 SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
@@ -148,7 +159,7 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     log_startup_information(*system_state.trading_modules, system_state.config);
     
     // Configure trading modules
-    configure_trading_modules(handles, *system_state.trading_modules);
+    configure_trading_modules(handles, *system_state.trading_modules, system_state);
     
     // Setup signal handling for graceful shutdown
     setup_signal_handlers(system_state);

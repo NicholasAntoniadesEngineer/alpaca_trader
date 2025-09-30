@@ -4,8 +4,8 @@
 #include <string>
 
 // Trading signal constants
-#define SIGNAL_BUY "BUY"
-#define SIGNAL_SELL "SELL"
+#define SIGNAL_BUY "buy"
+#define SIGNAL_SELL "sell"
 
 // Position side constants
 #define POSITION_LONG "LONG"

@@ -5,6 +5,7 @@
 #include <vector>
 #include "api/base/alpaca_base_client.hpp"
 #include "core/trader/data/data_structures.hpp"
+#include "json/json.hpp"
 
 namespace AlpacaTrader {
 namespace API {
@@ -28,6 +29,7 @@ public:
 private:
     // Helper methods for order operations
     void log_order_result(const std::string& operation, const std::string& response) const;
+    void log_order_details_table(const nlohmann::json& order, const std::string& response) const;
     std::string format_order_log(const std::string& operation, const std::string& details) const;
     
     // Position management helpers

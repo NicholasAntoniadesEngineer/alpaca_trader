@@ -105,6 +105,16 @@ bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
     
     // Store bars in member variable for later processing
     cached_bars = std::move(bars);
+    
+    // Populate the ProcessedData with the latest bar information
+    if (!cached_bars.empty()) {
+        data.curr = cached_bars.back();
+        constexpr size_t MINIMUM_BARS_FOR_PREV = 2;
+        if (cached_bars.size() >= MINIMUM_BARS_FOR_PREV) {
+            data.prev = cached_bars[cached_bars.size() - 2];
+        }
+    }
+    
     return true;
 }
 

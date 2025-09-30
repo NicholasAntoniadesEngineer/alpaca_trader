@@ -14,6 +14,7 @@ public:
     
     // Application header and branding
     static void log_application_header();
+    static void log_api_endpoints_table(const std::string& base_url, const std::string& data_url, const std::string& orders_endpoint);
     
     // Account status display
     static void log_account_overview(const AlpacaTrader::Core::AccountManager& account_manager);

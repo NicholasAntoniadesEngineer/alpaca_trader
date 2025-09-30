@@ -28,7 +28,17 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         execute_order(OrderSide::Buy, data, current_qty, sizing);
     } else if (sd.sell) {
         TradingLogs::log_signal_triggered(SIGNAL_SELL, true);
-        execute_order(OrderSide::Sell, data, current_qty, sizing);
+        // For SELL signals, determine the correct order side based on current position
+        if (current_qty == 0) {
+            // No position: open short position (use sell side for short)
+            execute_order(OrderSide::Sell, data, current_qty, sizing);
+        } else if (current_qty > 0) {
+            // Long position: close long position (sell to close)
+            execute_order(OrderSide::Sell, data, current_qty, sizing);
+        } else {
+            // Short position: close short position (buy to close)
+            execute_order(OrderSide::Buy, data, current_qty, sizing);
+        }
     } else {
         TradingLogs::log_no_trading_pattern();
     }
@@ -52,9 +62,15 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
         return;
     }
     
-    // Calculate exit targets and execute bracket order
-    StrategyLogic::ExitTargets targets = calculate_exit_targets(side, data, sizing);
-    execute_bracket_order(side, data, sizing, targets);
+    // Determine if this is opening a new position or closing an existing one
+    if (current_qty == 0) {
+        // Opening new position: use bracket order
+        StrategyLogic::ExitTargets targets = calculate_exit_targets(side, data, sizing);
+        execute_bracket_order(side, data, sizing, targets);
+    } else {
+        // Closing existing position: use regular market order
+        execute_market_order(side, data, sizing);
+    }
 }
 
 // Execute bracket order with proper validation
@@ -68,6 +84,34 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
         client.place_bracket_order(OrderRequest{side_str, sizing.quantity, targets.take_profit, targets.stop_loss});
     } catch (const std::exception& e) {
         TradingLogs::log_market_status(false, "Order execution failed: " + std::string(e.what()));
+    }
+}
+
+// Execute regular market order for closing positions
+void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) {
+    std::string side_str = to_side_string(side);
+    
+    TradingLogs::log_market_order_intent(side_str, sizing.quantity);
+    
+    // Log order execution details in table format
+    AlpacaTrader::Logging::log_message("+-- ORDER EXECUTION DEBUG", config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Function: execute_market_order", config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Side: " + side_str, config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Quantity: " + std::to_string(sizing.quantity), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Symbol: " + config.target.symbol, config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Current Price: " + std::to_string(data.curr.c), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   ATR: " + std::to_string(data.atr), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Position Qty: " + std::to_string(data.pos_details.qty), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+    
+    try {
+        // For closing positions, we need to determine the correct side
+        // If we have a long position and want to close it, we need to sell
+        // If we have a short position and want to close it, we need to buy
+        client.submit_market_order(config.target.symbol, side_str, sizing.quantity);
+        TradingLogs::log_market_status(true, "Market order submitted successfully");
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_status(false, "Market order execution failed: " + std::string(e.what()));
     }
 }
 
@@ -151,9 +195,22 @@ bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, 
 }
 
 StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const {
+    double entry_price = data.curr.c;
+    
+    // Use real-time price if configured and available
+    if (config.strategy.use_realtime_price_for_orders) {
+        double realtime_price = client.get_current_price(config.target.symbol);
+        if (realtime_price > 0.0) {
+            entry_price = realtime_price;
+            TradingLogs::log_realtime_price_used(realtime_price, data.curr.c);
+        } else {
+            TradingLogs::log_realtime_price_fallback(data.curr.c);
+        }
+    }
+    
     return StrategyLogic::compute_exit_targets(
         to_side_string(side), 
-        data.curr.c, 
+        entry_price, 
         sizing.risk_amount, 
         config.strategy.rr_ratio, 
         config

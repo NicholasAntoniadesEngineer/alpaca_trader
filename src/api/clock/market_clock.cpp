@@ -58,13 +58,19 @@ bool MarketClock::is_within_fetch_window() const {
     HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
-    if (response.empty()) return false;
+    if (response.empty()) {
+        log_message("Empty response from clock API", logging.log_file);
+        return false;
+    }
     
     try {
         json j = json::parse(response);
         if (j.contains("is_open") && j["is_open"].is_boolean() && j["is_open"].get<bool>()) {
+            log_message("Market is open - allowing data fetch", logging.log_file);
             return true;
         }
+        
+        log_message("Market is closed, checking pre-open window", logging.log_file);
         
         if (j.contains("timestamp") && !j["timestamp"].is_null() && 
             j.contains("next_open") && !j["next_open"].is_null()) {
@@ -80,9 +86,15 @@ bool MarketClock::is_within_fetch_window() const {
             
             if (now_min > 0 && open_min > 0) {
                 long long mins_to_open = open_min - now_min;
-                return mins_to_open >= 0 && mins_to_open <= timing.pre_open_buffer_min;
+                bool within_window = mins_to_open >= 0 && mins_to_open <= timing.pre_open_buffer_min;
+                log_message("Minutes to open: " + std::to_string(mins_to_open) + 
+                           ", Pre-open buffer: " + std::to_string(timing.pre_open_buffer_min) + 
+                           ", Within window: " + (within_window ? "YES" : "NO"), logging.log_file);
+                return within_window;
             }
         }
+    } catch (const std::exception& e) {
+        log_message("Error parsing clock response for fetch window: " + response + " - " + e.what(), logging.log_file);
     } catch (...) {
         log_message("Error parsing clock response for fetch window: " + response, logging.log_file);
     }

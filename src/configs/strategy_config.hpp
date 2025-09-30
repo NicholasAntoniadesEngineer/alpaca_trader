@@ -14,6 +14,13 @@ struct StrategyConfig {
     double min_price_buffer;                 // Minimum buffer amount in dollars
     double max_price_buffer;                 // Maximum buffer amount in dollars
     
+    // Stop loss buffer configuration for API validation
+    double stop_loss_buffer_dollars;         // Additional buffer in dollars for stop loss validation
+    bool use_realtime_price_for_orders;      // Use real-time price for order calculations
+    
+    // Profit taking configuration
+    double profit_taking_threshold_dollars;  // Automatic sell when profit exceeds this amount
+    
     // Signal detection configuration
     bool buy_allow_equal_close;              // Allow close >= open for buy signals
     bool buy_require_higher_high;            // Require current high > previous high

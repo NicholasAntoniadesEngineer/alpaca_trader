@@ -775,48 +775,92 @@ void TradingLogs::log_position_sizing_skipped(const std::string& reason) {
 }
 
 void TradingLogs::log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short) {
-    log_message("DEBUG: execute_trade - current_qty=" + std::to_string(current_qty), "");
-    log_message("DEBUG: execute_trade - position value=" + std::to_string(position_value), "");
-    log_message("DEBUG: execute_trade - position qty=" + std::to_string(position_qty), "");
-    log_message("DEBUG: execute_trade - is_long=" + std::to_string(is_long) + ", is_short=" + std::to_string(is_short), "");
+    LOG_THREAD_SECTION_HEADER("POSITION DEBUG");
+    LOG_THREAD_CONTENT("Current Quantity: " + std::to_string(current_qty));
+    LOG_THREAD_CONTENT("Position Value: $" + std::to_string(position_value));
+    LOG_THREAD_CONTENT("Position Qty: " + std::to_string(position_qty));
+    LOG_THREAD_CONTENT("Is Long: " + std::string(is_long ? "true" : "false") + ", Is Short: " + std::string(is_short ? "true" : "false"));
+    LOG_THREAD_SECTION_FOOTER();
+}
+
+void TradingLogs::log_realtime_price_used(double realtime_price, double delayed_price) {
+    LOG_THREAD_SECTION_HEADER("REAL-TIME PRICE VERIFICATION");
+    LOG_THREAD_CONTENT("Using real-time price: $" + std::to_string(realtime_price));
+    LOG_THREAD_CONTENT("Delayed price: $" + std::to_string(delayed_price));
+    LOG_THREAD_CONTENT("Price difference: $" + std::to_string(realtime_price - delayed_price));
+    LOG_THREAD_SECTION_FOOTER();
+}
+
+void TradingLogs::log_realtime_price_fallback(double delayed_price) {
+    LOG_THREAD_SECTION_HEADER("REAL-TIME PRICE VERIFICATION");
+    LOG_THREAD_CONTENT("Real-time price unavailable");
+    LOG_THREAD_CONTENT("Using delayed price: $" + std::to_string(delayed_price));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_account_details(int qty, double current_value) {
-    log_message("DEBUG: Fresh account details - qty=" + std::to_string(qty) + ", current_value=" + std::to_string(current_value), "");
+    LOG_THREAD_SECTION_HEADER("ACCOUNT DEBUG");
+    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(qty));
+    LOG_THREAD_CONTENT("Current Value: $" + std::to_string(current_value));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 
 void TradingLogs::log_debug_fresh_data_fetch(const std::string& position_type) {
-    log_message("Forcing fresh account data fetch before closing " + position_type + " position", "");
+    LOG_THREAD_SECTION_HEADER("FRESH DATA FETCH");
+    LOG_THREAD_CONTENT("Forcing fresh account data fetch before closing " + position_type + " position");
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_fresh_position_data(int fresh_qty, int current_qty) {
-    log_message("Fresh position data: " + std::to_string(fresh_qty) + " (was: " + std::to_string(current_qty) + ")", "");
+    LOG_THREAD_SECTION_HEADER("POSITION DATA UPDATE");
+    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(fresh_qty));
+    LOG_THREAD_CONTENT("Previous Quantity: " + std::to_string(current_qty));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 
 void TradingLogs::log_debug_position_closure_attempt(int qty) {
-    log_message("Attempting to close fresh position: " + std::to_string(qty), "");
+    LOG_THREAD_SECTION_HEADER("POSITION CLOSURE ATTEMPT");
+    LOG_THREAD_CONTENT("Attempting to close fresh position: " + std::to_string(qty));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_position_closure_attempted() {
-    log_message("Position closure attempted, waiting for settlement", "");
+    LOG_THREAD_SECTION_HEADER("POSITION CLOSURE STATUS");
+    LOG_THREAD_CONTENT("Position closure attempted, waiting for settlement");
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_position_verification(int verify_qty) {
-    log_message("Position verification: " + std::to_string(verify_qty), "");
+    LOG_THREAD_SECTION_HEADER("POSITION VERIFICATION");
+    LOG_THREAD_CONTENT("Verifying position quantity: " + std::to_string(verify_qty));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_position_still_exists(const std::string& side) {
-    log_message("Position still exists after closure attempt, skipping " + side + " order", "");
+    LOG_THREAD_SECTION_HEADER("POSITION CLOSURE FAILED");
+    LOG_THREAD_CONTENT("Position still exists after closure attempt, skipping " + side + " order");
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_no_position_found(const std::string& side) {
-    log_message("No " + side + " position found in fresh data, proceeding with " + side, "");
+    LOG_THREAD_SECTION_HEADER("POSITION VERIFICATION");
+    LOG_THREAD_CONTENT("No " + side + " position found in fresh data, proceeding with " + side);
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_debug_skipping_trading_cycle() {
-    log_message("Skipping trading cycle - no fresh market data available", "");
+    LOG_THREAD_SECTION_HEADER("TRADING CYCLE SKIPPED");
+    LOG_THREAD_CONTENT("No fresh market data available");
+    LOG_THREAD_SECTION_FOOTER();
+}
+
+void TradingLogs::log_market_order_intent(const std::string& side, int quantity) {
+    LOG_THREAD_SECTION_HEADER("MARKET ORDER INTENT");
+    LOG_THREAD_CONTENT("Side: " + side);
+    LOG_THREAD_CONTENT("Quantity: " + std::to_string(quantity));
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 // Inline status and countdown logging

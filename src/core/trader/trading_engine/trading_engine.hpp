@@ -3,6 +3,7 @@
 
 #include "configs/trader_config.hpp"
 #include "api/alpaca_client.hpp"
+#include "api/clock/market_clock.hpp"
 #include "../data/account_manager.hpp"
 #include "../data/data_structures.hpp"
 #include "../analysis/strategy_logic.hpp"
@@ -31,6 +32,7 @@ private:
     // Core dependencies
     const TraderConfig& config;
     AccountManager& account_manager;
+    API::AlpacaClient& client;
     OrderExecutionEngine order_engine;
     PositionManager position_manager;
     TradeValidator trade_validator;
@@ -44,11 +46,13 @@ private:
     // Core validation methods
     bool validate_risk_conditions(const ProcessedData& data, double equity);
     bool check_connectivity();
+    bool is_market_open();
     
     // Trading decision methods
     void process_signal_analysis(const ProcessedData& data, double equity);
     void process_position_sizing(const ProcessedData& data, double equity, int current_qty);
     void execute_trade_if_valid(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& signal_decision);
+    void check_and_execute_profit_taking(const ProcessedData& data, int current_qty);
     
     // Utility methods
     void perform_halt_countdown(int seconds) const;

@@ -9,7 +9,7 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 
 TradingEngine::TradingEngine(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
-    : config(cfg), account_manager(account_mgr),
+    : config(cfg), account_manager(account_mgr), client(client_ref),
       order_engine(client_ref, account_mgr, cfg),
       position_manager(client_ref, cfg),
       trade_validator(cfg),
@@ -27,7 +27,19 @@ bool TradingEngine::check_trading_permissions(const ProcessedData& data, double 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
     TradingLogs::log_signal_analysis_start(config.target.symbol);
     
+    // Check if market is open before making any trading decisions
+    if (!is_market_open()) {
+        TradingLogs::log_market_status(false, "Market is closed - no trading decisions");
+        TradingLogs::log_signal_analysis_complete();
+        return;
+    }
+    
     int current_qty = data.pos_details.qty;
+    
+    // Check for profit-taking opportunity first
+    if (current_qty != 0 && config.strategy.profit_taking_threshold_dollars > 0.0) {
+        check_and_execute_profit_taking(data, current_qty);
+    }
     
     // Process signal analysis
     process_signal_analysis(data, equity);
@@ -94,6 +106,15 @@ bool TradingEngine::check_connectivity() {
     return true;
 }
 
+bool TradingEngine::is_market_open() {
+    if (!client.is_core_trading_hours()) {
+        TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
+        return false;
+    }
+    TradingLogs::log_market_status(true, "Market is open - trading allowed");
+    return true;
+}
+
 void TradingEngine::process_signal_analysis(const ProcessedData& data, double /*equity*/) {
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
     TradingLogs::log_candle_and_signals(data, signal_decision);
@@ -145,6 +166,42 @@ void TradingEngine::perform_halt_countdown(int seconds) const {
 
 void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
     position_manager.handle_market_close_positions(data);
+}
+
+void TradingEngine::check_and_execute_profit_taking(const ProcessedData& data, int current_qty) {
+    // Get unrealized profit/loss from position details
+    double unrealized_pl = data.pos_details.unrealized_pl;
+    double current_price = data.curr.c;
+    double position_value = data.pos_details.current_value;
+    
+    // Log profit calculation
+    AlpacaTrader::Logging::log_message("+-- PROFIT TAKING ANALYSIS", config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Current Price: $" + std::to_string(current_price), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Position Value: $" + std::to_string(position_value), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Current Quantity: " + std::to_string(current_qty), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Unrealized P&L: $" + std::to_string(unrealized_pl), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Threshold: $" + std::to_string(config.strategy.profit_taking_threshold_dollars), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+    
+    // Check if profit exceeds threshold
+    if (unrealized_pl > config.strategy.profit_taking_threshold_dollars) {
+        AlpacaTrader::Logging::log_message("+-- PROFIT TAKING TRIGGERED", config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Profit $" + std::to_string(unrealized_pl) + " exceeds threshold $" + 
+                          std::to_string(config.strategy.profit_taking_threshold_dollars), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Executing automatic sell of all " + std::to_string(abs(current_qty)) + " shares", config.logging.log_file);
+        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+        
+        // Execute market order to close entire position
+        if (current_qty > 0) {
+            // Long position: sell to close
+            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Sell, data, 
+                                            StrategyLogic::PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
+        } else {
+            // Short position: buy to close
+            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Buy, data, 
+                                            StrategyLogic::PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
+        }
+    }
 }
 
 } // namespace Core

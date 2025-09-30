@@ -22,7 +22,7 @@ timing.market_post_close_buffer_minutes,5
 timing.market_close_buffer_minutes,15
 
 # System monitoring configuration
-timing.enable_thread_monitoring,true
+timing.enable_thread_monitoring,false
 timing.thread_monitor_log_interval_sec,30
 
 # Error handling configuration

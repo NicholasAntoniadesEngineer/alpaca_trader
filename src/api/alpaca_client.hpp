@@ -26,7 +26,7 @@ private:
     Orders::OrderClient orders;
     
     // Direct access to configuration for API methods
-    const AlpacaClientConfig& config;
+    const AlpacaClientConfig config;
 
 public:
     explicit AlpacaClient(const AlpacaClientConfig& cfg)

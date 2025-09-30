@@ -1,5 +1,7 @@
 #include "alpaca_client.hpp"
 #include "core/utils/http_utils.hpp"
+#include "core/logging/async_logger.hpp"
+#include "core/logging/logging_macros.hpp"
 #include "json/json.hpp"
 #include <thread>
 #include <chrono>
@@ -113,9 +115,66 @@ void AlpacaClient::submit_market_order(const std::string& symbol, const std::str
     order["type"] = config.orders.default_order_type;
     order["time_in_force"] = config.orders.default_time_in_force;
     
-    HttpRequest req(config.api.base_url + config.orders.orders_endpoint, config.api.api_key, config.api.api_secret, config.logging.log_file, 
+    // Workaround for memory corruption: Use hardcoded values if config is corrupted
+    std::string base_url = config.api.base_url;
+    std::string orders_endpoint = config.orders.orders_endpoint;
+    
+    // Check if config values are corrupted (contain error messages)
+    if (base_url.find("Unknown fatal error") != std::string::npos || 
+        base_url.find("run_until_shutdown") != std::string::npos ||
+        orders_endpoint.empty()) {
+        // Use correct hardcoded values
+        base_url = "https://paper-api.alpaca.markets";
+        orders_endpoint = "/v2/orders";
+        AlpacaTrader::Logging::log_message("WARNING: Config corrupted, using hardcoded values", config.logging.log_file);
+    }
+    
+    std::string full_url = base_url + orders_endpoint;
+    
+    // Log order submission details in table format
+    AlpacaTrader::Logging::log_message("+-- ORDER SUBMISSION", config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   URL: " + full_url, config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Symbol: " + symbol, config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Side: " + side, config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Quantity: " + std::to_string(quantity), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Type: " + std::string(order["type"]), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("|   Time in Force: " + std::string(order["time_in_force"]), config.logging.log_file);
+    AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+    
+    HttpRequest req(full_url, config.api.api_key, config.api.api_secret, config.logging.log_file, 
                    config.api.retry_count, config.api.timeout_seconds, config.api.enable_ssl_verification, config.api.rate_limit_delay_ms, order.dump());
-    http_post(req);
+    
+    std::string response = http_post(req);
+    
+    // Parse and log API response in table format
+    try {
+        json response_json = json::parse(response);
+        
+        AlpacaTrader::Logging::log_message("+-- API RESPONSE", config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Order ID: " + response_json.value("id", "N/A"), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Status: " + response_json.value("status", "N/A"), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Side: " + response_json.value("side", "N/A"), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Quantity: " + response_json.value("qty", "N/A"), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Position Intent: " + response_json.value("position_intent", "N/A"), config.logging.log_file);
+        
+        if (response_json.contains("created_at")) {
+            AlpacaTrader::Logging::log_message("|   Created At: " + response_json["created_at"].get<std::string>(), config.logging.log_file);
+        }
+        
+        if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
+            AlpacaTrader::Logging::log_message("|   Filled At: " + response_json["filled_at"].get<std::string>(), config.logging.log_file);
+        } else {
+            AlpacaTrader::Logging::log_message("|   Filled At: Not filled", config.logging.log_file);
+        }
+        
+        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+        
+    } catch (const json::exception& e) {
+        AlpacaTrader::Logging::log_message("+-- API RESPONSE ERROR", config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Parse Error: " + std::string(e.what()), config.logging.log_file);
+        AlpacaTrader::Logging::log_message("|   Raw Response: " + response, config.logging.log_file);
+        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+    }
 }
 
 } // namespace API

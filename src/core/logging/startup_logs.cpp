@@ -30,6 +30,23 @@ void StartupLogs::log_application_header() {
     log_message("", "");
 }
 
+void StartupLogs::log_api_endpoints_table(const std::string& base_url, const std::string& data_url, const std::string& orders_endpoint) {
+    log_message("┌─────────────────────────────────────────────────────────────────────────────┐", "");
+    log_message("│                              API ENDPOINTS                                  │", "");
+    log_message("├─────────────────────────────────────────────────────────────────────────────┤", "");
+    log_message("│ Trading API (Paper)    │ " + base_url + "                   │", "");
+    log_message("│ Market Data API        │ " + data_url + "                        │", "");
+    log_message("├─────────────────────────────────────────────────────────────────────────────┤", "");
+    log_message("│ GET /v2/account                    │ Account info (equity, buying power)    │", "");
+    log_message("│ GET /v2/positions                  │ All positions                          │", "");
+    log_message("│ POST " + orders_endpoint + "                    │ Place orders (market, bracket)         │", "");
+    log_message("│ GET /v2/clock                      │ Market hours & status                  │", "");
+    log_message("│ GET /v2/stocks/{sym}/bars          │ Historical market data                 │", "");
+    log_message("│ GET /v2/stocks/{sym}/quotes/latest │ Real-time quotes                       │", "");
+    log_message("└─────────────────────────────────────────────────────────────────────────────┘", "");
+    log_message("", "");
+}
+
 
 void StartupLogs::log_account_overview(const AccountManager& account_manager) {
     auto [account_info, snapshot] = account_manager.fetch_account_data_bundled();

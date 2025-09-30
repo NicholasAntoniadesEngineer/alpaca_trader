@@ -19,14 +19,17 @@ public:
     
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
     
+    // Order side enumeration
+    enum class OrderSide { Buy, Sell };
+    
+    // Public method for profit taking
+    void execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing);
+    
 private:
     // Core dependencies
     API::AlpacaClient& client;
     AccountManager& account_manager;
     const TraderConfig& config;
-    
-    // Order side enumeration
-    enum class OrderSide { Buy, Sell };
     
     // Configuration constants
     static constexpr std::chrono::milliseconds POSITION_CLOSE_WAIT_TIME{2000};

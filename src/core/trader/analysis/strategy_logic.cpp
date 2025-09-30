@@ -171,13 +171,20 @@ ExitTargets compute_exit_targets(const std::string& side, double entry_price, do
     // Use the larger of risk_amount or calculated buffer for safety
     double effective_buffer = std::max(risk_amount, price_buffer);
     
+    // Add minimum buffer to account for market data delays and price movements
+    // Use configurable buffer for API validation and market delays
+    double min_stop_buffer = config.strategy.stop_loss_buffer_dollars;
+    
+    // TODO: When better data comes through we can use orders with more precision.
     if (side == "buy") {
         // Long position: profit when price goes UP, stop when price goes DOWN
-        targets.stop_loss = entry_price - effective_buffer;
+        // Ensure stop loss is well below entry price to account for market data delays
+        targets.stop_loss = entry_price - std::max(effective_buffer, min_stop_buffer);
         targets.take_profit = entry_price + (rr_ratio * risk_amount);
     } else { // side == "sell" 
         // Short position: profit when price goes DOWN, stop when price goes UP
-        targets.stop_loss = entry_price + effective_buffer;
+        // Ensure stop loss is well above entry price to account for market data delays
+        targets.stop_loss = entry_price + std::max(effective_buffer, min_stop_buffer);
         targets.take_profit = entry_price - (rr_ratio * risk_amount);
     }
     

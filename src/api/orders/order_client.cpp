@@ -1,3 +1,4 @@
+
 #include "api/orders/order_client.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/logging/async_logger.hpp"
@@ -48,6 +49,85 @@ void OrderClient::cancel_orders_for_signal(const std::string& signal_side) const
     cancel_orders(signal_side);
 }
 
+void OrderClient::log_order_details_table(const nlohmann::json& order, const std::string& response) const {
+    // Order Details Table
+    TABLE_HEADER_48("ORDER DETAILS", "Bracket Order Configuration");
+    
+    TABLE_ROW_48("Symbol", order.value("symbol", "N/A"));
+    TABLE_ROW_48("Side", order.value("side", "N/A"));
+    TABLE_ROW_48("Quantity", order.value("qty", "N/A"));
+    TABLE_ROW_48("Type", order.value("type", "N/A"));
+    TABLE_ROW_48("Time in Force", order.value("time_in_force", "N/A"));
+    TABLE_ROW_48("Order Class", order.value("order_class", "N/A"));
+    
+    if (order.contains("take_profit") && order["take_profit"].contains("limit_price")) {
+        TABLE_ROW_48("Take Profit", "$" + order["take_profit"]["limit_price"].get<std::string>());
+    }
+    
+    if (order.contains("stop_loss") && order["stop_loss"].contains("stop_price")) {
+        TABLE_ROW_48("Stop Loss", "$" + order["stop_loss"]["stop_price"].get<std::string>());
+    }
+    
+    TABLE_FOOTER_48();
+    
+    // Parse API Response
+    try {
+        nlohmann::json response_json = nlohmann::json::parse(response);
+        
+        TABLE_HEADER_48("API RESPONSE", "Order Execution Result");
+        
+        TABLE_ROW_48("Order ID", response_json.value("id", "N/A"));
+        TABLE_ROW_48("Status", response_json.value("status", "N/A"));
+        TABLE_ROW_48("Side", response_json.value("side", "N/A"));
+        TABLE_ROW_48("Quantity", response_json.value("qty", "N/A"));
+        TABLE_ROW_48("Order Class", response_json.value("order_class", "N/A"));
+        TABLE_ROW_48("Position Intent", response_json.value("position_intent", "N/A"));
+        
+        if (response_json.contains("created_at")) {
+            TABLE_ROW_48("Created At", response_json["created_at"].get<std::string>());
+        }
+        
+        if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
+            TABLE_ROW_48("Filled At", response_json["filled_at"].get<std::string>());
+        } else {
+            TABLE_ROW_48("Filled At", "Not filled");
+        }
+        
+        if (response_json.contains("legs") && response_json["legs"].is_array()) {
+            TABLE_SEPARATOR_48();
+            TABLE_ROW_48("Bracket Legs", std::to_string(response_json["legs"].size()) + " legs");
+            
+            for (size_t i = 0; i < response_json["legs"].size(); ++i) {
+                const auto& leg = response_json["legs"][i];
+                std::string leg_type = leg.value("type", "unknown");
+                std::string leg_side = leg.value("side", "unknown");
+                std::string leg_price = "N/A";
+                
+                if (leg.contains("limit_price") && !leg["limit_price"].is_null()) {
+                    leg_price = "$" + leg["limit_price"].get<std::string>();
+                } else if (leg.contains("stop_price") && !leg["stop_price"].is_null()) {
+                    leg_price = "$" + leg["stop_price"].get<std::string>();
+                }
+                
+                TABLE_ROW_48("Leg " + std::to_string(i+1), leg_type + " " + leg_side + " @ " + leg_price);
+            }
+        }
+        
+        TABLE_FOOTER_48();
+        
+    } catch (const nlohmann::json::exception& e) {
+        LOG_THREAD_CONTENT("API Response Parse Error: " + std::string(e.what()));
+        LOG_THREAD_CONTENT("Raw Response: " + response);
+    }
+    
+    // If response is empty or parsing failed, show raw response
+    if (response.empty()) {
+        LOG_THREAD_CONTENT("API Response: Empty response received");
+    } else if (response.length() < 10) {
+        LOG_THREAD_CONTENT("API Response: " + response);
+    }
+}
+
 void OrderClient::place_bracket_order(const Core::OrderRequest& oreq) const {
     if (oreq.qty <= 0) return;
     
@@ -70,6 +150,11 @@ void OrderClient::place_bracket_order(const Core::OrderRequest& oreq) const {
     HttpRequest req(api.base_url + "/v2/orders", api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms, order.dump());
     std::string response = http_post(req);
+    
+    // Log order details for troubleshooting
+    LOG_THREAD_SECTION_HEADER("ORDER EXECUTION DEBUG");
+    log_order_details_table(order, response);
+    LOG_THREAD_SECTION_FOOTER();
     
     std::string log_msg = format_order_log("Bracket order attempt", 
         oreq.side + " " + std::to_string(oreq.qty) + " (TP: " + round_price_to_penny(oreq.tp) + 

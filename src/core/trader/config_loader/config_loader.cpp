@@ -48,7 +48,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         // API
         if (key == "api.api_key") cfg.api.api_key = value;
         else if (key == "api.api_secret") cfg.api.api_secret = value;
-        else if (key == "api.base_url") cfg.api.base_url = value;
+        else if (key == "api.base_url") {
+            cfg.api.base_url = value;
+        }
         else if (key == "api.data_url") cfg.api.data_url = value;
         else if (key == "api.retry_count") cfg.api.retry_count = std::stoi(value);
         else if (key == "api.timeout_seconds") cfg.api.timeout_seconds = std::stoi(value);
@@ -114,7 +116,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "orders.default_order_type") cfg.orders.default_order_type = value;
         else if (key == "orders.position_closure_side_buy") cfg.orders.position_closure_side_buy = value;
         else if (key == "orders.position_closure_side_sell") cfg.orders.position_closure_side_sell = value;
-        else if (key == "orders.orders_endpoint") cfg.orders.orders_endpoint = value;
+        else if (key == "orders.orders_endpoint") {
+            cfg.orders.orders_endpoint = value;
+        }
         else if (key == "orders.positions_endpoint") cfg.orders.positions_endpoint = value;
         else if (key == "orders.orders_status_filter") cfg.orders.orders_status_filter = value;
         else if (key == "orders.zero_quantity_check") cfg.orders.zero_quantity_check = to_bool(value);
@@ -157,6 +161,9 @@ bool load_strategy_profiles(AlpacaTrader::Config::SystemConfig& cfg, const std::
         else if (key == "strategy.price_buffer_pct") cfg.strategy.price_buffer_pct = std::stod(value);
         else if (key == "strategy.min_price_buffer") cfg.strategy.min_price_buffer = std::stod(value);
         else if (key == "strategy.max_price_buffer") cfg.strategy.max_price_buffer = std::stod(value);
+        else if (key == "strategy.stop_loss_buffer_dollars") cfg.strategy.stop_loss_buffer_dollars = std::stod(value);
+        else if (key == "strategy.use_realtime_price_for_orders") cfg.strategy.use_realtime_price_for_orders = to_bool(value);
+        else if (key == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(value);
         
         // Strategy precision configuration
         else if (key == "strategy.ratio_precision") cfg.strategy.ratio_precision = std::stoi(value);

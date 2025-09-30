@@ -40,3 +40,7 @@ strategy.max_price_buffer,0.25
 # RISK/REWARD & TIMING
 strategy.rr_ratio,2.0
 timing.sleep_interval_sec,3
+
+# STOP LOSS BUFFER CONFIGURATION (Conservative)
+strategy.stop_loss_buffer_dollars,2.00
+strategy.use_realtime_price_for_orders,true

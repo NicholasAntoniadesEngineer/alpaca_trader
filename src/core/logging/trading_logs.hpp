@@ -75,6 +75,8 @@ public:
     static void log_insufficient_buying_power(double required_buying_power, double available_buying_power, int quantity, double current_price);
     static void log_position_sizing_skipped(const std::string& reason);
     static void log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short);
+    static void log_realtime_price_used(double realtime_price, double delayed_price);
+    static void log_realtime_price_fallback(double delayed_price);
     static void log_debug_fresh_data_fetch(const std::string& position_type);
     static void log_debug_fresh_position_data(int fresh_qty, int current_qty);
     static void log_debug_account_details(int qty, double current_value);
@@ -84,6 +86,7 @@ public:
     static void log_debug_position_still_exists(const std::string& side);
     static void log_debug_no_position_found(const std::string& side);
     static void log_debug_skipping_trading_cycle();
+    static void log_market_order_intent(const std::string& side, int quantity);
     
     // Market close position management
     static void log_market_close_warning(int minutes_until_close);
