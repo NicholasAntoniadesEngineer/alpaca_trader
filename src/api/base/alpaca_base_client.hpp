@@ -10,7 +10,7 @@ using AlpacaClientConfig = AlpacaTrader::Config::AlpacaClientConfig;
 
 class AlpacaBaseClient {
 protected:
-    const ApiConfig& api;
+    const AlpacaTrader::Config::ApiConfig& api;
     const SessionConfig& session;
     const TimingConfig& timing;
     const LoggingConfig& logging;

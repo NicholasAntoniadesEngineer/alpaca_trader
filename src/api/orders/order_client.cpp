@@ -5,6 +5,7 @@
 #include "core/logging/logging_macros.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/utils/http_utils.hpp"
+#include "configs/api_endpoints.hpp"
 #include "json/json.hpp"
 #include <cmath>
 #include <iomanip>
@@ -147,7 +148,8 @@ void OrderClient::place_bracket_order(const Core::OrderRequest& oreq) const {
     order["take_profit"] = take_profit;
     order["stop_loss"] = stop_loss;
     
-    HttpRequest req(api.base_url + "/v2/orders", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.orders, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms, order.dump());
     std::string response = http_post(req);
     

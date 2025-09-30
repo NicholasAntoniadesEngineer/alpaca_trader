@@ -53,7 +53,7 @@ public:
     AccountInfo fetch_account_info() const;
 
 private:
-    const ApiConfig& api;
+    const AlpacaTrader::Config::ApiConfig& api;
     const LoggingConfig& logging;
     const TargetConfig& target;
     int cache_duration_seconds;

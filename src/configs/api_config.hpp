@@ -3,6 +3,10 @@
 #define API_CONFIG_HPP
 
 #include <string>
+#include "endpoints_config.hpp"
+
+namespace AlpacaTrader {
+namespace Config {
 
 struct ApiConfig {
     // Authentication
@@ -20,8 +24,14 @@ struct ApiConfig {
     int rate_limit_delay_ms; 
     
     // API Versioning
-    std::string api_version; 
+    std::string api_version;
+    
+    // Endpoints Configuration
+    EndpointsConfig endpoints;
 };
+
+} // namespace Config
+} // namespace AlpacaTrader
 
 #endif // API_CONFIG_HPP
 

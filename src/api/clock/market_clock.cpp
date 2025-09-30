@@ -2,6 +2,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
+#include "configs/api_endpoints.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
@@ -17,7 +18,8 @@ namespace API {
 namespace Clock {
 
 bool MarketClock::is_core_trading_hours() const {
-    HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.clock, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) return false;
@@ -55,7 +57,8 @@ bool MarketClock::is_core_trading_hours() const {
 
 bool MarketClock::is_within_fetch_window() const {
     // Allow data fetching only when: market is open OR within N minutes before next open
-    HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.clock, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
@@ -129,7 +132,8 @@ bool MarketClock::is_approaching_market_close() const {
 }
 
 int MarketClock::get_minutes_until_market_close() const {
-    HttpRequest req(api.base_url + "/v2/clock", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.clock, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) return -1;

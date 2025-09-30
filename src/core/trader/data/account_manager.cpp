@@ -2,6 +2,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
 #include "core/utils/http_utils.hpp"
+#include "configs/api_endpoints.hpp"
 #include "json/json.hpp"
 #include <cmath>
 
@@ -18,7 +19,8 @@ AccountManager::AccountManager(const AccountManagerConfig& cfg)
       last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_sec + 1)) {}
 
 double AccountManager::fetch_account_equity() const {
-    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
@@ -43,7 +45,8 @@ double AccountManager::fetch_account_equity() const {
 }
 
 double AccountManager::fetch_buying_power() const {
-    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) {
@@ -68,8 +71,11 @@ double AccountManager::fetch_buying_power() const {
 }
 
 PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_sym) const {
+    using namespace AlpacaTrader::Config;
     PositionDetails details;
-    HttpRequest req(api.base_url + "/v2/positions/" + req_sym.symbol, api.api_key, api.api_secret, logging.log_file, 
+    ApiEndpoints endpoints(api.endpoints);
+    std::string url = endpoints.build_position_url(api.base_url, req_sym.symbol);
+    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     if (response.empty()) return details;
@@ -91,7 +97,9 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
 }
 
 int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const {
-    std::string url = api.base_url + "/v2/orders?status=open&symbols=" + req_sym.symbol;
+    using namespace AlpacaTrader::Config;
+    ApiEndpoints endpoints(api.endpoints);
+    std::string url = endpoints.build_orders_by_symbol_url(api.base_url, req_sym.symbol);
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
@@ -136,7 +144,8 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_ac
     AccountSnapshot snapshot;
     
     // Single request to get all account data
-    HttpRequest req(api.base_url + "/v2/account", api.api_key, api.api_secret, logging.log_file, 
+    using namespace AlpacaTrader::Config;
+    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
     

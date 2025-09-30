@@ -55,7 +55,7 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
     StartupLogs::log_application_header();
     
     // Log API endpoints table
-    StartupLogs::log_api_endpoints_table(config.api.base_url, config.api.data_url, config.orders.orders_endpoint);
+    StartupLogs::log_api_endpoints_table(config);
     
     // Note: Main startup logging is handled separately to avoid duplication
     

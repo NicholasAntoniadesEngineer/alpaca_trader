@@ -3,6 +3,7 @@
 #include "async_logger.hpp"
 #include "logging_macros.hpp"
 #include "configs/timing_config.hpp"
+#include "configs/api_endpoints.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/trader/config_loader/config_loader.hpp"
 #include <iomanip>
@@ -30,19 +31,21 @@ void StartupLogs::log_application_header() {
     log_message("", "");
 }
 
-void StartupLogs::log_api_endpoints_table(const std::string& base_url, const std::string& data_url, const std::string& orders_endpoint) {
+void StartupLogs::log_api_endpoints_table(const AlpacaTrader::Config::SystemConfig& config) {
+    using namespace AlpacaTrader::Config;
+    
     log_message("┌─────────────────────────────────────────────────────────────────────────────┐", "");
     log_message("│                              API ENDPOINTS                                  │", "");
     log_message("├─────────────────────────────────────────────────────────────────────────────┤", "");
-    log_message("│ Trading API (Paper)    │ " + base_url + "                   │", "");
-    log_message("│ Market Data API        │ " + data_url + "                        │", "");
+    log_message("│ Trading API (Paper)    │ " + config.api.base_url + "                   │", "");
+    log_message("│ Market Data API        │ " + config.api.data_url + "                        │", "");
     log_message("├─────────────────────────────────────────────────────────────────────────────┤", "");
-    log_message("│ GET /v2/account                    │ Account info (equity, buying power)    │", "");
-    log_message("│ GET /v2/positions                  │ All positions                          │", "");
-    log_message("│ POST " + orders_endpoint + "                    │ Place orders (market, bracket)         │", "");
-    log_message("│ GET /v2/clock                      │ Market hours & status                  │", "");
-    log_message("│ GET /v2/stocks/{sym}/bars          │ Historical market data                 │", "");
-    log_message("│ GET /v2/stocks/{sym}/quotes/latest │ Real-time quotes                       │", "");
+    log_message("│ GET " + config.api.endpoints.trading.account + "                       │ Account info (equity, buying power) │", "");
+    log_message("│ GET " + config.api.endpoints.trading.positions + "                     │ All positions                       │", "");
+    log_message("│ POST " + config.orders.orders_endpoint + "                       │ Place orders (market, bracket)      │", "");
+    log_message("│ GET " + config.api.endpoints.trading.clock + "                         │ Market hours & status               │", "");
+    log_message("│ GET " + config.api.endpoints.market_data.bars + "          │ Historical market data              │", "");
+    log_message("│ GET " + config.api.endpoints.market_data.quotes_latest + " │ Real-time quotes                    │", "");
     log_message("└─────────────────────────────────────────────────────────────────────────────┘", "");
     log_message("", "");
 }

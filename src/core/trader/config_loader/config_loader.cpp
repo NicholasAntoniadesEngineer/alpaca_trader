@@ -58,6 +58,24 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "api.rate_limit_delay_ms") cfg.api.rate_limit_delay_ms = std::stoi(value);
         else if (key == "api.api_version") cfg.api.api_version = value;
 
+        // Endpoints Configuration (only used endpoints)
+        else if (key == "endpoints.trading_paper_url") cfg.api.endpoints.trading_paper_url = value;
+        else if (key == "endpoints.trading_live_url") cfg.api.endpoints.trading_live_url = value;
+        else if (key == "endpoints.market_data_url") cfg.api.endpoints.market_data_url = value;
+        else if (key == "endpoints.api_version") cfg.api.endpoints.api_version = value;
+        
+        // Trading Endpoints (used)
+        else if (key == "endpoints.trading.account") cfg.api.endpoints.trading.account = value;
+        else if (key == "endpoints.trading.positions") cfg.api.endpoints.trading.positions = value;
+        else if (key == "endpoints.trading.position_by_symbol") cfg.api.endpoints.trading.position_by_symbol = value;
+        else if (key == "endpoints.trading.orders") cfg.api.endpoints.trading.orders = value;
+        else if (key == "endpoints.trading.orders_by_symbol") cfg.api.endpoints.trading.orders_by_symbol = value;
+        else if (key == "endpoints.trading.clock") cfg.api.endpoints.trading.clock = value;
+        
+        // Market Data Endpoints (used)
+        else if (key == "endpoints.market_data.bars") cfg.api.endpoints.market_data.bars = value;
+        else if (key == "endpoints.market_data.quotes_latest") cfg.api.endpoints.market_data.quotes_latest = value;
+
         // Target
         else if (key == "target.symbol") cfg.target.symbol = value;
 
@@ -238,6 +256,7 @@ int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
     // Load configuration from separate logical files
     std::vector<std::string> config_files = {
         "config/api_config.csv",
+        "config/endpoints_config.csv",
         "config/target_config.csv", 
         "config/strategy_config.csv",
         "config/risk_config.csv",

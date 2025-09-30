@@ -4,6 +4,7 @@
 #include "core/logging/logging_macros.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
+#include "configs/api_endpoints.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
@@ -72,9 +73,12 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
 
 std::string MarketDataClient::build_bars_url(const std::string& symbol, const std::string& start, 
                                            const std::string& end, int limit, const std::string& feed) const {
+    using namespace AlpacaTrader::Config;
+    
     std::string timeframe = (limit == 10) ? "1Day" : "1Min";
-    return api.data_url + "/v2/stocks/" + symbol + "/bars?start=" + start + "&end=" + end + 
-           "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) + 
+    ApiEndpoints endpoints(api.endpoints);
+    std::string url = endpoints.build_bars_url(api.data_url, symbol, start, end);
+    return url + "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) + 
            "&adjustment=raw&feed=" + feed;
 }
 
@@ -137,8 +141,11 @@ void MarketDataClient::log_fetch_failure() const {
  * @note Alpaca provides free real-time quotes from IEX exchange
  */
 double MarketDataClient::get_current_price(const std::string& symbol) const {
+    using namespace AlpacaTrader::Config;
+    
     // Construct real-time quotes endpoint URL.
-    std::string url = api.data_url + "/v2/stocks/" + symbol + "/quotes/latest";
+    ApiEndpoints endpoints(api.endpoints);
+    std::string url = endpoints.build_quotes_latest_url(api.data_url, symbol);
     
     // Make HTTP request with standard retry/timeout settings.
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
