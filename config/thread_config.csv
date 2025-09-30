@@ -8,13 +8,13 @@
 
 # Main thread configuration
 thread.main.priority,NORMAL
-thread.main.cpu_affinity,-1
+thread.main.cpu_affinity,1
 thread.main.name,MAIN
-thread.main.use_cpu_affinity,false
+thread.main.use_cpu_affinity,true
 
 # Trader decision thread configuration
 thread.trader_decision.priority,HIGHEST
-thread.trader_decision.cpu_affinity,0
+thread.trader_decision.cpu_affinity,01
 thread.trader_decision.name,TRADER
 thread.trader_decision.use_cpu_affinity,true
 
