@@ -131,6 +131,87 @@ void TradingLogs::log_order_result(const std::string& order_id, bool success, co
     }
 }
 
+// Consolidated order execution logging - combines all order execution data into one comprehensive table
+void TradingLogs::log_comprehensive_order_execution(const std::string& order_type, const std::string& side, int quantity, 
+                                                   double current_price, double atr, int position_qty, double risk_amount,
+                                                   double stop_loss, double take_profit, 
+                                                   const std::string& symbol, const std::string& function_name) {
+    TABLE_HEADER_48("ORDER EXECUTION", "Comprehensive Order Details");
+    
+    // Order Configuration
+    TABLE_ROW_48("Order Type", order_type);
+    TABLE_ROW_48("Side", side);
+    TABLE_ROW_48("Quantity", std::to_string(quantity));
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Function", function_name);
+    
+    TABLE_SEPARATOR_48();
+    
+    // Market Data (Raw Values)
+    TABLE_ROW_48("Current Price", "$" + std::to_string(current_price));
+    TABLE_ROW_48("ATR", std::to_string(atr));
+    TABLE_ROW_48("Position Qty", std::to_string(position_qty));
+    TABLE_ROW_48("Risk Amount", "$" + std::to_string(risk_amount));
+    
+    // Exit Targets (if applicable)
+    if (stop_loss > 0.0 || take_profit > 0.0) {
+        TABLE_SEPARATOR_48();
+        TABLE_ROW_48("Stop Loss", stop_loss > 0.0 ? "$" + std::to_string(stop_loss) : "N/A");
+        TABLE_ROW_48("Take Profit", take_profit > 0.0 ? "$" + std::to_string(take_profit) : "N/A");
+    } else if (order_type == "Market Order") {
+        // For market orders, show that this is a position closing order
+        TABLE_SEPARATOR_48();
+        TABLE_ROW_48("Order Purpose", "Position Closure");
+        TABLE_ROW_48("Entry Price", "$" + std::to_string(current_price));
+        TABLE_ROW_48("Exit Strategy", "Market Price");
+    }
+    
+    TABLE_FOOTER_48();
+}
+
+// Consolidated API response logging - shows all API response data in one comprehensive table
+void TradingLogs::log_comprehensive_api_response(const std::string& order_id, const std::string& status, 
+                                                const std::string& side, const std::string& quantity, 
+                                                const std::string& order_class, const std::string& position_intent,
+                                                const std::string& created_at, const std::string& filled_at,
+                                                const std::string& filled_qty, const std::string& filled_avg_price,
+                                                const std::string& error_code, const std::string& error_message,
+                                                const std::string& available_qty, const std::string& existing_qty,
+                                                const std::string& held_for_orders, const std::string& related_orders) {
+    
+    // Determine if this is an error response or success response
+    bool is_error = !error_code.empty() || !error_message.empty();
+    
+    if (is_error) {
+        TABLE_HEADER_48("API ERROR RESPONSE", "Order Rejection Details");
+        
+        TABLE_ROW_48("Error Code", error_code.empty() ? "N/A" : error_code);
+        TABLE_ROW_48("Error Message", error_message.empty() ? "N/A" : error_message);
+        TABLE_ROW_48("Symbol", side.empty() ? "N/A" : "SPY");
+        TABLE_ROW_48("Requested Qty", quantity.empty() ? "N/A" : quantity);
+        TABLE_ROW_48("Available Qty", available_qty.empty() ? "N/A" : available_qty);
+        TABLE_ROW_48("Existing Qty", existing_qty.empty() ? "N/A" : existing_qty);
+        TABLE_ROW_48("Held for Orders", held_for_orders.empty() ? "N/A" : held_for_orders);
+        TABLE_ROW_48("Related Orders", related_orders.empty() ? "N/A" : related_orders);
+        
+    } else {
+        TABLE_HEADER_48("API SUCCESS RESPONSE", "Order Confirmation Details");
+        
+        TABLE_ROW_48("Order ID", order_id.empty() ? "N/A" : order_id);
+        TABLE_ROW_48("Status", status.empty() ? "N/A" : status);
+        TABLE_ROW_48("Side", side.empty() ? "N/A" : side);
+        TABLE_ROW_48("Quantity", quantity.empty() ? "N/A" : quantity);
+        TABLE_ROW_48("Order Class", order_class.empty() ? "N/A" : order_class);
+        TABLE_ROW_48("Position Intent", position_intent.empty() ? "N/A" : position_intent);
+        TABLE_ROW_48("Created At", created_at.empty() ? "N/A" : created_at);
+        TABLE_ROW_48("Filled At", filled_at.empty() ? "Not filled" : filled_at);
+        TABLE_ROW_48("Filled Qty", filled_qty.empty() ? "0" : filled_qty);
+        TABLE_ROW_48("Filled Avg Price", filled_avg_price.empty() ? "N/A" : "$" + filled_avg_price);
+    }
+    
+    TABLE_FOOTER_48();
+}
+
 
 void TradingLogs::log_market_close_warning(int minutes_until_close) {
     LOG_THREAD_SECTION_HEADER("MARKET CLOSE WARNING");
@@ -163,8 +244,18 @@ void TradingLogs::log_candle_and_signals(const ProcessedData& data, const Signal
     log_signals_table(signals.buy, signals.sell);
 }
 
-void TradingLogs::log_filters(const FilterResult& filters, const TraderConfig& config) {
-    log_filters_table(filters.atr_pass, filters.atr_ratio, config.strategy.atr_multiplier_entry, 
+void TradingLogs::log_filters(const FilterResult& filters, const TraderConfig& config, const ProcessedData& data) {
+    // Use absolute ATR threshold if enabled, otherwise use relative threshold
+    double atr_threshold = config.strategy.use_absolute_atr_threshold ? 
+                          config.strategy.atr_absolute_threshold : 
+                          config.strategy.atr_multiplier_entry;
+    
+    // For absolute threshold, pass the actual ATR value instead of ratio
+    double atr_value = config.strategy.use_absolute_atr_threshold ? 
+                      data.atr : 
+                      filters.atr_ratio;
+    
+    log_filters_table(filters.atr_pass, atr_value, atr_threshold, 
                      filters.vol_pass, filters.vol_ratio, config.strategy.volume_multiplier, 
                      filters.doji_pass);
 }
@@ -555,6 +646,12 @@ void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemCon
     TABLE_ROW_48("Market Status Check", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
     TABLE_ROW_48("Thread Monitor Log", std::to_string(config.timing.monitoring_interval_sec) + "s");
     
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("Wash Trade Prevention", config.timing.enable_wash_trade_prevention ? "Enabled" : "Disabled");
+    if (config.timing.enable_wash_trade_prevention) {
+        TABLE_ROW_48("Min Order Interval", std::to_string(config.timing.min_order_interval_sec) + " seconds");
+    }
+    
     TABLE_FOOTER_48();
 }
 
@@ -593,6 +690,29 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     TABLE_ROW_48("Risk per Trade", risk_pct);
     TABLE_ROW_48("Max Trade Value", "$" + std::to_string((int)config.risk.max_value_per_trade));
     TABLE_ROW_48("RR Ratio", "1:" + std::to_string(config.strategy.rr_ratio).substr(0,4));
+    
+    // Take Profit Configuration
+    if (config.strategy.use_take_profit_percentage) {
+        std::string tp_pct = std::to_string(config.strategy.take_profit_percentage * 100.0).substr(0,4) + "%";
+        TABLE_ROW_48("Take Profit Method", "Percentage (" + tp_pct + ")");
+    } else {
+        TABLE_ROW_48("Take Profit Method", "Risk/Reward Ratio");
+    }
+    
+    // Position Scaling Configuration
+    if (config.strategy.enable_fixed_shares) {
+        TABLE_ROW_48("Fixed Shares", "Enabled (" + std::to_string(config.strategy.fixed_shares_per_trade) + " shares)");
+    } else {
+        TABLE_ROW_48("Fixed Shares", "Disabled");
+    }
+    
+    if (config.strategy.enable_position_multiplier) {
+        std::string multiplier_str = (config.strategy.position_size_multiplier == 1.0) ? 
+            "1.0x (Normal)" : std::to_string(config.strategy.position_size_multiplier).substr(0,4) + "x";
+        TABLE_ROW_48("Position Multiplier", "Enabled (" + multiplier_str + ")");
+    } else {
+        TABLE_ROW_48("Position Multiplier", "Disabled");
+    }
     
     std::string multi_pos = config.risk.allow_multiple_positions ? "YES" : "NO";
     TABLE_ROW_48("Multi Positions", multi_pos);
@@ -645,11 +765,39 @@ void TradingLogs::log_signals_table(bool buy_signal, bool sell_signal) {
     TABLE_FOOTER_48();
 }
 
-void TradingLogs::log_filters_table(bool atr_pass, double atr_ratio, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass) {
+void TradingLogs::log_signals_table_enhanced(const SignalDecision& signals) {
+    TABLE_HEADER_48("Signal Analysis", "Detection Results");
+    
+    std::string buy_status = signals.buy ? "YES" : "NO";
+    if (signals.buy) {
+        buy_status += " (Strength: " + std::to_string(signals.signal_strength).substr(0,4) + ")";
+    }
+    TABLE_ROW_48("BUY Signal", buy_status);
+    
+    std::string sell_status = signals.sell ? "YES" : "NO";
+    if (signals.sell) {
+        sell_status += " (Strength: " + std::to_string(signals.signal_strength).substr(0,4) + ")";
+    }
+    TABLE_ROW_48("SELL Signal", sell_status);
+    
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_filters_table(bool atr_pass, double atr_value, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass) {
     TABLE_HEADER_48("Filter Analysis", "Validation Results");
     
     std::string atr_status = atr_pass ? "PASS" : "FAIL";
-    std::string atr_detail = "(" + std::to_string(atr_ratio).substr(0,4) + "x > " + std::to_string(atr_threshold).substr(0,4) + "x)";
+    std::string atr_detail;
+    
+    // Check if this is an absolute threshold (less than 10) or relative threshold (greater than 1)
+    if (atr_threshold < 10.0) {
+        // Absolute threshold - show actual ATR value vs threshold
+        atr_detail = "($" + std::to_string(atr_value).substr(0,4) + " > $" + std::to_string(atr_threshold).substr(0,4) + ")";
+    } else {
+        // Relative threshold - show ratio
+        atr_detail = "(" + std::to_string(atr_value).substr(0,4) + "x > " + std::to_string(atr_threshold).substr(0,4) + "x)";
+    }
+    
     std::string atr_display = atr_status + " " + atr_detail;
     TABLE_ROW_48("ATR Filter", atr_display);
     
@@ -879,6 +1027,65 @@ void TradingLogs::end_inline_status() {
 // Order execution header
 void TradingLogs::log_order_execution_header() {
     LOG_THREAD_ORDER_EXECUTION_HEADER();
+}
+
+// Enhanced signal analysis logging
+void TradingLogs::log_signal_analysis_detailed(const ProcessedData& data, const SignalDecision& signals, const TraderConfig& config) {
+    LOG_THREAD_SECTION_HEADER("DETAILED SIGNAL ANALYSIS");
+    
+    // Log momentum analysis
+    log_momentum_analysis(data, config);
+    
+    // Log signal strength breakdown
+    log_signal_strength_breakdown(signals, config);
+    
+    LOG_THREAD_SECTION_FOOTER();
+}
+
+void TradingLogs::log_momentum_analysis(const ProcessedData& data, const TraderConfig& config) {
+    // Calculate momentum indicators
+    double price_change = data.curr.c - data.prev.c;
+    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * 100.0 : 0.0;
+    
+    double volume_change = static_cast<double>(data.curr.v) - static_cast<double>(data.prev.v);
+    double volume_change_pct = (data.prev.v > 0) ? (volume_change / static_cast<double>(data.prev.v)) * 100.0 : 0.0;
+    
+    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * 100.0 : 0.0;
+    
+    // Log momentum analysis table
+    TABLE_HEADER_48("Momentum Analysis", "Current vs Previous Values");
+    
+    // Show actual price values for debugging
+    std::string price_debug = "Prev: $" + std::to_string(data.prev.c).substr(0,6) + " | Curr: $" + std::to_string(data.curr.c).substr(0,6);
+    TABLE_ROW_48("Price Values", price_debug);
+    
+    std::string price_status = (price_change_pct > config.strategy.min_price_change_pct) ? "PASS" : "FAIL";
+    std::string price_detail = "($" + std::to_string(price_change_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_price_change_pct).substr(0,4) + "%)";
+    TABLE_ROW_48("Price Change", price_status + " " + price_detail);
+    
+    std::string volume_status = (volume_change_pct > config.strategy.min_volume_change_pct) ? "PASS" : "FAIL";
+    std::string volume_detail = "(" + std::to_string(volume_change_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_volume_change_pct).substr(0,4) + "%)";
+    TABLE_ROW_48("Volume Change", volume_status + " " + volume_detail);
+    
+    std::string volatility_status = (volatility_pct > config.strategy.min_volatility_pct) ? "PASS" : "FAIL";
+    std::string volatility_detail = "(" + std::to_string(volatility_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_volatility_pct).substr(0,4) + "%)";
+    TABLE_ROW_48("Volatility", volatility_status + " " + volatility_detail);
+    
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_signal_strength_breakdown(const SignalDecision& signals, const TraderConfig& config) {
+    TABLE_HEADER_48("Signal Strength Analysis", "Decision Breakdown");
+    
+    std::string signal_status = signals.buy ? "BUY" : (signals.sell ? "SELL" : "NONE");
+    std::string strength_detail = "(" + std::to_string(signals.signal_strength).substr(0,4) + " >= " + std::to_string(config.strategy.signal_strength_threshold).substr(0,4) + ")";
+    TABLE_ROW_48("Signal Type", signal_status + " " + strength_detail);
+    
+    TABLE_ROW_48("Signal Strength", std::to_string(signals.signal_strength).substr(0,4) + "/1.0");
+    TABLE_ROW_48("Threshold", std::to_string(config.strategy.signal_strength_threshold).substr(0,4) + "/1.0");
+    TABLE_ROW_48("Reason", signals.signal_reason.empty() ? "No analysis" : signals.signal_reason);
+    
+    TABLE_FOOTER_48();
 }
 
 } // namespace Logging

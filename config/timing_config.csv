@@ -5,16 +5,17 @@
 # ========================================================================
 
 # Thread polling intervals
-timing.thread_market_data_poll_interval_sec,1
-timing.thread_account_data_poll_interval_sec,5
-timing.thread_market_gate_poll_interval_sec,15
-timing.thread_trader_poll_interval_sec,4
-timing.thread_logging_poll_interval_sec,1
+timing.thread_market_data_poll_interval_sec,5
+timing.thread_account_data_poll_interval_sec,10
+timing.thread_market_gate_poll_interval_sec,30
+timing.thread_trader_poll_interval_sec,3
+timing.thread_logging_poll_interval_sec,5
 
 # Data polling configuration
 timing.historical_bars_fetch_minutes,120
 timing.historical_bars_buffer_count,20
 timing.account_data_cache_duration_sec,10
+timing.market_data_max_age_seconds,3
 
 # Market monitoring configuration
 timing.market_pre_open_buffer_minutes,5
@@ -42,6 +43,10 @@ timing.position_settlement_wait_ms,2000
 
 # Order cancellation concurrency
 timing.max_concurrent_cancellations,10
+
+# Order timing constraints
+timing.min_order_interval_sec,30
+timing.enable_wash_trade_prevention,true
 
 # PRECISION CONFIGURATION
 timing.cpu_usage_precision,1

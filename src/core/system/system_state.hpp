@@ -37,7 +37,18 @@ struct SystemState {
     std::atomic<bool> has_market{false};    // Indicates if market data is available
     std::atomic<bool> has_account{false};   // Indicates if account data is available
     std::atomic<bool> running{true};        // Main system running flag
-    std::atomic<bool> allow_fetch{false};    // Controls data fetching operations 
+    std::atomic<bool> allow_fetch{false};    // Controls data fetching operations
+    
+    // =========================================================================
+    // DATA FRESHNESS TRACKING
+    // =========================================================================
+    std::atomic<std::chrono::steady_clock::time_point> market_data_timestamp{std::chrono::steady_clock::now()};  // When market data was last updated
+    std::atomic<bool> market_data_fresh{false};  // Indicates if market data is fresh enough for trading
+    
+    // =========================================================================
+    // ORDER TIMING TRACKING
+    // =========================================================================
+    std::atomic<std::chrono::steady_clock::time_point> last_order_timestamp{std::chrono::steady_clock::time_point::min()};  // When the last order was placed 
 
     // =========================================================================
     // CONFIGURATION AND MODULES

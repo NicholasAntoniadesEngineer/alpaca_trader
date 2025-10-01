@@ -18,10 +18,11 @@ struct TimingConfig {
                      pre_open_buffer_min(0), post_close_buffer_min(0), market_close_buffer_min(0),
                      halt_sleep_min(0), countdown_tick_sec(0), enable_thread_monitoring(false),
                      monitoring_interval_sec(0), account_data_cache_duration_sec(0),
-                     thread_initialization_delay_ms(0), thread_startup_delay_ms(0),
-                     order_cancellation_wait_ms(0), position_verification_wait_ms(0),
-                     position_settlement_wait_ms(0), max_concurrent_cancellations(0),
-                     cpu_usage_precision(0), rate_precision(0) {}
+                     market_data_max_age_seconds(0), thread_initialization_delay_ms(0), 
+                     thread_startup_delay_ms(0), order_cancellation_wait_ms(0), 
+                     position_verification_wait_ms(0), position_settlement_wait_ms(0), 
+                     max_concurrent_cancellations(0), min_order_interval_sec(0), 
+                     enable_wash_trade_prevention(false), cpu_usage_precision(0), rate_precision(0) {}
     
     // Thread polling intervals
     int thread_market_data_poll_interval_sec;
@@ -41,6 +42,7 @@ struct TimingConfig {
     bool enable_thread_monitoring;
     int monitoring_interval_sec;
     int account_data_cache_duration_sec;
+    int market_data_max_age_seconds;
     
     // Thread initialization delays
     int thread_initialization_delay_ms;     // Delay before setting thread priorities
@@ -53,6 +55,10 @@ struct TimingConfig {
     
     // Order cancellation concurrency
     int max_concurrent_cancellations;       // Maximum concurrent order cancellations
+    
+    // Order timing constraints
+    int min_order_interval_sec;             // Minimum time between orders to prevent wash trades
+    bool enable_wash_trade_prevention;      // Enable/disable wash trade prevention
     
     // Thread priority configuration
     ThreadPriorityConfig thread_priorities;

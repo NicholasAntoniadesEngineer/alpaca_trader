@@ -87,6 +87,42 @@ struct ClosePositionRequest {
     explicit ClosePositionRequest(int q) : current_qty(q) {}
 };
 
+// Strategy logic data structures
+namespace StrategyLogic {
+
+struct SignalDecision {
+    bool buy = false;
+    bool sell = false;
+    double signal_strength = 0.0;  // Signal strength (0.0 to 1.0)
+    std::string signal_reason = ""; // Reason for signal/no signal
+};
+
+struct FilterResult {
+    bool atr_pass = false;
+    bool vol_pass = false;
+    bool doji_pass = false;
+    bool all_pass = false;
+    double atr_ratio = 0.0;
+    double vol_ratio = 0.0;
+};
+
+struct PositionSizing {
+    int quantity = 0;
+    double risk_amount = 0.0;
+    double size_multiplier = 1.0;
+    int risk_based_qty = 0;
+    int exposure_based_qty = 0;
+    int max_value_qty = 0;
+    int buying_power_qty = 0;
+};
+
+struct ExitTargets {
+    double stop_loss = 0.0;
+    double take_profit = 0.0;
+};
+
+} // namespace StrategyLogic
+
 } // namespace Core
 } // namespace AlpacaTrader
 

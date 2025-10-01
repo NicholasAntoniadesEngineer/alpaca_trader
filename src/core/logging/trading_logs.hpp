@@ -28,8 +28,14 @@ public:
     
     // Detailed trading analysis  
     static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
-    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const TraderConfig& config);
+    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const TraderConfig& config, const AlpacaTrader::Core::ProcessedData& data);
     static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const std::string& symbol = "");
+    
+    // Enhanced signal analysis logging
+    static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const TraderConfig& config);
+    static void log_momentum_analysis(const AlpacaTrader::Core::ProcessedData& data, const TraderConfig& config);
+    static void log_signal_strength_breakdown(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const TraderConfig& config);
+    static void log_signals_table_enhanced(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_filters_not_met_table(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);
@@ -55,6 +61,20 @@ public:
     // Order management
     static void log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit);
     static void log_order_result(const std::string& order_id, bool success, const std::string& reason = "");
+    
+    // Consolidated order execution logging
+    static void log_comprehensive_order_execution(const std::string& order_type, const std::string& side, int quantity, 
+                                                double current_price, double atr, int position_qty, double risk_amount,
+                                                double stop_loss = 0.0, double take_profit = 0.0, 
+                                                const std::string& symbol = "", const std::string& function_name = "");
+    static void log_comprehensive_api_response(const std::string& order_id, const std::string& status, 
+                                             const std::string& side, const std::string& quantity, 
+                                             const std::string& order_class, const std::string& position_intent,
+                                             const std::string& created_at, const std::string& filled_at,
+                                             const std::string& filled_qty, const std::string& filled_avg_price,
+                                             const std::string& error_code = "", const std::string& error_message = "",
+                                             const std::string& available_qty = "", const std::string& existing_qty = "",
+                                             const std::string& held_for_orders = "", const std::string& related_orders = "");
     
     // Order cancellation
     static void log_cancellation_start(const std::string& strategy, const std::string& signal_side = "");
@@ -104,7 +124,7 @@ public:
     static void log_trading_conditions_table(double daily_pnl_pct, double daily_loss_limit, double daily_profit_target, double exposure_pct, double max_exposure_pct, bool conditions_met);
     static void log_candle_data_table(double open, double high, double low, double close);
     static void log_signals_table(bool buy_signal, bool sell_signal);
-    static void log_filters_table(bool atr_pass, double atr_ratio, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass);
+    static void log_filters_table(bool atr_pass, double atr_value, double atr_threshold, bool volume_pass, double volume_ratio, double volume_threshold, bool doji_pass);
     static void log_decision_summary_table(const std::string& symbol, double price, bool buy_signal, bool sell_signal, bool atr_pass, bool volume_pass, bool doji_pass, double exposure_pct, double atr_ratio, double volume_ratio);
     
     // System startup and status tables

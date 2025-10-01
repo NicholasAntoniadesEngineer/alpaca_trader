@@ -81,7 +81,7 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
 
 SystemConfigurations create_trading_configurations(const SystemState& state) {
     return SystemConfigurations{
-        AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing, state.config.orders},
+        AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing, state.config.orders, state.config.strategy},
         AccountManagerConfig{state.config.api, state.config.logging, state.config.target, state.config.timing},
         MarketDataThreadConfig{state.config.strategy, state.config.timing, state.config.target},
         AccountDataThreadConfig{state.config.timing}
@@ -103,7 +103,8 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     // Create MARKET_DATA thread
     modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_connector, 
                                                                    state.mtx, state.cv, state.market, 
-                                                                   state.has_market, state.running);
+                                                                   state.has_market, state.running,
+                                                                   state.market_data_timestamp, state.market_data_fresh);
     
     // Create ACCOUNT_DATA thread
     modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.portfolio_manager, 
@@ -152,7 +153,8 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     
         // Set up data synchronization for trading orchestrator
         DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
-                                   system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch);
+                                   system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
+                                   system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
         system_state.trading_modules->trading_engine->setup_data_synchronization(sync_config);
     
     // Log startup information

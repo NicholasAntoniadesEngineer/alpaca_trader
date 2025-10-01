@@ -2,6 +2,8 @@
 #include "../analysis/risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/monitoring/system_monitor.hpp"
+#include <chrono>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -10,7 +12,7 @@ using AlpacaTrader::Logging::TradingLogs;
 
 TradingEngine::TradingEngine(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr), client(client_ref),
-      order_engine(client_ref, account_mgr, cfg),
+      order_engine(client_ref, account_mgr, cfg, data_sync),
       position_manager(client_ref, cfg),
       trade_validator(cfg),
       price_manager(client_ref, cfg),
@@ -30,6 +32,14 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     // Check if market is open before making any trading decisions
     if (!is_market_open()) {
         TradingLogs::log_market_status(false, "Market is closed - no trading decisions");
+        TradingLogs::log_signal_analysis_complete();
+        return;
+    }
+    
+    // Check if market data is fresh enough for trading decisions
+    if (!is_data_fresh()) {
+        TradingLogs::log_market_status(false, "Market data is stale - no trading decisions");
+        AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_data_freshness_failure();
         TradingLogs::log_signal_analysis_complete();
         return;
     }
@@ -107,7 +117,7 @@ bool TradingEngine::check_connectivity() {
 }
 
 bool TradingEngine::is_market_open() {
-    if (!client.is_core_trading_hours()) {
+    if (!client.is_within_fetch_window()) {
         TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
         return false;
     }
@@ -115,12 +125,52 @@ bool TradingEngine::is_market_open() {
     return true;
 }
 
+bool TradingEngine::is_data_fresh() {
+    // Check if data_sync references are properly initialized
+    if (!data_sync.market_data_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync not initialized - market_data_timestamp is null");
+        return false;
+    }
+    
+    auto now = std::chrono::steady_clock::now();
+    auto data_timestamp = data_sync.market_data_timestamp->load();
+    auto max_age_seconds = config.timing.market_data_max_age_seconds;
+    
+    if (data_timestamp == std::chrono::steady_clock::time_point::min()) {
+        TradingLogs::log_market_status(false, "Market data timestamp is invalid - no data received yet");
+        return false;
+    }
+    
+    auto age_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - data_timestamp).count();
+    bool fresh = age_seconds <= max_age_seconds;
+    
+    if (!fresh) {
+        TradingLogs::log_market_status(false, "Market data is stale - age: " + std::to_string(age_seconds) + 
+                                    "s, max: " + std::to_string(max_age_seconds) + "s");
+    } else {
+        TradingLogs::log_market_status(true, "Market data is fresh - age: " + std::to_string(age_seconds) + "s");
+    }
+    
+    return fresh;
+}
+
+void TradingEngine::setup_data_synchronization(const DataSyncConfig& config) {
+    data_sync = DataSyncReferences(config);
+    TradingLogs::log_market_status(true, "Data synchronization setup completed - market_data_timestamp initialized");
+}
+
 void TradingEngine::process_signal_analysis(const ProcessedData& data, double /*equity*/) {
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
-    TradingLogs::log_candle_and_signals(data, signal_decision);
+    
+    // Log candle data and enhanced signals table
+    TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
+    TradingLogs::log_signals_table_enhanced(signal_decision);
+    
+    // Enhanced detailed signal analysis logging
+    TradingLogs::log_signal_analysis_detailed(data, signal_decision, config);
     
     StrategyLogic::FilterResult filter_result = StrategyLogic::evaluate_trading_filters(data, config);
-    TradingLogs::log_filters(filter_result, config);
+    TradingLogs::log_filters(filter_result, config, data);
     TradingLogs::log_summary(data, signal_decision, filter_result, config.target.symbol);
 }
 

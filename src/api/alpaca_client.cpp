@@ -2,11 +2,13 @@
 #include "core/utils/http_utils.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/logging/trading_logs.hpp"
 #include "json/json.hpp"
 #include <thread>
 #include <chrono>
 #include <vector>
 #include <atomic>
+#include <string>
 
 using json = nlohmann::json;
 
@@ -36,6 +38,20 @@ std::vector<std::string> AlpacaClient::get_open_orders(const std::string& symbol
     }
     
     return order_ids;
+}
+
+// Get open orders as JSON string
+std::string AlpacaClient::get_open_orders_json(const std::string& symbol) const {
+    std::string url = config.api.base_url + config.orders.orders_endpoint;
+    if (!symbol.empty()) {
+        url += "?status=open&symbols=" + symbol;
+    } else {
+        url += "?status=open";
+    }
+    
+    HttpRequest get_orders_req(url, config.api.api_key, config.api.api_secret, config.logging.log_file, 
+                              config.api.retry_count, config.api.timeout_seconds, config.api.enable_ssl_verification, 0, "");
+    return http_get(get_orders_req);
 }
 
 void AlpacaClient::cancel_order(const std::string& order_id) const {
@@ -146,34 +162,202 @@ void AlpacaClient::submit_market_order(const std::string& symbol, const std::str
     
     std::string response = http_post(req);
     
-    // Parse and log API response in table format
+    // Parse and log API response using consolidated logging
     try {
         json response_json = json::parse(response);
         
-        AlpacaTrader::Logging::log_message("+-- API RESPONSE", config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Order ID: " + response_json.value("id", "N/A"), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Status: " + response_json.value("status", "N/A"), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Side: " + response_json.value("side", "N/A"), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Quantity: " + response_json.value("qty", "N/A"), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Position Intent: " + response_json.value("position_intent", "N/A"), config.logging.log_file);
-        
-        if (response_json.contains("created_at")) {
-            AlpacaTrader::Logging::log_message("|   Created At: " + response_json["created_at"].get<std::string>(), config.logging.log_file);
-        }
-        
-        if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
-            AlpacaTrader::Logging::log_message("|   Filled At: " + response_json["filled_at"].get<std::string>(), config.logging.log_file);
+        // Check if this is an error response
+        if (response_json.contains("code") && response_json.contains("message")) {
+            // Extract error response data
+            std::string error_code = std::to_string(response_json.value("code", 0));
+            std::string error_message = response_json.value("message", "Unknown error");
+            std::string symbol = response_json.value("symbol", "N/A");
+            std::string requested_qty = std::to_string(quantity);
+            std::string available_qty = response_json.value("available", "N/A");
+            std::string existing_qty = response_json.value("existing_qty", "N/A");
+            std::string held_for_orders = response_json.value("held_for_orders", "N/A");
+            std::string related_orders = "";
+            if (response_json.contains("related_orders") && response_json["related_orders"].is_array() && !response_json["related_orders"].empty()) {
+                related_orders = response_json["related_orders"][0].get<std::string>();
+            }
+            
+            // Use consolidated error logging
+            AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response("", "", "", requested_qty, "", "", "", "", "", "",
+                                                       error_code, error_message, available_qty, existing_qty, 
+                                                       held_for_orders, related_orders);
         } else {
-            AlpacaTrader::Logging::log_message("|   Filled At: Not filled", config.logging.log_file);
+            // Extract success response data
+            std::string order_id = response_json.value("id", "N/A");
+            std::string status = response_json.value("status", "N/A");
+            std::string side = response_json.value("side", "N/A");
+            std::string qty = response_json.value("qty", "N/A");
+            std::string order_class = response_json.value("order_class", "N/A");
+            std::string position_intent = response_json.value("position_intent", "N/A");
+            std::string created_at = response_json.value("created_at", "N/A");
+            std::string filled_at = "Not filled";
+            std::string filled_qty = "0";
+            std::string filled_avg_price = "N/A";
+            
+            // Format timestamps
+            if (created_at != "N/A" && created_at.length() > 19) {
+                created_at = created_at.substr(0, 19); // Remove microseconds and timezone
+            }
+            
+            if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
+                filled_at = response_json["filled_at"].get<std::string>();
+                if (filled_at.length() > 19) {
+                    filled_at = filled_at.substr(0, 19);
+                }
+            }
+            
+            if (response_json.contains("filled_qty") && !response_json["filled_qty"].is_null()) {
+                filled_qty = response_json["filled_qty"].get<std::string>();
+            }
+            
+            if (response_json.contains("filled_avg_price") && !response_json["filled_avg_price"].is_null()) {
+                filled_avg_price = response_json["filled_avg_price"].get<std::string>();
+            }
+            
+            // Use consolidated success logging
+            AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response(order_id, status, side, qty, order_class, position_intent,
+                                                       created_at, filled_at, filled_qty, filled_avg_price);
         }
-        
-        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
         
     } catch (const json::exception& e) {
-        AlpacaTrader::Logging::log_message("+-- API RESPONSE ERROR", config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Parse Error: " + std::string(e.what()), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Raw Response: " + response, config.logging.log_file);
-        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+        // Use consolidated error logging for parse errors
+        AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response("", "", "", "", "", "", "", "", "", "",
+                                                   "PARSE_ERROR", std::string(e.what()), "", "", "", response.substr(0, 50) + "...");
+    }
+}
+
+// Check if there are pending orders for a symbol
+bool AlpacaClient::has_pending_orders(const std::string& symbol) const {
+    try {
+        std::string orders_json = get_open_orders_json(symbol);
+        json orders = json::parse(orders_json);
+        
+        if (orders.is_array() && !orders.empty()) {
+            AlpacaTrader::Logging::log_message("┌─────────────────────────────────────────────────────────────────────────────┐", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│                            PENDING ORDERS CHECK                             │", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("├─────────────────────────────────────────────────────────────────────────────┤", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│ Symbol            │ " + symbol + "                                                      │", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│ Found Orders      │ " + std::to_string(orders.size()) + " pending orders                                        │", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("└─────────────────────────────────────────────────────────────────────────────┘", config.logging.log_file);
+            return true;
+        }
+        
+        return false;
+    } catch (const std::exception& e) {
+        AlpacaTrader::Logging::log_message("ERROR: Failed to check pending orders: " + std::string(e.what()), config.logging.log_file);
+        return false;
+    }
+}
+
+// Cancel all pending orders for a symbol
+void AlpacaClient::cancel_pending_orders(const std::string& symbol) const {
+    try {
+        std::string orders_json = get_open_orders_json(symbol);
+        json orders = json::parse(orders_json);
+        
+        if (orders.is_array() && !orders.empty()) {
+            AlpacaTrader::Logging::log_message("┌─────────────────────────────────────────────────────────────────────────────┐", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│                          CANCELLING PENDING ORDERS                          │", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("├─────────────────────────────────────────────────────────────────────────────┤", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│ Symbol            │ " + symbol + "                                                      │", config.logging.log_file);
+            AlpacaTrader::Logging::log_message("│ Orders to Cancel  │ " + std::to_string(orders.size()) + " pending orders                                        │", config.logging.log_file);
+            
+            std::vector<std::string> order_ids;
+            for (const auto& order : orders) {
+                if (order.contains("id")) {
+                    std::string order_id = order["id"].get<std::string>();
+                    order_ids.push_back(order_id);
+                    AlpacaTrader::Logging::log_message("│ Order ID          │ " + order_id + "                    │", config.logging.log_file);
+                }
+            }
+            
+            if (!order_ids.empty()) {
+                cancel_orders_batch(order_ids);
+                AlpacaTrader::Logging::log_message("│ Result            │ Cancelled " + std::to_string(order_ids.size()) + " orders successfully                    │", config.logging.log_file);
+            }
+            
+            AlpacaTrader::Logging::log_message("└─────────────────────────────────────────────────────────────────────────────┘", config.logging.log_file);
+        }
+    } catch (const std::exception& e) {
+        AlpacaTrader::Logging::log_message("ERROR: Failed to cancel pending orders: " + std::string(e.what()), config.logging.log_file);
+    }
+}
+
+// Short selling validation methods
+bool AlpacaClient::check_short_availability(const std::string& symbol, int quantity) const {
+    int shortable_qty = get_shortable_quantity(symbol);
+    return shortable_qty >= quantity;
+}
+
+int AlpacaClient::get_shortable_quantity(const std::string& symbol) const {
+    try {
+        // Get asset details to check shortability
+        std::string url = config.api.base_url + "/v2/assets/" + symbol;
+        HttpRequest req(url, config.api.api_key, config.api.api_secret, config.logging.log_file, 
+                       config.api.retry_count, config.api.timeout_seconds, config.api.enable_ssl_verification, 
+                       config.api.rate_limit_delay_ms, "");
+        std::string response = http_get(req);
+        
+        if (response.empty()) {
+            AlpacaTrader::Logging::log_message("ERROR: Empty response for asset details: " + symbol, config.logging.log_file);
+            return 0;
+        }
+        
+        json asset = json::parse(response);
+        
+        // Check if asset is shortable
+        if (asset.contains("shortable") && !asset["shortable"].get<bool>()) {
+            AlpacaTrader::Logging::log_message("WARNING: Asset " + symbol + " is not shortable", config.logging.log_file);
+            return 0;
+        }
+        
+        // Check if asset is tradable
+        if (asset.contains("tradable") && !asset["tradable"].get<bool>()) {
+            AlpacaTrader::Logging::log_message("WARNING: Asset " + symbol + " is not tradable", config.logging.log_file);
+            return 0;
+        }
+        
+        // Check if asset is active
+        if (asset.contains("status") && asset["status"].get<std::string>() != "active") {
+            AlpacaTrader::Logging::log_message("WARNING: Asset " + symbol + " is not active", config.logging.log_file);
+            return 0;
+        }
+        
+        // Check if asset is marginable (required for shorting)
+        if (asset.contains("marginable") && !asset["marginable"].get<bool>()) {
+            AlpacaTrader::Logging::log_message("WARNING: Asset " + symbol + " is not marginable", config.logging.log_file);
+            return 0;
+        }
+        
+        int current_position = get_position_quantity(symbol);
+        if (current_position < 0) {
+            try {
+                int base_quantity = config.strategy.default_shortable_quantity;
+                double multiplier = config.strategy.existing_short_multiplier;
+                int additional_shortable = static_cast<int>(base_quantity * multiplier);
+                
+                AlpacaTrader::Logging::log_message("Existing short position detected - additional shortable: " + 
+                    std::to_string(additional_shortable), config.logging.log_file);
+                return additional_shortable;
+            } catch (const std::exception& e) {
+                AlpacaTrader::Logging::log_message("Error calculating additional shortable quantity: " + 
+                    std::string(e.what()), config.logging.log_file);
+                return 0;
+            }
+        }
+        
+        int default_quantity = config.strategy.default_shortable_quantity;
+        AlpacaTrader::Logging::log_message("New short position - default shortable quantity: " + 
+            std::to_string(default_quantity), config.logging.log_file);
+        return default_quantity;
+        
+    } catch (const std::exception& e) {
+        AlpacaTrader::Logging::log_message("ERROR: Failed to check short availability for " + symbol + ": " + std::string(e.what()), config.logging.log_file);
+        return 0;
     }
 }
 

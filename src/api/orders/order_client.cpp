@@ -51,81 +51,71 @@ void OrderClient::cancel_orders_for_signal(const std::string& signal_side) const
 }
 
 void OrderClient::log_order_details_table(const nlohmann::json& order, const std::string& response) const {
-    // Order Details Table
-    TABLE_HEADER_48("ORDER DETAILS", "Bracket Order Configuration");
-    
-    TABLE_ROW_48("Symbol", order.value("symbol", "N/A"));
-    TABLE_ROW_48("Side", order.value("side", "N/A"));
-    TABLE_ROW_48("Quantity", order.value("qty", "N/A"));
-    TABLE_ROW_48("Type", order.value("type", "N/A"));
-    TABLE_ROW_48("Time in Force", order.value("time_in_force", "N/A"));
-    TABLE_ROW_48("Order Class", order.value("order_class", "N/A"));
-    
-    if (order.contains("take_profit") && order["take_profit"].contains("limit_price")) {
-        TABLE_ROW_48("Take Profit", "$" + order["take_profit"]["limit_price"].get<std::string>());
-    }
-    
-    if (order.contains("stop_loss") && order["stop_loss"].contains("stop_price")) {
-        TABLE_ROW_48("Stop Loss", "$" + order["stop_loss"]["stop_price"].get<std::string>());
-    }
-    
-    TABLE_FOOTER_48();
-    
-    // Parse API Response
+    // Parse API Response using consolidated logging
     try {
         nlohmann::json response_json = nlohmann::json::parse(response);
         
-        TABLE_HEADER_48("API RESPONSE", "Order Execution Result");
-        
-        TABLE_ROW_48("Order ID", response_json.value("id", "N/A"));
-        TABLE_ROW_48("Status", response_json.value("status", "N/A"));
-        TABLE_ROW_48("Side", response_json.value("side", "N/A"));
-        TABLE_ROW_48("Quantity", response_json.value("qty", "N/A"));
-        TABLE_ROW_48("Order Class", response_json.value("order_class", "N/A"));
-        TABLE_ROW_48("Position Intent", response_json.value("position_intent", "N/A"));
-        
-        if (response_json.contains("created_at")) {
-            TABLE_ROW_48("Created At", response_json["created_at"].get<std::string>());
-        }
-        
-        if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
-            TABLE_ROW_48("Filled At", response_json["filled_at"].get<std::string>());
-        } else {
-            TABLE_ROW_48("Filled At", "Not filled");
-        }
-        
-        if (response_json.contains("legs") && response_json["legs"].is_array()) {
-            TABLE_SEPARATOR_48();
-            TABLE_ROW_48("Bracket Legs", std::to_string(response_json["legs"].size()) + " legs");
-            
-            for (size_t i = 0; i < response_json["legs"].size(); ++i) {
-                const auto& leg = response_json["legs"][i];
-                std::string leg_type = leg.value("type", "unknown");
-                std::string leg_side = leg.value("side", "unknown");
-                std::string leg_price = "N/A";
-                
-                if (leg.contains("limit_price") && !leg["limit_price"].is_null()) {
-                    leg_price = "$" + leg["limit_price"].get<std::string>();
-                } else if (leg.contains("stop_price") && !leg["stop_price"].is_null()) {
-                    leg_price = "$" + leg["stop_price"].get<std::string>();
-                }
-                
-                TABLE_ROW_48("Leg " + std::to_string(i+1), leg_type + " " + leg_side + " @ " + leg_price);
+        // Check if this is an error response
+        if (response_json.contains("code") && response_json.contains("message")) {
+            // Extract error response data
+            std::string error_code = std::to_string(response_json.value("code", 0));
+            std::string error_message = response_json.value("message", "Unknown error");
+            std::string symbol = response_json.value("symbol", "N/A");
+            std::string requested_qty = order.value("qty", "N/A");
+            std::string available_qty = response_json.value("available", "N/A");
+            std::string existing_qty = response_json.value("existing_qty", "N/A");
+            std::string held_for_orders = response_json.value("held_for_orders", "N/A");
+            std::string related_orders = "";
+            if (response_json.contains("related_orders") && response_json["related_orders"].is_array() && !response_json["related_orders"].empty()) {
+                related_orders = response_json["related_orders"][0].get<std::string>();
             }
+            
+            // Use consolidated error logging
+            AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response("", "", "", requested_qty, "", "", "", "", "", "",
+                                                       error_code, error_message, available_qty, existing_qty, 
+                                                       held_for_orders, related_orders);
+        } else {
+            // Extract success response data
+            std::string order_id = response_json.value("id", "N/A");
+            std::string status = response_json.value("status", "N/A");
+            std::string side = response_json.value("side", "N/A");
+            std::string qty = response_json.value("qty", "N/A");
+            std::string order_class = response_json.value("order_class", "N/A");
+            std::string position_intent = response_json.value("position_intent", "N/A");
+            std::string created_at = response_json.value("created_at", "N/A");
+            std::string filled_at = "Not filled";
+            std::string filled_qty = "0";
+            std::string filled_avg_price = "N/A";
+            
+            // Format timestamps
+            if (created_at != "N/A" && created_at.length() > 19) {
+                created_at = created_at.substr(0, 19); // Remove microseconds and timezone
+            }
+            
+            if (response_json.contains("filled_at") && !response_json["filled_at"].is_null()) {
+                filled_at = response_json["filled_at"].get<std::string>();
+                if (filled_at.length() > 19) {
+                    filled_at = filled_at.substr(0, 19);
+                }
+            }
+            
+            if (response_json.contains("filled_qty") && !response_json["filled_qty"].is_null()) {
+                filled_qty = response_json["filled_qty"].get<std::string>();
+            }
+            
+            if (response_json.contains("filled_avg_price") && !response_json["filled_avg_price"].is_null()) {
+                filled_avg_price = response_json["filled_avg_price"].get<std::string>();
+            }
+            
+            // Use consolidated success logging
+            AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response(order_id, status, side, qty, order_class, position_intent,
+                                                       created_at, filled_at, filled_qty, filled_avg_price);
         }
-        
-        TABLE_FOOTER_48();
         
     } catch (const nlohmann::json::exception& e) {
-        LOG_THREAD_CONTENT("API Response Parse Error: " + std::string(e.what()));
-        LOG_THREAD_CONTENT("Raw Response: " + response);
-    }
-    
-    // If response is empty or parsing failed, show raw response
-    if (response.empty()) {
-        LOG_THREAD_CONTENT("API Response: Empty response received");
-    } else if (response.length() < 10) {
-        LOG_THREAD_CONTENT("API Response: " + response);
+        // Use consolidated error logging for parse errors
+        AlpacaTrader::Logging::TradingLogs::log_comprehensive_api_response("", "", "", "", "", "", "", "", "", "",
+                                                   "PARSE_ERROR", std::string(e.what()), "", "", "", response.substr(0, 50) + "...");
     }
 }
 

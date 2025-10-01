@@ -98,6 +98,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.historical_bars_fetch_minutes") cfg.timing.bar_fetch_minutes = std::stoi(value);
         else if (key == "timing.historical_bars_buffer_count") cfg.timing.bar_buffer = std::stoi(value);
         else if (key == "timing.account_data_cache_duration_sec") cfg.timing.account_data_cache_duration_sec = std::stoi(value);
+        else if (key == "timing.market_data_max_age_seconds") cfg.timing.market_data_max_age_seconds = std::stoi(value);
         else if (key == "timing.market_pre_open_buffer_minutes") cfg.timing.pre_open_buffer_min = std::stoi(value);
         else if (key == "timing.market_post_close_buffer_minutes") cfg.timing.post_close_buffer_min = std::stoi(value);
         else if (key == "timing.market_close_buffer_minutes") cfg.timing.market_close_buffer_min = std::stoi(value);
@@ -115,6 +116,8 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.position_verification_wait_ms") cfg.timing.position_verification_wait_ms = std::stoi(value);
         else if (key == "timing.position_settlement_wait_ms") cfg.timing.position_settlement_wait_ms = std::stoi(value);
         else if (key == "timing.max_concurrent_cancellations") cfg.timing.max_concurrent_cancellations = std::stoi(value);
+        else if (key == "timing.min_order_interval_sec") cfg.timing.min_order_interval_sec = std::stoi(value);
+        else if (key == "timing.enable_wash_trade_prevention") cfg.timing.enable_wash_trade_prevention = to_bool(value);
         
         // Timing precision configuration
         else if (key == "timing.cpu_usage_precision") cfg.timing.cpu_usage_precision = std::stoi(value);
@@ -170,6 +173,25 @@ bool load_strategy_profiles(AlpacaTrader::Config::SystemConfig& cfg, const std::
         else if (key == "strategy.volume_multiplier") cfg.strategy.volume_multiplier = std::stod(value);
         else if (key == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(value);
         else if (key == "strategy.avg_atr_multiplier") cfg.strategy.avg_atr_multiplier = std::stoi(value);
+        else if (key == "strategy.atr_absolute_threshold") cfg.strategy.atr_absolute_threshold = std::stod(value);
+        else if (key == "strategy.use_absolute_atr_threshold") cfg.strategy.use_absolute_atr_threshold = (value == "true");
+        
+        // Momentum signal configuration
+        else if (key == "strategy.min_price_change_pct") cfg.strategy.min_price_change_pct = std::stod(value);
+        else if (key == "strategy.min_volume_change_pct") cfg.strategy.min_volume_change_pct = std::stod(value);
+        else if (key == "strategy.min_volatility_pct") cfg.strategy.min_volatility_pct = std::stod(value);
+        else if (key == "strategy.min_sell_volume_change_pct") cfg.strategy.min_sell_volume_change_pct = std::stod(value);
+        else if (key == "strategy.min_sell_volatility_pct") cfg.strategy.min_sell_volatility_pct = std::stod(value);
+        else if (key == "strategy.signal_strength_threshold") cfg.strategy.signal_strength_threshold = std::stod(value);
+        
+        // Signal strength weighting configuration
+        else if (key == "strategy.basic_pattern_weight") cfg.strategy.basic_pattern_weight = std::stod(value);
+        else if (key == "strategy.momentum_weight") cfg.strategy.momentum_weight = std::stod(value);
+        else if (key == "strategy.volume_weight") cfg.strategy.volume_weight = std::stod(value);
+        else if (key == "strategy.volatility_weight") cfg.strategy.volatility_weight = std::stod(value);
+        
+        // Doji pattern detection configuration
+        else if (key == "strategy.doji_body_threshold") cfg.strategy.doji_body_threshold = std::stod(value);
         else if (key == "strategy.buy_allow_equal_close") cfg.strategy.buy_allow_equal_close = to_bool(value);
         else if (key == "strategy.buy_require_higher_high") cfg.strategy.buy_require_higher_high = to_bool(value);
         else if (key == "strategy.buy_require_higher_low") cfg.strategy.buy_require_higher_low = to_bool(value);
@@ -182,6 +204,15 @@ bool load_strategy_profiles(AlpacaTrader::Config::SystemConfig& cfg, const std::
         else if (key == "strategy.stop_loss_buffer_dollars") cfg.strategy.stop_loss_buffer_dollars = std::stod(value);
         else if (key == "strategy.use_realtime_price_for_orders") cfg.strategy.use_realtime_price_for_orders = to_bool(value);
         else if (key == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(value);
+        else if (key == "strategy.take_profit_percentage") cfg.strategy.take_profit_percentage = std::stod(value);
+        else if (key == "strategy.use_take_profit_percentage") cfg.strategy.use_take_profit_percentage = to_bool(value);
+        else if (key == "strategy.enable_fixed_shares") cfg.strategy.enable_fixed_shares = to_bool(value);
+        else if (key == "strategy.enable_position_multiplier") cfg.strategy.enable_position_multiplier = to_bool(value);
+        else if (key == "strategy.fixed_shares_per_trade") cfg.strategy.fixed_shares_per_trade = std::stoi(value);
+        else if (key == "strategy.position_size_multiplier") cfg.strategy.position_size_multiplier = std::stod(value);
+        else if (key == "strategy.max_quantity_per_trade") cfg.strategy.max_quantity_per_trade = std::stoi(value);
+        else if (key == "strategy.min_price_threshold") cfg.strategy.min_price_threshold = std::stod(value);
+        else if (key == "strategy.max_price_threshold") cfg.strategy.max_price_threshold = std::stod(value);
         
         // Strategy precision configuration
         else if (key == "strategy.ratio_precision") cfg.strategy.ratio_precision = std::stoi(value);
@@ -315,6 +346,19 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     if (config.strategy.rr_ratio <= 0.0) {
         error_message = "strategy.rr_ratio must be > 0";
         return false;
+    }
+    
+    // Validate take profit configuration
+    if (config.strategy.take_profit_percentage < 0.0 || config.strategy.take_profit_percentage > 1.0) {
+        error_message = "strategy.take_profit_percentage must be between 0.0 and 1.0 (0% to 100%)";
+        return false;
+    }
+    
+    // Protection: Ensure only one take profit method is enabled
+    if (config.strategy.use_take_profit_percentage && config.strategy.rr_ratio > 0.0) {
+        // If percentage is enabled, disable risk/reward ratio for take profit
+        // (risk/reward can still be used for stop loss calculation)
+        AlpacaTrader::Logging::log_message("INFO: Take profit percentage enabled - using percentage-based take profit instead of risk/reward ratio", config.logging.log_file);
     }
     if (config.risk.risk_per_trade <= 0.0 || config.risk.risk_per_trade >= 1.0) {
         error_message = "risk.risk_per_trade must be between 0 and 1";

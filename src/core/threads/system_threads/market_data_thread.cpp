@@ -109,6 +109,12 @@ void AlpacaTrader::Threads::MarketDataThread::update_market_snapshot(const Proce
     market_snapshot.curr = computed.curr;
     market_snapshot.prev = computed.prev;
     has_market.store(true);
+    
+    // Update data freshness timestamp
+    auto now = std::chrono::steady_clock::now();
+    market_data_timestamp.store(now);
+    market_data_fresh.store(true);
+    
     data_cv.notify_all();
 }
 

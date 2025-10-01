@@ -12,6 +12,7 @@
 #include "trade_validator.hpp"
 #include "../analysis/price_manager.hpp"
 #include "../data/market_data_fetcher.hpp"
+#include "../data/data_sync_structures.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
 
@@ -27,6 +28,7 @@ public:
     void handle_trading_halt(const std::string& reason);
     bool validate_market_data(const MarketSnapshot& market) const;
     void handle_market_close_positions(const ProcessedData& data);
+    void setup_data_synchronization(const DataSyncConfig& config);
 
 private:
     // Core dependencies
@@ -39,6 +41,9 @@ private:
     PriceManager price_manager;
     MarketDataFetcher data_fetcher;
     
+    // Data synchronization references
+    DataSyncReferences data_sync;
+    
     // Configuration constants
     static constexpr int HALT_SLEEP_SECONDS = 1;
     static constexpr int CONNECTIVITY_RETRY_SECONDS = 1;
@@ -47,6 +52,7 @@ private:
     bool validate_risk_conditions(const ProcessedData& data, double equity);
     bool check_connectivity();
     bool is_market_open();
+    bool is_data_fresh();
     
     // Trading decision methods
     void process_signal_analysis(const ProcessedData& data, double equity);

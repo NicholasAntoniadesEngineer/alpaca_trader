@@ -30,6 +30,7 @@ struct AlpacaClientConfig {
     const TargetConfig& target;
     const TimingConfig& timing;
     const OrdersConfig& orders;
+    const StrategyConfig& strategy;
 };
 
 struct AccountManagerConfig {

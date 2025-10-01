@@ -43,7 +43,7 @@ public:
         if (pos != std::string::npos) {
             url.replace(pos, 8, symbol);
         }
-        return url + "?start=" + start + "&end=" + end + "&timeframe=1Min&adjustment=raw&asof=";
+        return url + "?start=" + start + "&end=" + end + "&asof=";
     }
     
     std::string build_quotes_latest_url(const std::string& base_url, const std::string& symbol) const {
