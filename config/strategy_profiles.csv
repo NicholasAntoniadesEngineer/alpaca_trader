@@ -30,12 +30,12 @@ strategy.atr_absolute_threshold,0.5
 strategy.use_absolute_atr_threshold,true
 
 # MOMENTUM SIGNAL CONFIGURATION (Production-Ready)
-strategy.min_price_change_pct,0.1
-strategy.min_volume_change_pct,10.0
-strategy.min_volatility_pct,0.3
-strategy.min_sell_volume_change_pct,5.0
-strategy.min_sell_volatility_pct,0.2
-strategy.signal_strength_threshold,0.7
+strategy.min_price_change_pct,0.01
+strategy.min_volume_change_pct,5.0
+strategy.min_volatility_pct,0.1
+strategy.min_sell_volume_change_pct,2.0
+strategy.min_sell_volatility_pct,0.05
+strategy.signal_strength_threshold,0.6
 
 # SIGNAL STRENGTH WEIGHTING (Configurable)
 strategy.basic_pattern_weight,0.3

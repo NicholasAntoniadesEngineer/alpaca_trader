@@ -1060,7 +1060,7 @@ void TradingLogs::log_momentum_analysis(const ProcessedData& data, const TraderC
     TABLE_ROW_48("Price Values", price_debug);
     
     std::string price_status = (price_change_pct > config.strategy.min_price_change_pct) ? "PASS" : "FAIL";
-    std::string price_detail = "($" + std::to_string(price_change_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_price_change_pct).substr(0,4) + "%)";
+    std::string price_detail = "($" + std::to_string(price_change_pct).substr(0,6) + "% > " + std::to_string(config.strategy.min_price_change_pct).substr(0,6) + "%)";
     TABLE_ROW_48("Price Change", price_status + " " + price_detail);
     
     std::string volume_status = (volume_change_pct > config.strategy.min_volume_change_pct) ? "PASS" : "FAIL";
