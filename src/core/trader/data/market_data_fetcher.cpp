@@ -10,12 +10,12 @@ namespace Core {
 
 using AlpacaTrader::Logging::MarketDataLogs;
 
-MarketDataFetcher::MarketDataFetcher(API::AlpacaClient& client_ref, AccountManager& account_mgr, const TraderConfig& cfg)
+MarketDataFetcher::MarketDataFetcher(API::AlpacaClient& client_ref, AccountManager& account_mgr, const SystemConfig& cfg)
     : client(client_ref), account_manager(account_mgr), config(cfg) {}
 
 ProcessedData MarketDataFetcher::fetch_and_process_data() {
     ProcessedData data;
-    MarketDataLogs::log_market_data_fetch_table(config.target.symbol, config.logging.log_file);
+    MarketDataLogs::log_market_data_fetch_table(config.strategy.symbol, config.logging.log_file);
 
     // Fetch market bars and validate data sufficiency
     if (!fetch_and_validate_market_bars(data)) {
@@ -88,10 +88,10 @@ void MarketDataFetcher::mark_data_as_consumed(MarketDataSyncState& sync_state) c
  * for technical analysis. Returns false if data is insufficient.
  */
 bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
-    BarRequest br{config.target.symbol, config.strategy.atr_period + config.timing.bar_buffer};
+    BarRequest br{config.strategy.symbol, config.strategy.atr_calculation_period + config.timing.historical_data_buffer_size};
     auto bars = client.get_recent_bars(br);
     
-    const size_t required_bars = static_cast<size_t>(config.strategy.atr_period + 2);
+    const size_t required_bars = static_cast<size_t>(config.strategy.atr_calculation_period + 2);
     
     if (bars.size() < required_bars) {
         if (bars.empty()) {
@@ -142,7 +142,7 @@ bool MarketDataFetcher::compute_technical_indicators(ProcessedData& data) {
 void MarketDataFetcher::fetch_account_and_position_data(ProcessedData& data) {
     MarketDataLogs::log_market_data_attempt_table("Getting position and account data", config.logging.log_file);
     
-    SymbolRequest sr{config.target.symbol};
+    SymbolRequest sr{config.strategy.symbol};
     data.pos_details = account_manager.fetch_position_details(sr);
     data.open_orders = account_manager.fetch_open_orders_count(sr);
     

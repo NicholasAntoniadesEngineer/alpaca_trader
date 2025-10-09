@@ -26,10 +26,8 @@ public:
     
 private:
     // Helper methods for data fetching
-    std::string build_bars_url(const std::string& symbol, const std::string& start, 
-                              const std::string& end, int limit, const std::string& feed) const;
+    std::string build_bars_url(const std::string& symbol, int limit, const std::string& feed) const;
     std::vector<Core::Bar> parse_bars_response(const std::string& response) const;
-    void log_fetch_attempt(const std::string& symbol, const std::string& description) const;
     void log_fetch_result(const std::string& description, bool success, size_t bar_count = 0) const;
     void log_fetch_failure() const;
 };

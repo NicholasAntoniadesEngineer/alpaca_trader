@@ -1,11 +1,12 @@
 #ifndef ORDER_EXECUTION_ENGINE_HPP
 #define ORDER_EXECUTION_ENGINE_HPP
 
-#include "configs/trader_config.hpp"
-#include "../data/data_structures.hpp"
-#include "../analysis/strategy_logic.hpp"
+#include "configs/system_config.hpp"
+#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data/data_sync_structures.hpp"
+#include "core/trader/analysis/strategy_logic.hpp"
 #include "api/alpaca_client.hpp"
-#include "../data/account_manager.hpp"
+#include "core/trader/data/account_manager.hpp"
 #include "core/logging/trading_logs.hpp"
 #include <string>
 #include <chrono>
@@ -15,7 +16,7 @@ namespace Core {
 
 class OrderExecutionEngine {
 public:
-    OrderExecutionEngine(API::AlpacaClient& client, AccountManager& account_manager, const TraderConfig& config);
+    OrderExecutionEngine(API::AlpacaClient& client, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync);
     
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
     
@@ -29,7 +30,8 @@ private:
     // Core dependencies
     API::AlpacaClient& client;
     AccountManager& account_manager;
-    const TraderConfig& config;
+    const SystemConfig& config;
+    DataSyncReferences& data_sync;
     
     // Configuration constants
     static constexpr std::chrono::milliseconds POSITION_CLOSE_WAIT_TIME{2000};
@@ -42,7 +44,11 @@ private:
     // Position management methods
     bool should_close_opposite_position(OrderSide side, int current_qty) const;
     bool close_opposite_position(OrderSide side, int current_qty);
-    bool can_execute_new_position(OrderSide side, int current_qty) const;
+    bool can_execute_new_position(int current_qty) const;
+    
+    // Order timing methods
+    bool can_place_order_now() const;
+    void update_last_order_timestamp();
     
     // Order validation and preparation
     bool validate_order_parameters(const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const;
@@ -54,6 +60,7 @@ private:
     bool is_long_position(int qty) const;
     bool is_short_position(int qty) const;
     bool is_flat_position(int qty) const;
+    bool should_cancel_existing_orders() const;
     
 };
 

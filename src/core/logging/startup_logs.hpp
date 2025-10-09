@@ -5,6 +5,8 @@
 #include "core/trader/data/account_manager.hpp"
 #include "core/logging/async_logger.hpp"
 
+using AlpacaTrader::Config::SystemConfig;
+
 /**
  * Specialized logging for application startup sequence.
  * Handles all startup-related logging in a consistent format.
@@ -25,7 +27,7 @@ public:
     static void log_data_source_configuration(const AlpacaTrader::Config::SystemConfig& config);
     
     // Thread system startup
-    static void log_thread_system_startup(const TimingConfig& timing_config);
+    static void log_thread_system_startup(const SystemConfig& config);
     
     
     // System configuration tables

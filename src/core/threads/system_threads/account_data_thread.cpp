@@ -5,7 +5,7 @@
 #include "account_data_thread.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
-#include "../thread_logic/platform/thread_control.hpp"
+#include "core/threads/thread_logic/platform/thread_control.hpp"
 #include <chrono>
 
 using AlpacaTrader::Threads::AccountDataThread;
@@ -18,7 +18,7 @@ void AlpacaTrader::Threads::AccountDataThread::operator()() {
     
     try {
         // Wait for main thread to complete priority setup
-        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
         
         account_data_loop();
     } catch (const std::exception& e) {

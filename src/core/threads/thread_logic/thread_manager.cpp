@@ -44,9 +44,6 @@ void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadIn
 void Manager::setup_thread_priorities(const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config) 
 {
     thread_status_data.clear();
-    if (!config.timing.thread_priorities.enable_thread_priorities) {
-        return;
-    }
     
     auto thread_types = AlpacaTrader::Core::ThreadRegistry::create_thread_types();
     
@@ -83,9 +80,9 @@ AlpacaTrader::Config::ThreadSettings Manager::create_platform_config(const Alpac
     return platform_config;
 }
 
-bool Manager::apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& /*thread_def*/, 
+bool Manager::apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, 
                                        const AlpacaTrader::Config::ThreadSettings& platform_config, 
-                                       const AlpacaTrader::Config::SystemConfig& /*config*/) 
+                                       const AlpacaTrader::Config::SystemConfig& config) 
 {
     AlpacaTrader::Config::Priority actual_priority = ThreadControl::set_priority_with_fallback(active_threads_.back(), platform_config);
     bool success = (actual_priority == platform_config.priority);

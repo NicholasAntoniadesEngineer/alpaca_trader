@@ -50,15 +50,22 @@ public:
     void close_position(const Core::ClosePositionRequest& req) const { orders.close_position(req); }
     void cancel_orders_for_signal(const std::string& signal_side) const { orders.cancel_orders_for_signal(signal_side); }
     
-    // Order cancellation API methods
+    // Order management API methods
     std::vector<std::string> get_open_orders(const std::string& symbol) const;
+    std::string get_open_orders_json(const std::string& symbol) const;
     void cancel_order(const std::string& order_id) const;
     void cancel_orders_batch(const std::vector<std::string>& order_ids) const;
+    bool has_pending_orders(const std::string& symbol) const;
+    void cancel_pending_orders(const std::string& symbol) const;
     
     // Position management API methods
     std::string get_positions() const;
     int get_position_quantity(const std::string& symbol) const;
     void submit_market_order(const std::string& symbol, const std::string& side, int quantity) const;
+    
+    // Short selling validation
+    bool check_short_availability(const std::string& symbol, int quantity) const;
+    int get_shortable_quantity(const std::string& symbol) const;
 };
 
 } // namespace API

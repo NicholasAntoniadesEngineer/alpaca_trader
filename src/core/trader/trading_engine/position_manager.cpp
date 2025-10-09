@@ -7,7 +7,7 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-PositionManager::PositionManager(API::AlpacaClient& client_ref, const TraderConfig& cfg)
+PositionManager::PositionManager(API::AlpacaClient& client_ref, const SystemConfig& cfg)
     : client(client_ref), config(cfg) {}
 
 void PositionManager::handle_market_close_positions(const ProcessedData& data) {
@@ -26,7 +26,7 @@ void PositionManager::handle_market_close_positions(const ProcessedData& data) {
     }
     
     std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
-    TradingLogs::log_market_close_position_closure(current_qty, config.target.symbol, side);
+    TradingLogs::log_market_close_position_closure(current_qty, config.strategy.symbol, side);
     
     client.close_position(ClosePositionRequest{current_qty});
     

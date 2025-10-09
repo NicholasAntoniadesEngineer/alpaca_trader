@@ -6,7 +6,7 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, double equity, bool allowed, const TraderConfig& config) {
+void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, double equity, bool allowed, const SystemConfig& config) {
     // Build risk input for evaluation
     AlpacaTrader::Core::RiskLogic::TradeGateInput input;
     input.initial_equity = 0.0;
@@ -27,7 +27,7 @@ void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data
     }
 }
 
-void RiskLogs::log_risk_conditions(const AlpacaTrader::Core::RiskLogic::TradeGateResult& result, const AlpacaTrader::Core::ProcessedData& data, const TraderConfig& config) {
+void RiskLogs::log_risk_conditions(const AlpacaTrader::Core::RiskLogic::TradeGateResult& result, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config) {
     TradingLogs::log_trading_conditions(result.daily_pnl, data.exposure_pct, result.allowed, config);
 }
 

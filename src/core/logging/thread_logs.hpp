@@ -3,10 +3,13 @@
 
 #include "configs/timing_config.hpp"
 #include "configs/thread_config.hpp"
+#include "configs/system_config.hpp"
 #include <string>
 #include <atomic>
 #include <vector>
 #include <chrono>
+
+using AlpacaTrader::Config::SystemConfig;
 
 /**
  * High-performance thread monitoring and logging system.
@@ -15,7 +18,7 @@
 class ThreadLogs {
 public:
     // Thread system initialization
-    static void log_system_startup(const TimingConfig& config);
+    static void log_system_startup(const SystemConfig& config);
     static void log_system_shutdown();
     
     // Thread lifecycle

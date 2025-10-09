@@ -1,10 +1,11 @@
 #ifndef TRADING_ORCHESTRATOR_HPP
 #define TRADING_ORCHESTRATOR_HPP
 
-#include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
 #include "api/alpaca_client.hpp"
 #include "data/account_manager.hpp"
 #include "data/data_structures.hpp"
+#include "data/data_sync_structures.hpp"
 #include "data/market_data_fetcher.hpp"
 #include "trading_engine/trading_engine.hpp"
 #include "analysis/risk_manager.hpp"
@@ -13,6 +14,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 
 namespace AlpacaTrader {
@@ -20,25 +22,6 @@ namespace Core {
 
 class TradingOrchestrator {
 private:
-        struct DataSyncReferences {
-            std::mutex* mtx = nullptr;
-            std::condition_variable* cv = nullptr;
-            MarketSnapshot* market = nullptr;
-            AccountSnapshot* account = nullptr;
-            std::atomic<bool>* has_market = nullptr;
-            std::atomic<bool>* has_account = nullptr;
-            std::atomic<bool>* running = nullptr;
-            std::atomic<bool>* allow_fetch = nullptr;
-            
-            // Default constructor
-            DataSyncReferences() = default;
-            
-            // Constructor for easy initialization from DataSyncConfig
-            DataSyncReferences(const DataSyncConfig& config)
-                : mtx(&config.mtx), cv(&config.cv), market(&config.market), account(&config.account),
-                  has_market(&config.has_market), has_account(&config.has_account),
-                  running(&config.running), allow_fetch(&config.allow_fetch) {}
-        };
 
     struct RuntimeState {
         double initial_equity = 0.0;
@@ -47,7 +30,7 @@ private:
         std::atomic<unsigned long>* iteration_counter = nullptr;
     };
 
-    const TraderConfig& config;
+    const SystemConfig& config;
     AccountManager& account_manager;
     TradingEngine trading_engine;
     RiskManager risk_manager;
@@ -60,7 +43,7 @@ private:
     bool check_connectivity_status();
 
 public:
-    TradingOrchestrator(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
+    TradingOrchestrator(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

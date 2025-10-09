@@ -6,11 +6,11 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-PriceManager::PriceManager(API::AlpacaClient& client_ref, const TraderConfig& cfg)
+PriceManager::PriceManager(API::AlpacaClient& client_ref, const SystemConfig& cfg)
     : client(client_ref), config(cfg) {}
 
 double PriceManager::get_real_time_price_with_fallback(double fallback_price) const {
-    double current_price = client.get_current_price(config.target.symbol);
+    double current_price = client.get_current_price(config.strategy.symbol);
     
     if (current_price <= 0.0) {
         current_price = fallback_price;

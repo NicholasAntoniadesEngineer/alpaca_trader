@@ -3,11 +3,10 @@
 #include "core/threads/thread_logic/thread_types.hpp"
 #include "configs/strategy_config.hpp"
 #include "configs/timing_config.hpp"
-#include "configs/target_config.hpp"
 #include "configs/api_config.hpp"
-#include "configs/session_config.hpp"
 #include "configs/logging_config.hpp"
-#include "configs/orders_config.hpp"
+#include <map>
+#include <string>
 
 namespace AlpacaTrader {
 namespace Config {
@@ -25,24 +24,21 @@ enum class ThreadType {
 // Config types for thread components
 struct AlpacaClientConfig {
     const ApiConfig& api;
-    const SessionConfig& session;
     const LoggingConfig& logging;
-    const TargetConfig& target;
     const TimingConfig& timing;
-    const OrdersConfig& orders;
+    const StrategyConfig& strategy;
 };
 
 struct AccountManagerConfig {
     const ApiConfig& api;
     const LoggingConfig& logging;
-    const TargetConfig& target;
     const TimingConfig& timing;
+    const StrategyConfig& strategy;
 };
 
 struct MarketDataThreadConfig {
     const StrategyConfig& strategy;
     const TimingConfig& timing;
-    const TargetConfig& target;
 };
 
 struct AccountDataThreadConfig {
@@ -50,14 +46,29 @@ struct AccountDataThreadConfig {
 };
 
 struct ThreadConfigRegistry {
-    ThreadSettings main;
-    ThreadSettings trader_decision;
-    ThreadSettings market_data;
-    ThreadSettings account_data;
-    ThreadSettings market_gate;
-    ThreadSettings logging;
-    
+    std::map<std::string, ThreadSettings> thread_settings;
+
     ThreadConfigRegistry() = default;
+    
+    // Generic thread settings access - only returns settings if explicitly configured
+    const ThreadSettings& get_thread_settings(const std::string& thread_name) const {
+        auto it = thread_settings.find(thread_name);
+        if (it != thread_settings.end()) {
+            return it->second;
+        }
+        // Thread settings not found - this should never happen in a properly configured system
+        throw std::runtime_error("Thread settings not found for thread: " + thread_name + 
+                                ". Ensure thread configuration is loaded from CSV.");
+    }
+    
+    bool has_thread_settings(const std::string& thread_name) const {
+        return thread_settings.find(thread_name) != thread_settings.end();
+    }
+    
+    // Non-const version for config loading only
+    ThreadSettings& get_thread_settings_for_loading(const std::string& thread_name) {
+        return thread_settings[thread_name];
+    }
 };
 
 } // namespace Config

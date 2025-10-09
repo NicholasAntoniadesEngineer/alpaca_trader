@@ -1,8 +1,8 @@
 #include "logging_thread.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
-#include "../thread_logic/thread_registry.hpp"
-#include "../thread_logic/platform/thread_control.hpp"
+#include "core/threads/thread_logic/thread_registry.hpp"
+#include "core/threads/thread_logic/platform/thread_control.hpp"
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -20,7 +20,7 @@ void AlpacaTrader::Threads::LoggingThread::operator()() {
         setup_logging_thread();
         
         // Wait for main thread to complete priority setup
-        std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_startup_delay_ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(config.timing.thread_startup_sequence_delay_milliseconds));
         
         
         logging_loop();

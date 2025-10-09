@@ -6,7 +6,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
 #include "core/logging/logging_macros.hpp"
-#include "../thread_logic/platform/thread_control.hpp"
+#include "core/threads/thread_logic/platform/thread_control.hpp"
 #include "core/trader/data/market_processing.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <chrono>
@@ -24,7 +24,7 @@ void AlpacaTrader::Threads::MarketDataThread::operator()() {
     
     try {
         // Wait for main thread to complete priority setup
-        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
         
         // Start the market data collection loop
         market_data_loop();
@@ -69,20 +69,23 @@ void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
 }
 
 void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
-    LOG_THREAD_SECTION_HEADER("MARKET DATA FETCH - " + target.symbol);
+    LOG_THREAD_SECTION_HEADER("MARKET DATA FETCH - " + strategy.symbol);
     
-    int num_bars = strategy.atr_period + timing.bar_buffer;
-    BarRequest br{target.symbol, num_bars};
+    int num_bars = strategy.atr_calculation_period + timing.historical_data_buffer_size;
+    BarRequest br{strategy.symbol, num_bars};
     LOG_THREAD_CONTENT("Requesting " + std::to_string(num_bars) + " bars");
     
     auto bars = client.get_recent_bars(br);
     LOG_THREAD_CONTENT("Received " + std::to_string(bars.size()) + " bars");
     
-    if (static_cast<int>(bars.size()) >= strategy.atr_period + 2) {
+    if (static_cast<int>(bars.size()) >= strategy.atr_calculation_period + 2) {
         LOG_THREAD_CONTENT("Sufficient bars, computing indicators");
         
         // Compute indicators using the same implementation as Trader
-        TraderConfig minimal_cfg{StrategyConfig{strategy}, RiskConfig{}, TimingConfig{timing}, LoggingConfig{}, TargetConfig{target}};
+        SystemConfig minimal_cfg;
+        minimal_cfg.strategy = strategy;
+        minimal_cfg.timing = timing;
+        minimal_cfg.logging = LoggingConfig{};
         ProcessedData computed = AlpacaTrader::Core::MarketProcessing::compute_processed_data(bars, minimal_cfg);
 
         LOG_THREAD_CONTENT("ATR computed: " + std::to_string(computed.atr));
@@ -95,7 +98,7 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
             LOG_THREAD_CONTENT("ATR is zero, not updating snapshot");
         }
     } else {
-        LOG_THREAD_CONTENT("Insufficient bars (" + std::to_string(bars.size()) + " < " + std::to_string(strategy.atr_period + 2) + ")");
+        LOG_THREAD_CONTENT("Insufficient bars (" + std::to_string(bars.size()) + " < " + std::to_string(strategy.atr_calculation_period + 2) + ")");
     }
     
     LOG_THREAD_SECTION_FOOTER();
@@ -109,6 +112,12 @@ void AlpacaTrader::Threads::MarketDataThread::update_market_snapshot(const Proce
     market_snapshot.curr = computed.curr;
     market_snapshot.prev = computed.prev;
     has_market.store(true);
+    
+    // Update data freshness timestamp
+    auto now = std::chrono::steady_clock::now();
+    market_data_timestamp.store(now);
+    market_data_fresh.store(true);
+    
     data_cv.notify_all();
 }
 

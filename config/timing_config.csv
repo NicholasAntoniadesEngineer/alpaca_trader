@@ -4,45 +4,50 @@
 # All timing-related settings for threads, data polling, and system monitoring
 # ========================================================================
 
-# Thread polling intervals
-timing.thread_market_data_poll_interval_sec,1
-timing.thread_account_data_poll_interval_sec,5
-timing.thread_market_gate_poll_interval_sec,15
-timing.thread_trader_poll_interval_sec,4
-timing.thread_logging_poll_interval_sec,1
+# Thread Polling Intervals (in seconds)
+timing.market_data_thread_polling_interval_seconds,5
+timing.account_data_thread_polling_interval_seconds,10
+timing.market_gate_thread_polling_interval_seconds,30
+timing.trader_decision_thread_polling_interval_seconds,3
+timing.logging_thread_polling_interval_seconds,5
 
-# Data polling configuration
-timing.historical_bars_fetch_minutes,120
-timing.historical_bars_buffer_count,20
-timing.account_data_cache_duration_sec,10
+# Historical Data Configuration
+timing.historical_data_fetch_period_minutes,120
+timing.historical_data_buffer_size,20
+timing.account_data_cache_duration_seconds,10
+timing.market_data_staleness_threshold_seconds,3
 
-# Market monitoring configuration
-timing.market_pre_open_buffer_minutes,5
-timing.market_post_close_buffer_minutes,5
-timing.market_close_buffer_minutes,15
+# Market Session Buffer Times (in minutes)
+timing.pre_market_open_buffer_minutes,5
+timing.post_market_close_buffer_minutes,5
+timing.market_close_grace_period_minutes,15
 
-# System monitoring configuration
-timing.enable_thread_monitoring,false
-timing.thread_monitor_log_interval_sec,30
+# System Health Monitoring
+timing.enable_system_health_monitoring,false
+timing.system_health_logging_interval_seconds,30
 
-# Error handling configuration
-timing.trading_halt_sleep_minutes,1
+# Error Recovery Timing
+timing.emergency_trading_halt_duration_minutes,1
 
-# User interface timing
-timing.countdown_display_interval_sec,1
+# User Interface Updates
+timing.countdown_display_refresh_interval_seconds,1
 
-# Thread initialization delays
-timing.thread_initialization_delay_ms,200
-timing.thread_startup_delay_ms,300
+# Thread Lifecycle Management
+timing.thread_initialization_delay_milliseconds,200
+timing.thread_startup_sequence_delay_milliseconds,300
 
-# Order cancellation timing
-timing.order_cancellation_wait_ms,500
-timing.position_verification_wait_ms,1000
-timing.position_settlement_wait_ms,2000
+# Order Management Timing
+timing.order_cancellation_processing_delay_milliseconds,500
+timing.position_verification_timeout_milliseconds,1000
+timing.position_settlement_timeout_milliseconds,2000
 
-# Order cancellation concurrency
-timing.max_concurrent_cancellations,10
+# Order Processing Limits
+timing.maximum_concurrent_order_cancellations,10
 
-# PRECISION CONFIGURATION
-timing.cpu_usage_precision,1
-timing.rate_precision,1
+# Trading Safety Constraints
+timing.minimum_interval_between_orders_seconds,30
+timing.enable_wash_trade_prevention_mechanism,true
+
+# Precision Settings for Metrics
+timing.cpu_usage_display_precision,1
+timing.performance_rate_display_precision,1

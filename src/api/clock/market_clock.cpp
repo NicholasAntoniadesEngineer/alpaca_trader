@@ -2,7 +2,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
-#include "configs/api_endpoints.hpp"
+#include "configs/api_config.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
@@ -43,12 +43,12 @@ bool MarketClock::is_core_trading_hours() const {
             min = t.tm_min;
         } else {
             // Assume UTC and convert to ET
-            hour = t.tm_hour + session.et_utc_offset_hours;
+            hour = t.tm_hour + strategy.et_utc_offset_hours;
             min = t.tm_min;
         }
         
-        return is_within_time_window(hour, min, session.market_open_hour, session.market_open_minute, 
-                                   session.market_close_hour, session.market_close_minute);
+        return is_within_time_window(hour, min, strategy.market_open_hour, strategy.market_open_minute, 
+                                   strategy.market_close_hour, strategy.market_close_minute);
     } catch (...) {
         log_message("Error parsing clock response: " + response, logging.log_file);
     }
@@ -89,9 +89,9 @@ bool MarketClock::is_within_fetch_window() const {
             
             if (now_min > 0 && open_min > 0) {
                 long long mins_to_open = open_min - now_min;
-                bool within_window = mins_to_open >= 0 && mins_to_open <= timing.pre_open_buffer_min;
+                bool within_window = mins_to_open >= 0 && mins_to_open <= timing.pre_market_open_buffer_minutes;
                 log_message("Minutes to open: " + std::to_string(mins_to_open) + 
-                           ", Pre-open buffer: " + std::to_string(timing.pre_open_buffer_min) + 
+                           ", Pre-open buffer: " + std::to_string(timing.pre_market_open_buffer_minutes) + 
                            ", Within window: " + (within_window ? "YES" : "NO"), logging.log_file);
                 return within_window;
             }
@@ -128,7 +128,7 @@ std::tm MarketClock::parse_timestamp(const std::string& timestamp) const {
 
 bool MarketClock::is_approaching_market_close() const {
     int minutes_until_close = get_minutes_until_market_close();
-    return minutes_until_close <= timing.market_close_buffer_min && minutes_until_close > 0;
+    return minutes_until_close <= timing.market_close_grace_period_minutes && minutes_until_close > 0;
 }
 
 int MarketClock::get_minutes_until_market_close() const {
@@ -157,13 +157,13 @@ int MarketClock::get_minutes_until_market_close() const {
             min = t.tm_min;
         } else {
             // Assume UTC and convert to ET
-            hour = t.tm_hour + session.et_utc_offset_hours;
+            hour = t.tm_hour + strategy.et_utc_offset_hours;
             min = t.tm_min;
         }
         
         // Calculate minutes until market close
         int current_minutes = hour * 60 + min;
-        int close_minutes = session.market_close_hour * 60 + session.market_close_minute;
+        int close_minutes = strategy.market_close_hour * 60 + strategy.market_close_minute;
         int minutes_until_close = close_minutes - current_minutes;
         
         return minutes_until_close;

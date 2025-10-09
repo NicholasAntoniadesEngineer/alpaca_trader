@@ -9,47 +9,160 @@ namespace Core {
 
 namespace StrategyLogic {
 
-SignalDecision detect_trading_signals(const ProcessedData& data, const TraderConfig& config) {
+// Helper function to detect doji pattern
+bool detect_doji_pattern(double open, double high, double low, double close, double doji_threshold) {
+    double body_size = std::abs(close - open);
+    double total_range = high - low;
+    
+    if (total_range == 0.0) return false; // Avoid division by zero
+    
+    // Doji if body is less than threshold% of total range
+    return (body_size / total_range) < doji_threshold;
+}
+
+SignalDecision detect_trading_signals(const ProcessedData& data, const SystemConfig& config) {
     SignalDecision decision;
     
-    // Configurable BUY signal conditions
-    bool buy_close_condition = config.strategy.buy_allow_equal_close ? 
-                              (data.curr.c >= data.curr.o) : 
-                              (data.curr.c > data.curr.o);
+    // Calculate momentum indicators for better signal detection
+    double price_change = data.curr.c - data.prev.c;
+    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * 100.0 : 0.0;
     
-    bool buy_high_condition = config.strategy.buy_require_higher_high ? 
+    // Calculate volume momentum
+    double volume_change = static_cast<double>(data.curr.v) - static_cast<double>(data.prev.v);
+    double volume_change_pct = (data.prev.v > 0) ? (volume_change / static_cast<double>(data.prev.v)) * 100.0 : 0.0;
+    
+    // Calculate volatility (ATR-based)
+    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * 100.0 : 0.0;
+    
+    // Enhanced BUY signal conditions with momentum confirmation
+    bool basic_buy_close = config.strategy.buy_signals_allow_equal_close ? 
+                          (data.curr.c >= data.curr.o) : 
+                          (data.curr.c > data.curr.o);
+    
+    bool buy_high_condition = config.strategy.buy_signals_require_higher_high ? 
                              (data.curr.h > data.prev.h) : 
                              true;
     
-    bool buy_low_condition = config.strategy.buy_require_higher_low ? 
+    bool buy_low_condition = config.strategy.buy_signals_require_higher_low ? 
                             (data.curr.l >= data.prev.l) : 
                             true;
     
-    decision.buy = buy_close_condition && buy_high_condition && buy_low_condition;
+    // Momentum-based buy confirmation (configurable thresholds)
+    bool momentum_buy = price_change_pct > config.strategy.minimum_price_change_percentage_for_momentum;
+    bool volume_confirmation = volume_change_pct > config.strategy.minimum_volume_increase_percentage_for_buy_signals;
+    bool volatility_adequate = volatility_pct > config.strategy.minimum_volatility_percentage_for_buy_signals;
     
-    // Configurable SELL signal conditions
-    bool sell_close_condition = config.strategy.sell_allow_equal_close ? 
-                               (data.curr.c <= data.curr.o) : 
-                               (data.curr.c < data.curr.o);
+    // Calculate signal strength and reasoning
+    double buy_strength = 0.0;
+    std::string buy_reason = "";
     
-    bool sell_low_condition = config.strategy.sell_require_lower_low ? 
+    if (basic_buy_close && buy_high_condition && buy_low_condition) {
+        buy_strength += config.strategy.basic_price_pattern_weight; // Basic pattern strength
+        buy_reason += "Basic pattern OK; ";
+        
+        if (momentum_buy) {
+            buy_strength += config.strategy.momentum_indicator_weight; // Momentum strength
+            buy_reason += "Momentum OK; ";
+        } else {
+            buy_reason += "No momentum; ";
+        }
+        
+        if (volume_confirmation) {
+            buy_strength += config.strategy.volume_analysis_weight; // Volume confirmation
+            buy_reason += "Volume OK; ";
+        } else {
+            buy_reason += "Low volume; ";
+        }
+        
+        if (volatility_adequate) {
+            buy_strength += config.strategy.volatility_analysis_weight; // Volatility confirmation
+            buy_reason += "Volatility OK; ";
+        } else {
+            buy_reason += "Low volatility; ";
+        }
+    } else {
+        buy_reason = "Basic pattern failed";
+    }
+    
+    // Set buy signal if strength is above threshold
+    decision.buy = buy_strength >= config.strategy.minimum_signal_strength_threshold;
+    decision.signal_strength = buy_strength;
+    decision.signal_reason = buy_reason;
+    
+    // Enhanced SELL signal conditions with momentum confirmation
+    bool basic_sell_close = config.strategy.sell_signals_allow_equal_close ? 
+                           (data.curr.c <= data.curr.o) : 
+                           (data.curr.c < data.curr.o);
+    
+    bool sell_low_condition = config.strategy.sell_signals_require_lower_low ? 
                              (data.curr.l < data.prev.l) : 
                              true;
     
-    bool sell_high_condition = config.strategy.sell_require_lower_high ? 
+    bool sell_high_condition = config.strategy.sell_signals_require_lower_high ? 
                               (data.curr.h <= data.prev.h) : 
                               true;
     
-    decision.sell = sell_close_condition && sell_low_condition && sell_high_condition;
+    // Momentum-based sell confirmation (configurable thresholds)
+    bool momentum_sell = price_change_pct < -config.strategy.minimum_price_change_percentage_for_momentum;
+    bool volume_sell_confirmation = volume_change_pct > config.strategy.minimum_volume_increase_percentage_for_sell_signals;
+    bool volatility_sell_adequate = volatility_pct > config.strategy.minimum_volatility_percentage_for_sell_signals;
+    
+    // Calculate sell signal strength and reasoning
+    double sell_strength = 0.0;
+    std::string sell_reason = "";
+    
+    if (basic_sell_close && sell_low_condition && sell_high_condition) {
+        sell_strength += config.strategy.basic_price_pattern_weight; // Basic pattern strength
+        sell_reason += "Basic pattern OK; ";
+        
+        if (momentum_sell) {
+            sell_strength += config.strategy.momentum_indicator_weight; // Momentum strength
+            sell_reason += "Momentum OK; ";
+        } else {
+            sell_reason += "No momentum; ";
+        }
+        
+        if (volume_sell_confirmation) {
+            sell_strength += config.strategy.volume_analysis_weight; // Volume confirmation
+            sell_reason += "Volume OK; ";
+        } else {
+            sell_reason += "Low volume; ";
+        }
+        
+        if (volatility_sell_adequate) {
+            sell_strength += config.strategy.volatility_analysis_weight; // Volatility confirmation
+            sell_reason += "Volatility OK; ";
+        } else {
+            sell_reason += "Low volatility; ";
+        }
+    } else {
+        sell_reason = "Basic pattern failed";
+    }
+    
+    // Set sell signal if strength is above threshold
+    decision.sell = sell_strength >= config.strategy.minimum_signal_strength_threshold;
+    
+    // Update signal strength and reason (use the stronger signal)
+    if (sell_strength > decision.signal_strength) {
+        decision.signal_strength = sell_strength;
+        decision.signal_reason = sell_reason;
+    }
     
     return decision;
 }
 
-FilterResult evaluate_trading_filters(const ProcessedData& data, const TraderConfig& config) {
+FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemConfig& config) {
     FilterResult result;
-    result.atr_pass = data.atr > config.strategy.atr_multiplier_entry * data.avg_atr;
-    result.vol_pass = data.curr.v > config.strategy.volume_multiplier * data.avg_vol;
-    result.doji_pass = !detect_doji_pattern(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
+    
+    // ATR filter: use absolute threshold if enabled, otherwise use relative threshold
+    if (config.strategy.use_absolute_atr_threshold) {
+        result.atr_pass = data.atr > config.strategy.atr_absolute_minimum_threshold;
+    } else {
+        result.atr_pass = data.atr > config.strategy.entry_signal_atr_multiplier * data.avg_atr;
+    }
+    
+    result.vol_pass = data.curr.v > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
+    result.doji_pass = !detect_doji_pattern(data.curr.o, data.curr.h, data.curr.l, data.curr.c, config.strategy.doji_candlestick_body_size_threshold_percentage);
     result.all_pass = result.atr_pass && result.vol_pass && result.doji_pass;
     result.atr_ratio = (data.avg_atr > 0.0) ? (data.atr / data.avg_atr) : 0.0;
     result.vol_ratio = (data.avg_vol > 0.0) ? (static_cast<double>(data.curr.v) / data.avg_vol) : 0.0;
@@ -75,9 +188,9 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const TraderCon
  * @param buying_power Available buying power (0.0 if not provided)
  * @return PositionSizing struct with calculated quantity and risk amount
  */
-PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const TraderConfig& config, double buying_power) {
+PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const SystemConfig& config, double buying_power) {
     PositionSizing sizing;
-    sizing.risk_amount = data.atr;  // Use ATR as risk per share
+    sizing.risk_amount = equity * config.strategy.risk_percentage_per_trade;
     
     // Early return if price is invalid (zero or negative)
     if (data.curr.c <= 0.0 || sizing.risk_amount <= 0.0) {
@@ -89,16 +202,42 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
         return sizing;
     }
     
+    double stop_loss_distance = data.atr;
+    double risk_per_share = stop_loss_distance;
+    
+    // Check for fixed shares per trade first (if enabled)
+    if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.fixed_share_quantity_per_trade > 0) {
+        sizing.quantity = config.strategy.fixed_share_quantity_per_trade;
+        sizing.risk_based_qty = 0;
+        sizing.exposure_based_qty = 0;
+        sizing.max_value_qty = 0;
+        sizing.buying_power_qty = 0;
+        
+        // Apply position size multiplier to fixed shares if enabled
+        if (config.strategy.enable_risk_based_position_multiplier) {
+            sizing.quantity = static_cast<int>(sizing.quantity * config.strategy.risk_based_position_size_multiplier);
+        }
+        
+        // Ensure minimum quantity of 1
+        sizing.quantity = std::max(1, sizing.quantity);
+        return sizing;
+    }
+    
     // Determine size multiplier for scaling in/out of positions
-    sizing.size_multiplier = (current_qty != 0 && config.risk.allow_multiple_positions)
-                                 ? config.risk.scale_in_multiplier
+    sizing.size_multiplier = (current_qty != 0 && config.strategy.allow_multiple_positions_per_symbol)
+                                 ? config.strategy.position_scaling_multiplier
                                  : 1.0;
     
+    // Apply position size multiplier (if enabled)
+    if (config.strategy.enable_risk_based_position_multiplier) {
+        sizing.size_multiplier *= config.strategy.risk_based_position_size_multiplier;
+    }
+    
     int equity_based_qty = static_cast<int>(std::floor(
-        (equity * config.risk.risk_per_trade * sizing.size_multiplier) / sizing.risk_amount
+        (sizing.risk_amount * sizing.size_multiplier) / risk_per_share
     ));
     
-    double max_total_exposure_value = equity * (config.risk.max_exposure_pct / 100.0);
+    double max_total_exposure_value = equity * (config.strategy.max_account_exposure_percentage / 100.0);
     double current_exposure_value = std::abs(data.pos_details.current_value);
     double available_exposure_value = max_total_exposure_value - current_exposure_value;
     
@@ -109,14 +248,14 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
     int max_value_qty = INT_MAX;
-    if (config.risk.max_value_per_trade > 0.0) {
-        max_value_qty = static_cast<int>(std::floor(config.risk.max_value_per_trade / data.curr.c));
+    if (config.strategy.maximum_dollar_value_per_trade > 0.0) {
+        max_value_qty = static_cast<int>(std::floor(config.strategy.maximum_dollar_value_per_trade / data.curr.c));
         sizing.quantity = std::min(sizing.quantity, max_value_qty);
     }
     
     int buying_power_qty = INT_MAX;
     if (buying_power > 0.0) {
-        double usable_buying_power = buying_power * config.risk.buying_power_usage_factor;
+        double usable_buying_power = buying_power * config.strategy.buying_power_utilization_percentage;
         buying_power_qty = static_cast<int>(std::floor(usable_buying_power / data.curr.c));
         sizing.quantity = std::min(sizing.quantity, buying_power_qty);
     }
@@ -153,7 +292,7 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
  * @param rr_ratio Risk-reward ratio (e.g., 3.0 means 3:1 reward:risk)
  * @return ExitTargets struct containing calculated stop_loss and take_profit prices
  */
-ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const TraderConfig& config) {
+ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const SystemConfig& config) {
     ExitTargets targets;
     
     // Dynamic buffer system to handle data delays and market volatility
@@ -173,19 +312,31 @@ ExitTargets compute_exit_targets(const std::string& side, double entry_price, do
     
     // Add minimum buffer to account for market data delays and price movements
     // Use configurable buffer for API validation and market delays
-    double min_stop_buffer = config.strategy.stop_loss_buffer_dollars;
+    double min_stop_buffer = config.strategy.stop_loss_buffer_amount_dollars;
     
-    // TODO: When better data comes through we can use orders with more precision.
+    // Note: Order precision is limited by market data accuracy and API constraints.
     if (side == "buy") {
         // Long position: profit when price goes UP, stop when price goes DOWN
         // Ensure stop loss is well below entry price to account for market data delays
         targets.stop_loss = entry_price - std::max(effective_buffer, min_stop_buffer);
-        targets.take_profit = entry_price + (rr_ratio * risk_amount);
+        
+        // Calculate take profit using either percentage or risk/reward ratio
+        if (config.strategy.use_take_profit_percentage) {
+            targets.take_profit = entry_price * (1.0 + config.strategy.take_profit_percentage);
+        } else {
+            targets.take_profit = entry_price + (rr_ratio * risk_amount);
+        }
     } else { // side == "sell" 
         // Short position: profit when price goes DOWN, stop when price goes UP
         // Ensure stop loss is well above entry price to account for market data delays
         targets.stop_loss = entry_price + std::max(effective_buffer, min_stop_buffer);
-        targets.take_profit = entry_price - (rr_ratio * risk_amount);
+        
+        // Calculate take profit using either percentage or risk/reward ratio
+        if (config.strategy.use_take_profit_percentage) {
+            targets.take_profit = entry_price * (1.0 - config.strategy.take_profit_percentage);
+        } else {
+            targets.take_profit = entry_price - (rr_ratio * risk_amount);
+        }
     }
     
     return targets;

@@ -16,7 +16,7 @@ void TraderThread::operator()() {
 
     try {
         // Wait for main thread to complete priority setup and other threads to initialize
-        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms + 2000)); // Extra 2 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds + 2000)); // Extra 2 seconds
 
         // Start the trader's decision loop
         trader.execute_trading_loop();

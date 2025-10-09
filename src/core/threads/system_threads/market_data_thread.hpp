@@ -3,7 +3,6 @@
 
 #include "configs/strategy_config.hpp"
 #include "configs/timing_config.hpp"
-#include "configs/target_config.hpp"
 #include "core/threads/thread_register.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/trader/data/data_structures.hpp"
@@ -11,6 +10,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 namespace AlpacaTrader {
 namespace Threads {
@@ -18,15 +18,16 @@ namespace Threads {
 using MarketDataThreadConfig = AlpacaTrader::Config::MarketDataThreadConfig;
 
 struct MarketDataThread {
-    const StrategyConfig& strategy;
+    const StrategyConfig& strategy;  // Now contains target settings
     const TimingConfig& timing;
-    const TargetConfig& target;
     AlpacaTrader::API::AlpacaClient& client;
     std::mutex& state_mtx;
     std::condition_variable& data_cv;
     AlpacaTrader::Core::MarketSnapshot& market_snapshot;
     std::atomic<bool>& has_market;
     std::atomic<bool>& running;
+    std::atomic<std::chrono::steady_clock::time_point>& market_data_timestamp;
+    std::atomic<bool>& market_data_fresh;
     std::atomic<bool>* allow_fetch_ptr {nullptr};
     std::atomic<unsigned long>* iteration_counter {nullptr};
 
@@ -36,10 +37,12 @@ struct MarketDataThread {
                     std::condition_variable& cv,
                     AlpacaTrader::Core::MarketSnapshot& snapshot,
                    std::atomic<bool>& has_market_flag,
-                   std::atomic<bool>& running_flag)
-        : strategy(cfg.strategy), timing(cfg.timing), target(cfg.target), client(cli),
+                   std::atomic<bool>& running_flag,
+                   std::atomic<std::chrono::steady_clock::time_point>& timestamp,
+                   std::atomic<bool>& fresh_flag)
+        : strategy(cfg.strategy), timing(cfg.timing), client(cli),
           state_mtx(mtx), data_cv(cv), market_snapshot(snapshot), has_market(has_market_flag),
-          running(running_flag) {}
+          running(running_flag), market_data_timestamp(timestamp), market_data_fresh(fresh_flag) {}
 
     // External gate: when set, task will fetch; otherwise it sleeps
     void set_allow_fetch_flag(std::atomic<bool>& allow_flag) { allow_fetch_ptr = &allow_flag; }

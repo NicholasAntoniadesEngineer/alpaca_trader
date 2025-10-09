@@ -1,10 +1,11 @@
 #include "api/market/market_data_client.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/logging/market_data_logs.hpp"
 #include "core/logging/logging_macros.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
-#include "configs/api_endpoints.hpp"
+#include "configs/api_config.hpp"
 #include "json/json.hpp"
 #include <iomanip>
 #include <sstream>
@@ -19,17 +20,15 @@ namespace Market {
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
 using AlpacaTrader::Logging::TradingLogs;
+using AlpacaTrader::Logging::MarketDataLogs;
 
 std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest& req_bars) const {
-    std::string start = TimeUtils::get_iso_time_minus_minutes(timing.bar_fetch_minutes);
-    std::string end = TimeUtils::get_current_iso_time_with_z();
-
-    TradingLogs::log_market_data_fetch_table(req_bars.symbol);
+    MarketDataLogs::log_market_data_fetch_table(req_bars.symbol, logging.log_file);
 
     std::vector<std::string> urls;
-    urls.push_back(build_bars_url(req_bars.symbol, start, end, req_bars.limit, "iex"));
-    urls.push_back(build_bars_url(req_bars.symbol, start, end, req_bars.limit, "sip"));
-    urls.push_back(build_bars_url(req_bars.symbol, start, end, 10, "iex")); // Daily bars
+    urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "iex"));
+    urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "sip"));
+    urls.push_back(build_bars_url(req_bars.symbol, 10, "iex")); // Daily bars
     
     std::vector<std::string> descriptions;
     descriptions.push_back("IEX FEED (FREE - 15MIN DELAYED)");
@@ -37,8 +36,6 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
     descriptions.push_back("IEX DAILY BARS (FREE - DELAYED)");
 
     for (size_t i = 0; i < urls.size(); ++i) {
-        log_fetch_attempt(req_bars.symbol, descriptions[i]);
-        
         HttpRequest req(urls[i], api.api_key, api.api_secret, logging.log_file, 
                        api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
         std::string response = http_get(req);
@@ -71,13 +68,16 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
     return std::vector<Core::Bar>();
 }
 
-std::string MarketDataClient::build_bars_url(const std::string& symbol, const std::string& start, 
-                                           const std::string& end, int limit, const std::string& feed) const {
+std::string MarketDataClient::build_bars_url(const std::string& symbol, int limit, const std::string& feed) const {
     using namespace AlpacaTrader::Config;
     
     std::string timeframe = (limit == 10) ? "1Day" : "1Min";
-    ApiEndpoints endpoints(api.endpoints);
-    std::string url = endpoints.build_bars_url(api.data_url, symbol, start, end);
+    std::string url = api.data_url + api.endpoints.market_data.bars;
+    // Replace {symbol} placeholder
+    size_t pos = url.find("{symbol}");
+    if (pos != std::string::npos) {
+        url.replace(pos, 8, symbol);
+    }
     return url + "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) + 
            "&adjustment=raw&feed=" + feed;
 }
@@ -109,9 +109,6 @@ std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& 
     return bars;
 }
 
-void MarketDataClient::log_fetch_attempt(const std::string& /* symbol */, const std::string& description) const {
-    TradingLogs::log_market_data_attempt_table(description);
-}
 
 void MarketDataClient::log_fetch_result(const std::string& description, bool success, size_t bar_count) const {
     TradingLogs::log_market_data_result_table(description, success, bar_count);
@@ -144,8 +141,12 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
     using namespace AlpacaTrader::Config;
     
     // Construct real-time quotes endpoint URL.
-    ApiEndpoints endpoints(api.endpoints);
-    std::string url = endpoints.build_quotes_latest_url(api.data_url, symbol);
+    std::string url = api.data_url + api.endpoints.market_data.quotes_latest;
+    // Replace {symbol} placeholder
+    size_t pos = url.find("{symbol}");
+    if (pos != std::string::npos) {
+        url.replace(pos, 8, symbol);
+    }
     
     // Make HTTP request with standard retry/timeout settings.
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 

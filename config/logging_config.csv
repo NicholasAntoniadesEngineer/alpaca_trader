@@ -4,4 +4,16 @@
 # Logging settings and file configuration
 # ========================================================================
 
+# Log file configuration
 logging.log_file,trade_log.txt
+logging.max_log_file_size_mb,100
+logging.log_backup_count,5
+
+# Log level configuration (DEBUG, INFO, WARN, ERROR)
+logging.console_log_level,INFO
+logging.file_log_level,DEBUG
+
+# Log formatting
+logging.include_timestamp,true
+logging.include_thread_id,true
+logging.include_function_name,false

@@ -6,7 +6,7 @@ namespace Core {
 
 using AlpacaTrader::Logging::RiskLogs;
 
-RiskManager::RiskManager(const TraderConfig& cfg) : config(cfg) {}
+RiskManager::RiskManager(const SystemConfig& cfg) : config(cfg) {}
 
 bool RiskManager::validate_trading_permissions(const ProcessedData& data, double equity) {
     if (!check_daily_limits(equity, 0.0)) {
@@ -22,12 +22,12 @@ bool RiskManager::validate_trading_permissions(const ProcessedData& data, double
 
 bool RiskManager::check_exposure_limits(const ProcessedData& data, double equity) {
     // Check percentage-based exposure limit
-    if (data.exposure_pct > config.risk.max_exposure_pct) {
+    if (data.exposure_pct > config.strategy.max_account_exposure_percentage) {
         return false;
     }
     
     // Check absolute exposure amount limit (if configured)
-    double max_exposure_amount = equity * config.risk.max_exposure_pct / 100.0;
+    double max_exposure_amount = equity * config.strategy.max_account_exposure_percentage / 100.0;
     double current_exposure_amount = equity * data.exposure_pct / 100.0;
     
     // Additional validation: ensure we don't exceed maximum exposure amount
@@ -40,7 +40,7 @@ bool RiskManager::check_daily_limits(double current_equity, double initial_equit
     }
     
     double daily_pnl = (current_equity - initial_equity) / initial_equity;
-    return daily_pnl > config.risk.daily_max_loss && daily_pnl < config.risk.daily_profit_target;
+    return daily_pnl > config.strategy.max_daily_loss_percentage && daily_pnl < config.strategy.daily_profit_target_percentage;
 }
 
 

@@ -2,64 +2,82 @@
 #ifndef TIMING_CONFIG_HPP
 #define TIMING_CONFIG_HPP
 
-struct ThreadPriorityConfig {
-    bool enable_thread_priorities;
-    bool enable_cpu_affinity;
-    int trader_cpu_affinity;       // Pin trader to CPU
-    int market_data_cpu_affinity;  // Pin market data to CPU
-    bool log_thread_info;       // Log thread priority info on startup
-};
-
 struct TimingConfig {
-    // Default constructor to initialize all values to 0
-    TimingConfig() : thread_market_data_poll_interval_sec(0), thread_account_data_poll_interval_sec(0), 
-                     thread_market_gate_poll_interval_sec(0), thread_trader_poll_interval_sec(0), 
-                     thread_logging_poll_interval_sec(0), bar_fetch_minutes(0), bar_buffer(0),
-                     pre_open_buffer_min(0), post_close_buffer_min(0), market_close_buffer_min(0),
-                     halt_sleep_min(0), countdown_tick_sec(0), enable_thread_monitoring(false),
-                     monitoring_interval_sec(0), account_data_cache_duration_sec(0),
-                     thread_initialization_delay_ms(0), thread_startup_delay_ms(0),
-                     order_cancellation_wait_ms(0), position_verification_wait_ms(0),
-                     position_settlement_wait_ms(0), max_concurrent_cancellations(0),
-                     cpu_usage_precision(0), rate_precision(0) {}
-    
-    // Thread polling intervals
-    int thread_market_data_poll_interval_sec;
-    int thread_account_data_poll_interval_sec;
-    int thread_market_gate_poll_interval_sec;
-    int thread_trader_poll_interval_sec;
-    int thread_logging_poll_interval_sec;
-    
-    // Data configuration
-    int bar_fetch_minutes;
-    int bar_buffer;
-    int pre_open_buffer_min;
-    int post_close_buffer_min;
-    int market_close_buffer_min;
-    int halt_sleep_min;
-    int countdown_tick_sec;
-    bool enable_thread_monitoring;
-    int monitoring_interval_sec;
-    int account_data_cache_duration_sec;
-    
-    // Thread initialization delays
-    int thread_initialization_delay_ms;     // Delay before setting thread priorities
-    int thread_startup_delay_ms;            // Delay for thread startup synchronization
-    
-    // Order cancellation timing
-    int order_cancellation_wait_ms;         // Wait time after cancelling orders
-    int position_verification_wait_ms;      // Wait time for position verification
-    int position_settlement_wait_ms;        // Wait time for position settlement
-    
-    // Order cancellation concurrency
-    int max_concurrent_cancellations;       // Maximum concurrent order cancellations
-    
-    // Thread priority configuration
-    ThreadPriorityConfig thread_priorities;
-    
-    // Precision configuration for performance metrics
-    int cpu_usage_precision;             // Decimal places for CPU usage percentages
-    int rate_precision;                  // Decimal places for rates (e.g., iterations/sec)
+    // ========================================================================
+    // THREAD POLLING INTERVALS
+    // ========================================================================
+
+    int thread_market_data_poll_interval_sec;        // Market data thread polling interval in seconds
+    int thread_account_data_poll_interval_sec;       // Account data thread polling interval in seconds
+    int thread_market_gate_poll_interval_sec;        // Market gate thread polling interval in seconds
+    int thread_trader_poll_interval_sec;             // Trader decision thread polling interval in seconds
+    int thread_logging_poll_interval_sec;            // Logging thread polling interval in seconds
+
+    // ========================================================================
+    // HISTORICAL DATA CONFIGURATION
+    // ========================================================================
+
+    int historical_data_fetch_period_minutes;        // Historical data fetch period in minutes
+    int historical_data_buffer_size;                 // Historical data buffer size
+    int account_data_cache_duration_seconds;         // Account data cache duration in seconds
+    int market_data_staleness_threshold_seconds;     // Market data staleness threshold in seconds
+
+    // ========================================================================
+    // MARKET SESSION BUFFER TIMES
+    // ========================================================================
+
+    int pre_market_open_buffer_minutes;              // Pre-market open buffer time in minutes
+    int post_market_close_buffer_minutes;            // Post-market close buffer time in minutes
+    int market_close_grace_period_minutes;           // Market close grace period in minutes
+
+    // ========================================================================
+    // SYSTEM HEALTH MONITORING
+    // ========================================================================
+
+    bool enable_system_health_monitoring;            // Enable system health monitoring
+    int system_health_logging_interval_seconds;      // System health logging interval in seconds
+
+    // ========================================================================
+    // ERROR RECOVERY TIMING
+    // ========================================================================
+
+    int emergency_trading_halt_duration_minutes;     // Emergency trading halt duration in minutes
+
+    // ========================================================================
+    // USER INTERFACE UPDATES
+    // ========================================================================
+
+    int countdown_display_refresh_interval_seconds;  // Countdown display refresh interval in seconds
+
+    // ========================================================================
+    // THREAD LIFECYCLE MANAGEMENT
+    // ========================================================================
+
+    int thread_initialization_delay_milliseconds;    // Thread initialization delay in milliseconds
+    int thread_startup_sequence_delay_milliseconds;  // Thread startup sequence delay in milliseconds
+
+    // ========================================================================
+    // ORDER MANAGEMENT TIMING
+    // ========================================================================
+
+    int order_cancellation_processing_delay_milliseconds;  // Order cancellation processing delay in milliseconds
+    int position_verification_timeout_milliseconds;        // Position verification timeout in milliseconds
+    int position_settlement_timeout_milliseconds;          // Position settlement timeout in milliseconds
+    int maximum_concurrent_order_cancellations;            // Maximum concurrent order cancellations
+
+    // ========================================================================
+    // TRADING SAFETY CONSTRAINTS
+    // ========================================================================
+
+    int minimum_interval_between_orders_seconds;     // Minimum time between orders to prevent wash trades
+    bool enable_wash_trade_prevention_mechanism;     // Enable/disable wash trade prevention mechanism
+
+    // ========================================================================
+    // PRECISION SETTINGS FOR METRICS
+    // ========================================================================
+
+    int cpu_usage_display_precision;                 // Decimal places for CPU usage percentages
+    int performance_rate_display_precision;          // Decimal places for rates (e.g., iterations/sec)
 };
 
 #endif // TIMING_CONFIG_HPP
