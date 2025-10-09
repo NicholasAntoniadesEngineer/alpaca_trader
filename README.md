@@ -68,8 +68,6 @@ tail -f trade_log.txt
 ---
 
 ## TODO:
-- Go through the API order client and then api files and there implementation in general. src/api/... split the api files out of there folders into one folder at all the same hierachachal level.
-- consolodate monitoring/system monitoing into the system folder and see where it fits in and if modifications are needed.
 
 - Add a generated 32-bit app key that expires regularly
 - Optimize order types and add more trading tools for decision engine

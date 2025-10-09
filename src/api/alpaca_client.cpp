@@ -117,24 +117,45 @@ std::string AlpacaClient::get_positions() const {
 }
 
 int AlpacaClient::get_position_quantity(const std::string& symbol) const {
+    if (symbol.empty()) {
+        return 0;
+    }
+
     std::string positions_response = get_positions();
-    
+    if (positions_response.empty()) {
+        return 0;
+    }
+
     try {
         json positions = json::parse(positions_response);
-        if (positions.is_array()) {
-            for (const auto& position : positions) {
-                if (position.contains("symbol") && position["symbol"] == symbol) {
-                    if (position.contains("qty")) {
-                        std::string qty_str = position["qty"].get<std::string>();
+        if (!positions.is_array() || positions.empty()) {
+            return 0;
+        }
+
+        for (const auto& position : positions) {
+            // Validate position object structure
+            if (!position.is_object() || !position.contains("symbol")) {
+                continue;
+            }
+
+            if (position["symbol"] == symbol && position.contains("qty")) {
+                try {
+                    std::string qty_str = position["qty"].get<std::string>();
+                    if (!qty_str.empty()) {
                         return std::stoi(qty_str);
                     }
+                } catch (const std::exception& e) {
+                    // Invalid quantity string, continue to next position
+                    continue;
                 }
             }
         }
+    } catch (const json::exception& e) {
+        // JSON parsing failed
     } catch (const std::exception& e) {
-        // Log error if needed
+        // Other parsing error
     }
-    
+
     return 0;
 }
 
@@ -193,7 +214,11 @@ void AlpacaClient::submit_market_order(const std::string& symbol, const std::str
             std::string held_for_orders = response_json.value("held_for_orders", "N/A");
             std::string related_orders = "";
             if (response_json.contains("related_orders") && response_json["related_orders"].is_array() && !response_json["related_orders"].empty()) {
-                related_orders = response_json["related_orders"][0].get<std::string>();
+                if (response_json["related_orders"][0].is_string()) {
+                    related_orders = response_json["related_orders"][0].get<std::string>();
+                } else {
+                    related_orders = response_json["related_orders"][0].dump();
+                }
             }
             
             // Use consolidated error logging

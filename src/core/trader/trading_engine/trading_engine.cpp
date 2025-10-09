@@ -4,6 +4,7 @@
 #include "core/logging/logging_macros.hpp"
 #include "core/system/system_monitor.hpp"
 #include <chrono>
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -27,8 +28,19 @@ bool TradingEngine::check_trading_permissions(const ProcessedData& data, double 
 }
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
+    // Input validation
+    if (config.strategy.symbol.empty()) {
+        TradingLogs::log_market_status(false, "Invalid configuration - symbol is empty");
+        return;
+    }
+
+    if (equity <= 0.0 || !std::isfinite(equity)) {
+        TradingLogs::log_market_status(false, "Invalid equity value");
+        return;
+    }
+
     TradingLogs::log_signal_analysis_start(config.strategy.symbol);
-    
+
     // Check if market is open before making any trading decisions
     if (!is_market_open()) {
         TradingLogs::log_market_status(false, "Market is closed - no trading decisions");
@@ -99,10 +111,23 @@ bool TradingEngine::validate_risk_conditions(const ProcessedData& data, double e
 }
 
 bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
-    if (market.curr.c <= 0.0 || market.atr <= 0.0) {
-        TradingLogs::log_market_status(false, "Invalid market data - price or ATR is zero");
+    // Validate that market data is not null/empty
+    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
+        TradingLogs::log_market_status(false, "Invalid market data - NaN or infinite values detected");
         return false;
     }
+
+    if (market.curr.c <= 0.0 || market.atr <= 0.0) {
+        TradingLogs::log_market_status(false, "Invalid market data - price or ATR is zero or negative");
+        return false;
+    }
+
+    // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
+    if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
+        TradingLogs::log_market_status(false, "Invalid market data - OHLC relationship violation");
+        return false;
+    }
+
     return true;
 }
 
@@ -131,10 +156,16 @@ bool TradingEngine::is_data_fresh() {
         TradingLogs::log_market_status(false, "Data sync not initialized - market_data_timestamp is null");
         return false;
     }
-    
+
     auto now = std::chrono::steady_clock::now();
     auto data_timestamp = data_sync.market_data_timestamp->load();
     auto max_age_seconds = config.timing.market_data_staleness_threshold_seconds;
+
+    // Additional null check before using the timestamp (defensive programming)
+    if (!data_sync.market_data_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync lost during execution - market_data_timestamp became null");
+        return false;
+    }
     
     if (data_timestamp == std::chrono::steady_clock::time_point::min()) {
         TradingLogs::log_market_status(false, "Market data timestamp is invalid - no data received yet");

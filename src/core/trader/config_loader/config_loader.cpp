@@ -155,6 +155,10 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.trader_decision_thread_polling_interval_seconds") cfg.timing.thread_trader_poll_interval_sec = std::stoi(value);
         else if (key == "timing.logging_thread_polling_interval_seconds") cfg.timing.thread_logging_poll_interval_sec = std::stoi(value);
 
+        // System Health Monitoring
+        else if (key == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(value);
+        else if (key == "timing.system_health_logging_interval_seconds") cfg.timing.system_health_logging_interval_seconds = std::stoi(value);
+
         // Precision Settings for Metrics
         else if (key == "timing.cpu_usage_display_precision") cfg.timing.cpu_usage_display_precision = std::stoi(value);
         else if (key == "timing.performance_rate_display_precision") cfg.timing.performance_rate_display_precision = std::stoi(value);
@@ -168,82 +172,6 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "logging.include_timestamp") cfg.logging.include_timestamp = to_bool(value);
         else if (key == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(value);
         else if (key == "logging.include_function_name") cfg.logging.include_function_name = to_bool(value);
-    }
-    return true;
-}
-
-int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
-    // Load configuration from separate logical files
-    std::vector<std::string> config_files = {
-        "config/api_endpoints_config.csv",
-        "config/strategy_config.csv",
-        "config/logging_config.csv",
-        "config/thread_config.csv",
-        "config/timing_config.csv"
-    };
-    
-    // Load each configuration file
-    for (const auto& config_path : config_files) {
-        if (!load_config_from_csv(config, config_path)) {
-            log_message("ERROR: Failed to load config CSV from " + config_path, "");
-            return 1;
-        }
-    }
-    
-    // Load thread configurations
-    std::string thread_config_path = std::string("config/thread_config.csv");
-    if (!load_thread_configs(config, thread_config_path)) {
-        log_message("ERROR: Failed to load thread configurations from " + thread_config_path, "");
-        return 1;
-    }
-    
-    return 0;
-}
-
-bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::string& error_message) {
-    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        error_message = "API credentials missing (provide via CONFIG_CSV)";
-        return false;
-    }
-    if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        error_message = "API URLs missing (provide via CONFIG_CSV)";
-        return false;
-    }
-    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        error_message = "API credentials missing (provide via api_config.csv)";
-        return false;
-    }
-    if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        error_message = "API URLs missing (provide via api_config.csv)";
-        return false;
-    }
-    if (config.strategy.atr_calculation_period < 2) {
-        error_message = "strategy.atr_calculation_period must be >= 2 (ATR calculation period)";
-        return false;
-    }
-    if (config.strategy.rr_ratio <= 0.0) {
-        error_message = "strategy.rr_ratio must be > 0 (risk/reward ratio)";
-        return false;
-    }
-    
-    // Validate take profit configuration
-    if (config.strategy.take_profit_percentage < 0.0 || config.strategy.take_profit_percentage > 1.0) {
-        error_message = "strategy.take_profit_percentage must be between 0.0 and 1.0 (0% to 100%)";
-        return false;
-    }
-    
-    // Protection: Ensure only one take profit method is enabled
-    if (config.strategy.use_take_profit_percentage && config.strategy.rr_ratio > 0.0) {
-        // If percentage is enabled, disable risk/reward ratio for take profit
-        // (risk/reward can still be used for stop loss calculation)
-    }
-    if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.enable_risk_based_position_multiplier) {
-        error_message = "Only one position sizing method can be enabled at a time";
-        return false;
-    }
-    if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_account_data_poll_interval_sec <= 0) {
-        error_message = "timing polling intervals must be > 0 (thread polling interval seconds)";
-        return false;
     }
     return true;
 }
@@ -275,7 +203,7 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
     while (std::getline(file, line)) {
         // Skip empty lines and comments
         if (line.empty() || line[0] == '#') continue;
-        
+
         std::istringstream ss(line);
         std::string key, value;
         if (!std::getline(ss, key, ',')) continue;
@@ -287,12 +215,12 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
             // Extract thread name and property
             size_t first_dot = key.find('.', 7);
             if (first_dot == std::string::npos) continue;
-            
+
             std::string thread_name = key.substr(7, first_dot - 7);
             std::string property = key.substr(first_dot + 1);
-            
+
             AlpacaTrader::Config::ThreadSettings* settings = get_thread_settings_for_loading(thread_name);
-            
+
             // Set the appropriate property
             if (property == "priority") {
                 settings->priority = parse_priority(value);
@@ -313,10 +241,121 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
     }
 
     file.close();
-    
+
     // Log successful loading of all discovered threads
     log_message("Thread configuration loaded successfully for " + std::to_string(cfg.thread_registry.thread_settings.size()) + " threads", "");
     return true;
 }
 
+int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
+    // Load configuration from separate logical files
+    std::vector<std::string> config_files = {
+        "config/api_endpoints_config.csv",
+        "config/strategy_config.csv",
+        "config/logging_config.csv",
+        "config/thread_config.csv",
+        "config/timing_config.csv"
+    };
+
+    // Load each configuration file
+    for (const auto& config_path : config_files) {
+        if (!load_config_from_csv(config, config_path)) {
+            log_message("ERROR: Failed to load config CSV from " + config_path, "");
+            return 1;
+        }
+    }
+
+    // Load thread configurations
+    std::string thread_config_path = std::string("config/thread_config.csv");
+    if (!load_thread_configs(config, thread_config_path)) {
+        log_message("ERROR: Failed to load thread configurations from " + thread_config_path, "");
+        return 1;
+    }
+
+    return 0;
+}
+
+bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::string& error_message) {
+    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
+        error_message = "API credentials missing (provide via CONFIG_CSV)";
+        return false;
+    }
+    if (config.api.base_url.empty() || config.api.data_url.empty()) {
+        error_message = "API URLs missing (provide via CONFIG_CSV)";
+        return false;
+    }
+    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
+        error_message = "API credentials missing (provide via api_config.csv)";
+        return false;
+    }
+    if (config.api.base_url.empty() || config.api.data_url.empty()) {
+        error_message = "API URLs missing (provide via api_config.csv)";
+        return false;
+    }
+    if (config.strategy.atr_calculation_period < 2) {
+        error_message = "strategy.atr_calculation_period must be >= 2 (ATR calculation period)";
+        return false;
+    }
+    if (config.strategy.rr_ratio <= 0.0) {
+        error_message = "strategy.rr_ratio must be > 0 (risk/reward ratio)";
+        return false;
+    }
+
+    // Validate risk percentage is reasonable
+    if (config.strategy.risk_percentage_per_trade <= 0.0 || config.strategy.risk_percentage_per_trade > 10.0) {
+        error_message = "strategy.risk_percentage_per_trade must be between 0.0 and 10.0 (0% to 1000%)";
+        return false;
+    }
+
+    // Validate account exposure percentage
+    if (config.strategy.max_account_exposure_percentage <= 0.0 || config.strategy.max_account_exposure_percentage > 100.0) {
+        error_message = "strategy.max_account_exposure_percentage must be between 0.0 and 100.0 (0% to 100%)";
+        return false;
+    }
+
+    // Validate take profit configuration
+    if (config.strategy.take_profit_percentage < 0.0 || config.strategy.take_profit_percentage > 1.0) {
+        error_message = "strategy.take_profit_percentage must be between 0.0 and 1.0 (0% to 100%)";
+        return false;
+    }
+
+    // Validate ATR calculation period
+    if (config.strategy.atr_calculation_period < 2 || config.strategy.atr_calculation_period > 100) {
+        error_message = "strategy.atr_calculation_period must be between 2 and 100";
+        return false;
+    }
+
+    // Validate minimum signal strength threshold
+    if (config.strategy.minimum_signal_strength_threshold < 0.0 || config.strategy.minimum_signal_strength_threshold > 1.0) {
+        error_message = "strategy.minimum_signal_strength_threshold must be between 0.0 and 1.0";
+        return false;
+    }
+
+    // Validate thread polling intervals are reasonable
+    if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_market_data_poll_interval_sec > 3600) {
+        error_message = "timing.thread_market_data_poll_interval_sec must be between 1 and 3600 seconds";
+        return false;
+    }
+
+    // Validate system health monitoring configuration
+    if (config.timing.system_health_logging_interval_seconds <= 0 || config.timing.system_health_logging_interval_seconds > 3600) {
+        error_message = "timing.system_health_logging_interval_seconds must be between 1 and 3600 seconds";
+        return false;
+    }
+    
+    // Protection: Ensure only one take profit method is enabled
+    if (config.strategy.use_take_profit_percentage && config.strategy.rr_ratio > 0.0) {
+        // If percentage is enabled, disable risk/reward ratio for take profit
+        // (risk/reward can still be used for stop loss calculation)
+    }
+    if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.enable_risk_based_position_multiplier) {
+        error_message = "Only one position sizing method can be enabled at a time";
+        return false;
+    }
+    if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_account_data_poll_interval_sec <= 0) {
+        error_message = "timing polling intervals must be > 0 (thread polling interval seconds)";
+        return false;
+    }
+    return true;
+}
 

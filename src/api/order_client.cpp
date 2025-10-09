@@ -66,7 +66,11 @@ void OrderClient::log_order_details_table(const nlohmann::json& order, const std
             std::string held_for_strategy = response_json.value("held_for_strategy", "N/A");
             std::string related_strategy = "";
             if (response_json.contains("related_strategy") && response_json["related_strategy"].is_array() && !response_json["related_strategy"].empty()) {
-                related_strategy = response_json["related_strategy"][0].get<std::string>();
+                if (response_json["related_strategy"][0].is_string()) {
+                    related_strategy = response_json["related_strategy"][0].get<std::string>();
+                } else {
+                    related_strategy = response_json["related_strategy"][0].dump();
+                }
             }
             
             // Use consolidated error logging
@@ -220,22 +224,40 @@ std::string OrderClient::get_positions() const {
 }
 
 int OrderClient::parse_position_quantity(const std::string& positions_response) const {
+    if (positions_response.empty() || strategy.symbol.empty()) {
+        return 0;
+    }
+
     try {
         json positions = json::parse(positions_response);
-        if (positions.is_array()) {
-            for (const auto& position : positions) {
-                if (position.contains("symbol") && position["symbol"] == strategy.symbol) {
-                    if (position.contains("qty")) {
-                        std::string qty_str = position["qty"].get<std::string>();
-                        int qty = std::stoi(qty_str);
-                        return qty;
+        if (!positions.is_array() || positions.empty()) {
+            return 0;
+        }
+
+        for (const auto& position : positions) {
+            // Validate position object structure
+            if (!position.is_object() || !position.contains("symbol")) {
+                continue;
+            }
+
+            if (position["symbol"] == strategy.symbol && position.contains("qty")) {
+                try {
+                    std::string qty_str = position["qty"].get<std::string>();
+                    if (!qty_str.empty()) {
+                        return std::stoi(qty_str);
                     }
+                } catch (const std::exception& e) {
+                    // Invalid quantity string, continue to next position
+                    continue;
                 }
             }
-        } else {
         }
+    } catch (const json::exception& e) {
+        // JSON parsing failed
     } catch (const std::exception& e) {
+        // Other parsing error
     }
+
     return 0;
 }
 

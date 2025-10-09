@@ -209,12 +209,12 @@ static void run_until_shutdown(SystemState& state) {
         while (state.running.load()) {
             try {
                 auto now = std::chrono::steady_clock::now();
-                
+
                 // Check if thread monitoring is enabled and it's time to log stats
-                if (state.config.strategy.health_check_interval_sec > 0 && 
+                if (state.config.timing.enable_system_health_monitoring &&
                     !state.thread_infos.empty() &&
-                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.strategy.health_check_interval_sec) {
-                    
+                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.timing.system_health_logging_interval_seconds) {
+
                     try {
                         AlpacaTrader::Core::ThreadSystem::Manager::log_thread_monitoring_stats(state.thread_infos, start_time);
                         last_monitor_time = now;
@@ -224,7 +224,8 @@ static void run_until_shutdown(SystemState& state) {
                         std::cerr << "Unknown error logging thread monitoring stats" << std::endl;
                     }
                 }
-                
+
+                // Sleep for 1 second to keep the main loop responsive, regardless of monitoring interval
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             } catch (const std::exception& e) {
                 // Log error and continue

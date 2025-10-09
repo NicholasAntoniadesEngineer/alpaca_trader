@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 using json = nlohmann::json;
 
@@ -69,7 +70,7 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
 
 std::string MarketDataClient::build_bars_url(const std::string& symbol, int limit, const std::string& feed) const {
     using namespace AlpacaTrader::Config;
-    
+
     std::string timeframe = (limit == 10) ? "1Day" : "1Min";
     std::string url = api.data_url + api.endpoints.market_data.bars;
     // Replace {symbol} placeholder
@@ -77,34 +78,67 @@ std::string MarketDataClient::build_bars_url(const std::string& symbol, int limi
     if (pos != std::string::npos) {
         url.replace(pos, 8, symbol);
     }
-    return url + "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) + 
+    return url + "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) +
            "&adjustment=raw&feed=" + feed;
 }
 
 std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& response) const {
     std::vector<Core::Bar> bars;
-    json j = json::parse(response);
-    
-    if (j.contains("bars") && j["bars"].is_array() && !j["bars"].empty()) {
-        for (json::const_iterator it = j["bars"].begin(); it != j["bars"].end(); ++it) {
-            const json& b = *it;
-            if (b.contains("o") && b.contains("h") && b.contains("l") && b.contains("c") && b.contains("v") &&
-                !b["o"].is_null() && !b["h"].is_null() && !b["l"].is_null() && !b["c"].is_null() && !b["v"].is_null()) {
-                Core::Bar bar;
-                bar.o = b["o"].get<double>();
-                bar.h = b["h"].get<double>();
-                bar.l = b["l"].get<double>();
-                bar.c = b["c"].get<double>();
-                bar.v = b["v"].get<long long>();
-                bars.push_back(bar);
-            }
-        }
-    } else if (j.contains("message")) {
-        log_message("     |   FAIL: " + j["message"].get<std::string>(), logging.log_file);
-    } else {
-        log_message("     |   FAIL: No bars in response", logging.log_file);
+
+    if (response.empty()) {
+        log_message("     |   FAIL: Empty response in parse_bars_response", logging.log_file);
+        return bars;
     }
-    
+
+    try {
+        json j = json::parse(response);
+
+        if (j.contains("bars") && j["bars"].is_array() && !j["bars"].empty()) {
+            const json& bars_array = j["bars"];
+            if (bars_array.empty()) {
+                log_message("     |   FAIL: Empty bars array", logging.log_file);
+                return bars;
+            }
+
+            for (json::const_iterator it = bars_array.begin(); it != bars_array.end(); ++it) {
+                const json& b = *it;
+
+                // Validate that all required fields exist and are not null
+                if (b.contains("o") && b.contains("h") && b.contains("l") && b.contains("c") && b.contains("v") &&
+                    !b["o"].is_null() && !b["h"].is_null() && !b["l"].is_null() && !b["c"].is_null() && !b["v"].is_null()) {
+
+                    try {
+                        Core::Bar bar;
+                        bar.o = b["o"].get<double>();
+                        bar.h = b["h"].get<double>();
+                        bar.l = b["l"].get<double>();
+                        bar.c = b["c"].get<double>();
+                        bar.v = b["v"].get<long long>();
+
+                        // Validate price data is reasonable (not NaN, not negative for prices)
+                        if (std::isfinite(bar.o) && std::isfinite(bar.h) && std::isfinite(bar.l) && std::isfinite(bar.c) &&
+                            bar.o >= 0.0 && bar.h >= 0.0 && bar.l >= 0.0 && bar.c >= 0.0 && bar.v >= 0) {
+                            bars.push_back(bar);
+                        } else {
+                            log_message("     |   WARNING: Invalid price/volume data in bar, skipping", logging.log_file);
+                        }
+                    } catch (const std::exception& e) {
+                        log_message("     |   WARNING: Failed to parse bar data: " + std::string(e.what()), logging.log_file);
+                    }
+                }
+            }
+        } else if (j.contains("message")) {
+            std::string message = j["message"].is_string() ? j["message"].get<std::string>() : "Unknown error";
+            log_message("     |   FAIL: " + message, logging.log_file);
+        } else {
+            log_message("     |   FAIL: No bars in response or invalid response format", logging.log_file);
+        }
+    } catch (const json::exception& e) {
+        log_message("     |   FAIL: JSON parse error: " + std::string(e.what()), logging.log_file);
+    } catch (const std::exception& e) {
+        log_message("     |   FAIL: Unexpected error in parse_bars_response: " + std::string(e.what()), logging.log_file);
+    }
+
     return bars;
 }
 

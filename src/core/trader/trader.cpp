@@ -91,11 +91,35 @@ void TradingOrchestrator::execute_trading_loop() {
 
 void TradingOrchestrator::countdown_to_next_cycle() {
     int sleep_secs = config.timing.thread_trader_poll_interval_sec;
-    
-    for (int s = sleep_secs; s > 0 && data_sync.running->load(); --s) {
-        TradingLogs::log_inline_next_loop(s);
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // Always sleep 1 second between countdown displays
+    int countdown_refresh_interval = config.timing.countdown_display_refresh_interval_seconds;
+
+    // If countdown refresh interval is 0 or greater than sleep_secs, just sleep once
+    if (countdown_refresh_interval <= 0 || countdown_refresh_interval >= sleep_secs) {
+        if (data_sync.running->load()) {
+            std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
+        }
+        return;
     }
+
+    // Calculate how many countdown updates we should show
+    int num_updates = sleep_secs / countdown_refresh_interval;
+    int remaining_secs = sleep_secs;
+
+    for (int i = 0; i < num_updates && data_sync.running->load(); ++i) {
+        int display_secs = std::min(remaining_secs, countdown_refresh_interval);
+        TradingLogs::log_inline_next_loop(display_secs);
+
+        if (data_sync.running->load()) {
+            std::this_thread::sleep_for(std::chrono::seconds(countdown_refresh_interval));
+            remaining_secs -= countdown_refresh_interval;
+        }
+    }
+
+    // Sleep any remaining time without countdown display
+    if (remaining_secs > 0 && data_sync.running->load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(remaining_secs));
+    }
+
     TradingLogs::end_inline_status();
 }
 

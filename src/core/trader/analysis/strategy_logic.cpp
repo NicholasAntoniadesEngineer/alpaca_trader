@@ -190,20 +190,26 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemCon
  */
 PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const SystemConfig& config, double buying_power) {
     PositionSizing sizing;
-    sizing.risk_amount = equity * config.strategy.risk_percentage_per_trade;
-    
+
     // Early return if price is invalid (zero or negative)
-    if (data.curr.c <= 0.0 || sizing.risk_amount <= 0.0) {
+    if (data.curr.c <= 0.0) {
         sizing.quantity = 0;
         sizing.risk_based_qty = 0;
         sizing.exposure_based_qty = 0;
         sizing.max_value_qty = 0;
         sizing.buying_power_qty = 0;
+        sizing.risk_amount = 0.0;
         return sizing;
     }
-    
+
     double stop_loss_distance = data.atr;
     double risk_per_share = stop_loss_distance;
+
+    // Calculate total risk budget (percentage of equity)
+    double total_risk_budget = equity * config.strategy.risk_percentage_per_trade;
+
+    // Set risk_amount to risk per share (ATR), not total budget
+    sizing.risk_amount = risk_per_share;
     
     // Check for fixed shares per trade first (if enabled)
     if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.fixed_share_quantity_per_trade > 0) {
@@ -233,17 +239,25 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
         sizing.size_multiplier *= config.strategy.risk_based_position_size_multiplier;
     }
     
-    int equity_based_qty = static_cast<int>(std::floor(
-        (sizing.risk_amount * sizing.size_multiplier) / risk_per_share
-    ));
-    
+    // Calculate equity-based quantity with safety checks
+    int equity_based_qty = 0;
+    if (risk_per_share > 0.0 && total_risk_budget > 0.0 && sizing.size_multiplier > 0.0) {
+        equity_based_qty = static_cast<int>(std::floor(
+            (total_risk_budget * sizing.size_multiplier) / risk_per_share
+        ));
+    }
+
     double max_total_exposure_value = equity * (config.strategy.max_account_exposure_percentage / 100.0);
     double current_exposure_value = std::abs(data.pos_details.current_value);
     double available_exposure_value = max_total_exposure_value - current_exposure_value;
-    
+
     available_exposure_value = std::max(0.0, available_exposure_value);
-    
-    int exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
+
+    // Calculate exposure-based quantity with safety checks
+    int exposure_based_qty = 0;
+    if (data.curr.c > 0.0 && available_exposure_value > 0.0) {
+        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
+    }
     
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     

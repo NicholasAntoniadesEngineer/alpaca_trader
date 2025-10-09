@@ -23,14 +23,14 @@ timing.post_market_close_buffer_minutes,5
 timing.market_close_grace_period_minutes,15
 
 # System Health Monitoring
-timing.enable_system_health_monitoring,false
-timing.system_health_logging_interval_seconds,30
+timing.enable_system_health_monitoring,true
+timing.system_health_logging_interval_seconds,5
 
 # Error Recovery Timing
 timing.emergency_trading_halt_duration_minutes,1
 
 # User Interface Updates
-timing.countdown_display_refresh_interval_seconds,1
+timing.countdown_display_refresh_interval_seconds,5
 
 # Thread Lifecycle Management
 timing.thread_initialization_delay_milliseconds,200
