@@ -1,0 +1,41 @@
+# ========================================================================
+# API AND ENDPOINTS CONFIGURATION
+# ========================================================================
+# API credentials, connection settings, and endpoint URLs
+# ========================================================================
+
+# ========================================================================
+# API CONNECTION SETTINGS
+# ========================================================================
+
+# API credentials and authentication
+api.api_key,PKFV5ODSQ2G2TA5DLIIT
+api.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
+
+# Base URLs for different API services
+api.trading_paper_url,https://paper-api.alpaca.markets
+api.trading_live_url,https://api.alpaca.markets
+api.market_data_url,https://data.alpaca.markets
+
+# Connection and request configuration
+api.retry_count,3
+api.timeout_seconds,30
+api.enable_ssl_verification,true
+api.rate_limit_delay_ms,100
+api.api_version,v2
+
+# ========================================================================
+# API ENDPOINTS
+# ========================================================================
+
+# Trading API Endpoints
+endpoints.trading.account,/v2/account
+endpoints.trading.positions,/v2/positions
+endpoints.trading.position_by_symbol,/v2/positions/{symbol}
+endpoints.trading.orders,/v2/orders
+endpoints.trading.orders_by_symbol,/v2/orders?status=open&symbols={symbol}
+endpoints.trading.clock,/v2/clock
+
+# Market Data API Endpoints
+endpoints.market_data.bars,/v2/stocks/{symbol}/bars
+endpoints.market_data.quotes_latest,/v2/stocks/{symbol}/quotes/latest

@@ -17,7 +17,7 @@ namespace API {
 
 // Order cancellation API methods
 std::vector<std::string> AlpacaClient::get_open_orders(const std::string& symbol) const {
-    HttpRequest get_orders_req(config.api.base_url + config.orders.orders_endpoint + "?status=" + config.orders.orders_status_filter, 
+    HttpRequest get_orders_req(config.api.base_url + config.strategy.orders_endpoint + "?status=" + config.strategy.orders_status_filter, 
                               config.api.api_key, config.api.api_secret, config.logging.log_file, 
                               config.api.retry_count, config.api.timeout_seconds, config.api.enable_ssl_verification, 0, "");
     std::string orders_response = http_get(get_orders_req);
@@ -42,7 +42,7 @@ std::vector<std::string> AlpacaClient::get_open_orders(const std::string& symbol
 
 // Get open orders as JSON string
 std::string AlpacaClient::get_open_orders_json(const std::string& symbol) const {
-    std::string url = config.api.base_url + config.orders.orders_endpoint;
+    std::string url = config.api.base_url + config.strategy.orders_endpoint;
     if (!symbol.empty()) {
         url += "?status=open&symbols=" + symbol;
     } else {
@@ -55,7 +55,7 @@ std::string AlpacaClient::get_open_orders_json(const std::string& symbol) const 
 }
 
 void AlpacaClient::cancel_order(const std::string& order_id) const {
-    HttpRequest cancel_req(config.api.base_url + config.orders.orders_endpoint + "/" + order_id, 
+    HttpRequest cancel_req(config.api.base_url + config.strategy.orders_endpoint + "/" + order_id, 
                           config.api.api_key, config.api.api_secret, config.logging.log_file, 
                           config.api.retry_count, config.api.timeout_seconds, config.api.enable_ssl_verification, 0, "");
     http_delete(cancel_req);
@@ -128,12 +128,12 @@ void AlpacaClient::submit_market_order(const std::string& symbol, const std::str
     order["symbol"] = symbol;
     order["qty"] = std::to_string(quantity);
     order["side"] = side;
-    order["type"] = config.orders.default_order_type;
-    order["time_in_force"] = config.orders.default_time_in_force;
+    order["type"] = config.strategy.default_order_type;
+    order["time_in_force"] = config.strategy.default_time_in_force;
     
     // Workaround for memory corruption: Use hardcoded values if config is corrupted
     std::string base_url = config.api.base_url;
-    std::string orders_endpoint = config.orders.orders_endpoint;
+    std::string orders_endpoint = config.strategy.orders_endpoint;
     
     // Check if config values are corrupted (contain error messages)
     if (base_url.find("Unknown fatal error") != std::string::npos || 

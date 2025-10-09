@@ -11,17 +11,14 @@ using AlpacaClientConfig = AlpacaTrader::Config::AlpacaClientConfig;
 class AlpacaBaseClient {
 protected:
     const AlpacaTrader::Config::ApiConfig& api;
-    const SessionConfig& session;
     const TimingConfig& timing;
     const LoggingConfig& logging;
-    const TargetConfig& target;
-    const OrdersConfig& orders;
+    const StrategyConfig& strategy;  // Now contains target, session, orders, risk, position, profit-taking
 
 public:
     explicit AlpacaBaseClient(const AlpacaClientConfig& cfg)
-        : api(cfg.api), session(cfg.session), timing(cfg.timing), 
-          logging(cfg.logging), target(cfg.target), orders(cfg.orders) {}
-    
+        : api(cfg.api), timing(cfg.timing), logging(cfg.logging), strategy(cfg.strategy) {}
+
     virtual ~AlpacaBaseClient() {}
 };
 

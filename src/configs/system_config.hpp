@@ -2,13 +2,9 @@
 #define SYSTEM_CONFIG_HPP
 
 #include "strategy_config.hpp"
-#include "risk_config.hpp"
 #include "timing_config.hpp"
 #include "logging_config.hpp"
-#include "target_config.hpp"
 #include "api_config.hpp"
-#include "session_config.hpp"
-#include "orders_config.hpp"
 #include "core/threads/thread_register.hpp"
 
 namespace AlpacaTrader {
@@ -16,18 +12,15 @@ namespace Config {
 
 /**
  * Main trading system configuration.
- * Aggregates all subsystem configurations into a single structure.
+ * Strategy config includes: strategy, risk, position, profit-taking, orders, target, session, monitoring, error handling
+ * Timing config includes: timing and system health monitoring
  */
 struct SystemConfig {
-    StrategyConfig strategy;
-    RiskConfig risk;
-    TimingConfig timing;
-    LoggingConfig logging;
-    TargetConfig target;
-    ApiConfig api;
-    SessionConfig session;
-    OrdersConfig orders;
-    ThreadConfigRegistry thread_registry;
+    StrategyConfig strategy;           // All strategy-related settings (strategy, risk, position, profit-taking, orders, target, session, monitoring, error handling)
+    TimingConfig timing;               // All timing and polling intervals
+    LoggingConfig logging;             // Logging configuration
+    ApiConfig api;                     // API credentials and connection settings
+    ThreadConfigRegistry thread_registry; // Thread priorities and CPU affinity
 };
 
 } // namespace Config

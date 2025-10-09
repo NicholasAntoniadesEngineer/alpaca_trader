@@ -27,11 +27,11 @@ std::string TradingLogs::format_percentage(double percentage) {
     return oss.str();
 }
 
-void TradingLogs::log_startup(const TraderConfig& config, double initial_equity) {
+void TradingLogs::log_startup(const SystemConfig& config, double initial_equity) {
     log_trader_startup_table(
-        config.target.symbol,
+        config.strategy.symbol,
         initial_equity,
-        config.risk.risk_per_trade,
+        config.strategy.risk_percentage_per_trade,
         config.strategy.rr_ratio,
         config.timing.thread_market_data_poll_interval_sec
     );
@@ -58,9 +58,9 @@ void TradingLogs::log_market_status(bool is_open, const std::string& reason) {
     }
 }
 
-void TradingLogs::log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const TraderConfig& config) {
+void TradingLogs::log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config) {
     LOG_THREAD_TRADING_CONDITIONS_HEADER();
-    log_trading_conditions_table(daily_pnl * 100.0, config.risk.daily_max_loss * 100.0, config.risk.daily_profit_target * 100.0, exposure_pct, config.risk.max_exposure_pct, allowed);
+    log_trading_conditions_table(daily_pnl * 100.0, config.strategy.max_daily_loss_percentage * 100.0, config.strategy.daily_profit_target_percentage * 100.0, exposure_pct, config.strategy.max_account_exposure_percentage, allowed);
 }
 
 void TradingLogs::log_equity_update(double current_equity) {
@@ -244,11 +244,11 @@ void TradingLogs::log_candle_and_signals(const ProcessedData& data, const Signal
     log_signals_table(signals.buy, signals.sell);
 }
 
-void TradingLogs::log_filters(const FilterResult& filters, const TraderConfig& config, const ProcessedData& data) {
+void TradingLogs::log_filters(const FilterResult& filters, const SystemConfig& config, const ProcessedData& data) {
     // Use absolute ATR threshold if enabled, otherwise use relative threshold
     double atr_threshold = config.strategy.use_absolute_atr_threshold ? 
-                          config.strategy.atr_absolute_threshold : 
-                          config.strategy.atr_multiplier_entry;
+                          config.strategy.atr_absolute_minimum_threshold : 
+                          config.strategy.entry_signal_atr_multiplier;
     
     // For absolute threshold, pass the actual ATR value instead of ratio
     double atr_value = config.strategy.use_absolute_atr_threshold ? 
@@ -256,7 +256,7 @@ void TradingLogs::log_filters(const FilterResult& filters, const TraderConfig& c
                       filters.atr_ratio;
     
     log_filters_table(filters.atr_pass, atr_value, atr_threshold, 
-                     filters.vol_pass, filters.vol_ratio, config.strategy.volume_multiplier, 
+                     filters.vol_pass, filters.vol_ratio, config.strategy.entry_signal_volume_multiplier, 
                      filters.doji_pass);
 }
 
@@ -475,13 +475,8 @@ void TradingLogs::log_data_source_info_table(const std::string& source, double p
 // Market Data Fetching Tables
 // ========================================================================
 
-void TradingLogs::log_market_data_fetch_table(const std::string& /* symbol */) {
-    // No initial table needed - just show the result when done
-}
 
-void TradingLogs::log_market_data_attempt_table(const std::string& /* description */) {
-    // Simplified - no separate attempt logging
-}
+
 
 void TradingLogs::log_market_data_result_table(const std::string& description, bool success, size_t bar_count) {
     if (success) {
@@ -631,25 +626,25 @@ void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemCon
     TABLE_SEPARATOR_48();
     
     // Risk Management
-    TABLE_ROW_48("Max Exposure", std::to_string((int)config.risk.max_exposure_pct) + "%");
-    TABLE_ROW_48("BP Usage Factor", std::to_string(config.risk.buying_power_usage_factor).substr(0,4));
-    
-    std::string daily_loss = (config.risk.daily_max_loss == -1) ? "UNLIMITED" : std::to_string(config.risk.daily_max_loss) + "%";
+    TABLE_ROW_48("Max Exposure", std::to_string((int)config.strategy.max_account_exposure_percentage) + "%");
+    TABLE_ROW_48("BP Usage Factor", std::to_string(config.strategy.buying_power_utilization_percentage).substr(0,4));
+
+    std::string daily_loss = (config.strategy.max_daily_loss_percentage == -1) ? "UNLIMITED" : std::to_string(config.strategy.max_daily_loss_percentage) + "%";
     TABLE_ROW_48("Daily Max Loss", daily_loss);
-    TABLE_ROW_48("Profit Target", std::to_string(config.risk.daily_profit_target) + "%");
+    TABLE_ROW_48("Profit Target", std::to_string(config.strategy.daily_profit_target_percentage) + "%");
     
     TABLE_SEPARATOR_48();
     
     // Timing Configuration
     TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.thread_account_data_poll_interval_sec) + "s");
-    TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.bar_fetch_minutes) + "m");
+    TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.historical_data_fetch_period_minutes) + "m");
     TABLE_ROW_48("Market Status Check", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
-    TABLE_ROW_48("Thread Monitor Log", std::to_string(config.timing.monitoring_interval_sec) + "s");
+    TABLE_ROW_48("Thread Monitor Log", std::to_string(config.strategy.health_check_interval_sec) + "s");
     
     TABLE_SEPARATOR_48();
-    TABLE_ROW_48("Wash Trade Prevention", config.timing.enable_wash_trade_prevention ? "Enabled" : "Disabled");
-    if (config.timing.enable_wash_trade_prevention) {
-        TABLE_ROW_48("Min Order Interval", std::to_string(config.timing.min_order_interval_sec) + " seconds");
+    TABLE_ROW_48("Wash Trade Prevention", config.timing.enable_wash_trade_prevention_mechanism ? "Enabled" : "Disabled");
+    if (config.timing.enable_wash_trade_prevention_mechanism) {
+        TABLE_ROW_48("Min Order Interval", std::to_string(config.timing.minimum_interval_between_orders_seconds) + " seconds");
     }
     
     TABLE_FOOTER_48();
@@ -659,18 +654,18 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     TABLE_HEADER_48("Strategy Config", "Trading Strategy Settings");
     
     // Signal Detection
-    std::string buy_equal = config.strategy.buy_allow_equal_close ? "YES" : "NO";
-    std::string buy_higher_high = config.strategy.buy_require_higher_high ? "YES" : "NO";
-    std::string buy_higher_low = config.strategy.buy_require_higher_low ? "YES" : "NO";
+    std::string buy_equal = config.strategy.buy_signals_allow_equal_close ? "YES" : "NO";
+    std::string buy_higher_high = config.strategy.buy_signals_require_higher_high ? "YES" : "NO";
+    std::string buy_higher_low = config.strategy.buy_signals_require_higher_low ? "YES" : "NO";
     TABLE_ROW_48("Buy Equal Close", buy_equal);
     TABLE_ROW_48("Buy Higher High", buy_higher_high);
     TABLE_ROW_48("Buy Higher Low", buy_higher_low);
     
     TABLE_SEPARATOR_48();
     
-    std::string sell_equal = config.strategy.sell_allow_equal_close ? "YES" : "NO";
-    std::string sell_lower_low = config.strategy.sell_require_lower_low ? "YES" : "NO";
-    std::string sell_lower_high = config.strategy.sell_require_lower_high ? "YES" : "NO";
+    std::string sell_equal = config.strategy.sell_signals_allow_equal_close ? "YES" : "NO";
+    std::string sell_lower_low = config.strategy.sell_signals_require_lower_low ? "YES" : "NO";
+    std::string sell_lower_high = config.strategy.sell_signals_require_lower_high ? "YES" : "NO";
     TABLE_ROW_48("Sell Equal Close", sell_equal);
     TABLE_ROW_48("Sell Lower Low", sell_lower_low);
     TABLE_ROW_48("Sell Lower High", sell_lower_high);
@@ -678,17 +673,17 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     TABLE_SEPARATOR_48();
     
     // Filter Thresholds
-    TABLE_ROW_48("ATR Multiplier", std::to_string(config.strategy.atr_multiplier_entry).substr(0,4));
-    TABLE_ROW_48("Volume Multiplier", std::to_string(config.strategy.volume_multiplier).substr(0,4));
-    TABLE_ROW_48("ATR Period", std::to_string(config.strategy.atr_period));
-    TABLE_ROW_48("Avg ATR Multi", std::to_string(config.strategy.avg_atr_multiplier).substr(0,4));
+    TABLE_ROW_48("ATR Multiplier", std::to_string(config.strategy.entry_signal_atr_multiplier).substr(0,4));
+    TABLE_ROW_48("Volume Multiplier", std::to_string(config.strategy.entry_signal_volume_multiplier).substr(0,4));
+    TABLE_ROW_48("ATR Period", std::to_string(config.strategy.atr_calculation_period));
+    TABLE_ROW_48("Avg ATR Multi", std::to_string(config.strategy.average_atr_comparison_multiplier).substr(0,4));
     
     TABLE_SEPARATOR_48();
     
     // Risk & Position Management
-    std::string risk_pct = std::to_string(config.risk.risk_per_trade * 100.0).substr(0,4) + "%";
+    std::string risk_pct = std::to_string(config.strategy.risk_percentage_per_trade * 100.0).substr(0,4) + "%";
     TABLE_ROW_48("Risk per Trade", risk_pct);
-    TABLE_ROW_48("Max Trade Value", "$" + std::to_string((int)config.risk.max_value_per_trade));
+    TABLE_ROW_48("Max Trade Value", "$" + std::to_string((int)config.strategy.maximum_dollar_value_per_trade));
     TABLE_ROW_48("RR Ratio", "1:" + std::to_string(config.strategy.rr_ratio).substr(0,4));
     
     // Take Profit Configuration
@@ -700,25 +695,25 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     }
     
     // Position Scaling Configuration
-    if (config.strategy.enable_fixed_shares) {
-        TABLE_ROW_48("Fixed Shares", "Enabled (" + std::to_string(config.strategy.fixed_shares_per_trade) + " shares)");
+    if (config.strategy.enable_fixed_share_quantity_per_trade) {
+        TABLE_ROW_48("Fixed Shares", "Enabled (" + std::to_string(config.strategy.fixed_share_quantity_per_trade) + " shares)");
     } else {
         TABLE_ROW_48("Fixed Shares", "Disabled");
     }
     
-    if (config.strategy.enable_position_multiplier) {
-        std::string multiplier_str = (config.strategy.position_size_multiplier == 1.0) ? 
-            "1.0x (Normal)" : std::to_string(config.strategy.position_size_multiplier).substr(0,4) + "x";
+    if (config.strategy.enable_risk_based_position_multiplier) {
+        std::string multiplier_str = (config.strategy.risk_based_position_size_multiplier == 1.0) ? 
+            "1.0x (Normal)" : std::to_string(config.strategy.risk_based_position_size_multiplier).substr(0,4) + "x";
         TABLE_ROW_48("Position Multiplier", "Enabled (" + multiplier_str + ")");
     } else {
         TABLE_ROW_48("Position Multiplier", "Disabled");
     }
     
-    std::string multi_pos = config.risk.allow_multiple_positions ? "YES" : "NO";
+    std::string multi_pos = config.strategy.allow_multiple_positions_per_symbol ? "YES" : "NO";
     TABLE_ROW_48("Multi Positions", multi_pos);
-    TABLE_ROW_48("Max Layers", std::to_string(config.risk.max_layers));
-    
-    std::string close_reverse = config.risk.close_on_reverse ? "YES" : "NO";
+    TABLE_ROW_48("Max Layers", std::to_string(config.strategy.maximum_position_layers));
+
+    std::string close_reverse = config.strategy.close_positions_on_signal_reversal ? "YES" : "NO";
     TABLE_ROW_48("Close on Reverse", close_reverse);
     
     TABLE_FOOTER_48();
@@ -1030,7 +1025,7 @@ void TradingLogs::log_order_execution_header() {
 }
 
 // Enhanced signal analysis logging
-void TradingLogs::log_signal_analysis_detailed(const ProcessedData& data, const SignalDecision& signals, const TraderConfig& config) {
+void TradingLogs::log_signal_analysis_detailed(const ProcessedData& data, const SignalDecision& signals, const SystemConfig& config) {
     LOG_THREAD_SECTION_HEADER("DETAILED SIGNAL ANALYSIS");
     
     // Log momentum analysis
@@ -1042,7 +1037,7 @@ void TradingLogs::log_signal_analysis_detailed(const ProcessedData& data, const 
     LOG_THREAD_SECTION_FOOTER();
 }
 
-void TradingLogs::log_momentum_analysis(const ProcessedData& data, const TraderConfig& config) {
+void TradingLogs::log_momentum_analysis(const ProcessedData& data, const SystemConfig& config) {
     // Calculate momentum indicators
     double price_change = data.curr.c - data.prev.c;
     double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * 100.0 : 0.0;
@@ -1059,30 +1054,30 @@ void TradingLogs::log_momentum_analysis(const ProcessedData& data, const TraderC
     std::string price_debug = "Prev: $" + std::to_string(data.prev.c).substr(0,6) + " | Curr: $" + std::to_string(data.curr.c).substr(0,6);
     TABLE_ROW_48("Price Values", price_debug);
     
-    std::string price_status = (price_change_pct > config.strategy.min_price_change_pct) ? "PASS" : "FAIL";
-    std::string price_detail = "($" + std::to_string(price_change_pct).substr(0,6) + "% > " + std::to_string(config.strategy.min_price_change_pct).substr(0,6) + "%)";
+    std::string price_status = (price_change_pct > config.strategy.minimum_price_change_percentage_for_momentum) ? "PASS" : "FAIL";
+    std::string price_detail = "($" + std::to_string(price_change_pct).substr(0,6) + "% > " + std::to_string(config.strategy.minimum_price_change_percentage_for_momentum).substr(0,6) + "%)";
     TABLE_ROW_48("Price Change", price_status + " " + price_detail);
     
-    std::string volume_status = (volume_change_pct > config.strategy.min_volume_change_pct) ? "PASS" : "FAIL";
-    std::string volume_detail = "(" + std::to_string(volume_change_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_volume_change_pct).substr(0,4) + "%)";
+    std::string volume_status = (volume_change_pct > config.strategy.minimum_volume_increase_percentage_for_buy_signals) ? "PASS" : "FAIL";
+    std::string volume_detail = "(" + std::to_string(volume_change_pct).substr(0,4) + "% > " + std::to_string(config.strategy.minimum_volume_increase_percentage_for_buy_signals).substr(0,4) + "%)";
     TABLE_ROW_48("Volume Change", volume_status + " " + volume_detail);
     
-    std::string volatility_status = (volatility_pct > config.strategy.min_volatility_pct) ? "PASS" : "FAIL";
-    std::string volatility_detail = "(" + std::to_string(volatility_pct).substr(0,4) + "% > " + std::to_string(config.strategy.min_volatility_pct).substr(0,4) + "%)";
+    std::string volatility_status = (volatility_pct > config.strategy.minimum_volatility_percentage_for_buy_signals) ? "PASS" : "FAIL";
+    std::string volatility_detail = "(" + std::to_string(volatility_pct).substr(0,4) + "% > " + std::to_string(config.strategy.minimum_volatility_percentage_for_buy_signals).substr(0,4) + "%)";
     TABLE_ROW_48("Volatility", volatility_status + " " + volatility_detail);
     
     TABLE_FOOTER_48();
 }
 
-void TradingLogs::log_signal_strength_breakdown(const SignalDecision& signals, const TraderConfig& config) {
+void TradingLogs::log_signal_strength_breakdown(const SignalDecision& signals, const SystemConfig& config) {
     TABLE_HEADER_48("Signal Strength Analysis", "Decision Breakdown");
     
     std::string signal_status = signals.buy ? "BUY" : (signals.sell ? "SELL" : "NONE");
-    std::string strength_detail = "(" + std::to_string(signals.signal_strength).substr(0,4) + " >= " + std::to_string(config.strategy.signal_strength_threshold).substr(0,4) + ")";
+    std::string strength_detail = "(" + std::to_string(signals.signal_strength).substr(0,4) + " >= " + std::to_string(config.strategy.minimum_signal_strength_threshold).substr(0,4) + ")";
     TABLE_ROW_48("Signal Type", signal_status + " " + strength_detail);
     
     TABLE_ROW_48("Signal Strength", std::to_string(signals.signal_strength).substr(0,4) + "/1.0");
-    TABLE_ROW_48("Threshold", std::to_string(config.strategy.signal_strength_threshold).substr(0,4) + "/1.0");
+    TABLE_ROW_48("Threshold", std::to_string(config.strategy.minimum_signal_strength_threshold).substr(0,4) + "/1.0");
     TABLE_ROW_48("Reason", signals.signal_reason.empty() ? "No analysis" : signals.signal_reason);
     
     TABLE_FOOTER_48();

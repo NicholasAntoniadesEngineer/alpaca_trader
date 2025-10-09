@@ -3,7 +3,7 @@
 #include "async_logger.hpp"
 #include "logging_macros.hpp"
 #include "configs/timing_config.hpp"
-#include "configs/api_endpoints.hpp"
+#include "configs/api_config.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/trader/config_loader/config_loader.hpp"
 #include <iomanip>
@@ -42,7 +42,7 @@ void StartupLogs::log_api_endpoints_table(const AlpacaTrader::Config::SystemConf
     log_message("├─────────────────────────────────────────────────────────────────────────────┤", "");
     log_message("│ GET " + config.api.endpoints.trading.account + "                       │ Account info (equity, buying power) │", "");
     log_message("│ GET " + config.api.endpoints.trading.positions + "                     │ All positions                       │", "");
-    log_message("│ POST " + config.orders.orders_endpoint + "                       │ Place orders (market, bracket)      │", "");
+    log_message("│ POST " + config.api.endpoints.trading.orders + "                       │ Place orders (market, bracket)      │", "");
     log_message("│ GET " + config.api.endpoints.trading.clock + "                         │ Market hours & status               │", "");
     log_message("│ GET " + config.api.endpoints.market_data.bars + "          │ Historical market data              │", "");
     log_message("│ GET " + config.api.endpoints.market_data.quotes_latest + " │ Real-time quotes                    │", "");
@@ -97,13 +97,13 @@ void StartupLogs::log_current_positions(const AccountManager& account_manager) {
 
 void StartupLogs::log_data_source_configuration(const AlpacaTrader::Config::SystemConfig& config) {
     std::string account_type = (config.api.base_url.find("paper") != std::string::npos) ? "PAPER TRADING" : "LIVE TRADING";
-    TradingLogs::log_data_source_table(config.target.symbol, account_type);
+    TradingLogs::log_data_source_table(config.strategy.symbol, account_type);
 }
 
-void StartupLogs::log_thread_system_startup(const TimingConfig& timing_config) {
+void StartupLogs::log_thread_system_startup(const SystemConfig& config) {
     TradingLogs::log_thread_system_table(
-        timing_config.thread_priorities.enable_thread_priorities,
-        timing_config.thread_priorities.enable_cpu_affinity
+        true,  // Thread priorities are always enabled
+        config.thread_registry.get_thread_settings("main").use_cpu_affinity
     );
 }
 

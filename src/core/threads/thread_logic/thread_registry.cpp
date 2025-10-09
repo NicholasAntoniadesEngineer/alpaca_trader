@@ -10,7 +10,7 @@ namespace Core {
 AlpacaTrader::Config::ThreadSettings ThreadRegistry::get_thread_config(Type type, const AlpacaTrader::Config::SystemConfig& system_config) {
     // Handle MAIN thread separately as it's not in the registry
     if (type == AlpacaTrader::Config::ThreadType::MAIN) {
-        return system_config.thread_registry.main;
+        return system_config.thread_registry.get_thread_settings("main");
     }
     
     // Find the thread in the registry

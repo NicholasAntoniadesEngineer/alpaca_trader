@@ -16,8 +16,8 @@ namespace SystemManager {
 
 // System lifecycle management
 SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
-void run(SystemState& system_state, SystemThreads& handles);
-void shutdown(SystemState& system_state, SystemThreads& handles, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
+void run(SystemState& system_state);
+void shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger);
 
 
 } // namespace SystemManager

@@ -35,8 +35,7 @@ using namespace AlpacaTrader::Core::ThreadSystem;
 // Global signal handling
 static SystemState* g_system_state = nullptr;
 
-void signal_handler(int signal) {
-    (void)signal; // Suppress unused parameter warning
+void signal_handler(int /* signal */) {
     if (g_system_state) {
         g_system_state->running.store(false);
         g_system_state->cv.notify_all();
@@ -76,14 +75,14 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
     StartupLogs::log_strategy_configuration(config);
     
     // Log thread system startup
-    StartupLogs::log_thread_system_startup(config.timing);
+    StartupLogs::log_thread_system_startup(config);
 }
 
 SystemConfigurations create_trading_configurations(const SystemState& state) {
     return SystemConfigurations{
-        AlpacaClientConfig{state.config.api, state.config.session, state.config.logging, state.config.target, state.config.timing, state.config.orders, state.config.strategy},
-        AccountManagerConfig{state.config.api, state.config.logging, state.config.target, state.config.timing},
-        MarketDataThreadConfig{state.config.strategy, state.config.timing, state.config.target},
+        AlpacaClientConfig{state.config.api, state.config.logging, state.config.timing, state.config.strategy},
+        AccountManagerConfig{state.config.api, state.config.logging, state.config.timing, state.config.strategy},
+        MarketDataThreadConfig{state.config.strategy, state.config.timing},
         AccountDataThreadConfig{state.config.timing}
     };
 }
@@ -195,7 +194,7 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     return handles;
 }
 
-static void run_until_shutdown(SystemState& state, SystemThreads& /*handles*/) {
+static void run_until_shutdown(SystemState& state) {
     try {
         // Ensure running flag is properly initialized
         if (!state.running.load()) {
@@ -211,9 +210,9 @@ static void run_until_shutdown(SystemState& state, SystemThreads& /*handles*/) {
                 auto now = std::chrono::steady_clock::now();
                 
                 // Check if thread monitoring is enabled and it's time to log stats
-                if (state.config.timing.enable_thread_monitoring && 
+                if (state.config.strategy.health_check_interval_sec > 0 && 
                     !state.thread_infos.empty() &&
-                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.timing.monitoring_interval_sec) {
+                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.strategy.health_check_interval_sec) {
                     
                     try {
                         AlpacaTrader::Core::ThreadSystem::Manager::log_thread_monitoring_stats(state.thread_infos, start_time);
@@ -241,7 +240,7 @@ static void run_until_shutdown(SystemState& state, SystemThreads& /*handles*/) {
     }
 }
 
-void SystemManager::shutdown(SystemState& system_state, SystemThreads& /*handles*/, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
     
@@ -255,6 +254,6 @@ void SystemManager::shutdown(SystemState& system_state, SystemThreads& /*handles
 // Thread management functions moved to thread_registry.hpp/.cpp
 // This provides a single source of truth for all thread definitions
 
-void SystemManager::run(SystemState& system_state, SystemThreads& handles) {
-    run_until_shutdown(system_state, handles);
+void SystemManager::run(SystemState& system_state) {
+    run_until_shutdown(system_state);
 }

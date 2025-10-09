@@ -1,7 +1,7 @@
 #ifndef MARKET_DATA_FETCHER_HPP
 #define MARKET_DATA_FETCHER_HPP
 
-#include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
 #include "data_structures.hpp"
 #include "data_sync_structures.hpp"
 #include "api/alpaca_client.hpp"
@@ -15,13 +15,15 @@
 #include <vector>
 #include <chrono>
 
+using AlpacaTrader::Config::SystemConfig;
+
 namespace AlpacaTrader {
 namespace Core {
 
 
 class MarketDataFetcher {
 public:
-    MarketDataFetcher(API::AlpacaClient& client, AccountManager& account_manager, const TraderConfig& config);
+    MarketDataFetcher(API::AlpacaClient& client, AccountManager& account_manager, const SystemConfig& config);
     
     // Data fetching methods
     ProcessedData fetch_and_process_data();
@@ -35,7 +37,7 @@ private:
     // Core dependencies
     API::AlpacaClient& client;
     AccountManager& account_manager;
-    const TraderConfig& config;
+    const SystemConfig& config;
     
     // Data synchronization state (set by TradingOrchestrator)
     MarketDataSyncState* sync_state_ptr = nullptr;

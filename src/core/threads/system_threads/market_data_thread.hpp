@@ -3,7 +3,6 @@
 
 #include "configs/strategy_config.hpp"
 #include "configs/timing_config.hpp"
-#include "configs/target_config.hpp"
 #include "core/threads/thread_register.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/trader/data/data_structures.hpp"
@@ -19,9 +18,8 @@ namespace Threads {
 using MarketDataThreadConfig = AlpacaTrader::Config::MarketDataThreadConfig;
 
 struct MarketDataThread {
-    const StrategyConfig& strategy;
+    const StrategyConfig& strategy;  // Now contains target settings
     const TimingConfig& timing;
-    const TargetConfig& target;
     AlpacaTrader::API::AlpacaClient& client;
     std::mutex& state_mtx;
     std::condition_variable& data_cv;
@@ -42,7 +40,7 @@ struct MarketDataThread {
                    std::atomic<bool>& running_flag,
                    std::atomic<std::chrono::steady_clock::time_point>& timestamp,
                    std::atomic<bool>& fresh_flag)
-        : strategy(cfg.strategy), timing(cfg.timing), target(cfg.target), client(cli),
+        : strategy(cfg.strategy), timing(cfg.timing), client(cli),
           state_mtx(mtx), data_cv(cv), market_snapshot(snapshot), has_market(has_market_flag),
           running(running_flag), market_data_timestamp(timestamp), market_data_fresh(fresh_flag) {}
 

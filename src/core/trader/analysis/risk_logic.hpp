@@ -1,7 +1,9 @@
 #ifndef RISK_LOGIC_HPP
 #define RISK_LOGIC_HPP
 
-#include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
+
+using AlpacaTrader::Config::SystemConfig;
 
 namespace AlpacaTrader {
 namespace Core {
@@ -21,7 +23,7 @@ struct TradeGateResult {
     double daily_pnl;
 };
 
-TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const TraderConfig& config);
+TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const SystemConfig& config);
 
 } // namespace RiskLogic
 } // namespace Core

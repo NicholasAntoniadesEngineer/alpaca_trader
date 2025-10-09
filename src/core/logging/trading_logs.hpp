@@ -1,12 +1,13 @@
 #ifndef TRADING_LOGS_HPP
 #define TRADING_LOGS_HPP
 
-#include "configs/trader_config.hpp"
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
 #include "logging_macros.hpp"
 #include <vector>
+
+using AlpacaTrader::Config::SystemConfig;
 #include <tuple>
 #include <string>
 
@@ -20,7 +21,7 @@ namespace Logging {
 class TradingLogs {
 public:
     // Application lifecycle
-    static void log_startup(const TraderConfig& config, double initial_equity);
+    static void log_startup(const SystemConfig& config, double initial_equity);
     static void log_shutdown(unsigned long total_loops, double final_equity);
     
     // Trading loop events
@@ -28,13 +29,13 @@ public:
     
     // Detailed trading analysis  
     static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
-    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const TraderConfig& config, const AlpacaTrader::Core::ProcessedData& data);
+    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const SystemConfig& config, const AlpacaTrader::Core::ProcessedData& data);
     static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const std::string& symbol = "");
     
     // Enhanced signal analysis logging
-    static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const TraderConfig& config);
-    static void log_momentum_analysis(const AlpacaTrader::Core::ProcessedData& data, const TraderConfig& config);
-    static void log_signal_strength_breakdown(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const TraderConfig& config);
+    static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const SystemConfig& config);
+    static void log_momentum_analysis(const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config);
+    static void log_signal_strength_breakdown(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const SystemConfig& config);
     static void log_signals_table_enhanced(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_filters_not_met_table(double risk_amount, int quantity);
@@ -47,7 +48,7 @@ public:
     
     // Market conditions
     static void log_market_status(bool is_open, const std::string& reason = "");
-    static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const TraderConfig& config);
+    static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config);
     static void log_equity_update(double current_equity);
     
     // Signal processing
@@ -140,8 +141,7 @@ public:
     static void log_strategy_config_table(const AlpacaTrader::Config::SystemConfig& config);
     
     // Market data fetching tables
-    static void log_market_data_fetch_table(const std::string& symbol);
-    static void log_market_data_attempt_table(const std::string& description);
+    static void log_market_data_fetch_table();
     static void log_market_data_result_table(const std::string& description, bool success, size_t bar_count);
     
     // Performance metrics

@@ -12,7 +12,7 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
-TradingOrchestrator::TradingOrchestrator(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
+TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr),
       trading_engine(cfg, client_ref, account_mgr),
       risk_manager(cfg),
@@ -49,7 +49,7 @@ void TradingOrchestrator::execute_trading_loop() {
 
                 // Display trading loop header and increment counter
                 runtime.loop_counter.fetch_add(1);
-                std::string symbol = config.target.symbol.empty() ? "UNKNOWN" : config.target.symbol;
+                std::string symbol = config.strategy.symbol.empty() ? "UNKNOWN" : config.strategy.symbol;
                 TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
 
                 // Validate trading permissions

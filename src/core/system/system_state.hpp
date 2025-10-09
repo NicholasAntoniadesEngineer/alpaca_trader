@@ -3,7 +3,7 @@
 
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
 #include "core/logging/thread_logs.hpp"
 #include "core/system/system_modules.hpp"
 #include <atomic>
@@ -54,30 +54,27 @@ struct SystemState {
     // CONFIGURATION AND MODULES
     // =========================================================================
     AlpacaTrader::Config::SystemConfig config;                    // Complete system configuration
-    TraderConfig trader_view;               // Trader-specific configuration view
+    const SystemConfig& trader_view = config;  // Trader-specific configuration view
     std::unique_ptr<SystemModules> trading_modules;  // All system modules
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
 
     // =========================================================================
     // CONSTRUCTORS
     // =========================================================================
-    
+
     /**
      * @brief Default constructor
      */
-    SystemState() : trader_view(config.strategy, config.risk, config.timing,
-                                config.logging, config.target) {}
-    
+    SystemState() {}
+
     /**
      * @brief Constructor with custom configuration
      * @param initial System configuration
      */
     explicit SystemState(const AlpacaTrader::Config::SystemConfig& initial)
-        : config(initial),
-          trader_view(config.strategy, config.risk, config.timing,
-                      config.logging, config.target) {
+        : config(initial) {
         // Verify that the symbol was loaded correctly
-        if (config.target.symbol.empty()) {
+        if (config.strategy.symbol.empty()) {
             std::cerr << "WARNING: Target symbol is empty! Config may not be loaded properly." << std::endl;
         }
     }

@@ -29,7 +29,7 @@ const std::vector<ThreadRegistry::ThreadEntry> ThreadRegistry::THREAD_REGISTRY =
         "MARKET_DATA",
         [](SystemModules& modules) { ThreadSystem::Manager::safe_thread_execution([&modules]() { (*modules.market_data_thread)(); }, "MarketDataThread"); },
         [](SystemThreads& handles) -> std::atomic<unsigned long>& { return handles.market_iterations; },
-        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.market_data; },
+        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.get_thread_settings("market_data"); },
         [](SystemModules& modules, std::atomic<unsigned long>& counter) { if (modules.market_data_thread) modules.market_data_thread->set_iteration_counter(counter); }
     },
     {
@@ -37,7 +37,7 @@ const std::vector<ThreadRegistry::ThreadEntry> ThreadRegistry::THREAD_REGISTRY =
         "ACCOUNT_DATA",
         [](SystemModules& modules) { ThreadSystem::Manager::safe_thread_execution([&modules]() { (*modules.account_data_thread)(); }, "AccountDataThread"); },
         [](SystemThreads& handles) -> std::atomic<unsigned long>& { return handles.account_iterations; },
-        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.account_data; },
+        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.get_thread_settings("account_data"); },
         [](SystemModules& modules, std::atomic<unsigned long>& counter) { if (modules.account_data_thread) modules.account_data_thread->set_iteration_counter(counter); }
     },
     {
@@ -45,7 +45,7 @@ const std::vector<ThreadRegistry::ThreadEntry> ThreadRegistry::THREAD_REGISTRY =
         "MARKET_GATE",
         [](SystemModules& modules) { ThreadSystem::Manager::safe_thread_execution([&modules]() { (*modules.market_gate_thread)(); }, "MarketGateThread"); },
         [](SystemThreads& handles) -> std::atomic<unsigned long>& { return handles.gate_iterations; },
-        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.market_gate; },
+        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.get_thread_settings("market_gate"); },
         [](SystemModules& modules, std::atomic<unsigned long>& counter) { if (modules.market_gate_thread) modules.market_gate_thread->set_iteration_counter(counter); }
     },
     {
@@ -53,7 +53,7 @@ const std::vector<ThreadRegistry::ThreadEntry> ThreadRegistry::THREAD_REGISTRY =
         "TRADER_DECISION",
         [](SystemModules& modules) { ThreadSystem::Manager::safe_thread_execution([&modules]() { (*modules.trading_thread)(); }, "TraderThread"); },
         [](SystemThreads& handles) -> std::atomic<unsigned long>& { return handles.trader_iterations; },
-        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.trader_decision; },
+        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.get_thread_settings("trader_decision"); },
         [](SystemModules& modules, std::atomic<unsigned long>& counter) { if (modules.trading_thread) modules.trading_thread->set_iteration_counter(counter); }
     },
     {
@@ -61,7 +61,7 @@ const std::vector<ThreadRegistry::ThreadEntry> ThreadRegistry::THREAD_REGISTRY =
         "LOGGING",
         [](SystemModules& modules) { ThreadSystem::Manager::safe_thread_execution([&modules]() { (*modules.logging_thread)(); }, "LoggingThread"); },
         [](SystemThreads& handles) -> std::atomic<unsigned long>& { return handles.logger_iterations; },
-        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.logging; },
+        [](const AlpacaTrader::Config::SystemConfig& config) -> AlpacaTrader::Config::ThreadSettings { return config.thread_registry.get_thread_settings("logging"); },
         [](SystemModules& modules, std::atomic<unsigned long>& counter) { if (modules.logging_thread) modules.logging_thread->set_iteration_counter(counter); }
     }
 };

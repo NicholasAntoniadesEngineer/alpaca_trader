@@ -1,8 +1,8 @@
 #ifndef POSITION_MANAGER_HPP
 #define POSITION_MANAGER_HPP
 
-#include "configs/trader_config.hpp"
-#include "../data/data_structures.hpp"
+#include "configs/system_config.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/logging/trading_logs.hpp"
 
@@ -11,13 +11,13 @@ namespace Core {
 
 class PositionManager {
 public:
-    PositionManager(API::AlpacaClient& client, const TraderConfig& config);
+    PositionManager(API::AlpacaClient& client, const SystemConfig& config);
     
     void handle_market_close_positions(const ProcessedData& data);
     
 private:
     API::AlpacaClient& client;
-    const TraderConfig& config;
+    const SystemConfig& config;
 };
 
 } // namespace Core

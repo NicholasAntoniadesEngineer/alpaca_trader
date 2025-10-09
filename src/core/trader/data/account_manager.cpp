@@ -2,7 +2,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
 #include "core/utils/http_utils.hpp"
-#include "configs/api_endpoints.hpp"
+#include "configs/api_config.hpp"
 #include "json/json.hpp"
 #include <cmath>
 
@@ -14,9 +14,9 @@ namespace Core {
 using AlpacaTrader::Logging::AccountLogs;
 
 AccountManager::AccountManager(const AccountManagerConfig& cfg)
-    : api(cfg.api), logging(cfg.logging), target(cfg.target), 
-      cache_duration_seconds(cfg.timing.account_data_cache_duration_sec),
-      last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_sec + 1)) {}
+    : api(cfg.api), logging(cfg.logging), strategy(cfg.strategy),
+      cache_duration_seconds(cfg.timing.account_data_cache_duration_seconds),
+      last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_seconds + 1)) {}
 
 double AccountManager::fetch_account_equity() const {
     using namespace AlpacaTrader::Config;
@@ -73,8 +73,12 @@ double AccountManager::fetch_buying_power() const {
 PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_sym) const {
     using namespace AlpacaTrader::Config;
     PositionDetails details;
-    ApiEndpoints endpoints(api.endpoints);
-    std::string url = endpoints.build_position_url(api.base_url, req_sym.symbol);
+    std::string url = api.base_url + api.endpoints.trading.position_by_symbol;
+    // Replace {symbol} placeholder
+    size_t pos = url.find("{symbol}");
+    if (pos != std::string::npos) {
+        url.replace(pos, 8, req_sym.symbol);
+    }
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
@@ -98,8 +102,12 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
 
 int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const {
     using namespace AlpacaTrader::Config;
-    ApiEndpoints endpoints(api.endpoints);
-    std::string url = endpoints.build_orders_by_symbol_url(api.base_url, req_sym.symbol);
+    std::string url = api.base_url + api.endpoints.trading.orders_by_symbol;
+    // Replace {symbol} placeholder
+    size_t pos = url.find("{symbol}");
+    if (pos != std::string::npos) {
+        url.replace(pos, 8, req_sym.symbol);
+    }
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
@@ -226,7 +234,7 @@ std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_ac
         }
         
         // Get position details and orders (these are different endpoints)
-        SymbolRequest sreq{target.symbol};
+        SymbolRequest sreq{strategy.symbol};
         snapshot.pos_details = fetch_position_details(sreq);
         snapshot.open_orders = fetch_open_orders_count(sreq);
         snapshot.exposure_pct = (snapshot.equity > 0.0) ? (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0 : 0.0;

@@ -10,7 +10,7 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-OrderExecutionEngine::OrderExecutionEngine(API::AlpacaClient& client_ref, AccountManager& account_mgr, const TraderConfig& cfg, DataSyncReferences& data_sync_ref)
+OrderExecutionEngine::OrderExecutionEngine(API::AlpacaClient& client_ref, AccountManager& account_mgr, const SystemConfig& cfg, DataSyncReferences& data_sync_ref)
     : client(client_ref), account_manager(account_mgr), config(cfg), data_sync(data_sync_ref) {}
 
 void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd) {
@@ -60,9 +60,9 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         // For SELL signals, determine the correct order side based on current position
         if (current_qty == 0) {
             // No position: open short position (use sell side for short)
-    if (!client.check_short_availability(config.target.symbol, sizing.quantity)) {
+    if (!client.check_short_availability(config.strategy.symbol, sizing.quantity)) {
         TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability");
-        AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_short_blocked(config.target.symbol);
+        AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_short_blocked(config.strategy.symbol);
         return;
     }
             TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
@@ -86,7 +86,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
     TradingLogs::log_debug_position_data(current_qty, data.pos_details.current_value, data.pos_details.qty, is_long_position(current_qty), is_short_position(current_qty));
     
     // Check wash trade prevention first (if enabled)
-    if (config.timing.enable_wash_trade_prevention) {
+    if (config.timing.enable_wash_trade_prevention_mechanism) {
         if (!can_place_order_now()) {
             TradingLogs::log_market_status(false, "Order blocked - minimum order interval not met (wash trade prevention)");
             return;
@@ -106,7 +106,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
     }
     
     // Check if we can execute a new position
-    if (!can_execute_new_position(side, current_qty)) {
+    if (!can_execute_new_position(current_qty)) {
         TradingLogs::log_position_limits_reached(to_side_string(side));
         return;
     }
@@ -133,7 +133,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
     TradingLogs::log_comprehensive_order_execution("Bracket Order", side_str, sizing.quantity, 
                                                   data.curr.c, data.atr, data.pos_details.qty, sizing.risk_amount,
                                                   targets.stop_loss, targets.take_profit, 
-                                                  config.target.symbol, "execute_bracket_order");
+                                                  config.strategy.symbol, "execute_bracket_order");
     
     // Also log the calculated entry and exit values for bracket orders
     TradingLogs::log_exit_targets_table(side_str, data.curr.c, sizing.risk_amount, config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
@@ -141,16 +141,16 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
     try {
         bool has_pending = false;
         try {
-            has_pending = client.has_pending_orders(config.target.symbol);
+            has_pending = client.has_pending_orders(config.strategy.symbol);
         } catch (const std::exception& e) {
             TradingLogs::log_market_status(false, "Error checking pending orders: " + std::string(e.what()));
         }
         
         if (has_pending) {
-            if (should_cancel_existing_orders(side_str)) {
+            if (should_cancel_existing_orders()) {
                 TradingLogs::log_market_status(false, "Found conflicting orders - cancelling before new bracket order");
                 try {
-                    client.cancel_pending_orders(config.target.symbol);
+                    client.cancel_pending_orders(config.strategy.symbol);
                     int cancel_wait_ms = config.strategy.short_retry_delay_ms > 0 ? 
                         config.strategy.short_retry_delay_ms / 5 : 200;
                     std::this_thread::sleep_for(std::chrono::milliseconds(cancel_wait_ms));
@@ -196,13 +196,13 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
     TradingLogs::log_comprehensive_order_execution("Market Order", side_str, sizing.quantity, 
                                                   data.curr.c, data.atr, data.pos_details.qty, sizing.risk_amount,
                                                   0.0, 0.0, // No stop loss or take profit for market orders
-                                                  config.target.symbol, "execute_market_order");
+                                                  config.strategy.symbol, "execute_market_order");
     
     try {
         // Check for and cancel any pending orders before placing new ones
-        if (client.has_pending_orders(config.target.symbol)) {
+        if (client.has_pending_orders(config.strategy.symbol)) {
             TradingLogs::log_market_status(false, "Found pending orders - cancelling before new order");
-            client.cancel_pending_orders(config.target.symbol);
+            client.cancel_pending_orders(config.strategy.symbol);
             
             // Wait a moment for order cancellation to process
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -211,7 +211,7 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
         // For closing positions, we need to determine the correct side
         // If we have a long position and want to close it, we need to sell
         // If we have a short position and want to close it, we need to buy
-        client.submit_market_order(config.target.symbol, side_str, sizing.quantity);
+        client.submit_market_order(config.strategy.symbol, side_str, sizing.quantity);
         TradingLogs::log_market_status(true, "Market order submitted successfully");
     } catch (const std::exception& e) {
         TradingLogs::log_market_status(false, "Market order execution failed: " + std::string(e.what()));
@@ -220,7 +220,7 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
 
 // Position management methods
 bool OrderExecutionEngine::should_close_opposite_position(OrderSide side, int current_qty) const {
-    if (!config.risk.close_on_reverse) {
+    if (!config.strategy.close_positions_on_signal_reversal) {
         return false;
     }
     
@@ -262,14 +262,14 @@ bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_q
     }
 }
 
-bool OrderExecutionEngine::can_execute_new_position(OrderSide /*side*/, int current_qty) const {
+bool OrderExecutionEngine::can_execute_new_position(int current_qty) const {
     // Can always execute if flat
     if (is_flat_position(current_qty)) {
         return true;
     }
     
     // Can execute if multiple positions are allowed
-    if (config.risk.allow_multiple_positions) {
+    if (config.strategy.allow_multiple_positions_per_symbol) {
         return true;
     }
     
@@ -295,21 +295,21 @@ bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, 
     }
     
     // Additional validation for order rejection prevention using config values
-    if (sizing.quantity > config.strategy.max_quantity_per_trade) {
-        TradingLogs::log_trade_validation_failed("Quantity too large - max " + std::to_string(config.strategy.max_quantity_per_trade) + " shares");
+    if (sizing.quantity > config.strategy.maximum_share_quantity_per_single_trade) {
+        TradingLogs::log_trade_validation_failed("Quantity too large - max " + std::to_string(config.strategy.maximum_share_quantity_per_single_trade) + " shares");
         return false;
     }
     
     // Validate price is within configured range
-    if (data.curr.c < config.strategy.min_price_threshold || data.curr.c > config.strategy.max_price_threshold) {
-        TradingLogs::log_trade_validation_failed("Price out of configured range: $" + std::to_string(config.strategy.min_price_threshold) + " - $" + std::to_string(config.strategy.max_price_threshold));
+    if (data.curr.c < config.strategy.minimum_acceptable_price_for_signals || data.curr.c > config.strategy.maximum_acceptable_price_for_signals) {
+        TradingLogs::log_trade_validation_failed("Price out of configured range: $" + std::to_string(config.strategy.minimum_acceptable_price_for_signals) + " - $" + std::to_string(config.strategy.maximum_acceptable_price_for_signals));
         return false;
     }
     
     // Check if order value exceeds configured maximum
     double order_value = data.curr.c * sizing.quantity;
-    if (order_value > config.strategy.max_order_value) {
-        TradingLogs::log_trade_validation_failed("Order value too large - max $" + std::to_string(config.strategy.max_order_value));
+    if (order_value > config.strategy.maximum_dollar_value_per_single_trade) {
+        TradingLogs::log_trade_validation_failed("Order value too large - max $" + std::to_string(config.strategy.maximum_dollar_value_per_single_trade));
         return false;
     }
     
@@ -320,8 +320,8 @@ StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSid
     double entry_price = data.curr.c;
     
     // Use real-time price if configured and available
-    if (config.strategy.use_realtime_price_for_orders) {
-        double realtime_price = client.get_current_price(config.target.symbol);
+    if (config.strategy.use_current_market_price_for_order_execution) {
+        double realtime_price = client.get_current_price(config.strategy.symbol);
         if (realtime_price > 0.0) {
             entry_price = realtime_price;
             TradingLogs::log_realtime_price_used(realtime_price, data.curr.c);
@@ -369,7 +369,7 @@ bool OrderExecutionEngine::can_place_order_now() const {
     
     // Check if enough time has passed
     auto time_since_last_order = std::chrono::duration_cast<std::chrono::seconds>(now - last_order);
-    int min_interval = config.timing.min_order_interval_sec;
+    int min_interval = config.timing.minimum_interval_between_orders_seconds;
     int elapsed_seconds = time_since_last_order.count();
     
     if (elapsed_seconds >= min_interval) {
@@ -390,7 +390,7 @@ bool OrderExecutionEngine::is_flat_position(int qty) const {
     return qty == 0;
 }
 
-bool OrderExecutionEngine::should_cancel_existing_orders(const std::string& new_side) const {
+bool OrderExecutionEngine::should_cancel_existing_orders() const {
     return true;
 }
 

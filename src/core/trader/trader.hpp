@@ -1,7 +1,7 @@
 #ifndef TRADING_ORCHESTRATOR_HPP
 #define TRADING_ORCHESTRATOR_HPP
 
-#include "configs/trader_config.hpp"
+#include "configs/system_config.hpp"
 #include "api/alpaca_client.hpp"
 #include "data/account_manager.hpp"
 #include "data/data_structures.hpp"
@@ -30,7 +30,7 @@ private:
         std::atomic<unsigned long>* iteration_counter = nullptr;
     };
 
-    const TraderConfig& config;
+    const SystemConfig& config;
     AccountManager& account_manager;
     TradingEngine trading_engine;
     RiskManager risk_manager;
@@ -43,7 +43,7 @@ private:
     bool check_connectivity_status();
 
 public:
-    TradingOrchestrator(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
+    TradingOrchestrator(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

@@ -1,10 +1,251 @@
 # ========================================================================
-# STRATEGY CONFIGURATION
+# COMPREHENSIVE TRADING STRATEGY CONFIGURATION
 # ========================================================================
-# Strategy-specific settings and precision configuration
+# All strategy, risk, position, profit-taking, and order settings in one place
 # ========================================================================
 
-# PRECISION CONFIGURATION
-strategy.ratio_precision,2
-strategy.factor_precision,3
-strategy.atr_vol_precision,3
+# ========================================================================
+# TARGET AND SESSION CONFIGURATION
+# ========================================================================
+# Trading symbol and market session settings
+
+# Target symbol for trading
+target.symbol,NFLX
+
+# Market session timing (Eastern Time)
+session.et_utc_offset_hours,-4
+session.market_open_hour,9
+session.market_open_minute,30
+session.market_close_hour,16
+session.market_close_minute,0
+
+# ========================================================================
+# CORE STRATEGY SETTINGS
+# ========================================================================
+# Main strategy logic and signal detection
+
+# STRATEGY: CONSERVATIVE PROFITABLE
+# Perfect for: Steady profits, reduced risk, sustainable trading
+# Characteristics: Fewer trades, higher win rate, proper confirmations
+# Risk Level: LOW-MEDIUM | Signal Frequency: MEDIUM | Hold Time: MEDIUM
+
+# Entry Signal Confirmation Requirements
+strategy.buy_signals_allow_equal_close,false
+strategy.buy_signals_require_higher_high,true
+strategy.buy_signals_require_higher_low,true
+strategy.sell_signals_allow_equal_close,false
+strategy.sell_signals_require_lower_low,true
+strategy.sell_signals_require_lower_high,true
+
+# Signal Filter Thresholds (Conservative Settings)
+strategy.entry_signal_atr_multiplier,1.2
+strategy.entry_signal_volume_multiplier,0.3
+strategy.atr_calculation_period,14
+strategy.average_atr_comparison_multiplier,1.5
+
+# ATR-Based Signal Validation
+strategy.atr_absolute_minimum_threshold,0.5
+strategy.use_absolute_atr_threshold_instead_of_relative,true
+
+# Momentum Signal Requirements (for Signal Strength)
+strategy.minimum_price_change_percentage_for_momentum,0.01
+strategy.minimum_volume_increase_percentage_for_buy_signals,5.0
+strategy.minimum_volatility_percentage_for_buy_signals,0.1
+strategy.minimum_volume_increase_percentage_for_sell_signals,2.0
+strategy.minimum_volatility_percentage_for_sell_signals,0.05
+strategy.minimum_signal_strength_threshold,0.6
+
+# Signal Strength Component Weighting
+strategy.basic_price_pattern_weight,0.3
+strategy.momentum_indicator_weight,0.3
+strategy.volume_analysis_weight,0.2
+strategy.volatility_analysis_weight,0.2
+
+# Candlestick Pattern Detection
+strategy.doji_candlestick_body_size_threshold_percentage,0.1
+
+# ========================================================================
+# RISK MANAGEMENT CONFIGURATION
+# ========================================================================
+# Risk parameters and limits for the strategy
+
+# Daily Trading Limits (as percentages of account value)
+# 1.0 = 100% (maximum allowed)
+risk.max_daily_loss_percentage,1.0
+risk.daily_profit_target_percentage,1.0
+risk.max_account_exposure_percentage,100.0
+risk.position_scaling_multiplier,1
+
+# Per-Trade Risk Management
+risk.risk_percentage_per_trade,0.01
+risk.maximum_dollar_value_per_trade,5000
+risk.allow_multiple_positions_per_symbol,false
+risk.maximum_position_layers,1
+risk.close_positions_on_signal_reversal,true
+
+# Buying Power Management
+risk.buying_power_utilization_percentage,0.8
+risk.buying_power_validation_safety_margin,1.25
+
+# ========================================================================
+# POSITION MANAGEMENT CONFIGURATION
+# ========================================================================
+# Position sizing, scaling, and management settings
+
+# Position Sizing Strategy Selection
+# Choose between fixed share amounts or risk-based sizing
+strategy.enable_fixed_share_quantity_per_trade,true
+strategy.enable_risk_based_position_multiplier,false
+
+# Fixed Share Quantity Configuration
+# Used when enable_fixed_share_quantity_per_trade is true
+# Overrides all risk-based calculations
+strategy.fixed_share_quantity_per_trade,1
+
+# Risk-Based Position Multiplier Configuration
+# Used when enable_risk_based_position_multiplier is true
+# 1.0 = normal risk-based size, 0.5 = half size, 2.0 = double size
+strategy.risk_based_position_size_multiplier,1.0
+
+# Position Size Constraints
+strategy.maximum_share_quantity_per_single_trade,1000
+strategy.maximum_dollar_value_per_single_trade,10000.0
+
+# ========================================================================
+# PROFIT TAKING AND EXIT STRATEGY
+# ========================================================================
+# Take profit and exit strategy settings
+
+# TAKE PROFIT CONFIGURATION (Choose ONE method)
+# Method 1: Percentage-based take profit (recommended for consistent % gains)
+strategy.take_profit_percentage,0.015
+strategy.use_take_profit_percentage,true
+
+# Method 2: Risk/Reward ratio-based take profit (alternative)
+# To use this method instead, set:
+# strategy.use_take_profit_percentage,false
+# Then take profit = entry_price + (rr_ratio * risk_amount) for long positions
+
+# Risk/Reward ratio for exit calculations
+strategy.rr_ratio,3.0
+
+# Dollar-based profit taking (can be used with either method)
+strategy.profit_taking_threshold_dollars,50.0
+strategy.enable_profit_taking,true
+
+# Price buffer for order execution
+strategy.price_buffer_pct,0.001
+strategy.min_price_buffer,0.02
+strategy.max_price_buffer,0.25
+
+# Stop Loss Order Configuration
+strategy.stop_loss_buffer_amount_dollars,0.10
+strategy.use_current_market_price_for_order_execution,true
+
+# ========================================================================
+# ORDER MANAGEMENT CONFIGURATION
+# ========================================================================
+# Order execution, validation, and cancellation settings
+
+# Order validation
+orders.min_quantity,1
+orders.price_precision,2
+
+# Order types and time in force
+orders.default_time_in_force,gtc
+orders.default_order_type,market
+
+# Position closure settings
+orders.position_closure_side_buy,buy
+orders.position_closure_side_sell,sell
+
+# API endpoints
+orders.orders_endpoint,/v2/orders
+orders.positions_endpoint,/v2/positions
+orders.orders_status_filter,open
+
+# Error handling
+orders.zero_quantity_check,true
+orders.position_verification_enabled,true
+
+# Order cancellation strategy
+orders.cancellation_mode,directional
+orders.cancel_opposite_side,true
+orders.cancel_same_side,false
+orders.max_orders_to_cancel,50
+
+# ========================================================================
+# SHORT SELLING CONFIGURATION
+# ========================================================================
+# Short selling specific settings
+
+strategy.enable_short_selling,true
+strategy.short_availability_check,true
+strategy.default_shortable_quantity,50
+strategy.existing_short_multiplier,0.2
+strategy.short_safety_margin,0.9
+strategy.short_retry_attempts,3
+strategy.short_retry_delay_ms,1000
+
+# ========================================================================
+# SIGNAL VALIDATION CONSTRAINTS
+# ========================================================================
+# Price and symbol validation for trading
+
+strategy.minimum_acceptable_price_for_signals,1.0
+strategy.maximum_acceptable_price_for_signals,10000.0
+
+# ========================================================================
+# PRECISION SETTINGS
+# ========================================================================
+# Display precision for calculations and logging
+
+# Strategy precision configuration
+strategy.ratio_display_precision,2
+strategy.factor_display_precision,3
+strategy.atr_volume_display_precision,3
+
+# Risk precision configuration
+risk.percentage_display_precision,1
+risk.exposure_calculation_precision,2
+risk.risk_factor_precision,3
+risk.currency_display_precision,2
+
+# Orders precision configuration
+orders.price_precision,2
+
+# Timing precision configuration
+timing.cpu_usage_display_precision,1
+timing.performance_rate_display_precision,1
+
+# ========================================================================
+# ERROR HANDLING CONFIGURATION
+# ========================================================================
+# Retry and circuit breaker settings
+
+# Retry configuration
+error_handling.max_retries,3
+error_handling.retry_delay_ms,1000
+
+# Circuit breaker configuration
+error_handling.circuit_breaker_enabled,true
+error_handling.circuit_breaker_threshold,10
+error_handling.circuit_breaker_timeout_min,5
+
+# ========================================================================
+# MONITORING CONFIGURATION
+# ========================================================================
+# System health monitoring and alerting
+
+# Health check configuration
+monitoring.health_check_interval_sec,30
+monitoring.performance_report_interval_min,15
+
+# Alert configuration
+monitoring.alert_on_failure_rate,true
+monitoring.max_failure_rate_pct,25.0
+monitoring.alert_on_drawdown,true
+monitoring.max_drawdown_pct,5.0
+monitoring.alert_on_data_stale,true
+monitoring.max_data_age_min,3
+monitoring.max_inactivity_min,10

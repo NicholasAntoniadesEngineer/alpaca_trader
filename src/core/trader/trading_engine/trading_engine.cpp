@@ -1,5 +1,5 @@
 #include "trading_engine.hpp"
-#include "../analysis/risk_logic.hpp"
+#include "core/trader/analysis/risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
 #include "core/monitoring/system_monitor.hpp"
@@ -10,7 +10,7 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-TradingEngine::TradingEngine(const TraderConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
+TradingEngine::TradingEngine(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr), client(client_ref),
       order_engine(client_ref, account_mgr, cfg, data_sync),
       position_manager(client_ref, cfg),
@@ -27,7 +27,7 @@ bool TradingEngine::check_trading_permissions(const ProcessedData& data, double 
 }
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
-    TradingLogs::log_signal_analysis_start(config.target.symbol);
+    TradingLogs::log_signal_analysis_start(config.strategy.symbol);
     
     // Check if market is open before making any trading decisions
     if (!is_market_open()) {
@@ -72,7 +72,7 @@ void TradingEngine::handle_trading_halt(const std::string& reason) {
             halt_seconds = CONNECTIVITY_RETRY_SECONDS;
         }
     } else {
-        halt_seconds = config.timing.halt_sleep_min * 60;
+        halt_seconds = config.timing.emergency_trading_halt_duration_minutes * 60;
     }
     
     perform_halt_countdown(halt_seconds);
@@ -134,7 +134,7 @@ bool TradingEngine::is_data_fresh() {
     
     auto now = std::chrono::steady_clock::now();
     auto data_timestamp = data_sync.market_data_timestamp->load();
-    auto max_age_seconds = config.timing.market_data_max_age_seconds;
+    auto max_age_seconds = config.timing.market_data_staleness_threshold_seconds;
     
     if (data_timestamp == std::chrono::steady_clock::time_point::min()) {
         TradingLogs::log_market_status(false, "Market data timestamp is invalid - no data received yet");
@@ -171,7 +171,7 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data, double /*
     
     StrategyLogic::FilterResult filter_result = StrategyLogic::evaluate_trading_filters(data, config);
     TradingLogs::log_filters(filter_result, config, data);
-    TradingLogs::log_summary(data, signal_decision, filter_result, config.target.symbol);
+    TradingLogs::log_summary(data, signal_decision, filter_result, config.strategy.symbol);
 }
 
 void TradingEngine::process_position_sizing(const ProcessedData& data, double equity, int current_qty) {
@@ -184,7 +184,7 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
     }
     
     TradingLogs::log_filters_passed();
-    TradingLogs::log_current_position(current_qty, config.target.symbol);
+    TradingLogs::log_current_position(current_qty, config.strategy.symbol);
     TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
     
@@ -210,7 +210,7 @@ void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int curren
 void TradingEngine::perform_halt_countdown(int seconds) const {
     for (int s = seconds; s > 0; --s) {
         TradingLogs::log_inline_halt_status(s);
-        std::this_thread::sleep_for(std::chrono::seconds(config.timing.countdown_tick_sec));
+        std::this_thread::sleep_for(std::chrono::seconds(config.timing.countdown_display_refresh_interval_seconds));
     }
 }
 
@@ -224,22 +224,17 @@ void TradingEngine::check_and_execute_profit_taking(const ProcessedData& data, i
     double current_price = data.curr.c;
     double position_value = data.pos_details.current_value;
     
-    // Log profit calculation
-    AlpacaTrader::Logging::log_message("+-- PROFIT TAKING ANALYSIS", config.logging.log_file);
-    AlpacaTrader::Logging::log_message("|   Current Price: $" + std::to_string(current_price), config.logging.log_file);
-    AlpacaTrader::Logging::log_message("|   Position Value: $" + std::to_string(position_value), config.logging.log_file);
-    AlpacaTrader::Logging::log_message("|   Current Quantity: " + std::to_string(current_qty), config.logging.log_file);
-    AlpacaTrader::Logging::log_message("|   Unrealized P&L: $" + std::to_string(unrealized_pl), config.logging.log_file);
-    AlpacaTrader::Logging::log_message("|   Threshold: $" + std::to_string(config.strategy.profit_taking_threshold_dollars), config.logging.log_file);
-    AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
-    
+    // Log profit calculation using proper TradingLogs class
+    AlpacaTrader::Logging::TradingLogs::log_position_sizing_debug(current_qty, position_value, current_qty, true, false);
+    AlpacaTrader::Logging::TradingLogs::log_exit_targets_table("LONG", current_price, config.strategy.profit_taking_threshold_dollars,
+                                                           config.strategy.rr_ratio, 0.0, 0.0);
+
     // Check if profit exceeds threshold
     if (unrealized_pl > config.strategy.profit_taking_threshold_dollars) {
-        AlpacaTrader::Logging::log_message("+-- PROFIT TAKING TRIGGERED", config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Profit $" + std::to_string(unrealized_pl) + " exceeds threshold $" + 
-                          std::to_string(config.strategy.profit_taking_threshold_dollars), config.logging.log_file);
-        AlpacaTrader::Logging::log_message("|   Executing automatic sell of all " + std::to_string(abs(current_qty)) + " shares", config.logging.log_file);
-        AlpacaTrader::Logging::log_message("+-- ", config.logging.log_file);
+        AlpacaTrader::Logging::TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", abs(current_qty));
+        AlpacaTrader::Logging::TradingLogs::log_comprehensive_order_execution("MARKET", "SELL", abs(current_qty),
+                                                                              current_price, 0.0, current_qty,
+                                                                              config.strategy.profit_taking_threshold_dollars);
         
         // Execute market order to close entire position
         if (current_qty > 0) {

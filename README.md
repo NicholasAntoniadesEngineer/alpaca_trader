@@ -68,15 +68,13 @@ tail -f trade_log.txt
 ---
 
 ## TODO:
+- Go through the API order client and then api files and there implementation in general. src/api/... split the api files out of there folders into one folder at all the same hierachachal level.
+- consolodate monitoring/system monitoing into the system folder and see where it fits in and if modifications are needed.
+
 - Add a generated 32-bit app key that expires regularly
-- Fix delayed data issues with bracket orders (stop loss and take profit positioning)
-- Improve trader gate and risk logic handling and logging
-  - Review evaluate_trade_gate and can_trade functions
-- Fix core_trading_hours implementation in services.client.is_core_trading_hours()
 - Optimize order types and add more trading tools for decision engine
+
 - Add application status notification and instance counting
 - Implement clear signal analysis framework
-- Fix market gate thread logging and implementation
-- Update trading to use realistic starting capital
-- Consider strategy configuration from CSV files (no compilation required)
+
 - Evaluate command-line controller interface for configuration testing

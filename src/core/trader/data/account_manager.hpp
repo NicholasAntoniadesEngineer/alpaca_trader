@@ -3,7 +3,7 @@
 
 #include "configs/api_config.hpp"
 #include "configs/logging_config.hpp"
-#include "configs/target_config.hpp"
+#include "configs/strategy_config.hpp"
 #include "core/threads/thread_register.hpp"
 #include "data_structures.hpp"
 #include <string>
@@ -40,14 +40,14 @@ public:
         double regt_buying_power;
         double daytrading_buying_power;
     };
-    
+
     explicit AccountManager(const AccountManagerConfig& cfg);
 
     double fetch_account_equity() const;
     double fetch_buying_power() const;
     PositionDetails fetch_position_details(const SymbolRequest& req_sym) const;
     int fetch_open_orders_count(const SymbolRequest& req_sym) const;
-    
+
     AccountSnapshot fetch_account_snapshot() const;
     std::pair<AccountInfo, AccountSnapshot> fetch_account_data_bundled() const;
     AccountInfo fetch_account_info() const;
@@ -55,7 +55,7 @@ public:
 private:
     const AlpacaTrader::Config::ApiConfig& api;
     const LoggingConfig& logging;
-    const TargetConfig& target;
+    const StrategyConfig& strategy;  // Now contains target settings
     int cache_duration_seconds;
     
     // Caching for rate limit optimization

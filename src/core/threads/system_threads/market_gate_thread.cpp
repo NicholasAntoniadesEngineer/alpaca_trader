@@ -5,7 +5,7 @@
 #include "market_gate_thread.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/startup_logs.hpp"
-#include "../thread_logic/platform/thread_control.hpp"
+#include "core/threads/thread_logic/platform/thread_control.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <chrono>
 
@@ -19,7 +19,7 @@ void AlpacaTrader::Threads::MarketGateThread::operator()() {
     
     try {
         // Wait for main thread to complete priority setup
-        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_delay_ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
         
         // Start the market gate monitoring loop
         market_gate_loop();

@@ -2,7 +2,10 @@
 #include "startup_logs.hpp"
 #include "async_logger.hpp"
 #include "logging_macros.hpp"
+#include "configs/system_config.hpp"
 #include <sstream>
+
+using AlpacaTrader::Config::SystemConfig;
 #include <iomanip>
 #include <chrono>
 
@@ -10,7 +13,7 @@
 using AlpacaTrader::Logging::log_message;
 
 
-void ThreadLogs::log_system_startup(const TimingConfig& config) {
+void ThreadLogs::log_system_startup(const SystemConfig& config) {
     StartupLogs::log_thread_system_startup(config);
 }
 
