@@ -1,4 +1,4 @@
-#include "api/clock/market_clock.hpp"
+#include "market_clock.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
@@ -15,7 +15,6 @@ using AlpacaTrader::Logging::log_message;
 
 namespace AlpacaTrader {
 namespace API {
-namespace Clock {
 
 bool MarketClock::is_core_trading_hours() const {
     using namespace AlpacaTrader::Config;
@@ -180,6 +179,5 @@ bool MarketClock::is_within_time_window(int hour, int minute, int open_hour, int
     return after_open && before_close;
 }
 
-} // namespace Clock
 } // namespace API
 } // namespace AlpacaTrader

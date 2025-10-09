@@ -3,7 +3,7 @@
 
 #include "configs/system_config.hpp"
 #include "api/alpaca_client.hpp"
-#include "api/clock/market_clock.hpp"
+#include "api/market_clock.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
@@ -55,7 +55,7 @@ private:
     bool is_data_fresh();
     
     // Trading decision methods
-    void process_signal_analysis(const ProcessedData& data, double equity);
+    void process_signal_analysis(const ProcessedData& data);
     void process_position_sizing(const ProcessedData& data, double equity, int current_qty);
     void execute_trade_if_valid(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& signal_decision);
     void check_and_execute_profit_taking(const ProcessedData& data, int current_qty);

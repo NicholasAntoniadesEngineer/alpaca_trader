@@ -1,13 +1,12 @@
 #ifndef MARKET_DATA_CLIENT_HPP
 #define MARKET_DATA_CLIENT_HPP
 
-#include "api/base/alpaca_base_client.hpp"
+#include "alpaca_base_client.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include <vector>
 
 namespace AlpacaTrader {
 namespace API {
-namespace Market {
 
 class MarketDataClient : public AlpacaBaseClient {
 public:
@@ -32,7 +31,6 @@ private:
     void log_fetch_failure() const;
 };
 
-} // namespace Market
 } // namespace API
 } // namespace AlpacaTrader
 

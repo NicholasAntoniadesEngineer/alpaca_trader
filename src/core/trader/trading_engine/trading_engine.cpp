@@ -2,7 +2,7 @@
 #include "core/trader/analysis/risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
-#include "core/monitoring/system_monitor.hpp"
+#include "core/system/system_monitor.hpp"
 #include <chrono>
 
 namespace AlpacaTrader {
@@ -52,7 +52,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     }
     
     // Process signal analysis
-    process_signal_analysis(data, equity);
+    process_signal_analysis(data);
     
     // Process position sizing and execute if valid
     process_position_sizing(data, equity, current_qty);
@@ -159,7 +159,7 @@ void TradingEngine::setup_data_synchronization(const DataSyncConfig& config) {
     TradingLogs::log_market_status(true, "Data synchronization setup completed - market_data_timestamp initialized");
 }
 
-void TradingEngine::process_signal_analysis(const ProcessedData& data, double /*equity*/) {
+void TradingEngine::process_signal_analysis(const ProcessedData& data) {
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
     
     // Log candle data and enhanced signals table

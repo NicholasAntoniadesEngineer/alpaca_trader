@@ -1,4 +1,4 @@
-#include "api/market/market_data_client.hpp"
+#include "market_data_client.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/logging/market_data_logs.hpp"
@@ -15,7 +15,6 @@ using json = nlohmann::json;
 
 namespace AlpacaTrader {
 namespace API {
-namespace Market {
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
@@ -192,6 +191,5 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
     return 0.0;
 }
 
-} // namespace Market
 } // namespace API
 } // namespace AlpacaTrader

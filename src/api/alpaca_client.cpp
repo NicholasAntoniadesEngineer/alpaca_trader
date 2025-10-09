@@ -1,4 +1,8 @@
 #include "alpaca_client.hpp"
+#include "alpaca_base_client.hpp"
+#include "market_clock.hpp"
+#include "market_data_client.hpp"
+#include "order_client.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
@@ -14,6 +18,17 @@ using json = nlohmann::json;
 
 namespace AlpacaTrader {
 namespace API {
+
+AlpacaClient::AlpacaClient(const AlpacaClientConfig& cfg)
+    : clock(cfg),
+      market_data(cfg),
+      orders(cfg),
+      config(cfg) {
+    // Set the API client reference in the orders component
+    orders.set_api_client(this);
+}
+
+AlpacaClient::~AlpacaClient() = default;
 
 // Order cancellation API methods
 std::vector<std::string> AlpacaClient::get_open_orders(const std::string& symbol) const {

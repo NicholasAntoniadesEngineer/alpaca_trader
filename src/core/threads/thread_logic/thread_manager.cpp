@@ -61,7 +61,7 @@ void Manager::configure_single_thread(const AlpacaTrader::Core::ThreadSystem::Th
     }
     
     auto platform_config = create_platform_config(thread_def, thread_type, config);
-    bool success = apply_thread_configuration(thread_def, platform_config, config);
+    bool success = apply_thread_configuration(platform_config);
     
     std::string priority_str = AlpacaTrader::Config::ConfigProvider::priority_to_string(static_cast<AlpacaTrader::Config::Priority>(platform_config.priority));
     std::string cpu_info = (platform_config.cpu_affinity >= 0) ? "CPU " + std::to_string(platform_config.cpu_affinity) : "No affinity";
@@ -80,9 +80,7 @@ AlpacaTrader::Config::ThreadSettings Manager::create_platform_config(const Alpac
     return platform_config;
 }
 
-bool Manager::apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, 
-                                       const AlpacaTrader::Config::ThreadSettings& platform_config, 
-                                       const AlpacaTrader::Config::SystemConfig& config) 
+bool Manager::apply_thread_configuration(const AlpacaTrader::Config::ThreadSettings& platform_config) 
 {
     AlpacaTrader::Config::Priority actual_priority = ThreadControl::set_priority_with_fallback(active_threads_.back(), platform_config);
     bool success = (actual_priority == platform_config.priority);

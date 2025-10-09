@@ -5,6 +5,7 @@
 #include "configs/timing_config.hpp"
 #include "configs/api_config.hpp"
 #include "configs/logging_config.hpp"
+#include "configs/api_client_config.hpp"
 #include <map>
 #include <string>
 
@@ -22,12 +23,6 @@ enum class ThreadType {
 };
 
 // Config types for thread components
-struct AlpacaClientConfig {
-    const ApiConfig& api;
-    const LoggingConfig& logging;
-    const TimingConfig& timing;
-    const StrategyConfig& strategy;
-};
 
 struct AccountManagerConfig {
     const ApiConfig& api;

@@ -1,12 +1,11 @@
 #ifndef MARKET_CLOCK_HPP
 #define MARKET_CLOCK_HPP
 
-#include "api/base/alpaca_base_client.hpp"
+#include "alpaca_base_client.hpp"
 #include "core/trader/data/data_structures.hpp"
 
 namespace AlpacaTrader {
 namespace API {
-namespace Clock {
 
 class MarketClock : public AlpacaBaseClient {
 public:
@@ -24,7 +23,6 @@ private:
     bool is_within_time_window(int hour, int minute, int open_hour, int open_minute, int close_hour, int close_minute) const;
 };
 
-} // namespace Clock
 } // namespace API
 } // namespace AlpacaTrader
 

@@ -22,7 +22,7 @@ struct MarketGateThread {
                    const LoggingConfig& logging_cfg,
                    std::atomic<bool>& allow,
                    std::atomic<bool>& running_flag,
-                   AlpacaTrader::API::AlpacaClient& cli)
+                    AlpacaTrader::API::AlpacaClient& cli)
         : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), client(cli) {}
     
     void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }

@@ -31,10 +31,10 @@ int main() {
         SystemThreads thread_handles = SystemManager::startup(system_state, logger);
         
         // Run until shutdown signal
-        SystemManager::run(system_state, thread_handles);
+        SystemManager::run(system_state);
         
         // Clean shutdown
-        SystemManager::shutdown(system_state, thread_handles, logger);
+        SystemManager::shutdown(system_state, logger);
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;

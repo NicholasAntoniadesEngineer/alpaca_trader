@@ -2,11 +2,11 @@
 #ifndef ALPACA_CLIENT_HPP
 #define ALPACA_CLIENT_HPP
 
-#include "core/threads/thread_register.hpp"
+#include "configs/api_client_config.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "clock/market_clock.hpp"
-#include "market/market_data_client.hpp"
-#include "orders/order_client.hpp"
+#include "market_clock.hpp"
+#include "market_data_client.hpp"
+#include "order_client.hpp"
 #include <vector>
 
 namespace AlpacaTrader {
@@ -14,37 +14,34 @@ namespace API {
 
 /**
  * AlpacaClient - Unified API facade for Alpaca trading operations
- * 
+ *
  * This class provides a simplified interface to all Alpaca API operations
  * by delegating to specialized component classes. It serves as a single
  * configuration point and entry point for all trading-related API calls.
  */
 class AlpacaClient {
 private:
-    Clock::MarketClock clock;
-    Market::MarketDataClient market_data;
-    Orders::OrderClient orders;
+    MarketClock clock;
+    MarketDataClient market_data;
+    OrderClient orders;
     
     // Direct access to configuration for API methods
     const AlpacaClientConfig config;
 
 public:
-    explicit AlpacaClient(const AlpacaClientConfig& cfg)
-        : clock(cfg), market_data(cfg), orders(cfg), config(cfg) {
-        // Set the API client reference in the orders component
-        orders.set_api_client(this);
-    }
+    explicit AlpacaClient(const AlpacaClientConfig& cfg);
+    ~AlpacaClient();
 
     // Market hours and timing operations
     bool is_core_trading_hours() const { return clock.is_core_trading_hours(); }
     bool is_within_fetch_window() const { return clock.is_within_fetch_window(); }
     bool is_approaching_market_close() const { return clock.is_approaching_market_close(); }
     int get_minutes_until_market_close() const { return clock.get_minutes_until_market_close(); }
-    
+
     // Market data operations
     std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& req) const { return market_data.get_recent_bars(req); }
     double get_current_price(const std::string& symbol) const { return market_data.get_current_price(symbol); }
-    
+
     // Order management operations
     void place_bracket_order(const Core::OrderRequest& req) const { orders.place_bracket_order(req); }
     void close_position(const Core::ClosePositionRequest& req) const { orders.close_position(req); }

@@ -1,5 +1,5 @@
 
-#include "api/orders/order_client.hpp"
+#include "order_client.hpp"
 #include "api/alpaca_client.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
@@ -20,7 +20,6 @@ using json = nlohmann::json;
 
 namespace AlpacaTrader {
 namespace API {
-namespace Orders {
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::TradingLogs;
@@ -370,6 +369,5 @@ void OrderClient::verify_position_closure() const {
     TradingLogs::log_position_verification(verify_qty);
 }
 
-} // namespace Orders
 } // namespace API
 } // namespace AlpacaTrader

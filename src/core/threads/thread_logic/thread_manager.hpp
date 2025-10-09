@@ -52,9 +52,7 @@ private:
     // Thread setup utilities
     static void configure_single_thread(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config);
     static AlpacaTrader::Config::ThreadSettings create_platform_config(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config);
-    static bool apply_thread_configuration(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, 
-                                          const AlpacaTrader::Config::ThreadSettings& platform_config, 
-                                          const AlpacaTrader::Config::SystemConfig& config);
+    static bool apply_thread_configuration(const AlpacaTrader::Config::ThreadSettings& platform_config);
     
     
     // Thread status tracking
