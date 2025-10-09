@@ -155,9 +155,40 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.trader_decision_thread_polling_interval_seconds") cfg.timing.thread_trader_poll_interval_sec = std::stoi(value);
         else if (key == "timing.logging_thread_polling_interval_seconds") cfg.timing.thread_logging_poll_interval_sec = std::stoi(value);
 
+        // Market Session Buffer Times
+        else if (key == "timing.pre_market_open_buffer_minutes") cfg.timing.pre_market_open_buffer_minutes = std::stoi(value);
+        else if (key == "timing.post_market_close_buffer_minutes") cfg.timing.post_market_close_buffer_minutes = std::stoi(value);
+        else if (key == "timing.market_close_grace_period_minutes") cfg.timing.market_close_grace_period_minutes = std::stoi(value);
+
+        // Historical Data Configuration
+        else if (key == "timing.historical_data_fetch_period_minutes") cfg.timing.historical_data_fetch_period_minutes = std::stoi(value);
+        else if (key == "timing.historical_data_buffer_size") cfg.timing.historical_data_buffer_size = std::stoi(value);
+        else if (key == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(value);
+        else if (key == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(value);
+
         // System Health Monitoring
         else if (key == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(value);
         else if (key == "timing.system_health_logging_interval_seconds") cfg.timing.system_health_logging_interval_seconds = std::stoi(value);
+
+        // Error Recovery Timing
+        else if (key == "timing.emergency_trading_halt_duration_minutes") cfg.timing.emergency_trading_halt_duration_minutes = std::stoi(value);
+
+        // User Interface Updates
+        else if (key == "timing.countdown_display_refresh_interval_seconds") cfg.timing.countdown_display_refresh_interval_seconds = std::stoi(value);
+
+        // Thread Lifecycle Management
+        else if (key == "timing.thread_initialization_delay_milliseconds") cfg.timing.thread_initialization_delay_milliseconds = std::stoi(value);
+        else if (key == "timing.thread_startup_sequence_delay_milliseconds") cfg.timing.thread_startup_sequence_delay_milliseconds = std::stoi(value);
+
+        // Order Management Timing
+        else if (key == "timing.order_cancellation_processing_delay_milliseconds") cfg.timing.order_cancellation_processing_delay_milliseconds = std::stoi(value);
+        else if (key == "timing.position_verification_timeout_milliseconds") cfg.timing.position_verification_timeout_milliseconds = std::stoi(value);
+        else if (key == "timing.position_settlement_timeout_milliseconds") cfg.timing.position_settlement_timeout_milliseconds = std::stoi(value);
+        else if (key == "timing.maximum_concurrent_order_cancellations") cfg.timing.maximum_concurrent_order_cancellations = std::stoi(value);
+
+        // Trading Safety Constraints
+        else if (key == "timing.minimum_interval_between_orders_seconds") cfg.timing.minimum_interval_between_orders_seconds = std::stoi(value);
+        else if (key == "timing.enable_wash_trade_prevention_mechanism") cfg.timing.enable_wash_trade_prevention_mechanism = to_bool(value);
 
         // Precision Settings for Metrics
         else if (key == "timing.cpu_usage_display_precision") cfg.timing.cpu_usage_display_precision = std::stoi(value);
@@ -334,12 +365,6 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     // Validate thread polling intervals are reasonable
     if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_market_data_poll_interval_sec > 3600) {
         error_message = "timing.thread_market_data_poll_interval_sec must be between 1 and 3600 seconds";
-        return false;
-    }
-
-    // Validate system health monitoring configuration
-    if (config.timing.system_health_logging_interval_seconds <= 0 || config.timing.system_health_logging_interval_seconds > 3600) {
-        error_message = "timing.system_health_logging_interval_seconds must be between 1 and 3600 seconds";
         return false;
     }
     

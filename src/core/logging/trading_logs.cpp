@@ -636,8 +636,13 @@ void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemCon
     TABLE_SEPARATOR_48();
     
     // Timing Configuration
+    TABLE_ROW_48("Market Data Poll", std::to_string(config.timing.thread_market_data_poll_interval_sec) + "s");
     TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.thread_account_data_poll_interval_sec) + "s");
+    TABLE_ROW_48("Market Gate Poll", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
+    TABLE_ROW_48("Trader Decision Poll", std::to_string(config.timing.thread_trader_poll_interval_sec) + "s");
+    TABLE_ROW_48("Logging Poll", std::to_string(config.timing.thread_logging_poll_interval_sec) + "s");
     TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.historical_data_fetch_period_minutes) + "m");
+    TABLE_ROW_48("Historical Data Buffer", std::to_string(config.timing.historical_data_buffer_size) + " bars");
     TABLE_ROW_48("Market Status Check", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
     TABLE_ROW_48("Thread Monitor Log", std::to_string(config.strategy.health_check_interval_sec) + "s");
     

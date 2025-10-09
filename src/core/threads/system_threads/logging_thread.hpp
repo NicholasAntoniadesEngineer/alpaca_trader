@@ -5,6 +5,7 @@
 #include <atomic>
 #include <fstream>
 #include <memory>
+#include <vector>
 #include "core/logging/async_logger.hpp"
 #include "configs/system_config.hpp"
 
@@ -25,9 +26,13 @@ private:
     std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger_ptr;
     std::atomic<unsigned long>* logger_iterations;
     const AlpacaTrader::Config::SystemConfig& config;
-    
+
     void setup_logging_thread();
     void logging_loop();
+    void collect_all_available_messages(std::vector<std::string>& buffer);
+    void collect_messages_for_batch(std::vector<std::string>& buffer);
+    void flush_message_buffer(std::vector<std::string>& buffer, std::ofstream& log_file);
+    void process_logging_queue_with_timeout(std::ofstream& log_file);
     void process_logging_queue(std::ofstream& log_file);
     void output_log_line(const std::string& line, std::ofstream& log_file);
 };

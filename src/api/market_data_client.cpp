@@ -72,13 +72,13 @@ std::string MarketDataClient::build_bars_url(const std::string& symbol, int limi
     using namespace AlpacaTrader::Config;
 
     std::string timeframe = (limit == 10) ? "1Day" : "1Min";
-    std::string url = api.data_url + api.endpoints.market_data.bars;
+    std::string url = api.market_data_url + api.endpoints.market_data.bars;
     // Replace {symbol} placeholder
     size_t pos = url.find("{symbol}");
     if (pos != std::string::npos) {
         url.replace(pos, 8, symbol);
     }
-    return url + "&timeframe=" + timeframe + "&limit=" + std::to_string(limit) +
+    return url + "?timeframe=" + timeframe + "&limit=" + std::to_string(limit) +
            "&adjustment=raw&feed=" + feed;
 }
 
@@ -174,7 +174,7 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
     using namespace AlpacaTrader::Config;
     
     // Construct real-time quotes endpoint URL.
-    std::string url = api.data_url + api.endpoints.market_data.quotes_latest;
+    std::string url = api.market_data_url + api.endpoints.market_data.quotes_latest;
     // Replace {symbol} placeholder
     size_t pos = url.find("{symbol}");
     if (pos != std::string::npos) {

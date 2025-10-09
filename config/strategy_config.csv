@@ -10,7 +10,7 @@
 # Trading symbol and market session settings
 
 # Target symbol for trading
-target.symbol,NFLX
+target.symbol,SPY
 
 # Market session timing (Eastern Time)
 session.et_utc_offset_hours,-4
