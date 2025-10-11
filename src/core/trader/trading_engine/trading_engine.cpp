@@ -2,6 +2,7 @@
 #include "core/trader/analysis/risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/logging/market_data_logs.hpp"
 #include "core/system/system_monitor.hpp"
 #include <chrono>
 #include <cmath>
@@ -111,20 +112,62 @@ bool TradingEngine::validate_risk_conditions(const ProcessedData& data, double e
 }
 
 bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
-    // Validate that market data is not null/empty
-    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
-        TradingLogs::log_market_status(false, "Invalid market data - NaN or infinite values detected");
+    // Check if this is a default/empty MarketSnapshot (no data available)
+    if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 && 
+        market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
+        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
+            config.strategy.symbol,
+            "No Data Available",
+            "Symbol may not exist or market is closed",
+            0,
+            config.logging.log_file
+        );
         return false;
     }
 
-    if (market.curr.c <= 0.0 || market.atr <= 0.0) {
-        TradingLogs::log_market_status(false, "Invalid market data - price or ATR is zero or negative");
+    // Validate that market data is not null/empty
+    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
+        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
+            config.strategy.symbol,
+            "Invalid Data",
+            "NaN or infinite values detected in market data",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    if (market.curr.c <= 0.0) {
+        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
+            config.strategy.symbol,
+            "Invalid Data",
+            "Price is zero or negative",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    if (market.atr <= 0.0) {
+        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
+            config.strategy.symbol,
+            "Insufficient Data",
+            "ATR is zero or negative - insufficient volatility data for trading",
+            0,
+            config.logging.log_file
+        );
         return false;
     }
 
     // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
     if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
-        TradingLogs::log_market_status(false, "Invalid market data - OHLC relationship violation");
+        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
+            config.strategy.symbol,
+            "Invalid Data",
+            "OHLC relationship violation - invalid price data structure",
+            0,
+            config.logging.log_file
+        );
         return false;
     }
 

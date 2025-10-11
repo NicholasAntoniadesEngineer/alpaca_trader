@@ -218,13 +218,13 @@ void MarketDataClient::log_fetch_result(const std::string& description, bool suc
 }
 
 void MarketDataClient::log_fetch_failure() const {
-    LOG_THREAD_SEPARATOR();
-    LOG_THREAD_CONTENT("ALL DATA SOURCES FAILED:");
-    LOG_THREAD_SUBCONTENT("- IEX FREE FEED: Limited symbol coverage, 15-min delay");
-    LOG_THREAD_SUBCONTENT("- SIP PAID FEED: Requires subscription ($100+/month)");
-    LOG_THREAD_SUBCONTENT("- Market may be closed (weekend/holiday)");
-    LOG_THREAD_SUBCONTENT("- Check API key permissions and account status");
-    LOG_THREAD_SECTION_FOOTER();
+    MarketDataLogs::log_market_data_failure_summary(
+        "UNKNOWN", 
+        "API Error", 
+        "All data sources failed to provide market data", 
+        0, 
+        logging.log_file
+    );
 }
 
 /**
