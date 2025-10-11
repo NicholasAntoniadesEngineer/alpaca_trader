@@ -83,11 +83,14 @@ void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thre
         auto runtime_duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time);
         double runtime_seconds = runtime_duration.count();
         
-        // Calculate total iterations across all threads with error handling
+        // Calculate total iterations and active threads
         unsigned long total_iterations = 0;
+        int active_threads = 0;
         for (const auto& thread_info : thread_infos) {
             try {
-                total_iterations += thread_info.iterations.load();
+                unsigned long iterations = thread_info.iterations.load();
+                total_iterations += iterations;
+                if (iterations > 0) active_threads++;
             } catch (const std::exception& e) {
                 // Skip invalid thread info and continue
                 continue;
@@ -97,7 +100,12 @@ void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thre
         // Calculate performance rate
         double iterations_per_second = (runtime_seconds > 0) ? total_iterations / runtime_seconds : 0.0;
         
-        // Use proper table macros for consistent formatting
+        // Use new thread monitor header macro
+        static int monitor_count = 0;
+        monitor_count++;
+        LOG_THREAD_MONITOR_HEADER(monitor_count, thread_infos.size(), active_threads);
+        
+        // Use original table format for detailed information
         TABLE_HEADER_48("Thread Monitor", "Iteration Counts & Performance");
         
         // Log each thread's iteration count with error handling
@@ -125,6 +133,9 @@ void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thre
         TABLE_ROW_48("Performance Rate", rate_stream.str());
         
         TABLE_FOOTER_48();
+
+        LOG_MESSAGE_BAR();
+        
     } catch (const std::exception& e) {
         // Log error and continue
         log_message("ERROR in thread monitoring stats: " + std::string(e.what()), "trading_system.log");

@@ -22,9 +22,33 @@
 #define LOG_TRADING_LOOP_HEADER(loop_num, symbol) \
     log_message("", ""); \
     log_message("================================================================================", ""); \
-    log_message("                                 TRADING LOOP #" + std::to_string(loop_num) + " - " + symbol, ""); \
+    log_message("                              TRADING LOOP #" + std::to_string(loop_num) + " - " + symbol, ""); \
     log_message("================================================================================", ""); \
     log_message("", "")
+
+// Thread monitor header (special case - no indentation)
+#define LOG_THREAD_MONITOR_HEADER(monitor_num, total_threads, active_threads) \
+    log_message("", ""); \
+    log_message("================================================================================", ""); \
+    log_message("                           THREAD MONITOR #" + std::to_string(monitor_num) + " - " + std::to_string(active_threads) + "/" + std::to_string(total_threads) + " ACTIVE", ""); \
+    log_message("================================================================================", ""); \
+    log_message("", "")
+
+#define LOG_MESSAGE_BAR() \
+    log_message("================================================================================", ""); \
+    log_message("", "")
+
+// Thread status section macros
+#define LOG_THREAD_STATUS_SECTION() LOG_SECTION_HEADER("THREAD STATUS")
+#define LOG_THREAD_PERFORMANCE_SECTION() LOG_SECTION_HEADER("THREAD PERFORMANCE")
+#define LOG_THREAD_HEALTH_SECTION() LOG_SECTION_HEADER("THREAD HEALTH")
+
+// Individual thread status macros
+#define LOG_THREAD_STATUS(thread_name, status, iterations, cpu_usage) \
+    log_message("|   " + std::string(thread_name) + ": " + std::string(status) + " | Iterations: " + std::to_string(iterations) + " | CPU: " + std::to_string(cpu_usage) + "%", "")
+
+#define LOG_THREAD_HEALTH(thread_name, healthy, details) \
+    log_message("|   " + std::string(thread_name) + ": " + (healthy ? "HEALTHY" : "ERROR") + (details.empty() ? "" : " - " + details), "")
 
 // Market status message (special case - no indentation)  
 #define LOG_MARKET_STATUS(msg) log_message(msg, "")

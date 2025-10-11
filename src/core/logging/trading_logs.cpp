@@ -275,7 +275,8 @@ void TradingLogs::log_signal_analysis_start(const std::string& symbol) {
 void TradingLogs::log_signal_analysis_complete() {
     LOG_THREAD_SEPARATOR();
     LOG_SIGNAL_ANALYSIS_COMPLETE();
-    log_message("", "");
+    LOG_MESSAGE_BAR();
+    
 }
 
 void TradingLogs::log_filters_not_met_preview(double risk_amount, int quantity) {
