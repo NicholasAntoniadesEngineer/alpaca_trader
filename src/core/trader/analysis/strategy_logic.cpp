@@ -25,14 +25,20 @@ SignalDecision detect_trading_signals(const ProcessedData& data, const SystemCon
     
     // Calculate momentum indicators for better signal detection
     double price_change = data.curr.c - data.prev.c;
-    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * 100.0 : 0.0;
+    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * config.strategy.percentage_calculation_multiplier : 0.0;
     
-    // Calculate volume momentum
-    double volume_change = static_cast<double>(data.curr.v) - static_cast<double>(data.prev.v);
-    double volume_change_pct = (data.prev.v > 0) ? (volume_change / static_cast<double>(data.prev.v)) * 100.0 : 0.0;
+    // Calculate volume momentum with crypto-specific handling
+    double volume_change = data.curr.v - data.prev.v;
+    double volume_change_pct = (data.prev.v > 0) ? (volume_change / data.prev.v) * config.strategy.percentage_calculation_multiplier : 0.0;
+    
+    // For crypto: normalize volume change percentage to be more sensitive to small changes
+    if (config.strategy.is_crypto_asset) {
+        // Crypto volumes are much smaller, so amplify the percentage for better signal detection
+        volume_change_pct *= config.strategy.crypto_volume_change_amplification_factor;
+    }
     
     // Calculate volatility (ATR-based)
-    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * 100.0 : 0.0;
+    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * config.strategy.percentage_calculation_multiplier : 0.0;
     
     // Enhanced BUY signal conditions with momentum confirmation
     bool basic_buy_close = config.strategy.buy_signals_allow_equal_close ? 
@@ -161,11 +167,21 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemCon
         result.atr_pass = data.atr > config.strategy.entry_signal_atr_multiplier * data.avg_atr;
     }
     
-    result.vol_pass = data.curr.v > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
+    // Crypto-specific volume filtering: use different thresholds for crypto vs stocks
+    if (config.strategy.is_crypto_asset) {
+        // For crypto: use crypto-specific volume multiplier for fractional volumes
+        double crypto_threshold = config.strategy.crypto_volume_multiplier * data.avg_vol;
+        result.vol_pass = data.curr.v > crypto_threshold;
+        
+    } else {
+        // For stocks: use original volume multiplier
+        result.vol_pass = data.curr.v > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
+    }
+    
     result.doji_pass = !detect_doji_pattern(data.curr.o, data.curr.h, data.curr.l, data.curr.c, config.strategy.doji_candlestick_body_size_threshold_percentage);
     result.all_pass = result.atr_pass && result.vol_pass && result.doji_pass;
     result.atr_ratio = (data.avg_atr > 0.0) ? (data.atr / data.avg_atr) : 0.0;
-    result.vol_ratio = (data.avg_vol > 0.0) ? (static_cast<double>(data.curr.v) / data.avg_vol) : 0.0;
+    result.vol_ratio = (data.avg_vol > 0.0) ? (data.curr.v / data.avg_vol) : 0.0;
     return result;
 }
 
@@ -190,20 +206,26 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemCon
  */
 PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const SystemConfig& config, double buying_power) {
     PositionSizing sizing;
-    sizing.risk_amount = equity * config.strategy.risk_percentage_per_trade;
-    
+
     // Early return if price is invalid (zero or negative)
-    if (data.curr.c <= 0.0 || sizing.risk_amount <= 0.0) {
+    if (data.curr.c <= 0.0) {
         sizing.quantity = 0;
         sizing.risk_based_qty = 0;
         sizing.exposure_based_qty = 0;
         sizing.max_value_qty = 0;
         sizing.buying_power_qty = 0;
+        sizing.risk_amount = 0.0;
         return sizing;
     }
-    
+
     double stop_loss_distance = data.atr;
     double risk_per_share = stop_loss_distance;
+
+    // Calculate total risk budget (percentage of equity)
+    double total_risk_budget = equity * config.strategy.risk_percentage_per_trade;
+
+    // Set risk_amount to risk per share (ATR), not total budget
+    sizing.risk_amount = risk_per_share;
     
     // Check for fixed shares per trade first (if enabled)
     if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.fixed_share_quantity_per_trade > 0) {
@@ -233,17 +255,25 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
         sizing.size_multiplier *= config.strategy.risk_based_position_size_multiplier;
     }
     
-    int equity_based_qty = static_cast<int>(std::floor(
-        (sizing.risk_amount * sizing.size_multiplier) / risk_per_share
-    ));
-    
-    double max_total_exposure_value = equity * (config.strategy.max_account_exposure_percentage / 100.0);
+    // Calculate equity-based quantity with safety checks
+    int equity_based_qty = 0;
+    if (risk_per_share > 0.0 && total_risk_budget > 0.0 && sizing.size_multiplier > 0.0) {
+        equity_based_qty = static_cast<int>(std::floor(
+            (total_risk_budget * sizing.size_multiplier) / risk_per_share
+        ));
+    }
+
+    double max_total_exposure_value = equity * (config.strategy.max_account_exposure_percentage / config.strategy.percentage_calculation_multiplier);
     double current_exposure_value = std::abs(data.pos_details.current_value);
     double available_exposure_value = max_total_exposure_value - current_exposure_value;
-    
+
     available_exposure_value = std::max(0.0, available_exposure_value);
-    
-    int exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
+
+    // Calculate exposure-based quantity with safety checks
+    int exposure_based_qty = 0;
+    if (data.curr.c > 0.0 && available_exposure_value > 0.0) {
+        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
+    }
     
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     

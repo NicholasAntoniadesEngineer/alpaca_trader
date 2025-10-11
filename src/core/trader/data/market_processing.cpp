@@ -24,14 +24,17 @@ IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars) {
 ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemConfig& cfg) {
     ProcessedData data;
     if (bars.empty()) return data;
-    const int atr_period = cfg.strategy.atr_calculation_period;
+    // Use configurable ATR calculation bars (new parameter) instead of deprecated atr_calculation_period
+    const int atr_period = cfg.strategy.atr_calculation_bars;
     if (static_cast<int>(bars.size()) < atr_period + 2) return data;
 
     IndicatorInputs inputs = extract_inputs_from_bars(bars);
     data.atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
     if (data.atr == 0.0) return data;
     data.avg_atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.average_atr_comparison_multiplier);
-    data.avg_vol = compute_average_volume(inputs.volumes, atr_period);
+    data.avg_vol = compute_average_volume(inputs.volumes, atr_period, cfg.strategy.minimum_volume_threshold);
+    
+    
     data.curr = bars.back();
     data.prev = bars[bars.size() - 2];
     return data;

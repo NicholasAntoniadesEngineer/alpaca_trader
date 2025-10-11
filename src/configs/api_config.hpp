@@ -42,6 +42,12 @@ struct ApiConfig {
             std::string bars;
             std::string quotes_latest;
         } market_data;
+
+        struct {
+            std::string bars;
+            std::string quotes_latest;
+            std::string assets;
+        } crypto;
     } endpoints;
 };
 

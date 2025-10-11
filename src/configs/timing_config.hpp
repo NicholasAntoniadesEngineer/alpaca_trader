@@ -21,6 +21,7 @@ struct TimingConfig {
     int historical_data_buffer_size;                 // Historical data buffer size
     int account_data_cache_duration_seconds;         // Account data cache duration in seconds
     int market_data_staleness_threshold_seconds;     // Market data staleness threshold in seconds
+    int crypto_data_staleness_threshold_seconds;     // Crypto-specific data staleness threshold in seconds
 
     // ========================================================================
     // MARKET SESSION BUFFER TIMES

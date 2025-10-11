@@ -145,5 +145,13 @@ void AccountLogs::log_orders_parse_error(const std::string& error, const std::st
     log_message("Raw orders response: " + raw_response, log_file);
 }
 
+void AccountLogs::log_position_empty_response(const std::string& log_file) {
+    log_message("INFO: Empty response when fetching position details", log_file);
+}
+
+void AccountLogs::log_position_not_found(const std::string& symbol, const std::string& log_file) {
+    log_message("INFO: Position not found for symbol " + symbol + " (no position held)", log_file);
+}
+
 } // namespace Logging
 } // namespace AlpacaTrader

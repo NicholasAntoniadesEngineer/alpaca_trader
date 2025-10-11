@@ -76,9 +76,9 @@ struct DataSyncReferences {
           running(&config.running), allow_fetch(&config.allow_fetch),
           market_data_timestamp(&config.market_data_timestamp), market_data_fresh(&config.market_data_fresh),
           last_order_timestamp(&config.last_order_timestamp) {
-        // Debug: Verify that market_data_timestamp is properly initialized
+        // Validate that critical pointers are properly initialized
         if (market_data_timestamp == nullptr) {
-            // This should not happen, but let's catch it
+            throw std::invalid_argument("DataSyncReferences: market_data_timestamp cannot be null");
         }
     }
 };

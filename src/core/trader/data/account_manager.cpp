@@ -70,19 +70,41 @@ double AccountManager::fetch_buying_power() const {
     return 0.0;
 }
 
+std::string AccountManager::replace_url_placeholder(const std::string& url, const std::string& symbol) const {
+    std::string result = url;
+
+    // Replace {symbol} placeholder
+    size_t pos = result.find("{symbol}");
+    if (pos != std::string::npos) {
+        result.replace(pos, 8, symbol);
+    }
+
+    return result;
+}
+
 PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_sym) const {
     using namespace AlpacaTrader::Config;
     PositionDetails details;
     std::string url = api.base_url + api.endpoints.trading.position_by_symbol;
+
     // Replace {symbol} placeholder
-    size_t pos = url.find("{symbol}");
-    if (pos != std::string::npos) {
-        url.replace(pos, 8, req_sym.symbol);
-    }
-    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
+    url = replace_url_placeholder(url, req_sym.symbol);
+    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file,
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);
-    if (response.empty()) return details;
+
+    // Handle empty response (network/API issues)
+    if (response.empty()) {
+        AccountLogs::log_position_empty_response(logging.log_file);
+        return details;
+    }
+
+    // Handle "Not Found" response (no position exists for symbol)
+    if (response == "Not Found" || response.find("Not Found") != std::string::npos) {
+        AccountLogs::log_position_not_found(req_sym.symbol, logging.log_file);
+        return details; // Return empty details for non-existent position
+    }
+
     try {
         json j = json::parse(response);
         if (j.contains("qty") && !j["qty"].is_null()) {
@@ -103,11 +125,9 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
 int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const {
     using namespace AlpacaTrader::Config;
     std::string url = api.base_url + api.endpoints.trading.orders_by_symbol;
+
     // Replace {symbol} placeholder
-    size_t pos = url.find("{symbol}");
-    if (pos != std::string::npos) {
-        url.replace(pos, 8, req_sym.symbol);
-    }
+    url = replace_url_placeholder(url, req_sym.symbol);
     HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
     std::string response = http_get(req);

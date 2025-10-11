@@ -129,7 +129,7 @@ public:
     static void log_decision_summary_table(const std::string& symbol, double price, bool buy_signal, bool sell_signal, bool atr_pass, bool volume_pass, bool doji_pass, double exposure_pct, double atr_ratio, double volume_ratio);
     
     // System startup and status tables
-    static void log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval);
+    static void log_trader_startup_table(const SystemConfig& config, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval);
     static void log_account_overview_table(const std::string& account_number, const std::string& status, const std::string& currency, bool pattern_day_trader, const std::string& created_date);
     static void log_financial_summary_table(double equity, double last_equity, double cash, double buying_power, double long_market_value, double short_market_value, double initial_margin, double maintenance_margin, double sma, int day_trade_count, double regt_buying_power, double day_trading_buying_power);
     static void log_current_positions_table(int quantity, double current_value, double unrealized_pnl, double exposure_pct, int open_orders);

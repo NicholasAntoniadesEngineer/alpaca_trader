@@ -1,4 +1,4 @@
-#include "api/clock/market_clock.hpp"
+#include "market_clock.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/time_utils.hpp"
@@ -15,7 +15,6 @@ using AlpacaTrader::Logging::log_message;
 
 namespace AlpacaTrader {
 namespace API {
-namespace Clock {
 
 bool MarketClock::is_core_trading_hours() const {
     using namespace AlpacaTrader::Config;
@@ -56,7 +55,12 @@ bool MarketClock::is_core_trading_hours() const {
 }
 
 bool MarketClock::is_within_fetch_window() const {
-    // Allow data fetching only when: market is open OR within N minutes before next open
+    // For crypto assets, always allow data fetching (24/7 markets)
+    if (crypto_asset) {
+        return true;
+    }
+
+    // For stocks, allow data fetching only when: market is open OR within N minutes before next open
     using namespace AlpacaTrader::Config;
     HttpRequest req(api.base_url + api.endpoints.trading.clock, api.api_key, api.api_secret, logging.log_file, 
                    api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
@@ -180,6 +184,5 @@ bool MarketClock::is_within_time_window(int hour, int minute, int open_hour, int
     return after_open && before_close;
 }
 
-} // namespace Clock
 } // namespace API
 } // namespace AlpacaTrader

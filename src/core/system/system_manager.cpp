@@ -90,18 +90,19 @@ SystemConfigurations create_trading_configurations(const SystemState& state) {
 SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     SystemConfigurations configs = create_trading_configurations(state);
     SystemModules modules;
-    
+
     // Create core trading modules
-    modules.market_connector = std::make_unique<AlpacaTrader::API::AlpacaClient>(configs.market_connector);
+    auto* market_client = new AlpacaTrader::API::AlpacaClient(configs.market_connector);
+    modules.market_connector = market_client;
     modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(configs.portfolio_manager);
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
-    modules.trading_engine = std::make_unique<AlpacaTrader::Core::TradingOrchestrator>(state.trader_view, *modules.market_connector, *modules.portfolio_manager);
+    modules.trading_engine = std::make_unique<AlpacaTrader::Core::TradingOrchestrator>(state.trader_view, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector), *modules.portfolio_manager);
     
     // Create thread modules
     
     // Create MARKET_DATA thread
-    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_connector, 
-                                                                   state.mtx, state.cv, state.market, 
+    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector),
+                                                                   state.mtx, state.cv, state.market,
                                                                    state.has_market, state.running,
                                                                    state.market_data_timestamp, state.market_data_fresh);
     
@@ -111,8 +112,8 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
                                                                      state.has_account, state.running);
     
     // Create MARKET_GATE thread
-    modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging, 
-                                                                   state.allow_fetch, state.running, *modules.market_connector);
+    modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
+                                                                   state.allow_fetch, state.running, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector));
     
     // Create LOGGING thread
     static std::atomic<unsigned long> logging_iterations{0};
@@ -208,12 +209,12 @@ static void run_until_shutdown(SystemState& state) {
         while (state.running.load()) {
             try {
                 auto now = std::chrono::steady_clock::now();
-                
-                // Check if thread monitoring is enabled and it's time to log stats
-                if (state.config.strategy.health_check_interval_sec > 0 && 
+
+                // Check if thread monitoring is enabled and it's time to log stats (configurable frequency)
+                if (state.config.timing.enable_system_health_monitoring &&
                     !state.thread_infos.empty() &&
-                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.strategy.health_check_interval_sec) {
-                    
+                    std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.timing.system_health_logging_interval_seconds) {
+
                     try {
                         AlpacaTrader::Core::ThreadSystem::Manager::log_thread_monitoring_stats(state.thread_infos, start_time);
                         last_monitor_time = now;
@@ -223,8 +224,9 @@ static void run_until_shutdown(SystemState& state) {
                         std::cerr << "Unknown error logging thread monitoring stats" << std::endl;
                     }
                 }
-                
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+
+                // Sleep for main loop interval based on configuration
+                std::this_thread::sleep_for(std::chrono::seconds(state.config.timing.thread_market_data_poll_interval_sec));
             } catch (const std::exception& e) {
                 // Log error and continue
                 std::cerr << "Error in main loop: " << e.what() << std::endl;
@@ -243,10 +245,16 @@ static void run_until_shutdown(SystemState& state) {
 void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
-    
+
     // Wait for all threads to complete
     Manager::shutdown_threads();
-    
+
+    // Cleanup market connector
+    if (system_state.trading_modules->market_connector) {
+        delete static_cast<AlpacaTrader::API::AlpacaClient*>(system_state.trading_modules->market_connector);
+        system_state.trading_modules->market_connector = nullptr;
+    }
+
     // Shutdown logging system
     AlpacaTrader::Logging::shutdown_global_logger(*logger);
 }

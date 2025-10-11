@@ -16,7 +16,7 @@ struct IndicatorInputs {
     std::vector<double> highs;
     std::vector<double> lows;
     std::vector<double> closes;
-    std::vector<long long> volumes;
+    std::vector<double> volumes; 
 };
 
 IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars);

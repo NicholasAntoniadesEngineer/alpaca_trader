@@ -3,13 +3,12 @@
 
 #include <string>
 #include <vector>
-#include "api/base/alpaca_base_client.hpp"
+#include "alpaca_base_client.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "json/json.hpp"
 
 namespace AlpacaTrader {
 namespace API {
-namespace Orders {
 
 class OrderClient : public AlpacaBaseClient {
 public:
@@ -53,7 +52,6 @@ private:
     void* api_client = nullptr;
 };
 
-} // namespace Orders
 } // namespace API
 } // namespace AlpacaTrader
 

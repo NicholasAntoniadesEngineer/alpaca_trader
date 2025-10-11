@@ -16,6 +16,9 @@ namespace Config {
  * Timing config includes: timing and system health monitoring
  */
 struct SystemConfig {
+    // Default constructor - ensures nested structs are properly constructed
+    SystemConfig() {}
+
     StrategyConfig strategy;           // All strategy-related settings (strategy, risk, position, profit-taking, orders, target, session, monitoring, error handling)
     TimingConfig timing;               // All timing and polling intervals
     LoggingConfig logging;             // Logging configuration

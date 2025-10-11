@@ -9,6 +9,7 @@ struct StrategyConfig {
     // ========================================================================
 
     std::string symbol;                              // Target symbol for trading
+    bool is_crypto_asset;                            // Whether the target symbol is a cryptocurrency
 
     // Market session timing (Eastern Time)
     int et_utc_offset_hours;                         // UTC offset for Eastern Time
@@ -32,8 +33,19 @@ struct StrategyConfig {
     // Signal filter thresholds (Conservative Settings)
     double entry_signal_atr_multiplier;              // ATR multiplier for entry signals
     double entry_signal_volume_multiplier;           // Volume multiplier for entry signals
-    int atr_calculation_period;                      // ATR calculation period in bars
+    double crypto_volume_multiplier;                 // Crypto-specific volume multiplier (fractional volumes)
+    double crypto_volume_change_amplification_factor; // Amplification factor for crypto volume change percentages
+    double percentage_calculation_multiplier;        // Multiplier for percentage calculations (default 100.0)
+    double minimum_volume_threshold;                 // Minimum volume threshold to avoid division by zero
+    int atr_calculation_period;                      // ATR calculation period in bars (deprecated - use atr_calculation_bars)
     int average_atr_comparison_multiplier;           // Average ATR comparison multiplier
+
+    // Volatility calculation configuration
+    int bars_to_fetch_for_calculations;              // Number of bars to fetch for ATR and other calculations
+    int minutes_per_bar;                             // Minutes per bar (timeframe for market data)
+    int atr_calculation_bars;                        // ATR calculation period in bars
+    std::string daily_bars_timeframe;                // Timeframe for daily bars (e.g., "1Day")
+    int daily_bars_count;                            // Number of daily bars to fetch for historical comparison
 
     // ATR-based signal validation
     double atr_absolute_minimum_threshold;           // Absolute ATR minimum threshold

@@ -22,6 +22,11 @@ public:
     static void log_data_timeout(const std::string& log_file);
     static void log_data_available(const std::string& log_file);
     static void log_data_exception(const std::string& error_message, const std::string& log_file);
+    
+    // Market data failure scenarios
+    static void log_market_data_failure_summary(const std::string& symbol, const std::string& error_type, 
+                                               const std::string& error_details, size_t bars_received, 
+                                               const std::string& log_file);
 };
 
 } // namespace Logging

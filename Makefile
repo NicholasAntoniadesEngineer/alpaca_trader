@@ -14,10 +14,10 @@ TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Source files (now in consolidated structure)
 SOURCES = src/main.cpp \
-  src/api/clock/market_clock.cpp \
-  src/api/market/market_data_client.cpp \
+  src/api/market_clock.cpp \
+  src/api/market_data_client.cpp \
   src/api/alpaca_client.cpp \
-  src/api/orders/order_client.cpp \
+  src/api/order_client.cpp \
   src/core/trader/trader.cpp \
   src/core/trader/trading_engine/trading_engine.cpp \
   src/core/trader/analysis/risk_manager.cpp \
@@ -33,7 +33,7 @@ SOURCES = src/main.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
-  src/core/monitoring/system_monitor.cpp \
+  src/core/system/system_monitor.cpp \
  \
   src/core/trader/config_loader/config_loader.cpp \
   src/core/trader/data/account_manager.cpp \
@@ -80,7 +80,7 @@ PRODUCTION_SOURCES = src/production_main.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
-  src/core/monitoring/system_monitor.cpp \
+  src/core/system/system_monitor.cpp \
   src/core/trader/config_loader/config_loader.cpp \
   src/core/trader/data/account_manager.cpp \
   src/core/utils/time_utils.cpp \
@@ -126,10 +126,6 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)/src
 	mkdir -p $(OBJ_DIR)/src/api
-	mkdir -p $(OBJ_DIR)/src/api/base
-	mkdir -p $(OBJ_DIR)/src/api/clock
-	mkdir -p $(OBJ_DIR)/src/api/market
-	mkdir -p $(OBJ_DIR)/src/api/orders
 	mkdir -p $(OBJ_DIR)/src/core
 	mkdir -p $(OBJ_DIR)/src/core/system
 	mkdir -p $(OBJ_DIR)/src/core/trader/core
@@ -138,7 +134,6 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/core/trader/data
 	mkdir -p $(OBJ_DIR)/src/core/trader/trading_engine
 	mkdir -p $(OBJ_DIR)/src/core/logging
-	mkdir -p $(OBJ_DIR)/src/core/monitoring
 	mkdir -p $(OBJ_DIR)/src/core/utils
 	mkdir -p $(OBJ_DIR)/src/core/threads
 	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic

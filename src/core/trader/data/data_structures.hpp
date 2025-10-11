@@ -16,7 +16,7 @@ namespace Core {
 
 struct Bar {
     double o, h, l, c;
-    long long v; /* volume */
+    double v; /* volume */
 };
 
 struct PositionDetails {

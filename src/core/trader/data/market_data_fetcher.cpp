@@ -88,10 +88,12 @@ void MarketDataFetcher::mark_data_as_consumed(MarketDataSyncState& sync_state) c
  * for technical analysis. Returns false if data is insufficient.
  */
 bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
-    BarRequest br{config.strategy.symbol, config.strategy.atr_calculation_period + config.timing.historical_data_buffer_size};
+    // Use configurable bars to fetch and ATR calculation bars
+    const int bars_to_fetch = config.strategy.bars_to_fetch_for_calculations + config.timing.historical_data_buffer_size;
+    BarRequest br{config.strategy.symbol, bars_to_fetch};
     auto bars = client.get_recent_bars(br);
-    
-    const size_t required_bars = static_cast<size_t>(config.strategy.atr_calculation_period + 2);
+
+    const size_t required_bars = static_cast<size_t>(config.strategy.atr_calculation_bars + 2);
     
     if (bars.size() < required_bars) {
         if (bars.empty()) {

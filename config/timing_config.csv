@@ -5,17 +5,18 @@
 # ========================================================================
 
 # Thread Polling Intervals (in seconds)
-timing.market_data_thread_polling_interval_seconds,5
+timing.market_data_thread_polling_interval_seconds,3
 timing.account_data_thread_polling_interval_seconds,10
 timing.market_gate_thread_polling_interval_seconds,30
-timing.trader_decision_thread_polling_interval_seconds,3
-timing.logging_thread_polling_interval_seconds,5
+timing.trader_decision_thread_polling_interval_seconds,5
+timing.logging_thread_polling_interval_seconds,1
 
 # Historical Data Configuration
 timing.historical_data_fetch_period_minutes,120
 timing.historical_data_buffer_size,20
 timing.account_data_cache_duration_seconds,10
-timing.market_data_staleness_threshold_seconds,3
+timing.market_data_staleness_threshold_seconds,5
+timing.crypto_data_staleness_threshold_seconds,10
 
 # Market Session Buffer Times (in minutes)
 timing.pre_market_open_buffer_minutes,5
@@ -23,14 +24,14 @@ timing.post_market_close_buffer_minutes,5
 timing.market_close_grace_period_minutes,15
 
 # System Health Monitoring
-timing.enable_system_health_monitoring,false
-timing.system_health_logging_interval_seconds,30
+timing.enable_system_health_monitoring,true
+timing.system_health_logging_interval_seconds,5
 
 # Error Recovery Timing
 timing.emergency_trading_halt_duration_minutes,1
 
 # User Interface Updates
-timing.countdown_display_refresh_interval_seconds,1
+timing.countdown_display_refresh_interval_seconds,5
 
 # Thread Lifecycle Management
 timing.thread_initialization_delay_milliseconds,200

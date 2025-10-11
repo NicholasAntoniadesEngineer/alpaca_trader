@@ -57,6 +57,9 @@ private:
     const LoggingConfig& logging;
     const StrategyConfig& strategy;  // Now contains target settings
     int cache_duration_seconds;
+
+    // Helper methods
+    std::string replace_url_placeholder(const std::string& url, const std::string& symbol) const;
     
     // Caching for rate limit optimization
     mutable std::pair<AccountInfo, AccountSnapshot> cached_data;

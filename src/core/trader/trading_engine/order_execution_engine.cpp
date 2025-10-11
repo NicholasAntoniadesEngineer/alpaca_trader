@@ -1,7 +1,7 @@
 #include "order_execution_engine.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "core/monitoring/system_monitor.hpp"
+#include "core/system/system_monitor.hpp"
 #include <thread>
 #include <chrono>
 
@@ -59,14 +59,15 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         TradingLogs::log_signal_triggered(SIGNAL_SELL, true);
         // For SELL signals, determine the correct order side based on current position
         if (current_qty == 0) {
-            // No position: open short position (use sell side for short)
-    if (!client.check_short_availability(config.strategy.symbol, sizing.quantity)) {
-        TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability");
-        AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_short_blocked(config.strategy.symbol);
-        return;
-    }
-            TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
-            execute_order(OrderSide::Sell, data, current_qty, sizing);
+            // No position: check if we can open short position (use sell side for short)
+            if (!client.check_short_availability(config.strategy.symbol, sizing.quantity)) {
+                TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
+                AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_short_blocked(config.strategy.symbol);
+                // Don't return early - allow processing of existing position closures if any
+            } else {
+                TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
+                execute_order(OrderSide::Sell, data, current_qty, sizing);
+            }
         } else if (current_qty > 0) {
             // Long position: close long position (sell to close)
             TradingLogs::log_market_status(true, "SELL signal - closing long position with market order");
@@ -358,20 +359,28 @@ bool OrderExecutionEngine::is_short_position(int qty) const {
 
 // Order timing methods for wash trade prevention
 bool OrderExecutionEngine::can_place_order_now() const {
+    // Validate data_sync is properly initialized
+    if (!data_sync.last_order_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync not initialized - cannot check wash trade prevention");
+        return false;
+    }
+
     auto now = std::chrono::steady_clock::now();
+
+    // Read the timestamp once to avoid race condition
     auto last_order = data_sync.last_order_timestamp->load();
-    
-    // If no previous order, allow
-    if (last_order == std::chrono::steady_clock::time_point::min()) {
-        TradingLogs::log_market_status(true, "No previous orders - wash trade check passed");
+
+    // Check if timestamp is properly initialized (not default-constructed)
+    if (last_order == std::chrono::steady_clock::time_point{}) {
+        TradingLogs::log_market_status(true, "No previous orders - wash trade check passed (uninitialized timestamp)");
         return true;
     }
-    
+
     // Check if enough time has passed
     auto time_since_last_order = std::chrono::duration_cast<std::chrono::seconds>(now - last_order);
     int min_interval = config.timing.minimum_interval_between_orders_seconds;
     int elapsed_seconds = time_since_last_order.count();
-    
+
     if (elapsed_seconds >= min_interval) {
         TradingLogs::log_market_status(true, "Wash trade check passed - " + std::to_string(elapsed_seconds) + "s elapsed (required: " + std::to_string(min_interval) + "s)");
         return true;
@@ -383,6 +392,12 @@ bool OrderExecutionEngine::can_place_order_now() const {
 }
 
 void OrderExecutionEngine::update_last_order_timestamp() {
+    // Validate data_sync is properly initialized
+    if (!data_sync.last_order_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync not initialized - cannot update last order timestamp");
+        return;
+    }
+
     data_sync.last_order_timestamp->store(std::chrono::steady_clock::now());
 }
 

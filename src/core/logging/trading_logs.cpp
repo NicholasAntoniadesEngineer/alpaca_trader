@@ -29,7 +29,7 @@ std::string TradingLogs::format_percentage(double percentage) {
 
 void TradingLogs::log_startup(const SystemConfig& config, double initial_equity) {
     log_trader_startup_table(
-        config.strategy.symbol,
+        config,
         initial_equity,
         config.strategy.risk_percentage_per_trade,
         config.strategy.rr_ratio,
@@ -492,10 +492,11 @@ void TradingLogs::log_market_data_result_table(const std::string& description, b
 // System Startup and Status Tables
 // ========================================================================
 
-void TradingLogs::log_trader_startup_table(const std::string& symbol, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval) {
+void TradingLogs::log_trader_startup_table(const SystemConfig& config, double initial_equity, double risk_per_trade, double rr_ratio, int loop_interval) {
     TABLE_HEADER_48("Trading Overview", "Current Session");
-    
-    TABLE_ROW_48("Trading Symbol", symbol);
+
+    TABLE_ROW_48("Trading Symbol", config.strategy.symbol);
+    TABLE_ROW_48("Asset Type", config.strategy.is_crypto_asset ? "CRYPTOCURRENCY" : "STOCK");
     TABLE_ROW_48("Initial Equity", format_currency(initial_equity));
     
     std::string risk_display = std::to_string(risk_per_trade * 100.0).substr(0,5) + "%";
@@ -636,8 +637,13 @@ void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemCon
     TABLE_SEPARATOR_48();
     
     // Timing Configuration
+    TABLE_ROW_48("Market Data Poll", std::to_string(config.timing.thread_market_data_poll_interval_sec) + "s");
     TABLE_ROW_48("Account Data Poll", std::to_string(config.timing.thread_account_data_poll_interval_sec) + "s");
+    TABLE_ROW_48("Market Gate Poll", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
+    TABLE_ROW_48("Trader Decision Poll", std::to_string(config.timing.thread_trader_poll_interval_sec) + "s");
+    TABLE_ROW_48("Logging Poll", std::to_string(config.timing.thread_logging_poll_interval_sec) + "s");
     TABLE_ROW_48("Historical Bars Fetch", std::to_string(config.timing.historical_data_fetch_period_minutes) + "m");
+    TABLE_ROW_48("Historical Data Buffer", std::to_string(config.timing.historical_data_buffer_size) + " bars");
     TABLE_ROW_48("Market Status Check", std::to_string(config.timing.thread_market_gate_poll_interval_sec) + "s");
     TABLE_ROW_48("Thread Monitor Log", std::to_string(config.strategy.health_check_interval_sec) + "s");
     
@@ -676,6 +682,11 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     TABLE_ROW_48("ATR Multiplier", std::to_string(config.strategy.entry_signal_atr_multiplier).substr(0,4));
     TABLE_ROW_48("Volume Multiplier", std::to_string(config.strategy.entry_signal_volume_multiplier).substr(0,4));
     TABLE_ROW_48("ATR Period", std::to_string(config.strategy.atr_calculation_period));
+    TABLE_ROW_48("ATR Calc Bars", std::to_string(config.strategy.atr_calculation_bars));
+    TABLE_ROW_48("Bars to Fetch", std::to_string(config.strategy.bars_to_fetch_for_calculations));
+    TABLE_ROW_48("Minutes/Bar", std::to_string(config.strategy.minutes_per_bar));
+    TABLE_ROW_48("Daily Bars TF", config.strategy.daily_bars_timeframe);
+    TABLE_ROW_48("Daily Bars Ct", std::to_string(config.strategy.daily_bars_count));
     TABLE_ROW_48("Avg ATR Multi", std::to_string(config.strategy.average_atr_comparison_multiplier).substr(0,4));
     
     TABLE_SEPARATOR_48();
