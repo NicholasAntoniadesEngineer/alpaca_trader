@@ -69,10 +69,18 @@ tail -f trade_log.txt
 
 ## TODO:
 
-- Add a generated 32-bit app key that expires regularly
-- Optimize order types and add more trading tools for decision engine
+- Go through all functions and files and limit the scope of each function and file to the minimum necessary to achieve the desired functionality.
+- Replace hardcoded dependencies with proper DI container to improve testability and modularity
+- Add circuit breaker for API calls to prevent cascade failures during outages
+- Replace raw std::thread usage with modern C++20 coroutines for better resource management
+- Implement analysis across multiple timeframes (1m, 5m, 15m, 1h) for better signal confirmation
+- Add RSI, MACD, Bollinger Bands, Stochastic Oscillator, and Fibonacci retracements
+- Implement ML models for pattern recognition and signal prediction
+- Replace fixed sizing with Kelly Criterion and dynamic risk adjustment
+- Add volatility regime detection to adjust strategy parameters dynamically
+- Implement VaR (Value at Risk), Expected Shortfall
+- Implement dynamic stop-losses and position reduction during drawdowns
+- Add order book analysis and slippage modeling
+- Add indexing and query optimization for large datasets
+- Implement Modern Portfolio Theory and risk parity strategies
 
-- Add application status notification and instance counting
-- Implement clear signal analysis framework
-
-- Evaluate command-line controller interface for configuration testing

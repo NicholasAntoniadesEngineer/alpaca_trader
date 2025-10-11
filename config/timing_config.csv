@@ -5,17 +5,18 @@
 # ========================================================================
 
 # Thread Polling Intervals (in seconds)
-timing.market_data_thread_polling_interval_seconds,5
+timing.market_data_thread_polling_interval_seconds,3
 timing.account_data_thread_polling_interval_seconds,10
 timing.market_gate_thread_polling_interval_seconds,30
 timing.trader_decision_thread_polling_interval_seconds,5
-timing.logging_thread_polling_interval_seconds,5
+timing.logging_thread_polling_interval_seconds,1
 
 # Historical Data Configuration
 timing.historical_data_fetch_period_minutes,120
 timing.historical_data_buffer_size,20
 timing.account_data_cache_duration_seconds,10
-timing.market_data_staleness_threshold_seconds,3
+timing.market_data_staleness_threshold_seconds,5
+timing.crypto_data_staleness_threshold_seconds,10
 
 # Market Session Buffer Times (in minutes)
 timing.pre_market_open_buffer_minutes,5

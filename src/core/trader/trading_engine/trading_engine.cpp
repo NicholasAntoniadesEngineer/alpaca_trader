@@ -159,7 +159,11 @@ bool TradingEngine::is_data_fresh() {
 
     auto now = std::chrono::steady_clock::now();
     auto data_timestamp = data_sync.market_data_timestamp->load();
-    auto max_age_seconds = config.timing.market_data_staleness_threshold_seconds;
+    
+    // Use crypto-specific staleness threshold for 24/7 markets
+    auto max_age_seconds = config.strategy.is_crypto_asset ? 
+        config.timing.crypto_data_staleness_threshold_seconds : // Crypto: use crypto-specific threshold
+        config.timing.market_data_staleness_threshold_seconds; // Stocks: use standard threshold
 
     // Additional null check before using the timestamp (defensive programming)
     if (!data_sync.market_data_timestamp) {

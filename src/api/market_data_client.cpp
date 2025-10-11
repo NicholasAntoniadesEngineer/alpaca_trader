@@ -26,14 +26,22 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
     MarketDataLogs::log_market_data_fetch_table(req_bars.symbol, logging.log_file);
 
     std::vector<std::string> urls;
-    urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "iex"));
-    urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "sip"));
-    urls.push_back(build_bars_url(req_bars.symbol, 10, "iex")); // Daily bars
-    
     std::vector<std::string> descriptions;
-    descriptions.push_back("IEX FEED (FREE - 15MIN DELAYED)");
-    descriptions.push_back("SIP FEED (PAID - REAL-TIME)");
-    descriptions.push_back("IEX DAILY BARS (FREE - DELAYED)");
+
+    if (strategy.is_crypto_asset) {
+        // For crypto assets, use only the crypto endpoint
+        urls.push_back(build_crypto_bars_url(req_bars.symbol, req_bars.limit));
+        descriptions.push_back("CRYPTO DATA FEED (REAL-TIME)");
+    } else {
+        // For stocks, use multiple data sources
+        urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "iex"));
+        urls.push_back(build_bars_url(req_bars.symbol, req_bars.limit, "sip"));
+        urls.push_back(build_bars_url(req_bars.symbol, strategy.daily_bars_count, "iex")); // Daily bars
+
+        descriptions.push_back("IEX FEED (FREE - 15MIN DELAYED)");
+        descriptions.push_back("SIP FEED (PAID - REAL-TIME)");
+        descriptions.push_back("IEX DAILY BARS (FREE - DELAYED)");
+    }
 
     for (size_t i = 0; i < urls.size(); ++i) {
         HttpRequest req(urls[i], api.api_key, api.api_secret, logging.log_file, 
@@ -68,18 +76,68 @@ std::vector<Core::Bar> MarketDataClient::get_recent_bars(const Core::BarRequest&
     return std::vector<Core::Bar>();
 }
 
+std::string MarketDataClient::build_crypto_bars_url(const std::string& symbol, int limit) const {
+    using namespace AlpacaTrader::Config;
+
+    // Determine timeframe based on limit and configuration
+    std::string timeframe;
+    if (limit == strategy.daily_bars_count) {
+        // Use configurable daily bars timeframe for historical comparison
+        timeframe = strategy.daily_bars_timeframe;
+    } else {
+        // Use configurable minutes per bar for intraday data
+        timeframe = std::to_string(strategy.minutes_per_bar) + "Min";
+    }
+
+    // For crypto, use the configured crypto bars endpoint with placeholder replacement
+    std::string endpoint = api.endpoints.crypto.bars;
+    std::string url = api.market_data_url + endpoint;
+
+    // Replace {symbol} and {timeframe} placeholders for crypto and add limit parameter
+    std::string final_url = replace_url_placeholders(url, symbol, timeframe);
+    final_url = final_url + "&limit=" + std::to_string(limit);
+    
+    return final_url;
+}
+
 std::string MarketDataClient::build_bars_url(const std::string& symbol, int limit, const std::string& feed) const {
     using namespace AlpacaTrader::Config;
 
-    std::string timeframe = (limit == 10) ? "1Day" : "1Min";
-    std::string url = api.market_data_url + api.endpoints.market_data.bars;
-    // Replace {symbol} placeholder
-    size_t pos = url.find("{symbol}");
-    if (pos != std::string::npos) {
-        url.replace(pos, 8, symbol);
+    // Determine timeframe based on limit and configuration
+    std::string timeframe;
+    if (limit == strategy.daily_bars_count) {
+        // Use configurable daily bars timeframe for historical comparison
+        timeframe = strategy.daily_bars_timeframe;
+    } else {
+        // Use configurable minutes per bar for intraday data
+        timeframe = std::to_string(strategy.minutes_per_bar) + "Min";
     }
-    return url + "?timeframe=" + timeframe + "&limit=" + std::to_string(limit) +
+
+    // For stocks, use the v2 endpoint format with symbol replacement
+    std::string endpoint = api.endpoints.market_data.bars;
+    std::string url = api.market_data_url + endpoint;
+    // Replace {symbol} placeholder for stocks and add query parameters
+    std::string final_url = replace_url_placeholders(url, symbol, timeframe);
+    return final_url + "&limit=" + std::to_string(limit) +
            "&adjustment=raw&feed=" + feed;
+}
+
+std::string MarketDataClient::replace_url_placeholders(const std::string& url, const std::string& symbol, const std::string& timeframe) const {
+    std::string result = url;
+
+    // Replace {symbol} placeholder
+    size_t symbol_pos = result.find("{symbol}");
+    if (symbol_pos != std::string::npos) {
+        result.replace(symbol_pos, 8, symbol);
+    }
+
+    // Replace {timeframe} placeholder
+    size_t timeframe_pos = result.find("{timeframe}");
+    if (timeframe_pos != std::string::npos) {
+        result.replace(timeframe_pos, 11, timeframe);
+    }
+
+    return result;
 }
 
 std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& response) const {
@@ -93,13 +151,25 @@ std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& 
     try {
         json j = json::parse(response);
 
-        if (j.contains("bars") && j["bars"].is_array() && !j["bars"].empty()) {
-            const json& bars_array = j["bars"];
-            if (bars_array.empty()) {
-                log_message("     |   FAIL: Empty bars array", logging.log_file);
-                return bars;
+        // Handle different response formats for stocks vs crypto
+        json bars_array;
+        if (j.contains("bars")) {
+            if (j["bars"].is_array()) {
+                // Stock format: {"bars": [...]}
+                bars_array = j["bars"];
+            } else if (j["bars"].is_object()) {
+                // Crypto format: {"bars": {"BTC/USD": [...]}}
+                // Get the first (and typically only) symbol's bars
+                for (auto& [symbol, symbol_bars] : j["bars"].items()) {
+                    if (symbol_bars.is_array()) {
+                        bars_array = symbol_bars;
+                        break;
+                    }
+                }
             }
+        }
 
+        if (!bars_array.empty() && bars_array.is_array()) {
             for (json::const_iterator it = bars_array.begin(); it != bars_array.end(); ++it) {
                 const json& b = *it;
 
@@ -113,7 +183,7 @@ std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& 
                         bar.h = b["h"].get<double>();
                         bar.l = b["l"].get<double>();
                         bar.c = b["c"].get<double>();
-                        bar.v = b["v"].get<long long>();
+                        bar.v = b["v"].get<double>();
 
                         // Validate price data is reasonable (not NaN, not negative for prices)
                         if (std::isfinite(bar.o) && std::isfinite(bar.h) && std::isfinite(bar.l) && std::isfinite(bar.c) &&
@@ -173,12 +243,15 @@ void MarketDataClient::log_fetch_failure() const {
 double MarketDataClient::get_current_price(const std::string& symbol) const {
     using namespace AlpacaTrader::Config;
     
-    // Construct real-time quotes endpoint URL.
-    std::string url = api.market_data_url + api.endpoints.market_data.quotes_latest;
-    // Replace {symbol} placeholder
-    size_t pos = url.find("{symbol}");
-    if (pos != std::string::npos) {
-        url.replace(pos, 8, symbol);
+    // Construct real-time quotes endpoint URL based on asset type
+    std::string url;
+    if (strategy.is_crypto_asset) {
+        // For crypto, use the configured crypto quotes endpoint with placeholder replacement
+        url = replace_url_placeholders(api.market_data_url + api.endpoints.crypto.quotes_latest, symbol, "");
+    } else {
+        // For stocks, use the v2 endpoint format with placeholder replacement
+        std::string endpoint = api.endpoints.market_data.quotes_latest;
+        url = replace_url_placeholders(api.market_data_url + endpoint, symbol, "");
     }
     
     // Make HTTP request with standard retry/timeout settings.

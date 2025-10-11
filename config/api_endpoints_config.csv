@@ -36,6 +36,11 @@ endpoints.trading.orders,/v2/orders
 endpoints.trading.orders_by_symbol,/v2/orders?status=open&symbols={symbol}
 endpoints.trading.clock,/v2/clock
 
-# Market Data API Endpoints
+# Market Data API Endpoints (Stocks)
 endpoints.market_data.bars,/v2/stocks/{symbol}/bars
 endpoints.market_data.quotes_latest,/v2/stocks/{symbol}/quotes/latest
+
+# Crypto Market Data API Endpoints
+endpoints.crypto.bars,/v1beta3/crypto/us/bars?symbols={symbol}&timeframe={timeframe}
+endpoints.crypto.quotes_latest,/v1beta3/crypto/us/quotes/latest?symbols={symbol}
+endpoints.crypto.assets,/v2/assets?asset_class=crypto

@@ -66,7 +66,7 @@ void log_message(const std::string& message, const std::string& log_file_path) {
                     std::cout << std::endl;
                     g_inline_active.store(false);
                 }
-                std::cout << log_str;
+                std::cout << log_str << std::flush;
             } catch (...) {
                 // Fall back to basic console output
                 std::cout << message << std::endl;

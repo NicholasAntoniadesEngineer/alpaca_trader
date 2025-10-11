@@ -66,8 +66,14 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "endpoints.market_data.bars") cfg.api.endpoints.market_data.bars = value;
         else if (key == "endpoints.market_data.quotes_latest") cfg.api.endpoints.market_data.quotes_latest = value;
 
+        // Crypto Endpoints
+        else if (key == "endpoints.crypto.bars") cfg.api.endpoints.crypto.bars = value;
+        else if (key == "endpoints.crypto.quotes_latest") cfg.api.endpoints.crypto.quotes_latest = value;
+        else if (key == "endpoints.crypto.assets") cfg.api.endpoints.crypto.assets = value;
+
         // Strategy Configuration - target and session
         else if (key == "target.symbol") cfg.strategy.symbol = value;
+        else if (key == "strategy.is_crypto_asset") cfg.strategy.is_crypto_asset = (value == "true");
         else if (key == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(value);
         else if (key == "session.market_open_hour") cfg.strategy.market_open_hour = std::stoi(value);
         else if (key == "session.market_open_minute") cfg.strategy.market_open_minute = std::stoi(value);
@@ -76,8 +82,17 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
 
         // Strategy parameters
         else if (key == "strategy.atr_calculation_period") cfg.strategy.atr_calculation_period = std::stoi(value);
+        else if (key == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(value);
+        else if (key == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(value);
+        else if (key == "strategy.atr_calculation_bars") cfg.strategy.atr_calculation_bars = std::stoi(value);
+        else if (key == "strategy.daily_bars_timeframe") cfg.strategy.daily_bars_timeframe = value;
+        else if (key == "strategy.daily_bars_count") cfg.strategy.daily_bars_count = std::stoi(value);
         else if (key == "strategy.entry_signal_atr_multiplier") cfg.strategy.entry_signal_atr_multiplier = std::stod(value);
         else if (key == "strategy.entry_signal_volume_multiplier") cfg.strategy.entry_signal_volume_multiplier = std::stod(value);
+        else if (key == "strategy.crypto_volume_multiplier") cfg.strategy.crypto_volume_multiplier = std::stod(value);
+        else if (key == "strategy.crypto_volume_change_amplification_factor") cfg.strategy.crypto_volume_change_amplification_factor = std::stod(value);
+        else if (key == "strategy.percentage_calculation_multiplier") cfg.strategy.percentage_calculation_multiplier = std::stod(value);
+        else if (key == "strategy.minimum_volume_threshold") cfg.strategy.minimum_volume_threshold = std::stod(value);
         else if (key == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(value);
         else if (key == "strategy.average_atr_comparison_multiplier") cfg.strategy.average_atr_comparison_multiplier = std::stoi(value);
         else if (key == "strategy.atr_absolute_minimum_threshold") cfg.strategy.atr_absolute_minimum_threshold = std::stod(value);
@@ -165,6 +180,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.historical_data_buffer_size") cfg.timing.historical_data_buffer_size = std::stoi(value);
         else if (key == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(value);
         else if (key == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(value);
+        else if (key == "timing.crypto_data_staleness_threshold_seconds") cfg.timing.crypto_data_staleness_threshold_seconds = std::stoi(value);
 
         // System Health Monitoring
         else if (key == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(value);
@@ -303,6 +319,13 @@ int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
         return 1;
     }
 
+    // Validate configuration completeness
+    std::string validation_error;
+    if (!validate_config(config, validation_error)) {
+        log_message("ERROR: Configuration validation failed: " + validation_error, "");
+        return 1;
+    }
+
     return 0;
 }
 
@@ -315,6 +338,34 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         error_message = "API URLs missing (provide via CONFIG_CSV)";
         return false;
     }
+
+    // Validate strategy configuration
+    if (config.strategy.symbol.empty()) {
+        error_message = "Trading symbol missing (provide via strategy_config.csv)";
+        return false;
+    }
+    if (config.strategy.minutes_per_bar <= 0) {
+        error_message = "Invalid minutes_per_bar (must be > 0, provide via strategy_config.csv)";
+        return false;
+    }
+    if (config.strategy.bars_to_fetch_for_calculations <= 0) {
+        error_message = "Invalid bars_to_fetch_for_calculations (must be > 0, provide via strategy_config.csv)";
+        return false;
+    }
+
+    // Validate crypto asset configuration
+    if (config.strategy.symbol.find('/') != std::string::npos && !config.strategy.is_crypto_asset) {
+        error_message = "Crypto symbol format detected (" + config.strategy.symbol + ") but is_crypto_asset is false - set is_crypto_asset=true in strategy_config.csv";
+        return false;
+    }
+
+    // Validate crypto endpoints if they are defined
+    if (!config.api.endpoints.crypto.bars.empty() || !config.api.endpoints.crypto.quotes_latest.empty() || !config.api.endpoints.crypto.assets.empty()) {
+        if (config.api.endpoints.crypto.bars.empty() || config.api.endpoints.crypto.quotes_latest.empty() || config.api.endpoints.crypto.assets.empty()) {
+            error_message = "Crypto endpoints incomplete - all crypto endpoints must be provided together";
+            return false;
+        }
+    }
     if (config.api.api_key.empty() || config.api.api_secret.empty()) {
         error_message = "API credentials missing (provide via api_config.csv)";
         return false;
@@ -323,8 +374,42 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         error_message = "API URLs missing (provide via api_config.csv)";
         return false;
     }
+
+    // Validate crypto endpoints if they are defined
+    if (!config.api.endpoints.crypto.bars.empty() || !config.api.endpoints.crypto.quotes_latest.empty() || !config.api.endpoints.crypto.assets.empty()) {
+        if (config.api.endpoints.crypto.bars.empty() || config.api.endpoints.crypto.quotes_latest.empty() || config.api.endpoints.crypto.assets.empty()) {
+            error_message = "Crypto endpoints incomplete - all crypto endpoints must be provided together";
+            return false;
+        }
+    }
     if (config.strategy.atr_calculation_period < 2) {
         error_message = "strategy.atr_calculation_period must be >= 2 (ATR calculation period)";
+        return false;
+    }
+
+    // Validate new volatility calculation parameters
+    if (config.strategy.bars_to_fetch_for_calculations < 1) {
+        error_message = "strategy.bars_to_fetch_for_calculations must be >= 1";
+        return false;
+    }
+
+    if (config.strategy.minutes_per_bar < 1) {
+        error_message = "strategy.minutes_per_bar must be >= 1";
+        return false;
+    }
+
+    if (config.strategy.atr_calculation_bars < 2) {
+        error_message = "strategy.atr_calculation_bars must be >= 2";
+        return false;
+    }
+
+    if (config.strategy.daily_bars_timeframe.empty()) {
+        error_message = "strategy.daily_bars_timeframe cannot be empty";
+        return false;
+    }
+
+    if (config.strategy.daily_bars_count < 1) {
+        error_message = "strategy.daily_bars_count must be >= 1";
         return false;
     }
     if (config.strategy.rr_ratio <= 0.0) {
@@ -350,9 +435,27 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    // Validate ATR calculation period
+    // Validate ATR calculation period (deprecated - use atr_calculation_bars)
     if (config.strategy.atr_calculation_period < 2 || config.strategy.atr_calculation_period > 100) {
         error_message = "strategy.atr_calculation_period must be between 2 and 100";
+        return false;
+    }
+
+    // Validate new ATR calculation bars
+    if (config.strategy.atr_calculation_bars < 2 || config.strategy.atr_calculation_bars > 100) {
+        error_message = "strategy.atr_calculation_bars must be between 2 and 100";
+        return false;
+    }
+
+    // Validate daily bars timeframe
+    if (config.strategy.daily_bars_timeframe.empty()) {
+        error_message = "strategy.daily_bars_timeframe cannot be empty";
+        return false;
+    }
+
+    // Validate daily bars count
+    if (config.strategy.daily_bars_count < 1) {
+        error_message = "strategy.daily_bars_count must be >= 1";
         return false;
     }
 

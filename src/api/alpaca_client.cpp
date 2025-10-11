@@ -24,6 +24,9 @@ AlpacaClient::AlpacaClient(const AlpacaClientConfig& cfg)
       market_data(cfg),
       orders(cfg),
       config(cfg) {
+    // Set the crypto asset flag on the market clock
+    clock.set_crypto_asset(cfg.strategy.is_crypto_asset);
+
     // Set the API client reference in the orders component
     orders.set_api_client(this);
 }

@@ -71,14 +71,16 @@ void AlpacaTrader::Threads::MarketDataThread::market_data_loop() {
 void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
     LOG_THREAD_SECTION_HEADER("MARKET DATA FETCH - " + strategy.symbol);
     
-    int num_bars = strategy.atr_calculation_period + timing.historical_data_buffer_size;
+    // Use configurable bars to fetch instead of deprecated atr_calculation_period
+    int num_bars = strategy.bars_to_fetch_for_calculations + timing.historical_data_buffer_size;
     BarRequest br{strategy.symbol, num_bars};
     LOG_THREAD_CONTENT("Requesting " + std::to_string(num_bars) + " bars");
     
     auto bars = client.get_recent_bars(br);
     LOG_THREAD_CONTENT("Received " + std::to_string(bars.size()) + " bars");
     
-    if (static_cast<int>(bars.size()) >= strategy.atr_calculation_period + 2) {
+    // Use configurable ATR calculation bars instead of deprecated atr_calculation_period
+    if (static_cast<int>(bars.size()) >= strategy.atr_calculation_bars + 2) {
         LOG_THREAD_CONTENT("Sufficient bars, computing indicators");
         
         // Compute indicators using the same implementation as Trader
@@ -98,7 +100,7 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
             LOG_THREAD_CONTENT("ATR is zero, not updating snapshot");
         }
     } else {
-        LOG_THREAD_CONTENT("Insufficient bars (" + std::to_string(bars.size()) + " < " + std::to_string(strategy.atr_calculation_period + 2) + ")");
+        LOG_THREAD_CONTENT("Insufficient bars (" + std::to_string(bars.size()) + " < " + std::to_string(strategy.atr_calculation_bars + 2) + ")");
     }
     
     LOG_THREAD_SECTION_FOOTER();

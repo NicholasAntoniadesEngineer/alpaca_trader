@@ -35,6 +35,7 @@ public:
     // Market hours and timing operations
     bool is_core_trading_hours() const { return clock.is_core_trading_hours(); }
     bool is_within_fetch_window() const { return clock.is_within_fetch_window(); }
+    bool is_within_fetch_window(bool is_crypto_asset) const;
     bool is_approaching_market_close() const { return clock.is_approaching_market_close(); }
     int get_minutes_until_market_close() const { return clock.get_minutes_until_market_close(); }
 

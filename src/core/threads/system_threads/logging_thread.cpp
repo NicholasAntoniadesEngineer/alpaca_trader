@@ -163,7 +163,7 @@ void AlpacaTrader::Threads::LoggingThread::output_log_line(const std::string& li
             std::cout << std::endl;
             g_inline_active.store(false);
         }
-        std::cout << line;
+        std::cout << line << std::flush;
     }
     
     if (log_file.is_open()) {

@@ -15,12 +15,25 @@ double compute_atr(const std::vector<double>& highs, const std::vector<double>& 
     return sum / period;
 }
 
-double compute_average_volume(const std::vector<long long>& volumes, int period) {
+double compute_average_volume(const std::vector<double>& volumes, int period, double minimum_threshold) {
     if (volumes.size() < static_cast<size_t>(period)) return 0.0;
     double sum = 0.0;
     int start = static_cast<int>(volumes.size()) - period;
-    for (int i = start; i < static_cast<int>(volumes.size()); ++i) sum += volumes[i];
-    return sum / period;
+    
+    // Calculate average over the period, including zero volumes
+    for (int i = start; i < static_cast<int>(volumes.size()); ++i) {
+        sum += volumes[i];
+    }
+    
+    double avg = sum / period;
+    
+    // If average is 0, use the minimum threshold to avoid division by zero
+    // This provides a small but meaningful baseline for volume calculations
+    if (avg == 0.0) {
+        return minimum_threshold;
+    }
+    
+    return avg;
 }
 
 bool detect_doji_pattern(double open, double high, double low, double close) {
