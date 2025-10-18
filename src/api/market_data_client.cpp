@@ -184,6 +184,13 @@ std::vector<Core::Bar> MarketDataClient::parse_bars_response(const std::string& 
                         bar.l = b["l"].get<double>();
                         bar.c = b["c"].get<double>();
                         bar.v = b["v"].get<double>();
+                        
+                        // Extract timestamp if available
+                        if (b.contains("t") && !b["t"].is_null()) {
+                            bar.t = b["t"].get<std::string>();
+                        } else {
+                            bar.t = ""; // Empty timestamp if not available
+                        }
 
                         // Validate price data is reasonable (not NaN, not negative for prices)
                         if (std::isfinite(bar.o) && std::isfinite(bar.h) && std::isfinite(bar.l) && std::isfinite(bar.c) &&
@@ -296,6 +303,80 @@ double MarketDataClient::get_current_price(const std::string& symbol) const {
     
     // Return 0.0 to indicate failure - caller should use fallback price
     return 0.0;
+}
+
+Core::QuoteData MarketDataClient::get_realtime_quotes(const std::string& symbol) const {
+    using namespace AlpacaTrader::Config;
+    
+    Core::QuoteData quote_data;
+    
+    // Construct real-time quotes endpoint URL based on asset type
+    std::string url;
+    if (strategy.is_crypto_asset) {
+        // For crypto, use the configured crypto quotes endpoint with placeholder replacement
+        url = replace_url_placeholders(api.market_data_url + api.endpoints.crypto.quotes_latest, symbol, "");
+        LOG_THREAD_CONTENT("DEBUG: Crypto quotes URL: " + url);
+    } else {
+        // For stocks, use the v2 endpoint format with placeholder replacement
+        std::string endpoint = api.endpoints.market_data.quotes_latest;
+        url = replace_url_placeholders(api.market_data_url + endpoint, symbol, "");
+        LOG_THREAD_CONTENT("DEBUG: Stock quotes URL: " + url);
+    }
+    
+    // Make HTTP request with standard retry/timeout settings
+    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
+                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
+    std::string response = http_get(req);
+    
+    // Handle empty response (network/API issues)
+    if (response.empty()) {
+        LOG_THREAD_CONTENT("DATA SOURCE: Real-time quotes FAILED - empty response");
+        return quote_data;
+    }
+    
+    // Parse JSON response and extract quote data
+    try {
+        json j = json::parse(response);
+        
+        if (strategy.is_crypto_asset) {
+            // Crypto format: {"quotes": {"BTC/USD": [{"ap": 108314.9, "as": 1.46611, "bp": 108069.34, "bs": 2.9235, "t": "2025-10-17T00:00:03.210003471Z"}]}}
+            if (j.contains("quotes") && j["quotes"].contains(symbol) && j["quotes"][symbol].is_array() && !j["quotes"][symbol].empty()) {
+                const auto& quote = j["quotes"][symbol][0];
+                
+                if (quote.contains("ap") && quote.contains("bp") && quote.contains("as") && quote.contains("bs") && quote.contains("t")) {
+                    quote_data.ask_price = quote["ap"].get<double>();
+                    quote_data.bid_price = quote["bp"].get<double>();
+                    quote_data.ask_size = quote["as"].get<double>();
+                    quote_data.bid_size = quote["bs"].get<double>();
+                    quote_data.timestamp = quote["t"].get<std::string>();
+                    quote_data.mid_price = (quote_data.ask_price + quote_data.bid_price) / 2.0;
+                    
+                    TradingLogs::log_data_source_info_table("CRYPTO REAL-TIME QUOTES", quote_data.mid_price, "LIVE DATA");
+                }
+            }
+        } else {
+            // Stock format: {"quote": {"ap": 662.13, "as": 2, "bp": 661.99, "bs": 2, "t": "2025-10-17T16:00:32.716168402Z"}}
+            if (j.contains("quote")) {
+                const auto& quote = j["quote"];
+                
+                if (quote.contains("ap") && quote.contains("bp") && quote.contains("as") && quote.contains("bs") && quote.contains("t")) {
+                    quote_data.ask_price = quote["ap"].get<double>();
+                    quote_data.bid_price = quote["bp"].get<double>();
+                    quote_data.ask_size = quote["as"].get<double>();
+                    quote_data.bid_size = quote["bs"].get<double>();
+                    quote_data.timestamp = quote["t"].get<std::string>();
+                    quote_data.mid_price = (quote_data.ask_price + quote_data.bid_price) / 2.0;
+                    
+                    TradingLogs::log_data_source_info_table("STOCK REAL-TIME QUOTES", quote_data.mid_price, "LIVE DATA");
+                }
+            }
+        }
+        
+    } catch (const std::exception& e) {
+        LOG_THREAD_CONTENT("DATA SOURCE: Real-time quotes PARSE ERROR - " + std::string(e.what()));
+    }
+    
+    return quote_data;
 }
 
 } // namespace API

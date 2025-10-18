@@ -42,6 +42,7 @@ public:
     // Market data operations
     std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& req) const { return market_data.get_recent_bars(req); }
     double get_current_price(const std::string& symbol) const { return market_data.get_current_price(symbol); }
+    Core::QuoteData get_realtime_quotes(const std::string& symbol) const { return market_data.get_realtime_quotes(symbol); }
 
     // Order management operations
     void place_bracket_order(const Core::OrderRequest& req) const { orders.place_bracket_order(req); }

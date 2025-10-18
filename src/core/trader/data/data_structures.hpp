@@ -17,6 +17,16 @@ namespace Core {
 struct Bar {
     double o, h, l, c;
     double v; /* volume */
+    std::string t; /* timestamp */
+};
+
+struct QuoteData {
+    double ask_price = 0.0;
+    double bid_price = 0.0;
+    double ask_size = 0.0;
+    double bid_size = 0.0;
+    std::string timestamp = "";
+    double mid_price = 0.0; // Calculated as (ask + bid) / 2
 };
 
 struct PositionDetails {

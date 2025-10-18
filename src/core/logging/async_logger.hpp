@@ -9,6 +9,8 @@
 #include <thread>
 #include <memory>
 #include "configs/system_config.hpp"
+#include "csv_bars_logger.hpp"
+#include "csv_trade_logger.hpp"
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -63,6 +65,14 @@ void shutdown_global_logger(AsyncLogger& logger);
 
 // Application foundation initialization
 std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config);
+
+// CSV logging initialization
+std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename);
+std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename);
+
+// Global CSV logger access
+extern std::shared_ptr<CSVBarsLogger> g_csv_bars_logger;
+extern std::shared_ptr<CSVTradeLogger> g_csv_trade_logger;
 
 } // namespace Logging
 } // namespace AlpacaTrader

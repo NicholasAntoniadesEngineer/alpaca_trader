@@ -42,5 +42,5 @@ endpoints.market_data.quotes_latest,/v2/stocks/{symbol}/quotes/latest
 
 # Crypto Market Data API Endpoints
 endpoints.crypto.bars,/v1beta3/crypto/us/bars?symbols={symbol}&timeframe={timeframe}
-endpoints.crypto.quotes_latest,/v1beta3/crypto/us/quotes/latest?symbols={symbol}
+endpoints.crypto.quotes_latest,/v1beta3/crypto/us/quotes?symbols={symbol}
 endpoints.crypto.assets,/v2/assets?asset_class=crypto

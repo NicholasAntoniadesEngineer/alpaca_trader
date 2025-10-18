@@ -28,6 +28,10 @@ struct MarketDataThread {
     std::atomic<bool>& running;
     std::atomic<std::chrono::steady_clock::time_point>& market_data_timestamp;
     std::atomic<bool>& market_data_fresh;
+
+    // For tracking previous bar data to detect changes
+    AlpacaTrader::Core::Bar previous_bar{};
+    std::chrono::steady_clock::time_point last_bar_log_time{};
     std::atomic<bool>* allow_fetch_ptr {nullptr};
     std::atomic<unsigned long>* iteration_counter {nullptr};
 

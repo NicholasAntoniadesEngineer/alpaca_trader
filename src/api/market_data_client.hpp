@@ -15,13 +15,8 @@ public:
     // Market data operations
     std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& req) const;
     
-    /**
-     * @brief Get real-time current price for a symbol
-     * @param symbol The stock symbol (e.g., "AAPL")
-     * @return Current ask price, or 0.0 if unavailable
-     * @note Uses Alpaca's free real-time quotes API to avoid delayed data issues
-     */
     double get_current_price(const std::string& symbol) const;
+    Core::QuoteData get_realtime_quotes(const std::string& symbol) const;
     
 private:
     // Helper methods for data fetching

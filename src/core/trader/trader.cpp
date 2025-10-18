@@ -1,7 +1,9 @@
 #include "trader.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/logging/csv_trade_logger.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
+#include "core/utils/time_utils.hpp"
 #include <thread>
 #include <chrono>
 #include <iostream>
@@ -51,6 +53,22 @@ void TradingOrchestrator::execute_trading_loop() {
                 runtime.loop_counter.fetch_add(1);
                 std::string symbol = config.strategy.symbol.empty() ? "UNKNOWN" : config.strategy.symbol;
                 TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
+
+                // CSV logging for account updates
+                try {
+                    std::string timestamp = TimeUtils::get_current_human_readable_time();
+                    double buying_power = account_manager.fetch_buying_power();
+
+                    if (AlpacaTrader::Logging::g_csv_trade_logger) {
+                        AlpacaTrader::Logging::g_csv_trade_logger->log_account_update(
+                            timestamp, account.equity, buying_power, account.exposure_pct
+                        );
+                    }
+                } catch (const std::exception& e) {
+                    TradingLogs::log_market_data_result_table("CSV logging error in account update: " + std::string(e.what()), false, 0);
+                } catch (...) {
+                    TradingLogs::log_market_data_result_table("Unknown CSV logging error in account update", false, 0);
+                }
 
                 // Validate trading permissions
                 if (!risk_manager.validate_trading_permissions(ProcessedData{}, account.equity)) {

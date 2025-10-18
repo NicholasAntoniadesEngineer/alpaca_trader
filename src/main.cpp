@@ -6,6 +6,7 @@
 #include "core/system/system_manager.hpp"
 #include "core/system/system_modules.hpp"
 #include "core/logging/startup_logs.hpp"
+#include "core/logging/async_logger.hpp"
 
 
 // =============================================================================
@@ -26,7 +27,11 @@ int main() {
         
         // Initialize application foundation (logging, validation)
         auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
-        
+
+        // Initialize CSV logging for bars and trades
+        auto csv_bars_logger = AlpacaTrader::Logging::initialize_csv_bars_logger("bars_logs");
+        auto csv_trade_logger = AlpacaTrader::Logging::initialize_csv_trade_logger("trade_logs");
+
         // Start the complete trading system
         SystemThreads thread_handles = SystemManager::startup(system_state, logger);
         

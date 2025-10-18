@@ -3,7 +3,10 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
 #include "core/logging/market_data_logs.hpp"
+#include "core/logging/csv_bars_logger.hpp"
+#include "core/logging/csv_trade_logger.hpp"
 #include "core/system/system_monitor.hpp"
+#include "core/utils/time_utils.hpp"
 #include <chrono>
 #include <cmath>
 
@@ -239,25 +242,82 @@ void TradingEngine::setup_data_synchronization(const DataSyncConfig& config) {
 
 void TradingEngine::process_signal_analysis(const ProcessedData& data) {
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
-    
+
     // Log candle data and enhanced signals table
     TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
     TradingLogs::log_signals_table_enhanced(signal_decision);
-    
+
     // Enhanced detailed signal analysis logging
     TradingLogs::log_signal_analysis_detailed(data, signal_decision, config);
-    
+
     StrategyLogic::FilterResult filter_result = StrategyLogic::evaluate_trading_filters(data, config);
     TradingLogs::log_filters(filter_result, config, data);
     TradingLogs::log_summary(data, signal_decision, filter_result, config.strategy.symbol);
+
+    // CSV logging for signal analysis
+    try {
+        std::string timestamp = TimeUtils::get_current_human_readable_time();
+        std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+
+        // Log signals to CSV
+        if (AlpacaTrader::Logging::g_csv_trade_logger) {
+            AlpacaTrader::Logging::g_csv_trade_logger->log_signal(
+                timestamp, symbol, signal_decision.buy, signal_decision.sell,
+                signal_decision.signal_strength, signal_decision.signal_reason
+            );
+        }
+
+        // Log filters to CSV
+        if (AlpacaTrader::Logging::g_csv_trade_logger) {
+            AlpacaTrader::Logging::g_csv_trade_logger->log_filters(
+                timestamp, symbol, filter_result.atr_pass, filter_result.atr_ratio,
+                config.strategy.use_absolute_atr_threshold ?
+                    config.strategy.atr_absolute_minimum_threshold :
+                    config.strategy.entry_signal_atr_multiplier,
+                filter_result.vol_pass, filter_result.vol_ratio,
+                config.strategy.entry_signal_volume_multiplier,
+                filter_result.doji_pass
+            );
+        }
+
+        // Log market data to CSV
+        if (AlpacaTrader::Logging::g_csv_trade_logger) {
+            AlpacaTrader::Logging::g_csv_trade_logger->log_market_data(
+                timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
+                data.curr.v, data.atr, data.avg_atr, data.avg_vol
+            );
+        }
+
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_data_result_table("CSV logging error in signal analysis: " + std::string(e.what()), false, 0);
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown CSV logging error in signal analysis", false, 0);
+    }
 }
 
 void TradingEngine::process_position_sizing(const ProcessedData& data, double equity, int current_qty) {
     double buying_power = account_manager.fetch_buying_power();
     StrategyLogic::PositionSizing sizing = StrategyLogic::calculate_position_sizing(data, equity, current_qty, config, buying_power);
-    
+
     if (!StrategyLogic::evaluate_trading_filters(data, config).all_pass) {
         TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
+
+        // CSV logging for position sizing when filters not met
+        try {
+            std::string timestamp = TimeUtils::get_current_human_readable_time();
+            std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+
+            if (AlpacaTrader::Logging::g_csv_trade_logger) {
+                AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
+                    timestamp, symbol, sizing.quantity, sizing.risk_amount,
+                    sizing.quantity * data.curr.c, buying_power
+                );
+            }
+        } catch (const std::exception& e) {
+            TradingLogs::log_market_data_result_table("CSV logging error in position sizing: " + std::string(e.what()), false, 0);
+        } catch (...) {
+            TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing", false, 0);
+        }
         return;
     }
     
@@ -265,9 +325,26 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
     TradingLogs::log_current_position(current_qty, config.strategy.symbol);
     TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
-    
+
     StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
     execute_trade_if_valid(data, current_qty, sizing, signal_decision);
+
+    // CSV logging for successful position sizing
+    try {
+        std::string timestamp = TimeUtils::get_current_human_readable_time();
+        std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+
+        if (AlpacaTrader::Logging::g_csv_trade_logger) {
+            AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
+                timestamp, symbol, sizing.quantity, sizing.risk_amount,
+                sizing.quantity * data.curr.c, buying_power
+            );
+        }
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_data_result_table("CSV logging error in successful position sizing: " + std::string(e.what()), false, 0);
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing", false, 0);
+    }
 }
 
 void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& signal_decision) {

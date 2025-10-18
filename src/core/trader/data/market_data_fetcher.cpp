@@ -1,6 +1,8 @@
 #include "market_data_fetcher.hpp"
 #include "core/logging/market_data_logs.hpp"
+#include "core/logging/csv_bars_logger.hpp"
 #include "core/system/system_state.hpp"
+#include "core/utils/time_utils.hpp"
 #include <cmath>
 #include <thread>
 #include <chrono>
@@ -116,7 +118,8 @@ bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
             data.prev = cached_bars[cached_bars.size() - 2];
         }
     }
-    
+
+
     return true;
 }
 
