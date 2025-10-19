@@ -63,7 +63,7 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
     if (modules.portfolio_manager) {
         StartupLogs::log_account_overview(*modules.portfolio_manager);
         StartupLogs::log_financial_summary(*modules.portfolio_manager);
-        StartupLogs::log_current_positions(*modules.portfolio_manager);
+        StartupLogs::log_current_positions(*modules.portfolio_manager, config);
     }
     
     // Log data source configuration

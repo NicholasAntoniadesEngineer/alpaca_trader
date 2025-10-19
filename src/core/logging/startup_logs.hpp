@@ -21,7 +21,7 @@ public:
     // Account status display
     static void log_account_overview(const AlpacaTrader::Core::AccountManager& account_manager);
     static void log_financial_summary(const AlpacaTrader::Core::AccountManager& account_manager);
-    static void log_current_positions(const AlpacaTrader::Core::AccountManager& account_manager);
+    static void log_current_positions(const AlpacaTrader::Core::AccountManager& account_manager, const AlpacaTrader::Config::SystemConfig& config);
     
     // Data source configuration
     static void log_data_source_configuration(const AlpacaTrader::Config::SystemConfig& config);
