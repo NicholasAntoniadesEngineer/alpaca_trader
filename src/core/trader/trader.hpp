@@ -2,7 +2,7 @@
 #define TRADING_ORCHESTRATOR_HPP
 
 #include "configs/system_config.hpp"
-#include "api/alpaca_client.hpp"
+#include "api/general/api_manager.hpp"
 #include "data/account_manager.hpp"
 #include "data/data_structures.hpp"
 #include "data/data_sync_structures.hpp"
@@ -43,7 +43,7 @@ private:
     bool check_connectivity_status();
 
 public:
-    TradingOrchestrator(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr);
+    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

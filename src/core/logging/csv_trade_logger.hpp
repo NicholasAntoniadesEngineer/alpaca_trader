@@ -52,7 +52,7 @@ public:
      */
     void log_filters(const std::string& timestamp, const std::string& symbol,
                      bool atr_pass, double atr_ratio, double atr_threshold,
-                     bool vol_pass, double vol_ratio, double vol_threshold,
+                     bool vol_pass, double vol_ratio,
                      bool doji_pass);
 
     /**
@@ -87,7 +87,7 @@ public:
      */
     void log_market_data(const std::string& timestamp, const std::string& symbol,
                          double open, double high, double low, double close, double volume,
-                         double atr, double avg_atr, double avg_vol);
+                         double atr);
 
     /**
      * Flush any buffered data to file

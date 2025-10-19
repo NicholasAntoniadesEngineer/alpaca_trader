@@ -1,11 +1,11 @@
 #ifndef ACCOUNT_MANAGER_HPP
 #define ACCOUNT_MANAGER_HPP
 
-#include "configs/api_config.hpp"
 #include "configs/logging_config.hpp"
 #include "configs/strategy_config.hpp"
 #include "core/threads/thread_register.hpp"
 #include "data_structures.hpp"
+#include "api/general/api_manager.hpp"
 #include <string>
 #include <chrono>
 #include <mutex>
@@ -41,7 +41,7 @@ public:
         double daytrading_buying_power;
     };
 
-    explicit AccountManager(const AccountManagerConfig& cfg);
+    explicit AccountManager(const AccountManagerConfig& cfg, API::ApiManager& api_mgr);
 
     double fetch_account_equity() const;
     double fetch_buying_power() const;
@@ -53,10 +53,9 @@ public:
     AccountInfo fetch_account_info() const;
 
 private:
-    const AlpacaTrader::Config::ApiConfig& api;
     const LoggingConfig& logging;
-    const StrategyConfig& strategy;  // Now contains target settings
-    int cache_duration_seconds;
+    const StrategyConfig& strategy;
+    API::ApiManager& api_manager;
 
     // Helper methods
     std::string replace_url_placeholder(const std::string& url, const std::string& symbol) const;

@@ -3,7 +3,7 @@
 
 #include "configs/timing_config.hpp"
 #include "configs/logging_config.hpp"
-#include "api/alpaca_client.hpp"
+#include "api/general/api_manager.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <atomic>
 
@@ -15,15 +15,15 @@ struct MarketGateThread {
     const LoggingConfig& logging;
     std::atomic<bool>& allow_fetch;
     std::atomic<bool>& running;
-    AlpacaTrader::API::AlpacaClient& client;
+    AlpacaTrader::API::ApiManager& api_manager;
     std::atomic<unsigned long>* iteration_counter {nullptr};
 
     MarketGateThread(const TimingConfig& timing_cfg,
                    const LoggingConfig& logging_cfg,
                    std::atomic<bool>& allow,
                    std::atomic<bool>& running_flag,
-                    AlpacaTrader::API::AlpacaClient& cli)
-        : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), client(cli) {}
+                    AlpacaTrader::API::ApiManager& api_mgr)
+        : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), api_manager(api_mgr) {}
     
     void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
     void operator()();

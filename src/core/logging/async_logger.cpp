@@ -258,7 +258,7 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
         std::string timestamped_bars_filename = generate_timestamped_log_filename(bars_filename);
         auto bars_logger = std::make_shared<CSVBarsLogger>(timestamped_bars_filename);
 
-        if (!bars_logger->is_valid()) {
+        if (!bars_logger->is_initialized()) {
             throw std::runtime_error("Failed to initialize CSV bars logger");
         }
 

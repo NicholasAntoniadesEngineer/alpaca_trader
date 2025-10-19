@@ -14,10 +14,10 @@ TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
 
 # Production source files
 SOURCES = src/main.cpp \
-  src/api/market_clock.cpp \
-  src/api/market_data_client.cpp \
-  src/api/alpaca_client.cpp \
-  src/api/order_client.cpp \
+  src/api/general/api_manager.cpp \
+  src/api/alpaca/alpaca_trading_client.cpp \
+  src/api/alpaca/alpaca_stocks_client.cpp \
+  src/api/polygon/polygon_crypto_client.cpp \
   src/core/trader/trader.cpp \
   src/core/trader/trading_engine/trading_engine.cpp \
   src/core/trader/analysis/risk_manager.cpp \
@@ -35,6 +35,8 @@ SOURCES = src/main.cpp \
   src/core/threads/thread_register.cpp \
   src/core/system/system_monitor.cpp \
   src/core/trader/config_loader/config_loader.cpp \
+  src/core/trader/config_loader/multi_api_config_loader.cpp \
+  src/core/system/trading_system_factory.cpp \
   src/core/trader/data/account_manager.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/account_logs.cpp \
@@ -74,6 +76,9 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)/src
 	mkdir -p $(OBJ_DIR)/src/api
+	mkdir -p $(OBJ_DIR)/src/api/general
+	mkdir -p $(OBJ_DIR)/src/api/alpaca
+	mkdir -p $(OBJ_DIR)/src/api/polygon
 	mkdir -p $(OBJ_DIR)/src/core
 	mkdir -p $(OBJ_DIR)/src/core/system
 	mkdir -p $(OBJ_DIR)/src/core/trader/core

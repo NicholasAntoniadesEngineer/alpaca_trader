@@ -1,4 +1,5 @@
 #include "config_loader.hpp"
+#include "multi_api_config_loader.hpp"
 #include "configs/system_config.hpp"
 #include "configs/thread_config.hpp"
 #include "core/logging/logging_macros.hpp"
@@ -25,6 +26,16 @@ namespace {
 }
 
 bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::string& csv_path) {
+    // Load multi-API configuration only from api_endpoints_config.csv
+    if (csv_path.find("api_endpoints_config.csv") != std::string::npos) {
+        try {
+            cfg.multi_api = AlpacaTrader::Core::MultiApiConfigLoader::load_from_csv(csv_path);
+        } catch (const std::exception& e) {
+            log_message("Failed to load multi-API configuration: " + std::string(e.what()), "");
+            return false;
+        }
+    }
+    
     std::ifstream in(csv_path);
     if (!in.is_open()) return false;
     std::string line;
@@ -36,43 +47,26 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         if (!std::getline(ss, value)) continue;
         key = trim(key); value = trim(value);
 
-        // API and Endpoints Configuration
-        if (key == "api.api_key") cfg.api.api_key = value;
-        else if (key == "api.api_secret") cfg.api.api_secret = value;
-        else if (key == "api.trading_paper_url") {
-            cfg.api.trading_paper_url = value;
-            cfg.api.base_url = value;  // Set base_url to paper URL by default
+        // Trading Mode Configuration
+        if (key == "trading_mode.mode") {
+            if (value.empty()) {
+                throw std::runtime_error("Trading mode is required but not provided");
+            }
+            cfg.trading_mode.mode = AlpacaTrader::Config::TradingModeConfig::parse_mode(value);
         }
-        else if (key == "api.trading_live_url") cfg.api.trading_live_url = value;
-        else if (key == "api.market_data_url") {
-            cfg.api.market_data_url = value;
-            cfg.api.data_url = value;  // Set data_url to market data URL
+        else if (key == "trading_mode.primary_symbol") {
+            if (value.empty()) {
+                throw std::runtime_error("Primary symbol is required but not provided");
+            }
+            cfg.trading_mode.primary_symbol = value;
         }
-        else if (key == "api.retry_count") cfg.api.retry_count = std::stoi(value);
-        else if (key == "api.timeout_seconds") cfg.api.timeout_seconds = std::stoi(value);
-        else if (key == "api.enable_ssl_verification") cfg.api.enable_ssl_verification = to_bool(value);
-        else if (key == "api.rate_limit_delay_ms") cfg.api.rate_limit_delay_ms = std::stoi(value);
-        else if (key == "api.api_version") cfg.api.api_version = value;
 
-        // Trading Endpoints
-        else if (key == "endpoints.trading.account") cfg.api.endpoints.trading.account = value;
-        else if (key == "endpoints.trading.positions") cfg.api.endpoints.trading.positions = value;
-        else if (key == "endpoints.trading.position_by_symbol") cfg.api.endpoints.trading.position_by_symbol = value;
-        else if (key == "endpoints.trading.orders") cfg.api.endpoints.trading.orders = value;
-        else if (key == "endpoints.trading.orders_by_symbol") cfg.api.endpoints.trading.orders_by_symbol = value;
-        else if (key == "endpoints.trading.clock") cfg.api.endpoints.trading.clock = value;
-        
-        // Market Data Endpoints
-        else if (key == "endpoints.market_data.bars") cfg.api.endpoints.market_data.bars = value;
-        else if (key == "endpoints.market_data.quotes_latest") cfg.api.endpoints.market_data.quotes_latest = value;
-
-        // Crypto Endpoints
-        else if (key == "endpoints.crypto.bars") cfg.api.endpoints.crypto.bars = value;
-        else if (key == "endpoints.crypto.quotes_latest") cfg.api.endpoints.crypto.quotes_latest = value;
-        else if (key == "endpoints.crypto.assets") cfg.api.endpoints.crypto.assets = value;
+        // All API configuration handled by multi_api section
 
         // Strategy Configuration - target and session
-        else if (key == "target.symbol") cfg.strategy.symbol = value;
+        else if (key == "target.symbol") {
+            cfg.strategy.symbol = value;
+        }
         else if (key == "strategy.is_crypto_asset") cfg.strategy.is_crypto_asset = (value == "true");
         else if (key == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(value);
         else if (key == "session.market_open_hour") cfg.strategy.market_open_hour = std::stoi(value);
@@ -289,6 +283,15 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
 
     file.close();
 
+    // Validate symbol consistency
+    if (!cfg.trading_mode.primary_symbol.empty() && !cfg.strategy.symbol.empty()) {
+        if (cfg.trading_mode.primary_symbol != cfg.strategy.symbol) {
+            log_message("ERROR: Symbol mismatch - trading_mode.primary_symbol (" + cfg.trading_mode.primary_symbol + 
+                       ") must match target.symbol (" + cfg.strategy.symbol + ")", "");
+            return false;
+        }
+    }
+
     // Log successful loading of all discovered threads
     log_message("Thread configuration loaded successfully for " + std::to_string(cfg.thread_registry.thread_settings.size()) + " threads", "");
     return true;
@@ -330,12 +333,9 @@ int load_system_config(AlpacaTrader::Config::SystemConfig& config) {
 }
 
 bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::string& error_message) {
-    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        error_message = "API credentials missing (provide via CONFIG_CSV)";
-        return false;
-    }
-    if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        error_message = "API URLs missing (provide via CONFIG_CSV)";
+    // Validate multi-API configuration
+    if (config.multi_api.providers.empty()) {
+        error_message = "No API providers configured (provide via api_endpoints_config.csv)";
         return false;
     }
 
@@ -353,34 +353,16 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
+    // Validate trading mode and symbol consistency
+    if (config.trading_mode.primary_symbol.empty()) {
+        error_message = "Primary trading symbol missing (provide via api_endpoints_config.csv)";
+        return false;
+    }
+    
     // Validate crypto asset configuration
     if (config.strategy.symbol.find('/') != std::string::npos && !config.strategy.is_crypto_asset) {
         error_message = "Crypto symbol format detected (" + config.strategy.symbol + ") but is_crypto_asset is false - set is_crypto_asset=true in strategy_config.csv";
         return false;
-    }
-
-    // Validate crypto endpoints if they are defined
-    if (!config.api.endpoints.crypto.bars.empty() || !config.api.endpoints.crypto.quotes_latest.empty() || !config.api.endpoints.crypto.assets.empty()) {
-        if (config.api.endpoints.crypto.bars.empty() || config.api.endpoints.crypto.quotes_latest.empty() || config.api.endpoints.crypto.assets.empty()) {
-            error_message = "Crypto endpoints incomplete - all crypto endpoints must be provided together";
-            return false;
-        }
-    }
-    if (config.api.api_key.empty() || config.api.api_secret.empty()) {
-        error_message = "API credentials missing (provide via api_config.csv)";
-        return false;
-    }
-    if (config.api.base_url.empty() || config.api.data_url.empty()) {
-        error_message = "API URLs missing (provide via api_config.csv)";
-        return false;
-    }
-
-    // Validate crypto endpoints if they are defined
-    if (!config.api.endpoints.crypto.bars.empty() || !config.api.endpoints.crypto.quotes_latest.empty() || !config.api.endpoints.crypto.assets.empty()) {
-        if (config.api.endpoints.crypto.bars.empty() || config.api.endpoints.crypto.quotes_latest.empty() || config.api.endpoints.crypto.assets.empty()) {
-            error_message = "Crypto endpoints incomplete - all crypto endpoints must be provided together";
-            return false;
-        }
     }
     if (config.strategy.atr_calculation_period < 2) {
         error_message = "strategy.atr_calculation_period must be >= 2 (ATR calculation period)";
@@ -435,7 +417,7 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    // Validate ATR calculation period (deprecated - use atr_calculation_bars)
+    // Validate ATR calculation period
     if (config.strategy.atr_calculation_period < 2 || config.strategy.atr_calculation_period > 100) {
         error_message = "strategy.atr_calculation_period must be between 2 and 100";
         return false;

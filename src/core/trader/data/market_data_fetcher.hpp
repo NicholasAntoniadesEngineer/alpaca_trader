@@ -4,7 +4,7 @@
 #include "configs/system_config.hpp"
 #include "data_structures.hpp"
 #include "data_sync_structures.hpp"
-#include "api/alpaca_client.hpp"
+#include "api/general/api_manager.hpp"
 #include "account_manager.hpp"
 #include "market_processing.hpp"
 #include "core/logging/trading_logs.hpp"
@@ -23,7 +23,7 @@ namespace Core {
 
 class MarketDataFetcher {
 public:
-    MarketDataFetcher(API::AlpacaClient& client, AccountManager& account_manager, const SystemConfig& config);
+    MarketDataFetcher(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config);
     
     // Data fetching methods
     ProcessedData fetch_and_process_data();
@@ -35,7 +35,7 @@ public:
     
 private:
     // Core dependencies
-    API::AlpacaClient& client;
+    API::ApiManager& api_manager;
     AccountManager& account_manager;
     const SystemConfig& config;
     

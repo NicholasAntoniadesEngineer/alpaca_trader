@@ -32,7 +32,7 @@ void AlpacaTrader::Threads::MarketGateThread::operator()() {
 
 void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
     try {
-        bool last_within = client.is_within_fetch_window();
+        bool last_within = api_manager.is_within_trading_hours();
         allow_fetch.store(last_within);
         
         auto& connectivity = ConnectivityManager::instance();
@@ -70,7 +70,7 @@ void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
 }
 
 void AlpacaTrader::Threads::MarketGateThread::check_and_update_fetch_window(bool& last_within) {
-    bool within = client.is_within_fetch_window();
+    bool within = api_manager.is_within_trading_hours();
     if (within != last_within) {
         allow_fetch.store(within);
         log_message(std::string("Market fetch gate ") + (within ? "ENABLED" : "DISABLED") +

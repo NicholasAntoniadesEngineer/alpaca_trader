@@ -21,7 +21,7 @@ using AlpacaTrader::Logging::set_log_thread_tag;
 using AlpacaTrader::Logging::log_message;
 using AlpacaTrader::Core::BarRequest;
 using AlpacaTrader::Core::ProcessedData;
-using AlpacaTrader::API::AlpacaClient;
+using AlpacaTrader::API::ApiManager;
 
 void AlpacaTrader::Threads::MarketDataThread::operator()() {
     set_log_thread_tag("MARKET");
@@ -80,7 +80,7 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
     BarRequest br{strategy.symbol, num_bars};
     LOG_THREAD_CONTENT("Requesting " + std::to_string(num_bars) + " bars for ATR calculation");
     
-    auto bars = client.get_recent_bars(br);
+    auto bars = api_manager.get_recent_bars(br);
     LOG_THREAD_CONTENT("Received " + std::to_string(bars.size()) + " bars");
     
     // Use configurable ATR calculation bars instead of deprecated atr_calculation_period
@@ -117,7 +117,7 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
 
                         // Get real-time quotes for current market data
                         LOG_THREAD_CONTENT("Fetching real-time quotes for " + strategy.symbol);
-                        auto quote_data = client.get_realtime_quotes(strategy.symbol);
+                        auto quote_data = api_manager.get_realtime_quotes(strategy.symbol);
                         LOG_THREAD_CONTENT("Quote data received - Mid: $" + std::to_string(quote_data.mid_price) + ", Timestamp: " + quote_data.timestamp);
                         
                         // Check if quote data is fresh (within last 2 minutes)
@@ -146,9 +146,11 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
                         }
                         
                         if (quote_data.mid_price > 0.0 && is_quote_fresh) {
-                            // Log real-time quote data
-                            AlpacaTrader::Logging::g_csv_bars_logger->log_quote(
-                                quote_data, strategy.symbol, timestamp, computed.atr, computed.avg_atr, computed.avg_vol
+                            // Log real-time quote data using market data method
+                            AlpacaTrader::Logging::g_csv_bars_logger->log_market_data(
+                                timestamp, strategy.symbol, quote_data.bid_price, quote_data.ask_price, 
+                                quote_data.bid_price, quote_data.mid_price, quote_data.ask_size + quote_data.bid_size,
+                                computed.atr, computed.avg_atr, computed.avg_vol
                             );
                             LOG_THREAD_CONTENT("Logged FRESH real-time quote data to CSV (Price: $" + std::to_string(quote_data.mid_price) + ")");
                         } else {
@@ -161,7 +163,7 @@ void AlpacaTrader::Threads::MarketDataThread::fetch_and_process_market_data() {
                                 for (const auto& bar : bars) {
                                     std::string bar_timestamp = bar.t.empty() ? timestamp : bar.t;
                                     AlpacaTrader::Logging::g_csv_bars_logger->log_bar(
-                                        bar, strategy.symbol, bar_timestamp, computed.atr, computed.avg_atr, computed.avg_vol
+                                        bar_timestamp, strategy.symbol, bar, computed.atr, computed.avg_atr, computed.avg_vol
                                     );
                                 }
                                 LOG_THREAD_CONTENT("Successfully logged " + std::to_string(bars.size()) + " bars to CSV");

@@ -1,46 +1,100 @@
 # ========================================================================
-# API AND ENDPOINTS CONFIGURATION
+# MULTI-API TRADING CONFIGURATION
 # ========================================================================
-# API credentials, connection settings, and endpoint URLs
-# ========================================================================
-
-# ========================================================================
-# API CONNECTION SETTINGS
+# Complete configuration supporting both STOCKS and CRYPTO trading
+# Switch between modes by changing trading_mode.mode and primary_symbol
 # ========================================================================
 
-# API credentials and authentication
-api.api_key,PKFV5ODSQ2G2TA5DLIIT
-api.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
-
-# Base URLs for different API services
-api.trading_paper_url,https://paper-api.alpaca.markets
-api.trading_live_url,https://api.alpaca.markets
-api.market_data_url,https://data.alpaca.markets
-
-# Connection and request configuration
-api.retry_count,3
-api.timeout_seconds,30
-api.enable_ssl_verification,true
-api.rate_limit_delay_ms,100
-api.api_version,v2
-
 # ========================================================================
-# API ENDPOINTS
+# TRADING MODE CONFIGURATION - CHANGE THESE TO SWITCH MODES
 # ========================================================================
 
-# Trading API Endpoints
-endpoints.trading.account,/v2/account
-endpoints.trading.positions,/v2/positions
-endpoints.trading.position_by_symbol,/v2/positions/{symbol}
-endpoints.trading.orders,/v2/orders
-endpoints.trading.orders_by_symbol,/v2/orders?status=open&symbols={symbol}
-endpoints.trading.clock,/v2/clock
+# STOCKS MODE: Set mode=stocks, primary_symbol=AAPL (or any stock symbol)
+# CRYPTO MODE: Set mode=crypto, primary_symbol=BTC/USD (or any crypto pair)
+trading_mode.mode,stocks
+trading_mode.primary_symbol,AAPL
 
-# Market Data API Endpoints (Stocks)
-endpoints.market_data.bars,/v2/stocks/{symbol}/bars
-endpoints.market_data.quotes_latest,/v2/stocks/{symbol}/quotes/latest
+# ========================================================================
+# ALPACA TRADING API CONFIGURATION
+# ========================================================================
 
-# Crypto Market Data API Endpoints
-endpoints.crypto.bars,/v1beta3/crypto/us/bars?symbols={symbol}&timeframe={timeframe}
-endpoints.crypto.quotes_latest,/v1beta3/crypto/us/quotes?symbols={symbol}
-endpoints.crypto.assets,/v2/assets?asset_class=crypto
+# Alpaca Trading API credentials and authentication
+alpaca_trading.api_key,PKFV5ODSQ2G2TA5DLIIT
+alpaca_trading.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
+alpaca_trading.base_url,https://paper-api.alpaca.markets
+alpaca_trading.websocket_url,wss://paper-api.alpaca.markets/stream
+alpaca_trading.retry_count,3
+alpaca_trading.timeout_seconds,30
+alpaca_trading.enable_ssl_verification,true
+alpaca_trading.rate_limit_delay_ms,100
+alpaca_trading.api_version,v2
+
+# Alpaca Trading API Endpoints
+alpaca_trading.endpoints.account,/v2/account
+alpaca_trading.endpoints.positions,/v2/positions
+alpaca_trading.endpoints.orders,/v2/orders
+alpaca_trading.endpoints.clock,/v2/clock
+alpaca_trading.endpoints.bars,/v2/stocks/{symbol}/bars
+alpaca_trading.endpoints.quotes_latest,/v2/stocks/{symbol}/quotes/latest
+alpaca_trading.endpoints.trades,/v2/stocks/{symbol}/trades/latest
+alpaca_trading.endpoints.assets,/v2/assets
+
+# ========================================================================
+# ALPACA STOCKS API CONFIGURATION
+# ========================================================================
+
+# Alpaca Stocks Market Data API credentials
+alpaca_stocks.api_key,PKFV5ODSQ2G2TA5DLIIT
+alpaca_stocks.api_secret,aR2YZeyldhrVigu5v0AtFOc04YlrBYnjmeEGC7Xk
+alpaca_stocks.base_url,https://data.alpaca.markets
+alpaca_stocks.websocket_url,wss://stream.data.alpaca.markets/v2/iex
+alpaca_stocks.retry_count,3
+alpaca_stocks.timeout_seconds,30
+alpaca_stocks.enable_ssl_verification,true
+alpaca_stocks.rate_limit_delay_ms,100
+alpaca_stocks.api_version,v2
+
+# Alpaca Stocks Market Data API Endpoints
+alpaca_stocks.endpoints.bars,/v2/stocks/{symbol}/bars
+alpaca_stocks.endpoints.quotes_latest,/v2/stocks/{symbol}/quotes/latest
+alpaca_stocks.endpoints.trades,/v2/stocks/{symbol}/trades/latest
+alpaca_stocks.endpoints.clock,/v2/clock
+alpaca_stocks.endpoints.assets,/v2/assets
+
+# ========================================================================
+# POLYGON CRYPTO API CONFIGURATION
+# ========================================================================
+
+# Polygon.io Crypto API credentials (REQUIRED FOR CRYPTO MODE)
+polygon_crypto.api_key,DEMO_API_KEY_POLYGON
+polygon_crypto.api_secret,
+polygon_crypto.base_url,https://api.polygon.io
+polygon_crypto.websocket_url,wss://socket.polygon.io/crypto
+polygon_crypto.retry_count,3
+polygon_crypto.timeout_seconds,30
+polygon_crypto.enable_ssl_verification,true
+polygon_crypto.rate_limit_delay_ms,100
+polygon_crypto.api_version,v1
+
+# Polygon Crypto API Endpoints
+polygon_crypto.endpoints.bars,/v2/aggs/ticker/{symbol}/range/1/minute/{from}/{to}
+polygon_crypto.endpoints.quotes_latest,/v1/last_quote/currencies/{symbol}
+polygon_crypto.endpoints.trades,/v1/last/crypto/{symbol}
+polygon_crypto.endpoints.assets,/v3/reference/tickers?market=crypto
+
+# ========================================================================
+# EASY MODE SWITCHING - JUST CHANGE 2 LINES ABOVE!
+# ========================================================================
+# 
+# ALL APIs ARE CONFIGURED - SYSTEM AUTOMATICALLY USES THE RIGHT ONES:
+#
+# STOCKS MODE (trading_mode.mode,stocks):
+#   - Uses: Alpaca Trading + Alpaca Stocks APIs
+#   - Ignores: Polygon Crypto API
+#
+# CRYPTO MODE (trading_mode.mode,crypto):  
+#   - Uses: Alpaca Trading + Polygon Crypto APIs
+#   - Ignores: Alpaca Stocks API
+#
+# TO SWITCH: Just change trading_mode.mode and primary_symbol above!
+# ========================================================================

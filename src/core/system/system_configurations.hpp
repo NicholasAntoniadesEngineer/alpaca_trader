@@ -5,9 +5,8 @@
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/thread_register.hpp"
-#include "configs/api_client_config.hpp"
+// No legacy API client config needed
 
-using AlpacaClientConfig = AlpacaTrader::Config::AlpacaClientConfig;
 using AccountManagerConfig = AlpacaTrader::Config::AccountManagerConfig;
 using MarketDataThreadConfig = AlpacaTrader::Config::MarketDataThreadConfig;
 using AccountDataThreadConfig = AlpacaTrader::Config::AccountDataThreadConfig;
@@ -18,7 +17,6 @@ using AccountDataThreadConfig = AlpacaTrader::Config::AccountDataThreadConfig;
  * Groups configuration objects for component initialization.
  */
 struct SystemConfigurations {
-    AlpacaClientConfig market_connector;      // Market data API configuration
     AccountManagerConfig portfolio_manager;   // Account management configuration
     MarketDataThreadConfig market_data_thread; // Market data thread configuration
     AccountDataThreadConfig account_data_thread; // Account data thread configuration

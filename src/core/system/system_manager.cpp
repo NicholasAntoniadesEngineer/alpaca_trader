@@ -2,6 +2,7 @@
 #include "system_state.hpp"
 #include "system_modules.hpp"
 #include "system_threads.hpp"
+#include "trading_system_factory.hpp"
 #include "core/threads/thread_logic/thread_registry.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/logging/startup_logs.hpp"
@@ -12,7 +13,7 @@
 #include "core/trader/trader.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/data/market_data_fetcher.hpp"
-#include "api/alpaca_client.hpp"
+#include "api/general/api_manager.hpp"
 #include "core/threads/system_threads/logging_thread.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
@@ -80,8 +81,7 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
 
 SystemConfigurations create_trading_configurations(const SystemState& state) {
     return SystemConfigurations{
-        AlpacaClientConfig{state.config.api, state.config.logging, state.config.timing, state.config.strategy},
-        AccountManagerConfig{state.config.api, state.config.logging, state.config.timing, state.config.strategy},
+        AccountManagerConfig{state.config.logging, state.config.timing, state.config.strategy},
         MarketDataThreadConfig{state.config.strategy, state.config.timing},
         AccountDataThreadConfig{state.config.timing}
     };
@@ -91,17 +91,18 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     SystemConfigurations configs = create_trading_configurations(state);
     SystemModules modules;
 
-    // Create core trading modules
-    auto* market_client = new AlpacaTrader::API::AlpacaClient(configs.market_connector);
-    modules.market_connector = market_client;
-    modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(configs.portfolio_manager);
+    // Create core trading modules using the factory
+    auto trading_components = TradingSystemFactory::create_trading_system(state.config);
+    
+    modules.api_manager = std::move(trading_components.api_manager);
+    modules.portfolio_manager = std::move(trading_components.account_manager);
+    modules.trading_engine = std::move(trading_components.trading_orchestrator);
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
-    modules.trading_engine = std::make_unique<AlpacaTrader::Core::TradingOrchestrator>(state.trader_view, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector), *modules.portfolio_manager);
     
     // Create thread modules
     
     // Create MARKET_DATA thread
-    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector),
+    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.api_manager,
                                                                    state.mtx, state.cv, state.market,
                                                                    state.has_market, state.running,
                                                                    state.market_data_timestamp, state.market_data_fresh);
@@ -113,7 +114,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     
     // Create MARKET_GATE thread
     modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
-                                                                   state.allow_fetch, state.running, *static_cast<AlpacaTrader::API::AlpacaClient*>(modules.market_connector));
+                                                                   state.allow_fetch, state.running, *modules.api_manager);
     
     // Create LOGGING thread
     static std::atomic<unsigned long> logging_iterations{0};
@@ -249,10 +250,9 @@ void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTr
     // Wait for all threads to complete
     Manager::shutdown_threads();
 
-    // Cleanup market connector
-    if (system_state.trading_modules->market_connector) {
-        delete static_cast<AlpacaTrader::API::AlpacaClient*>(system_state.trading_modules->market_connector);
-        system_state.trading_modules->market_connector = nullptr;
+    // Cleanup API manager - handled automatically by unique_ptr
+    if (system_state.trading_modules->api_manager) {
+        system_state.trading_modules->api_manager->shutdown();
     }
 
     // Shutdown logging system

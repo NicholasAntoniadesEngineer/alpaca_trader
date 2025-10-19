@@ -12,8 +12,8 @@ namespace Core {
 
 using AlpacaTrader::Logging::MarketDataLogs;
 
-MarketDataFetcher::MarketDataFetcher(API::AlpacaClient& client_ref, AccountManager& account_mgr, const SystemConfig& cfg)
-    : client(client_ref), account_manager(account_mgr), config(cfg) {}
+MarketDataFetcher::MarketDataFetcher(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg)
+    : api_manager(api_mgr), account_manager(account_mgr), config(cfg) {}
 
 ProcessedData MarketDataFetcher::fetch_and_process_data() {
     ProcessedData data;
@@ -93,7 +93,7 @@ bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
     // Use configurable bars to fetch and ATR calculation bars
     const int bars_to_fetch = config.strategy.bars_to_fetch_for_calculations + config.timing.historical_data_buffer_size;
     BarRequest br{config.strategy.symbol, bars_to_fetch};
-    auto bars = client.get_recent_bars(br);
+    auto bars = api_manager.get_recent_bars(br);
 
     const size_t required_bars = static_cast<size_t>(config.strategy.atr_calculation_bars + 2);
     

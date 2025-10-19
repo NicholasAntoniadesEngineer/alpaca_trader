@@ -2,8 +2,7 @@
 #define TRADING_ENGINE_HPP
 
 #include "configs/system_config.hpp"
-#include "api/alpaca_client.hpp"
-#include "api/market_clock.hpp"
+#include "api/general/api_manager.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
@@ -21,7 +20,7 @@ namespace Core {
 
 class TradingEngine {
 public:
-    TradingEngine(const SystemConfig& config, API::AlpacaClient& client, AccountManager& account_manager);
+    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager);
     
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
@@ -34,7 +33,7 @@ private:
     // Core dependencies
     const SystemConfig& config;
     AccountManager& account_manager;
-    API::AlpacaClient& client;
+    API::ApiManager& api_manager;
     OrderExecutionEngine order_engine;
     PositionManager position_manager;
     TradeValidator trade_validator;

@@ -568,10 +568,10 @@ void TradingLogs::log_current_positions_table(int quantity, double current_value
 }
 
 void TradingLogs::log_data_source_table(const std::string& symbol, const std::string& account_type) {
-    TABLE_HEADER_48("Data Sources", "Feed Configuration");
+    TABLE_HEADER_48("Data Sources", "Multi-API Configuration");
     
-    TABLE_ROW_48("Historical Bars", "IEX Feed (15-min delayed)");
-    TABLE_ROW_48("Real-time Quotes", "IEX Free (limited coverage)");
+    TABLE_ROW_48("Historical Bars", "Provider-specific feeds");
+    TABLE_ROW_48("Real-time Quotes", "Multi-provider routing");
     TABLE_ROW_48("Trading Symbol", symbol);
     TABLE_ROW_48("Account Type", account_type);
     
@@ -619,11 +619,9 @@ void TradingLogs::log_runtime_config_table(const AlpacaTrader::Config::SystemCon
     TABLE_HEADER_48("Runtime Config", "System Settings");
     
     // API Configuration
-    std::string api_env = (config.api.base_url.find("paper") != std::string::npos) ? "PAPER" : "LIVE";
-    TABLE_ROW_48("Environment", api_env);
-    TABLE_ROW_48("API Version", config.api.api_version);
-    TABLE_ROW_48("Retry Count", std::to_string(config.api.retry_count));
-    TABLE_ROW_48("Timeout", std::to_string(config.api.timeout_seconds) + "s");
+    TABLE_ROW_48("Trading Mode", (config.trading_mode.mode == AlpacaTrader::Config::TradingMode::STOCKS) ? "STOCKS" : "CRYPTO");
+    TABLE_ROW_48("Primary Symbol", config.trading_mode.primary_symbol);
+    TABLE_ROW_48("API Providers", std::to_string(config.multi_api.providers.size()));
     
     TABLE_SEPARATOR_48();
     

@@ -6,17 +6,17 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-PriceManager::PriceManager(API::AlpacaClient& client_ref, const SystemConfig& cfg)
-    : client(client_ref), config(cfg) {}
+PriceManager::PriceManager(API::ApiManager& api_mgr, const SystemConfig& cfg)
+    : api_manager(api_mgr), config(cfg) {}
 
 double PriceManager::get_real_time_price_with_fallback(double fallback_price) const {
-    double current_price = client.get_current_price(config.strategy.symbol);
+    double current_price = api_manager.get_current_price(config.trading_mode.primary_symbol);
     
     if (current_price <= 0.0) {
         current_price = fallback_price;
-        TradingLogs::log_data_source_info_table("DELAYED BAR DATA (15-MIN DELAY)", current_price, "FREE PLAN LIMITATION");
+        TradingLogs::log_data_source_info_table("FALLBACK BAR DATA", current_price, "PROVIDER UNAVAILABLE");
     } else {
-        TradingLogs::log_data_source_info_table("IEX FREE QUOTE", current_price, "LIMITED SYMBOL COVERAGE");
+        TradingLogs::log_data_source_info_table("REAL-TIME QUOTE", current_price, "MULTI-PROVIDER FEED");
     }
     
     return current_price;

@@ -72,8 +72,8 @@ void CSVBarsLogger::ensure_initialized() {
     }
 }
 
-void CSVBarsLogger::log_bar(const AlpacaTrader::Core::Bar& bar, const std::string& symbol,
-                           const std::string& timestamp, double atr, double avg_atr, double avg_vol) {
+void CSVBarsLogger::log_bar(const std::string& timestamp, const std::string& symbol,
+                           const AlpacaTrader::Core::Bar& bar, double atr, double avg_atr, double avg_vol) {
     ensure_initialized();
 
     std::lock_guard<std::mutex> lock(file_mutex);
@@ -92,43 +92,59 @@ void CSVBarsLogger::log_bar(const AlpacaTrader::Core::Bar& bar, const std::strin
     file_stream.flush();
 }
 
-void CSVBarsLogger::log_bars(const std::vector<AlpacaTrader::Core::Bar>& bars, const std::string& symbol,
-                            const std::string& timestamp, double atr, double avg_atr, double avg_vol) {
+void CSVBarsLogger::log_market_snapshot(const std::string& timestamp, const std::string& symbol,
+                                       const AlpacaTrader::Core::MarketSnapshot& snapshot) {
     ensure_initialized();
 
     std::lock_guard<std::mutex> lock(file_mutex);
 
-    for (const auto& bar : bars) {
-        // Write bar data directly without acquiring mutex again
-        file_stream << timestamp << ","
-                    << symbol << ","
-                    << std::fixed << std::setprecision(2) << bar.o << ","
-                    << std::fixed << std::setprecision(2) << bar.h << ","
-                    << std::fixed << std::setprecision(2) << bar.l << ","
-                    << std::fixed << std::setprecision(2) << bar.c << ","
-                    << std::fixed << std::setprecision(0) << bar.v << ","
-                    << std::fixed << std::setprecision(4) << atr << ","
-                    << std::fixed << std::setprecision(4) << avg_atr << ","
-                    << std::fixed << std::setprecision(0) << avg_vol << "\n";
-    }
-    
+    file_stream << timestamp << ","
+                << symbol << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.o << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.h << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.l << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.c << ","
+                << std::fixed << std::setprecision(0) << snapshot.curr.v << ","
+                << std::fixed << std::setprecision(4) << snapshot.atr << ","
+                << std::fixed << std::setprecision(4) << snapshot.avg_atr << ","
+                << std::fixed << std::setprecision(0) << snapshot.avg_vol << "\n";
+
     file_stream.flush();
 }
 
-void CSVBarsLogger::log_quote(const AlpacaTrader::Core::QuoteData& quote, const std::string& symbol,
-                             const std::string& timestamp, double atr, double avg_atr, double avg_vol) {
+void CSVBarsLogger::log_indicators(const std::string& timestamp, const std::string& symbol,
+                                  double atr, double avg_atr, double avg_vol, 
+                                  double price_change, double volume_change) {
     ensure_initialized();
 
     std::lock_guard<std::mutex> lock(file_mutex);
 
-    // Log quote data in a format similar to bars but with quote-specific fields
     file_stream << timestamp << ","
                 << symbol << ","
-                << std::fixed << std::setprecision(2) << quote.bid_price << ","  // Use bid as "open"
-                << std::fixed << std::setprecision(2) << quote.ask_price << ","  // Use ask as "high"
-                << std::fixed << std::setprecision(2) << quote.bid_price << ","  // Use bid as "low"
-                << std::fixed << std::setprecision(2) << quote.mid_price << ","  // Use mid as "close"
-                << std::fixed << std::setprecision(2) << (quote.ask_size + quote.bid_size) << "," // Use combined size as "volume"
+                << "INDICATORS" << ","
+                << std::fixed << std::setprecision(4) << atr << ","
+                << std::fixed << std::setprecision(4) << avg_atr << ","
+                << std::fixed << std::setprecision(0) << avg_vol << ","
+                << std::fixed << std::setprecision(4) << price_change << ","
+                << std::fixed << std::setprecision(4) << volume_change << "\n";
+
+    file_stream.flush();
+}
+
+void CSVBarsLogger::log_market_data(const std::string& timestamp, const std::string& symbol,
+                                   double open, double high, double low, double close, double volume,
+                                   double atr, double avg_atr, double avg_vol) {
+    ensure_initialized();
+
+    std::lock_guard<std::mutex> lock(file_mutex);
+
+    file_stream << timestamp << ","
+                << symbol << ","
+                << std::fixed << std::setprecision(2) << open << ","
+                << std::fixed << std::setprecision(2) << high << ","
+                << std::fixed << std::setprecision(2) << low << ","
+                << std::fixed << std::setprecision(2) << close << ","
+                << std::fixed << std::setprecision(0) << volume << ","
                 << std::fixed << std::setprecision(4) << atr << ","
                 << std::fixed << std::setprecision(4) << avg_atr << ","
                 << std::fixed << std::setprecision(0) << avg_vol << "\n";
@@ -140,6 +156,10 @@ void CSVBarsLogger::flush() {
     if (file_stream.is_open()) {
         file_stream.flush();
     }
+}
+
+bool CSVBarsLogger::is_initialized() const {
+    return initialized && file_stream.is_open();
 }
 
 } // namespace Logging

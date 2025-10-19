@@ -1,10 +1,8 @@
 #include "account_manager.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
-#include "core/utils/http_utils.hpp"
-#include "configs/api_config.hpp"
 #include "json/json.hpp"
-#include <cmath>
+#include <stdexcept>
 
 using json = nlohmann::json;
 
@@ -13,279 +11,213 @@ namespace Core {
 
 using AlpacaTrader::Logging::AccountLogs;
 
-AccountManager::AccountManager(const AccountManagerConfig& cfg)
-    : api(cfg.api), logging(cfg.logging), strategy(cfg.strategy),
-      cache_duration_seconds(cfg.timing.account_data_cache_duration_seconds),
+AccountManager::AccountManager(const AccountManagerConfig& cfg, API::ApiManager& api_mgr)
+    : logging(cfg.logging), strategy(cfg.strategy), api_manager(api_mgr),
       last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_seconds + 1)) {}
 
 double AccountManager::fetch_account_equity() const {
-    using namespace AlpacaTrader::Config;
-    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
-                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
-    std::string response = http_get(req);
-    if (response.empty()) {
-        AccountLogs::log_account_empty_response(logging.log_file);
-        return 0.0;
-    }
     try {
-        json j = json::parse(response);
-        if (j.contains("message")) {
-            AccountLogs::log_account_api_error(j["message"].get<std::string>(), logging.log_file);
-            return 0.0;
+        std::string account_json = api_manager.get_account_info();
+        if (account_json.empty()) {
+            throw std::runtime_error("Empty account response from API");
         }
-        if (j.contains("equity") && !j["equity"].is_null()) {
-            return std::stod(j["equity"].get<std::string>());
-        } else {
-            AccountLogs::log_account_field_missing("Equity", logging.log_file);
+        
+        json account_data = json::parse(account_json);
+        if (account_data.contains("equity") && account_data["equity"].is_string()) {
+            return std::stod(account_data["equity"].get<std::string>());
+        } else if (account_data.contains("equity") && account_data["equity"].is_number()) {
+            return account_data["equity"].get<double>();
         }
+        
+        throw std::runtime_error("Account equity not found in API response");
     } catch (const std::exception& e) {
-        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
+        AlpacaTrader::Logging::log_message("Account equity fetch failed: " + std::string(e.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch account equity: " + std::string(e.what()));
     }
-    return 0.0;
 }
 
 double AccountManager::fetch_buying_power() const {
-    using namespace AlpacaTrader::Config;
-    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
-                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
-    std::string response = http_get(req);
-    if (response.empty()) {
-        AccountLogs::log_account_empty_response(logging.log_file);
-        return 0.0;
-    }
     try {
-        json j = json::parse(response);
-        if (j.contains("message")) {
-            AccountLogs::log_account_api_error(j["message"].get<std::string>(), logging.log_file);
-            return 0.0;
+        std::string account_json = api_manager.get_account_info();
+        if (account_json.empty()) {
+            throw std::runtime_error("Empty account response from API");
         }
-        if (j.contains("buying_power") && !j["buying_power"].is_null()) {
-            return std::stod(j["buying_power"].get<std::string>());
-        } else {
-            AccountLogs::log_account_field_missing("Buying power", logging.log_file);
+        
+        json account_data = json::parse(account_json);
+        if (account_data.contains("buying_power") && account_data["buying_power"].is_string()) {
+            return std::stod(account_data["buying_power"].get<std::string>());
+        } else if (account_data.contains("buying_power") && account_data["buying_power"].is_number()) {
+            return account_data["buying_power"].get<double>();
         }
+        
+        throw std::runtime_error("Buying power not found in API response");
     } catch (const std::exception& e) {
-        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
+        AlpacaTrader::Logging::log_message("Buying power fetch failed: " + std::string(e.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch buying power: " + std::string(e.what()));
     }
-    return 0.0;
-}
-
-std::string AccountManager::replace_url_placeholder(const std::string& url, const std::string& symbol) const {
-    std::string result = url;
-
-    // Replace {symbol} placeholder
-    size_t pos = result.find("{symbol}");
-    if (pos != std::string::npos) {
-        result.replace(pos, 8, symbol);
-    }
-
-    return result;
 }
 
 PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_sym) const {
-    using namespace AlpacaTrader::Config;
-    PositionDetails details;
-    std::string url = api.base_url + api.endpoints.trading.position_by_symbol;
-
-    // Replace {symbol} placeholder
-    url = replace_url_placeholder(url, req_sym.symbol);
-    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file,
-                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
-    std::string response = http_get(req);
-
-    // Handle empty response (network/API issues)
-    if (response.empty()) {
-        AccountLogs::log_position_empty_response(logging.log_file);
-        return details;
-    }
-
-    // Handle "Not Found" response (no position exists for symbol)
-    if (response == "Not Found" || response.find("Not Found") != std::string::npos) {
-        AccountLogs::log_position_not_found(req_sym.symbol, logging.log_file);
-        return details; // Return empty details for non-existent position
-    }
-
     try {
-        json j = json::parse(response);
-        if (j.contains("qty") && !j["qty"].is_null()) {
-            details.qty = std::stoi(j["qty"].get<std::string>());
+        std::string positions_json = api_manager.get_positions();
+        if (positions_json.empty()) {
+            // No positions is valid - return empty position
+            PositionDetails details;
+            details.qty = 0;
+            details.current_value = 0.0;
+            details.unrealized_pl = 0.0;
+            return details;
         }
-        if (j.contains("unrealized_pl") && !j["unrealized_pl"].is_null()) {
-            details.unrealized_pl = std::stod(j["unrealized_pl"].get<std::string>());
+        
+        json positions_data = json::parse(positions_json);
+        
+        // Find position for the requested symbol
+        for (const auto& position : positions_data) {
+            if (position.contains("symbol") && position["symbol"].get<std::string>() == req_sym.symbol) {
+                PositionDetails details;
+                
+                if (position.contains("qty")) {
+                    details.qty = position["qty"].is_string() ? 
+                        std::stoi(position["qty"].get<std::string>()) : 
+                        position["qty"].get<int>();
+                }
+                
+                if (position.contains("market_value")) {
+                    details.current_value = position["market_value"].is_string() ? 
+                        std::stod(position["market_value"].get<std::string>()) : 
+                        position["market_value"].get<double>();
+                }
+                
+                if (position.contains("unrealized_pl")) {
+                    details.unrealized_pl = position["unrealized_pl"].is_string() ? 
+                        std::stod(position["unrealized_pl"].get<std::string>()) : 
+                        position["unrealized_pl"].get<double>();
+                }
+                
+                return details;
+            }
         }
-        if (j.contains("market_value") && !j["market_value"].is_null()) {
-            details.current_value = std::stod(j["market_value"].get<std::string>());
-        }
+        
+        // Position not found - return empty position
+        PositionDetails details;
+        details.qty = 0;
+        details.current_value = 0.0;
+        details.unrealized_pl = 0.0;
+        return details;
+        
     } catch (const std::exception& e) {
-        AccountLogs::log_position_parse_error(e.what(), response, logging.log_file);
+        AlpacaTrader::Logging::log_message("Position details fetch failed: " + std::string(e.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch position details: " + std::string(e.what()));
     }
-    return details;
 }
 
 int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const {
-    using namespace AlpacaTrader::Config;
-    std::string url = api.base_url + api.endpoints.trading.orders_by_symbol;
-
-    // Replace {symbol} placeholder
-    url = replace_url_placeholder(url, req_sym.symbol);
-    HttpRequest req(url, api.api_key, api.api_secret, logging.log_file, 
-                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
-    std::string response = http_get(req);
-    if (response.empty()) return 0;
     try {
-        json j = json::parse(response);
-        if (j.is_array()) {
-            return static_cast<int>(j.size());
+        std::string orders_json = api_manager.get_open_orders();
+        if (orders_json.empty()) {
+            return 0; // No orders is valid
         }
-        return 0;
+        
+        json orders_data = json::parse(orders_json);
+        int count = 0;
+        
+        for (const auto& order : orders_data) {
+            if (order.contains("symbol") && order["symbol"].get<std::string>() == req_sym.symbol) {
+                if (order.contains("status")) {
+                    std::string status = order["status"].get<std::string>();
+                    if (status == "new" || status == "partially_filled" || status == "pending_new") {
+                        count++;
+                    }
+                }
+            }
+        }
+        
+        return count;
+        
     } catch (const std::exception& e) {
-        AccountLogs::log_orders_parse_error(e.what(), response, logging.log_file);
-        return 0;
+        AlpacaTrader::Logging::log_message("Open orders count fetch failed: " + std::string(e.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch open orders count: " + std::string(e.what()));
     }
 }
 
 AccountSnapshot AccountManager::fetch_account_snapshot() const {
-    std::lock_guard<std::mutex> lock(cache_mutex);
+    AccountSnapshot snapshot;
+    snapshot.equity = fetch_account_equity();
+    snapshot.pos_details = fetch_position_details(SymbolRequest{strategy.symbol});
+    snapshot.open_orders = fetch_open_orders_count(SymbolRequest{strategy.symbol});
     
-    // Check if cache is still valid
-    auto now = std::chrono::steady_clock::now();
-    auto cache_age = std::chrono::duration_cast<std::chrono::seconds>(now - last_cache_time).count();
-    
-    if (cache_age < cache_duration_seconds) {
-        // Return cached data
-        return cached_data.second;
+    // Calculate exposure percentage
+    if (snapshot.equity > 0.0) {
+        snapshot.exposure_pct = (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0;
+    } else {
+        snapshot.exposure_pct = 0.0;
     }
-    
-    // Cache expired, fetch fresh data
-    auto [account_info, snapshot] = fetch_account_data_bundled();
-    
-    // Update cache
-    cached_data = {account_info, snapshot};
-    last_cache_time = now;
     
     return snapshot;
 }
 
-// Optimized method to get both account info and snapshot with minimal API calls
 std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_account_data_bundled() const {
-    AccountInfo info = {};
-    AccountSnapshot snapshot;
-    
-    // Single request to get all account data
-    using namespace AlpacaTrader::Config;
-    HttpRequest req(api.base_url + api.endpoints.trading.account, api.api_key, api.api_secret, logging.log_file, 
-                   api.retry_count, api.timeout_seconds, api.enable_ssl_verification, api.rate_limit_delay_ms);
-    std::string response = http_get(req);
-    
-    if (response.empty()) {
-        AccountLogs::log_account_empty_response(logging.log_file);
-        return {info, snapshot};
-    }
-    
-    try {
-        json account = json::parse(response);
-        if (account.contains("message")) {
-            AccountLogs::log_account_api_error(account["message"].get<std::string>(), logging.log_file);
-            return {info, snapshot};
-        }
-        
-        // Extract all account fields for both info and snapshot
-        if (account.contains("account_number") && !account["account_number"].is_null()) {
-            info.account_number = account["account_number"].get<std::string>();
-        }
-        if (account.contains("status") && !account["status"].is_null()) {
-            info.status = account["status"].get<std::string>();
-        }
-        if (account.contains("currency") && !account["currency"].is_null()) {
-            info.currency = account["currency"].get<std::string>();
-        }
-        if (account.contains("pattern_day_trader") && !account["pattern_day_trader"].is_null()) {
-            info.pattern_day_trader = account["pattern_day_trader"].get<bool>();
-        }
-        if (account.contains("trading_blocked_reason") && !account["trading_blocked_reason"].is_null()) {
-            info.trading_blocked_reason = account["trading_blocked_reason"].get<std::string>();
-        }
-        if (account.contains("transfers_blocked_reason") && !account["transfers_blocked_reason"].is_null()) {
-            info.transfers_blocked_reason = account["transfers_blocked_reason"].get<std::string>();
-        }
-        if (account.contains("account_blocked_reason") && !account["account_blocked_reason"].is_null()) {
-            info.account_blocked_reason = account["account_blocked_reason"].get<std::string>();
-        }
-        if (account.contains("created_at") && !account["created_at"].is_null()) {
-            info.created_at = account["created_at"].get<std::string>();
-        }
-        if (account.contains("equity") && !account["equity"].is_null()) {
-            double equity = std::stod(account["equity"].get<std::string>());
-            info.equity = equity;
-            snapshot.equity = equity;  // Use same value for snapshot
-        }
-        if (account.contains("last_equity") && !account["last_equity"].is_null()) {
-            info.last_equity = std::stod(account["last_equity"].get<std::string>());
-        }
-        if (account.contains("long_market_value") && !account["long_market_value"].is_null()) {
-            info.long_market_value = std::stod(account["long_market_value"].get<std::string>());
-        }
-        if (account.contains("short_market_value") && !account["short_market_value"].is_null()) {
-            info.short_market_value = std::stod(account["short_market_value"].get<std::string>());
-        }
-        if (account.contains("cash") && !account["cash"].is_null()) {
-            info.cash = std::stod(account["cash"].get<std::string>());
-        }
-        if (account.contains("buying_power") && !account["buying_power"].is_null()) {
-            info.buying_power = std::stod(account["buying_power"].get<std::string>());
-        }
-        if (account.contains("initial_margin") && !account["initial_margin"].is_null()) {
-            info.initial_margin = std::stod(account["initial_margin"].get<std::string>());
-        }
-        if (account.contains("maintenance_margin") && !account["maintenance_margin"].is_null()) {
-            info.maintenance_margin = std::stod(account["maintenance_margin"].get<std::string>());
-        }
-        if (account.contains("sma") && !account["sma"].is_null()) {
-            info.sma = std::stod(account["sma"].get<std::string>());
-        }
-        if (account.contains("day_trade_count") && !account["day_trade_count"].is_null()) {
-            info.day_trade_count = account["day_trade_count"].get<double>();
-        }
-        if (account.contains("regt_buying_power") && !account["regt_buying_power"].is_null()) {
-            info.regt_buying_power = std::stod(account["regt_buying_power"].get<std::string>());
-        }
-        if (account.contains("daytrading_buying_power") && !account["daytrading_buying_power"].is_null()) {
-            info.daytrading_buying_power = std::stod(account["daytrading_buying_power"].get<std::string>());
-        }
-        
-        // Get position details and orders (these are different endpoints)
-        SymbolRequest sreq{strategy.symbol};
-        snapshot.pos_details = fetch_position_details(sreq);
-        snapshot.open_orders = fetch_open_orders_count(sreq);
-        snapshot.exposure_pct = (snapshot.equity > 0.0) ? (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0 : 0.0;
-        
-    } catch (const std::exception& e) {
-        AccountLogs::log_account_parse_error(e.what(), response, logging.log_file);
-    }
-    
-    return {info, snapshot};
+    AccountInfo info = fetch_account_info();
+    AccountSnapshot snapshot = fetch_account_snapshot();
+    return std::make_pair(info, snapshot);
 }
 
 AccountManager::AccountInfo AccountManager::fetch_account_info() const {
-    std::lock_guard<std::mutex> lock(cache_mutex);
-    
-    // Check if cache is still valid
-    auto now = std::chrono::steady_clock::now();
-    auto cache_age = std::chrono::duration_cast<std::chrono::seconds>(now - last_cache_time).count();
-    
-    if (cache_age < cache_duration_seconds) {
-        // Return cached data
-        return cached_data.first;
+    try {
+        std::string account_json = api_manager.get_account_info();
+        if (account_json.empty()) {
+            throw std::runtime_error("Empty account response from API");
+        }
+        
+        json account_data = json::parse(account_json);
+        AccountInfo info;
+        
+        // Extract account information with proper error handling
+        info.account_number = account_data.value("account_number", "");
+        info.status = account_data.value("status", "UNKNOWN");
+        info.currency = account_data.value("currency", "USD");
+        info.pattern_day_trader = account_data.value("pattern_day_trader", false);
+        info.trading_blocked_reason = account_data.value("trading_blocked_reason", "");
+        info.transfers_blocked_reason = account_data.value("transfers_blocked_reason", "");
+        info.account_blocked_reason = account_data.value("account_blocked_reason", "");
+        info.created_at = account_data.value("created_at", "");
+        
+        // Handle numeric fields that might be strings or numbers
+        auto parse_numeric = [](const json& j, const std::string& key, double default_val = 0.0) -> double {
+            if (!j.contains(key)) return default_val;
+            if (j[key].is_string()) return std::stod(j[key].get<std::string>());
+            if (j[key].is_number()) return j[key].get<double>();
+            return default_val;
+        };
+        
+        info.equity = parse_numeric(account_data, "equity");
+        info.last_equity = parse_numeric(account_data, "last_equity");
+        info.long_market_value = parse_numeric(account_data, "long_market_value");
+        info.short_market_value = parse_numeric(account_data, "short_market_value");
+        info.cash = parse_numeric(account_data, "cash");
+        info.buying_power = parse_numeric(account_data, "buying_power");
+        info.initial_margin = parse_numeric(account_data, "initial_margin");
+        info.maintenance_margin = parse_numeric(account_data, "maintenance_margin");
+        info.sma = parse_numeric(account_data, "sma");
+        info.day_trade_count = parse_numeric(account_data, "day_trade_count");
+        info.regt_buying_power = parse_numeric(account_data, "regt_buying_power");
+        info.daytrading_buying_power = parse_numeric(account_data, "daytrading_buying_power");
+        
+        return info;
+        
+    } catch (const std::exception& e) {
+        AlpacaTrader::Logging::log_message("Account info fetch failed: " + std::string(e.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch account info: " + std::string(e.what()));
     }
-    
-    // Cache expired, fetch fresh data
-    auto [account_info, snapshot] = fetch_account_data_bundled();
-    
-    // Update cache
-    cached_data = {account_info, snapshot};
-    last_cache_time = now;
-    
-    return account_info;
+}
+
+std::string AccountManager::replace_url_placeholder(const std::string& url, const std::string& symbol) const {
+    std::string result = url;
+    size_t pos = result.find("{symbol}");
+    if (pos != std::string::npos) {
+        result.replace(pos, 8, symbol);
+    }
+    return result;
 }
 
 } // namespace Core

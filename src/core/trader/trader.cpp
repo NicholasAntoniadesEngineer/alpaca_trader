@@ -14,11 +14,11 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
-TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
+TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr),
-      trading_engine(cfg, client_ref, account_mgr),
+      trading_engine(cfg, api_mgr, account_mgr),
       risk_manager(cfg),
-      data_fetcher(client_ref, account_mgr, cfg) {
+      data_fetcher(api_mgr, account_mgr, cfg) {
     
     runtime.initial_equity = initialize_trading_session();
 }
@@ -51,7 +51,10 @@ void TradingOrchestrator::execute_trading_loop() {
 
                 // Display trading loop header and increment counter
                 runtime.loop_counter.fetch_add(1);
-                std::string symbol = config.strategy.symbol.empty() ? "UNKNOWN" : config.strategy.symbol;
+                if (config.trading_mode.primary_symbol.empty()) {
+                    throw std::runtime_error("Primary symbol is required but not configured");
+                }
+                std::string symbol = config.trading_mode.primary_symbol;
                 TradingLogs::log_loop_header(runtime.loop_counter.load(), symbol);
 
                 // CSV logging for account updates

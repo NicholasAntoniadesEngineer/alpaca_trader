@@ -15,13 +15,13 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-TradingEngine::TradingEngine(const SystemConfig& cfg, API::AlpacaClient& client_ref, AccountManager& account_mgr)
-    : config(cfg), account_manager(account_mgr), client(client_ref),
-      order_engine(client_ref, account_mgr, cfg, data_sync),
-      position_manager(client_ref, cfg),
+TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
+    : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
+      order_engine(api_mgr, account_mgr, cfg, data_sync),
+      position_manager(api_mgr, cfg),
       trade_validator(cfg),
-      price_manager(client_ref, cfg),
-      data_fetcher(client_ref, account_mgr, cfg) {}
+      price_manager(api_mgr, cfg),
+      data_fetcher(api_mgr, account_mgr, cfg) {}
 
 bool TradingEngine::check_trading_permissions(const ProcessedData& data, double equity) {
     if (!check_connectivity()) {
@@ -33,8 +33,8 @@ bool TradingEngine::check_trading_permissions(const ProcessedData& data, double 
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
     // Input validation
-    if (config.strategy.symbol.empty()) {
-        TradingLogs::log_market_status(false, "Invalid configuration - symbol is empty");
+    if (config.trading_mode.primary_symbol.empty()) {
+        TradingLogs::log_market_status(false, "Invalid configuration - primary symbol is empty");
         return;
     }
 
@@ -43,7 +43,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
         return;
     }
 
-    TradingLogs::log_signal_analysis_start(config.strategy.symbol);
+    TradingLogs::log_signal_analysis_start(config.trading_mode.primary_symbol);
 
     // Check if market is open before making any trading decisions
     if (!is_market_open()) {
@@ -119,7 +119,7 @@ bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
     if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 && 
         market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
         AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.strategy.symbol,
+            config.trading_mode.primary_symbol,
             "No Data Available",
             "Symbol may not exist or market is closed",
             0,
@@ -131,7 +131,7 @@ bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
     // Validate that market data is not null/empty
     if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
         AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.strategy.symbol,
+            config.trading_mode.primary_symbol,
             "Invalid Data",
             "NaN or infinite values detected in market data",
             0,
@@ -142,7 +142,7 @@ bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
 
     if (market.curr.c <= 0.0) {
         AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.strategy.symbol,
+            config.trading_mode.primary_symbol,
             "Invalid Data",
             "Price is zero or negative",
             0,
@@ -153,7 +153,7 @@ bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
 
     if (market.atr <= 0.0) {
         AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.strategy.symbol,
+            config.trading_mode.primary_symbol,
             "Insufficient Data",
             "ATR is zero or negative - insufficient volatility data for trading",
             0,
@@ -165,7 +165,7 @@ bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
     // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
     if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
         AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.strategy.symbol,
+            config.trading_mode.primary_symbol,
             "Invalid Data",
             "OHLC relationship violation - invalid price data structure",
             0,
@@ -188,7 +188,7 @@ bool TradingEngine::check_connectivity() {
 }
 
 bool TradingEngine::is_market_open() {
-    if (!client.is_within_fetch_window()) {
+    if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
         TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
         return false;
     }
@@ -257,7 +257,10 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data) {
     // CSV logging for signal analysis
     try {
         std::string timestamp = TimeUtils::get_current_human_readable_time();
-        std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+        if (config.trading_mode.primary_symbol.empty()) {
+            throw std::runtime_error("Primary symbol is required but not configured");
+        }
+        std::string symbol = config.trading_mode.primary_symbol;
 
         // Log signals to CSV
         if (AlpacaTrader::Logging::g_csv_trade_logger) {
@@ -275,7 +278,6 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data) {
                     config.strategy.atr_absolute_minimum_threshold :
                     config.strategy.entry_signal_atr_multiplier,
                 filter_result.vol_pass, filter_result.vol_ratio,
-                config.strategy.entry_signal_volume_multiplier,
                 filter_result.doji_pass
             );
         }
@@ -284,7 +286,7 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data) {
         if (AlpacaTrader::Logging::g_csv_trade_logger) {
             AlpacaTrader::Logging::g_csv_trade_logger->log_market_data(
                 timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
-                data.curr.v, data.atr, data.avg_atr, data.avg_vol
+                data.curr.v, data.atr
             );
         }
 
@@ -305,7 +307,10 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
         // CSV logging for position sizing when filters not met
         try {
             std::string timestamp = TimeUtils::get_current_human_readable_time();
-            std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+            if (config.trading_mode.primary_symbol.empty()) {
+            throw std::runtime_error("Primary symbol is required but not configured");
+        }
+        std::string symbol = config.trading_mode.primary_symbol;
 
             if (AlpacaTrader::Logging::g_csv_trade_logger) {
                 AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
@@ -332,7 +337,10 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
     // CSV logging for successful position sizing
     try {
         std::string timestamp = TimeUtils::get_current_human_readable_time();
-        std::string symbol = config.strategy.symbol.empty() ? "SPY" : config.strategy.symbol;
+        if (config.trading_mode.primary_symbol.empty()) {
+            throw std::runtime_error("Primary symbol is required but not configured");
+        }
+        std::string symbol = config.trading_mode.primary_symbol;
 
         if (AlpacaTrader::Logging::g_csv_trade_logger) {
             AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(

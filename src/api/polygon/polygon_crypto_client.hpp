@@ -1,0 +1,65 @@
+#ifndef POLYGON_CRYPTO_CLIENT_HPP
+#define POLYGON_CRYPTO_CLIENT_HPP
+
+#include "../general/api_provider_interface.hpp"
+#include "configs/multi_api_config.hpp"
+#include "core/trader/data/data_structures.hpp"
+#include "core/utils/http_utils.hpp"
+#include <string>
+#include <vector>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <unordered_map>
+
+namespace AlpacaTrader {
+namespace API {
+
+class PolygonCryptoClient : public ApiProviderInterface {
+private:
+    Config::ApiProviderConfig config;
+    std::atomic<bool> connected{false};
+    std::atomic<bool> websocket_active{false};
+    
+    std::thread websocket_thread;
+    mutable std::mutex data_mutex;
+    std::condition_variable data_condition;
+    
+    mutable std::unordered_map<std::string, Core::QuoteData> latest_quotes;
+    mutable std::unordered_map<std::string, double> latest_prices;
+    
+    void websocket_worker();
+    void process_websocket_message(const std::string& message);
+    std::string build_rest_url(const std::string& endpoint, const std::string& symbol) const;
+    std::string make_authenticated_request(const std::string& url) const;
+    
+    bool validate_config() const;
+    void cleanup_resources();
+
+public:
+    PolygonCryptoClient();
+    ~PolygonCryptoClient() override;
+    
+    bool initialize(const Config::ApiProviderConfig& config) override;
+    bool is_connected() const override;
+    void disconnect() override;
+    
+    std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& request) const override;
+    double get_current_price(const std::string& symbol) const override;
+    Core::QuoteData get_realtime_quotes(const std::string& symbol) const override;
+    
+    bool is_market_open() const override;
+    bool is_within_trading_hours() const override;
+    
+    std::string get_provider_name() const override;
+    Config::ApiProvider get_provider_type() const override;
+    
+    bool start_realtime_feed(const std::vector<std::string>& symbols);
+    void stop_realtime_feed();
+};
+
+} // namespace API
+} // namespace AlpacaTrader
+
+#endif // POLYGON_CRYPTO_CLIENT_HPP

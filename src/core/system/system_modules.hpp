@@ -4,6 +4,7 @@
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/trader.hpp"
 #include "core/logging/account_logs.hpp"
+#include "api/general/api_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/market_gate_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
@@ -20,7 +21,7 @@ struct SystemModules {
     // =========================================================================
     // CORE TRADING COMPONENTS
     // =========================================================================
-    void* market_connector;    // Market data API client (opaque pointer)
+    std::unique_ptr<AlpacaTrader::API::ApiManager> api_manager;           // Multi-provider API manager
     std::unique_ptr<AlpacaTrader::Core::AccountManager> portfolio_manager; // Account and portfolio management
     std::unique_ptr<AlpacaTrader::Core::TradingOrchestrator> trading_engine;            // Core trading logic engine
     

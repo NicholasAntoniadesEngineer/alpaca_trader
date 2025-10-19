@@ -5,7 +5,7 @@
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/data/data_sync_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
-#include "api/alpaca_client.hpp"
+#include "api/general/api_manager.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/logging/trading_logs.hpp"
 #include <string>
@@ -16,7 +16,7 @@ namespace Core {
 
 class OrderExecutionEngine {
 public:
-    OrderExecutionEngine(API::AlpacaClient& client, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync);
+    OrderExecutionEngine(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync);
     
     void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
     
@@ -28,7 +28,7 @@ public:
     
 private:
     // Core dependencies
-    API::AlpacaClient& client;
+    API::ApiManager& api_manager;
     AccountManager& account_manager;
     const SystemConfig& config;
     DataSyncReferences& data_sync;
