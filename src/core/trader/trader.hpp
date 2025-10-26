@@ -11,6 +11,7 @@
 #include "analysis/risk_manager.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
+#include "core/system/system_monitor.hpp"
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -42,7 +43,7 @@ private:
     void countdown_to_next_cycle();
 
 public:
-    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr);
+    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

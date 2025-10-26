@@ -6,6 +6,8 @@
 #include "configs/system_config.hpp"
 #include "core/logging/thread_logs.hpp"
 #include "core/system/system_modules.hpp"
+#include "core/threads/thread_logic/thread_manager.hpp"
+#include "core/system/system_monitor.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
@@ -38,6 +40,7 @@ struct SystemState {
     std::atomic<bool> has_account{false};   // Indicates if account data is available
     std::atomic<bool> running{true};        // Main system running flag
     std::atomic<bool> allow_fetch{false};    // Controls data fetching operations
+    std::atomic<bool> shutdown_requested{false};  // Can be set to trigger graceful shutdown
     
     // =========================================================================
     // DATA FRESHNESS TRACKING
@@ -57,6 +60,8 @@ struct SystemState {
     const SystemConfig& trader_view = config;  // Trader-specific configuration view
     std::unique_ptr<SystemModules> trading_modules;  // All system modules
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
+    AlpacaTrader::Core::ThreadSystem::ThreadManagerState thread_manager_state;  // Thread management state
+    AlpacaTrader::Core::Monitoring::SystemMonitor system_monitor;  // System monitoring state
 
     // =========================================================================
     // CONSTRUCTORS

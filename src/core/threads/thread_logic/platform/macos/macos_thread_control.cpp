@@ -16,7 +16,7 @@ int ThreadControl::priority_to_native(AlpacaTrader::Config::Priority priority) {
         case AlpacaTrader::Config::Priority::REALTIME: return 47;
         case AlpacaTrader::Config::Priority::HIGHEST:  return 40;
         case AlpacaTrader::Config::Priority::HIGH:     return 35;
-        case AlpacaTrader::Config::Priority::NORMAL:   return 31;  // Default macOS thread priority
+        case AlpacaTrader::Config::Priority::NORMAL:   return 31;  
         case AlpacaTrader::Config::Priority::LOW:      return 25;
         case AlpacaTrader::Config::Priority::LOWEST:   return 15;
         default:                 return 31;

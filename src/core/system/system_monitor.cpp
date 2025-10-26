@@ -7,11 +7,6 @@ namespace AlpacaTrader {
 namespace Core {
 namespace Monitoring {
 
-SystemMonitor& SystemMonitor::instance() {
-    static SystemMonitor instance;
-    return instance;
-}
-
 void SystemMonitor::set_configuration(const StrategyConfig& config) {
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     config_ = config;

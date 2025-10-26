@@ -12,28 +12,25 @@ namespace AlpacaTrader {
 namespace Core {
 namespace ThreadSystem {
 
-std::vector<AlpacaTrader::Config::ThreadStatusData> Manager::thread_status_data;
-std::vector<std::thread> Manager::active_threads_;
-
-void Manager::start_threads(const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules) 
+void Manager::start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules) 
 {
-    active_threads_.clear();
+    manager_state.clear_all_data();
    
-    for (const auto& thread_def : thread_definitions) {
+    for (const auto& thread_definition : thread_definitions) {
         // Use get_function directly with modules
-        active_threads_.emplace_back([&thread_def, &modules]() { 
-            thread_def.get_function(modules);
-        });
+        manager_state.add_active_thread(std::thread([&thread_definition, &modules]() { 
+            thread_definition.get_function(modules);
+        }));
     }
 }
 
-void Manager::shutdown_threads() {
-    for (auto& thread : active_threads_) {
-        if (thread.joinable()) {
-            thread.join();
+void Manager::shutdown_threads(ThreadManagerState& manager_state) {
+    for (auto& thread_instance : manager_state.active_threads) {
+        if (thread_instance.joinable()) {
+            thread_instance.join();
         }
     }
-    active_threads_.clear();
+    manager_state.clear_all_data();
 }
 
 void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadInfo>& thread_infos, 
@@ -41,32 +38,32 @@ void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadIn
     ThreadLogs::log_thread_monitoring_stats(thread_infos, start_time);
 }
 
-void Manager::setup_thread_priorities(const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config) 
+void Manager::setup_thread_priorities(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config) 
 {
-    thread_status_data.clear();
+    manager_state.thread_status_data.clear();
     
     auto thread_types = AlpacaTrader::Core::ThreadRegistry::create_thread_types();
     
-    for (size_t i = 0; i < thread_definitions.size() && i < thread_types.size(); ++i) {
-        configure_single_thread(thread_definitions[i], thread_types[i], config);
+    for (size_t thread_index = 0; thread_index < thread_definitions.size() && thread_index < thread_types.size(); ++thread_index) {
+        configure_single_thread(manager_state, thread_definitions[thread_index], thread_types[thread_index], config);
     }
-    ThreadLogs::log_thread_status_table(thread_status_data);    
+    ThreadLogs::log_thread_status_table(manager_state.thread_status_data);    
 }
 
-void Manager::configure_single_thread(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config) 
+void Manager::configure_single_thread(ThreadManagerState& manager_state, const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config) 
 {    
-    if (active_threads_.empty()) {
-        thread_status_data.emplace_back(thread_def.name, "SKIPPED", false, -1);
+    if (!manager_state.has_active_threads()) {
+        manager_state.add_thread_status(AlpacaTrader::Config::ThreadStatusData(thread_def.name, "SKIPPED", false, -1));
         return;
     }
     
     auto platform_config = create_platform_config(thread_def, thread_type, config);
-    bool success = apply_thread_configuration(platform_config);
+    bool configuration_success = apply_thread_configuration(manager_state, platform_config);
     
-    std::string priority_str = AlpacaTrader::Config::ConfigProvider::priority_to_string(static_cast<AlpacaTrader::Config::Priority>(platform_config.priority));
-    std::string cpu_info = (platform_config.cpu_affinity >= 0) ? "CPU " + std::to_string(platform_config.cpu_affinity) : "No affinity";
-    std::string status_msg = success ? "Configured" : "Failed";
-    thread_status_data.emplace_back(thread_def.name, priority_str, success, platform_config.cpu_affinity, status_msg);
+    std::string priority_string = AlpacaTrader::Config::ConfigProvider::priority_to_string(static_cast<AlpacaTrader::Config::Priority>(platform_config.priority));
+    std::string cpu_affinity_info = (platform_config.cpu_affinity >= 0) ? "CPU " + std::to_string(platform_config.cpu_affinity) : "No affinity";
+    std::string status_message = configuration_success ? "Configured" : "Failed";
+    manager_state.add_thread_status(AlpacaTrader::Config::ThreadStatusData(thread_def.name, priority_string, configuration_success, platform_config.cpu_affinity, status_message));
 }
 
 AlpacaTrader::Config::ThreadSettings Manager::create_platform_config(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config) 
@@ -80,12 +77,12 @@ AlpacaTrader::Config::ThreadSettings Manager::create_platform_config(const Alpac
     return platform_config;
 }
 
-bool Manager::apply_thread_configuration(const AlpacaTrader::Config::ThreadSettings& platform_config) 
+bool Manager::apply_thread_configuration(ThreadManagerState& manager_state, const AlpacaTrader::Config::ThreadSettings& platform_config) 
 {
-    AlpacaTrader::Config::Priority actual_priority = ThreadControl::set_priority_with_fallback(active_threads_.back(), platform_config);
-    bool success = (actual_priority == platform_config.priority);
+    AlpacaTrader::Config::Priority actual_priority = ThreadControl::set_priority_with_fallback(manager_state.get_last_thread(), platform_config);
+    bool configuration_success = (actual_priority == platform_config.priority);
     
-    return success;
+    return configuration_success;
 }
 
 } // namespace ThreadSystem

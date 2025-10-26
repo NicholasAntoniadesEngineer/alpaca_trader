@@ -5,7 +5,6 @@
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/thread_register.hpp"
-// No legacy API client config needed
 
 using AccountManagerConfig = AlpacaTrader::Config::AccountManagerConfig;
 using MarketDataThreadConfig = AlpacaTrader::Config::MarketDataThreadConfig;

@@ -11,12 +11,13 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
+TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon)
     : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       risk_manager(cfg),
       signal_processor(cfg),
-      order_engine(api_mgr, account_mgr, cfg, data_sync),
-      data_fetcher(api_mgr, account_mgr, cfg) {}
+      order_engine(api_mgr, account_mgr, cfg, data_sync, mon),
+      data_fetcher(api_mgr, account_mgr, cfg),
+      system_monitor(mon) {}
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
     // Input validation
@@ -42,7 +43,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     // Check if market data is fresh enough for trading decisions
     if (!data_fetcher.is_data_fresh()) {
         TradingLogs::log_market_status(false, "Market data is stale - no trading decisions");
-        AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_data_freshness_failure();
+        system_monitor.record_data_freshness_failure();
         TradingLogs::log_signal_analysis_complete();
         return;
     }

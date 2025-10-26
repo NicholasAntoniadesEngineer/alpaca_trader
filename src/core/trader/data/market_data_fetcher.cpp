@@ -16,7 +16,7 @@ using AlpacaTrader::Logging::MarketDataLogs;
 using AlpacaTrader::Logging::TradingLogs;
 
 MarketDataFetcher::MarketDataFetcher(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg)
-    : api_manager(api_mgr), account_manager(account_mgr), config(cfg), 
+    : api_manager(api_mgr), config(cfg), 
       market_data_manager(cfg, api_mgr, account_mgr), 
       market_data_validator(cfg), 
       bars_data_manager(cfg, api_mgr), 

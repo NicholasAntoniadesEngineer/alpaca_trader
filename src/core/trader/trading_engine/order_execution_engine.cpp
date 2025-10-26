@@ -10,8 +10,8 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-OrderExecutionEngine::OrderExecutionEngine(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg, DataSyncReferences& data_sync_ref)
-    : api_manager(api_mgr), account_manager(account_mgr), config(cfg), data_sync(data_sync_ref) {}
+OrderExecutionEngine::OrderExecutionEngine(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg, DataSyncReferences& data_sync_ref, Monitoring::SystemMonitor& mon)
+    : api_manager(api_mgr), account_manager(account_mgr), config(cfg), data_sync(data_sync_ref), system_monitor(mon) {}
 
 void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd) {
     TradingLogs::log_order_execution_header();
@@ -62,7 +62,7 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
             // No position: check if we can open short position (use sell side for short)
             if (!api_manager.get_account_info().empty()) { // Simplified check - detailed short availability would need specific implementation
                 TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
-                AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_short_blocked(config.trading_mode.primary_symbol);
+                system_monitor.record_short_blocked(config.trading_mode.primary_symbol);
                 // Don't return early - allow processing of existing position closures if any
             } else {
                 TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
@@ -174,7 +174,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
                 TradingLogs::log_market_status(true, "Placing bracket order");
                 order_placed = true;
                 TradingLogs::log_market_status(true, "Bracket order placed successfully on attempt " + std::to_string(attempt));
-                AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_order_placed(true);
+                system_monitor.record_order_placed(true);
             } catch (const std::exception& e) {
                 if (attempt < max_retries) {
                     TradingLogs::log_market_status(false, "Order attempt " + std::to_string(attempt) + " failed, retrying: " + std::string(e.what()));
@@ -182,7 +182,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
                     std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
                 } else {
                     TradingLogs::log_market_status(false, "Order execution failed after " + std::to_string(max_retries) + " attempts: " + std::string(e.what()));
-                    AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_order_placed(false, std::string(e.what()));
+                    system_monitor.record_order_placed(false, std::string(e.what()));
                 }
             }
         }

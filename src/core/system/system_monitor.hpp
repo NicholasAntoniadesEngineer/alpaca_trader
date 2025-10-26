@@ -51,7 +51,7 @@ struct SystemMetricsSnapshot {
 
 class SystemMonitor {
 public:
-    static SystemMonitor& instance();
+    SystemMonitor() = default;
     
     // Configuration
     void set_configuration(const StrategyConfig& config);
@@ -79,7 +79,6 @@ public:
     void check_and_alert();
     
 private:
-    SystemMonitor() = default;
     mutable std::mutex metrics_mutex_;
     SystemMetrics metrics_;
     StrategyConfig config_;

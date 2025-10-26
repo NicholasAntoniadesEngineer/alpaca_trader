@@ -33,22 +33,6 @@ using namespace AlpacaTrader::Logging;
 using namespace AlpacaTrader::Threads;
 using namespace AlpacaTrader::Core::ThreadSystem;
 
-// Global signal handling
-static SystemState* g_system_state = nullptr;
-
-void signal_handler(int /* signal */) {
-    if (g_system_state) {
-        g_system_state->running.store(false);
-        g_system_state->cv.notify_all();
-    }
-}
-
-void setup_signal_handlers(SystemState& system_state) {
-    g_system_state = &system_state;
-    std::signal(SIGINT, signal_handler);
-    std::signal(SIGTERM, signal_handler);
-}
-
 
 void log_startup_information(const SystemModules& modules, const AlpacaTrader::Config::SystemConfig& config) {
     // Log application header
@@ -92,7 +76,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     SystemModules modules;
 
     // Create core trading modules using the factory
-    auto trading_components = TradingSystemFactory::create_trading_system(state.config);
+    auto trading_components = TradingSystemFactory::create_trading_system(state.config, state.system_monitor);
     
     modules.api_manager = std::move(trading_components.api_manager);
     modules.portfolio_manager = std::move(trading_components.account_manager);
@@ -164,9 +148,6 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     // Configure trading modules
     configure_trading_modules(handles, *system_state.trading_modules, system_state);
     
-    // Setup signal handling for graceful shutdown
-    setup_signal_handlers(system_state);
-    
     // Create thread configurations from single source
     auto& modules = *system_state.trading_modules;
     auto thread_definitions = AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules);
@@ -174,17 +155,17 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     
     // Start all threads
     try {
-        Manager::start_threads(thread_definitions, modules);
-    } catch (const std::exception& e) {
-        std::cerr << "Error starting threads: " << e.what() << std::endl;
+        Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules);
+    } catch (const std::exception& exception) {
+        std::cerr << "Error starting threads: " << exception.what() << std::endl;
         return handles;
     }
     
     // Setup thread priorities after threads are started
     try {
-        Manager::setup_thread_priorities(thread_definitions, system_state.config);
-    } catch (const std::exception& e) {
-        std::cerr << "Error setting thread priorities: " << e.what() << std::endl;
+        Manager::setup_thread_priorities(system_state.thread_manager_state, thread_definitions, system_state.config);
+    } catch (const std::exception& exception) {
+        std::cerr << "Error setting thread priorities: " << exception.what() << std::endl;
         return handles;
     }
     
@@ -248,7 +229,7 @@ void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTr
     system_state.cv.notify_all();
 
     // Wait for all threads to complete
-    Manager::shutdown_threads();
+    Manager::shutdown_threads(system_state.thread_manager_state);
 
     // Cleanup API manager - handled automatically by unique_ptr
     if (system_state.trading_modules->api_manager) {

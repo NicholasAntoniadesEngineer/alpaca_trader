@@ -15,9 +15,9 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
-TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
+TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon)
     : config(cfg), account_manager(account_mgr),
-      trading_engine(cfg, api_mgr, account_mgr),
+      trading_engine(cfg, api_mgr, account_mgr, mon),
       risk_manager(cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {
     

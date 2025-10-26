@@ -13,13 +13,14 @@
 #include "core/trader/data/data_sync_structures.hpp"
 #include "core/logging/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
+#include "core/system/system_monitor.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
 
 class TradingEngine {
 public:
-    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager);
+    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager, Monitoring::SystemMonitor& system_monitor);
     
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
@@ -38,6 +39,7 @@ private:
     SignalProcessor signal_processor;
     OrderExecutionEngine order_engine;
     MarketDataFetcher data_fetcher;
+    Monitoring::SystemMonitor& system_monitor;
     
     // Data synchronization references
     DataSyncReferences data_sync;

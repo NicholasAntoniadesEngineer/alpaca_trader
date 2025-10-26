@@ -8,6 +8,7 @@
 #include "api/general/api_manager.hpp"
 #include "core/trader/data/account_manager.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/system/system_monitor.hpp"
 #include <string>
 #include <chrono>
 
@@ -16,7 +17,7 @@ namespace Core {
 
 class OrderExecutionEngine {
 public:
-    OrderExecutionEngine(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync);
+    OrderExecutionEngine(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync, Monitoring::SystemMonitor& system_monitor);
     
     void execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd);
     
@@ -38,6 +39,7 @@ private:
     AccountManager& account_manager;
     const SystemConfig& config;
     DataSyncReferences& data_sync;
+    Monitoring::SystemMonitor& system_monitor;
     
     // Configuration constants
     static constexpr std::chrono::milliseconds POSITION_CLOSE_WAIT_TIME{2000};

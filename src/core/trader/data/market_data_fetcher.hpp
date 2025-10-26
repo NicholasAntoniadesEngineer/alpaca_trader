@@ -49,7 +49,6 @@ public:
 private:
     // Core dependencies
     API::ApiManager& api_manager;
-    AccountManager& account_manager;
     const SystemConfig& config;
     
     // Sub-managers for specialized functionality
