@@ -25,6 +25,8 @@ struct TradeGateResult {
 
 TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const SystemConfig& config);
 
+double calculate_exposure_percentage(double current_value, double equity);
+
 } // namespace RiskLogic
 } // namespace Core
 } // namespace AlpacaTrader

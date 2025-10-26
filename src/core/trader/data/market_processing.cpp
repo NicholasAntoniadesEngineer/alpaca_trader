@@ -32,10 +32,10 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemC
     if (static_cast<int>(bars.size()) < atr_period + 2) return data;
 
     IndicatorInputs inputs = extract_inputs_from_bars(bars);
-    data.atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
+    data.atr = AlpacaTrader::Core::compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
     if (data.atr == 0.0) return data;
-    data.avg_atr = compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.average_atr_comparison_multiplier);
-    data.avg_vol = compute_average_volume(inputs.volumes, atr_period, cfg.strategy.minimum_volume_threshold);
+    data.avg_atr = AlpacaTrader::Core::compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.average_atr_comparison_multiplier);
+    data.avg_vol = AlpacaTrader::Core::compute_average_volume(inputs.volumes, atr_period, cfg.strategy.minimum_volume_threshold);
     
     
     data.curr = bars.back();
@@ -77,28 +77,6 @@ void handle_market_close_positions(const ProcessedData& data, API::ApiManager& a
     }
     
     TradingLogs::log_market_close_complete();
-}
-
-bool compute_technical_indicators(ProcessedData& data, const std::vector<Bar>& bars, const SystemConfig& config) {
-    using AlpacaTrader::Logging::MarketDataLogs;
-    
-    MarketDataLogs::log_market_data_attempt_table("Computing indicators", config.logging.log_file);
-    
-    data = compute_processed_data(bars, config);
-    
-    if (data.atr == 0.0) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed", false, 0, config.logging.log_file);
-        return false;
-    }
-    
-    return true;
-}
-
-double calculate_exposure_percentage(double current_value, double equity) {
-    if (equity <= 0.0) {
-        return 0.0;
-    }
-    return (std::abs(current_value) / equity) * 100.0;
 }
 
 } // namespace MarketProcessing

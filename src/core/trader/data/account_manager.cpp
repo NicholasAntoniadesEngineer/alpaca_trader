@@ -2,6 +2,7 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
 #include "core/logging/market_data_logs.hpp"
+#include "core/trader/analysis/risk_logic.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 #include <string>
@@ -249,7 +250,7 @@ void AccountManager::fetch_account_and_position_data(ProcessedData& data) const 
     data.open_orders = fetch_open_orders_count(sr);
     
     double equity = fetch_account_equity();
-    data.exposure_pct = MarketProcessing::calculate_exposure_percentage(data.pos_details.current_value, equity);
+    data.exposure_pct = AlpacaTrader::Core::RiskLogic::calculate_exposure_percentage(data.pos_details.current_value, equity);
 }
 
 } // namespace Core

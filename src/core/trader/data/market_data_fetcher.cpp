@@ -3,6 +3,7 @@
 #include "core/logging/csv_bars_logger.hpp"
 #include "core/system/system_state.hpp"
 #include "core/utils/time_utils.hpp"
+#include "core/trader/analysis/indicators.hpp"
 #include <cmath>
 #include <thread>
 #include <chrono>
@@ -25,7 +26,7 @@ ProcessedData MarketDataFetcher::fetch_and_process_data() {
     }
 
     // Compute technical indicators
-    if (!MarketProcessing::compute_technical_indicators(data, cached_bars, config)) {
+    if (!AlpacaTrader::Core::compute_technical_indicators(data, cached_bars, config)) {
         return data;
     }
 

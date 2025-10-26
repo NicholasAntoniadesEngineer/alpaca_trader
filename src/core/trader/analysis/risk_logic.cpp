@@ -1,5 +1,6 @@
 #include "risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -13,6 +14,13 @@ TradeGateResult evaluate_trade_gate(const TradeGateInput& in, const SystemConfig
     out.exposure_ok = in.exposure_pct <= config.strategy.max_account_exposure_percentage;
     out.allowed = out.pnl_ok && out.exposure_ok;
     return out;
+}
+
+double calculate_exposure_percentage(double current_value, double equity) {
+    if (equity <= 0.0) {
+        return 0.0;
+    }
+    return (std::abs(current_value) / equity) * 100.0;
 }
 
 } // namespace RiskLogic
