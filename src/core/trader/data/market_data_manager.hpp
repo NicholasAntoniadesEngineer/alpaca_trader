@@ -19,6 +19,7 @@ public:
     // Market data fetching methods
     ProcessedData fetch_and_process_market_data();
     std::pair<MarketSnapshot, AccountSnapshot> fetch_current_snapshots();
+    QuoteData fetch_real_time_quote_data(const std::string& symbol) const;
     
     // Market data processing methods
     void process_account_and_position_data(ProcessedData& processed_data) const;

@@ -36,7 +36,7 @@ void AlpacaTrader::Threads::LoggingThread::operator()() {
 
 void AlpacaTrader::Threads::LoggingThread::setup_logging_thread() {
     AlpacaTrader::Config::ThreadSettings thread_config = AlpacaTrader::Core::ThreadRegistry::get_config_for_type(AlpacaTrader::Core::ThreadRegistry::Type::LOGGING, config);
-    ThreadSystem::Platform::ThreadControl::set_current_priority(thread_config);
+    ::ThreadSystem::Platform::ThreadControl::set_current_priority(thread_config);
     
     set_log_thread_tag("LOGGER");
 }

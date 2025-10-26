@@ -47,8 +47,9 @@ SOURCES = src/main.cpp \
   src/core/logging/async_logger.cpp \
   src/core/logging/csv_bars_logger.cpp \
   src/core/logging/csv_trade_logger.cpp \
-      src/core/logging/trading_logs.cpp \
-      src/core/logging/signal_analysis_logs.cpp \
+  src/core/logging/trading_logs.cpp \
+  src/core/logging/signal_analysis_logs.cpp \
+  src/core/logging/market_data_thread_logs.cpp \
   src/core/logging/thread_logs.cpp \
   src/core/logging/startup_logs.cpp \
   src/configs/thread_config.cpp \

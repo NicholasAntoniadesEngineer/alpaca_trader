@@ -127,5 +127,15 @@ AccountSnapshot MarketDataManager::create_account_snapshot() const {
     return account_snapshot;
 }
 
+QuoteData MarketDataManager::fetch_real_time_quote_data(const std::string& symbol) const {
+    MarketDataLogs::log_market_data_fetch_table(symbol, config.logging.log_file);
+    
+    auto quote_data = api_manager.get_realtime_quotes(symbol);
+    
+    MarketDataLogs::log_market_data_result_table("Quote data fetched", true, quote_data.mid_price, config.logging.log_file);
+    
+    return quote_data;
+}
+
 } // namespace Core
 } // namespace AlpacaTrader

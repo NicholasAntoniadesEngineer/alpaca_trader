@@ -170,6 +170,45 @@ struct PositionSizingProcessRequest {
           available_buying_power(buying_power), strategy_configuration(strategy_config), trading_mode_configuration(trading_mode_config) {}
 };
 
+// Market data thread parameter structures
+struct MarketDataFetchRequest {
+    const std::string& symbol;
+    int bars_to_fetch;
+    int atr_calculation_bars;
+    
+    MarketDataFetchRequest(const std::string& symbol, int bars_to_fetch, int atr_calculation_bars)
+        : symbol(symbol), bars_to_fetch(bars_to_fetch), atr_calculation_bars(atr_calculation_bars) {}
+};
+
+struct QuoteDataProcessingRequest {
+    const std::string& symbol;
+    const std::string& timestamp;
+    double mid_price;
+    double bid_price;
+    double ask_price;
+    int bid_size;
+    int ask_size;
+    int freshness_threshold_seconds;
+    
+    QuoteDataProcessingRequest(const std::string& symbol, const std::string& timestamp, double mid_price, 
+                              double bid_price, double ask_price, int bid_size, int ask_size, int freshness_threshold_seconds)
+        : symbol(symbol), timestamp(timestamp), mid_price(mid_price), bid_price(bid_price), 
+          ask_price(ask_price), bid_size(bid_size), ask_size(ask_size), freshness_threshold_seconds(freshness_threshold_seconds) {}
+};
+
+struct CsvLoggingRequest {
+    const std::string& symbol;
+    const std::string& timestamp;
+    const ProcessedData& processed_data;
+    int logging_interval_seconds;
+    std::chrono::steady_clock::time_point last_log_time;
+    
+    CsvLoggingRequest(const std::string& symbol, const std::string& timestamp, const ProcessedData& processed_data, 
+                     int logging_interval_seconds, std::chrono::steady_clock::time_point last_log_time)
+        : symbol(symbol), timestamp(timestamp), processed_data(processed_data), 
+          logging_interval_seconds(logging_interval_seconds), last_log_time(last_log_time) {}
+};
+
 } // namespace Core
 } // namespace AlpacaTrader
 

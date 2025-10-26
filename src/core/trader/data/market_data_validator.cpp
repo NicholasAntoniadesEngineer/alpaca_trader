@@ -1,6 +1,8 @@
 #include "market_data_validator.hpp"
 #include "core/logging/market_data_logs.hpp"
 #include <cmath>
+#include <sstream>
+#include <iomanip>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -165,6 +167,64 @@ bool MarketDataValidator::validate_position_data(const PositionDetails& position
     }
 
     return true;
+}
+
+bool MarketDataValidator::is_quote_data_fresh_and_valid(const QuoteData& quote_data) const {
+    if (quote_data.mid_price <= 0.0 || quote_data.timestamp.empty()) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Invalid Quote Data",
+            "Quote data is missing or invalid",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+    
+    try {
+        // Parse timestamp to check freshness
+        std::tm timestamp_parsed = {};
+        std::istringstream timestamp_stream(quote_data.timestamp);
+        timestamp_stream >> std::get_time(&timestamp_parsed, "%Y-%m-%dT%H:%M:%S");
+        
+        if (timestamp_stream.fail()) {
+            MarketDataLogs::log_market_data_failure_summary(
+                config.trading_mode.primary_symbol,
+                "Invalid Quote Data",
+                "Unable to parse quote timestamp",
+                0,
+                config.logging.log_file
+            );
+            return false;
+        }
+        
+        auto quote_timestamp = std::mktime(&timestamp_parsed);
+        auto current_timestamp = std::time(nullptr);
+        auto quote_age_seconds = current_timestamp - quote_timestamp;
+        
+        bool is_quote_fresh = (quote_age_seconds < config.timing.quote_data_freshness_threshold_seconds);
+        
+        if (!is_quote_fresh) {
+            MarketDataLogs::log_market_data_failure_summary(
+                config.trading_mode.primary_symbol,
+                "Stale Quote Data",
+                "Quote data is stale (age: " + std::to_string(quote_age_seconds) + "s)",
+                quote_age_seconds,
+                config.logging.log_file
+            );
+        }
+        
+        return is_quote_fresh;
+    } catch (const std::exception& exception) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Quote Data Error",
+            "Error parsing quote timestamp: " + std::string(exception.what()),
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
 }
 
 } // namespace Core

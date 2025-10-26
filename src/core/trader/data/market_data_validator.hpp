@@ -18,6 +18,7 @@ public:
     bool validate_market_snapshot(const MarketSnapshot& market_snapshot) const;
     bool validate_account_snapshot(const AccountSnapshot& account_snapshot) const;
     bool validate_processed_data(const ProcessedData& processed_data) const;
+    bool is_quote_data_fresh_and_valid(const QuoteData& quote_data) const;
 
 private:
     const SystemConfig& config;

@@ -6,7 +6,7 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, double equity, bool allowed, const SystemConfig& config) {
+void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, bool allowed, const SystemConfig& config) {
     // Calculate daily PnL for logging
     double daily_pnl = 0.0; // Default for logging when initial equity is 0
     
@@ -21,7 +21,7 @@ void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data
     }
 }
 
-void RiskLogs::log_risk_conditions(double daily_pnl, double exposure_pct, bool allowed, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config) {
+void RiskLogs::log_risk_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config) {
     TradingLogs::log_trading_conditions(daily_pnl, exposure_pct, allowed, config);
 }
 

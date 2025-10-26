@@ -22,6 +22,8 @@ struct TimingConfig {
     int account_data_cache_duration_seconds;         // Account data cache duration in seconds
     int market_data_staleness_threshold_seconds;     // Market data staleness threshold in seconds
     int crypto_data_staleness_threshold_seconds;     // Crypto-specific data staleness threshold in seconds
+    int market_data_logging_interval_seconds;         // Market data CSV logging interval in seconds
+    int quote_data_freshness_threshold_seconds;       // Quote data freshness threshold in seconds
 
     // ========================================================================
     // MARKET SESSION BUFFER TIMES

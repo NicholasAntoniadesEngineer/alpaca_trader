@@ -148,6 +148,29 @@ MarketSnapshot BarsDataManager::create_market_snapshot_from_bars(const std::vect
     return market_snapshot;
 }
 
+std::vector<Bar> BarsDataManager::fetch_historical_market_data(const MarketDataFetchRequest& fetch_request) const {
+    MarketDataLogs::log_market_data_fetch_table(fetch_request.symbol, config.logging.log_file);
+    
+    BarRequest bar_request{fetch_request.symbol, fetch_request.bars_to_fetch};
+    auto historical_bars = api_manager.get_recent_bars(bar_request);
+    
+    MarketDataLogs::log_market_data_result_table("Bars fetched", true, historical_bars.size(), config.logging.log_file);
+    
+    return historical_bars;
+}
+
+bool BarsDataManager::has_sufficient_bars_for_calculations(const std::vector<Bar>& historical_bars, int required_bars) const {
+    int minimum_required_bars = required_bars + 2;
+    
+    if (static_cast<int>(historical_bars.size()) < minimum_required_bars) {
+        MarketDataLogs::log_market_data_result_table("Insufficient bars for calculations", false, historical_bars.size(), config.logging.log_file);
+        return false;
+    }
+    
+    MarketDataLogs::log_market_data_result_table("Sufficient bars for calculations", true, historical_bars.size(), config.logging.log_file);
+    return true;
+}
+
 std::vector<double> BarsDataManager::extract_highs_from_bars(const std::vector<Bar>& bars_data) const {
     std::vector<double> highs;
     highs.reserve(bars_data.size());

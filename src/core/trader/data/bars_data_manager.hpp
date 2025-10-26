@@ -18,6 +18,8 @@ public:
     // Bars data fetching methods
     std::vector<Bar> fetch_bars_data(const std::string& symbol) const;
     bool fetch_and_validate_bars(const std::string& symbol, std::vector<Bar>& bars_data) const;
+    std::vector<Bar> fetch_historical_market_data(const MarketDataFetchRequest& fetch_request) const;
+    bool has_sufficient_bars_for_calculations(const std::vector<Bar>& historical_bars, int required_bars) const;
     
     // Bars data processing methods
     bool compute_technical_indicators_from_bars(ProcessedData& processed_data, const std::vector<Bar>& bars_data) const;
