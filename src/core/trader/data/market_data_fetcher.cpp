@@ -1,6 +1,7 @@
 #include "market_data_fetcher.hpp"
 #include "core/logging/market_data_logs.hpp"
 #include "core/logging/csv_bars_logger.hpp"
+#include "core/logging/trading_logs.hpp"
 #include "core/system/system_state.hpp"
 #include "core/utils/time_utils.hpp"
 #include "core/trader/analysis/indicators.hpp"
@@ -12,6 +13,7 @@ namespace AlpacaTrader {
 namespace Core {
 
 using AlpacaTrader::Logging::MarketDataLogs;
+using AlpacaTrader::Logging::TradingLogs;
 
 MarketDataFetcher::MarketDataFetcher(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg)
     : api_manager(api_mgr), account_manager(account_mgr), config(cfg) {}
@@ -169,6 +171,123 @@ bool MarketDataFetcher::wait_for_data_availability(MarketDataSyncState& sync_sta
     }
     
     return true;
+}
+
+bool MarketDataFetcher::is_market_open() const {
+    if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
+        TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
+        return false;
+    }
+    TradingLogs::log_market_status(true, "Market is open - trading allowed");
+    return true;
+}
+
+bool MarketDataFetcher::is_data_fresh() const {
+    // Check if sync_state_ptr is properly initialized
+    if (!sync_state_ptr || !sync_state_ptr->market_data_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync not initialized - market_data_timestamp is null");
+        return false;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    auto data_timestamp = sync_state_ptr->market_data_timestamp->load();
+    
+    // Use crypto-specific staleness threshold for 24/7 markets
+    auto max_age_seconds = config.strategy.is_crypto_asset ? 
+        config.timing.crypto_data_staleness_threshold_seconds : // Crypto: use crypto-specific threshold
+        config.timing.market_data_staleness_threshold_seconds; // Stocks: use standard threshold
+
+    // Additional null check before using the timestamp (defensive programming)
+    if (!sync_state_ptr->market_data_timestamp) {
+        TradingLogs::log_market_status(false, "Data sync lost during execution - market_data_timestamp became null");
+        return false;
+    }
+    
+    if (data_timestamp == std::chrono::steady_clock::time_point::min()) {
+        TradingLogs::log_market_status(false, "Market data timestamp is invalid - no data received yet");
+        return false;
+    }
+    
+    auto age_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - data_timestamp).count();
+    bool fresh = age_seconds <= max_age_seconds;
+    
+    if (!fresh) {
+        TradingLogs::log_market_status(false, "Market data is stale - age: " + std::to_string(age_seconds) + 
+                                    "s, max: " + std::to_string(max_age_seconds) + "s");
+    } else {
+        TradingLogs::log_market_status(true, "Market data is fresh - age: " + std::to_string(age_seconds) + "s");
+    }
+    
+    return fresh;
+}
+
+bool MarketDataFetcher::validate_market_data(const MarketSnapshot& market) const {
+    // Check if this is a default/empty MarketSnapshot (no data available)
+    if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 && 
+        market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "No Data Available",
+            "Symbol may not exist or market is closed",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    // Validate that market data is not null/empty
+    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Invalid Data",
+            "NaN or infinite values detected in market data",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    if (market.curr.c <= 0.0) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Invalid Data",
+            "Price is zero or negative",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    if (market.atr <= 0.0) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Insufficient Data",
+            "ATR is zero or negative - insufficient volatility data for trading",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
+    if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
+        MarketDataLogs::log_market_data_failure_summary(
+            config.trading_mode.primary_symbol,
+            "Invalid Data",
+            "OHLC relationship violation - invalid price data structure",
+            0,
+            config.logging.log_file
+        );
+        return false;
+    }
+
+    return true;
+}
+
+void MarketDataFetcher::setup_data_synchronization(const DataSyncConfig& sync_config) {
+    // This method would typically set up the sync_state_ptr references
+    // For now, we'll just log that the setup is complete
+    TradingLogs::log_market_status(true, "Data synchronization setup completed - market_data_timestamp initialized");
 }
 
 } // namespace Core

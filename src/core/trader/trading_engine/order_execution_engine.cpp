@@ -48,8 +48,8 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         return;
     }
     
-    bool is_long = is_long_position(current_qty);
-    bool is_short = is_short_position(current_qty);
+    bool is_long = current_qty > 0;
+    bool is_short = current_qty < 0;
     TradingLogs::log_debug_position_data(current_qty, 0.0, current_qty, is_long, is_short);
 
     if (sd.buy) {
@@ -84,7 +84,7 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
 
 // Core execution method - unified for both buy and sell orders
 void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing) {
-    TradingLogs::log_debug_position_data(current_qty, data.pos_details.current_value, data.pos_details.qty, is_long_position(current_qty), is_short_position(current_qty));
+    TradingLogs::log_debug_position_data(current_qty, data.pos_details.current_value, data.pos_details.qty, current_qty > 0, current_qty < 0);
     
     // Check wash trade prevention first (if enabled)
     if (config.timing.enable_wash_trade_prevention_mechanism) {
@@ -101,14 +101,14 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
     // Handle opposite position closure if required
     if (should_close_opposite_position(side, current_qty)) {
         if (!close_opposite_position(side, current_qty)) {
-            TradingLogs::log_position_limits_reached(to_side_string(side));
+            TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
             return;
         }
     }
     
     // Check if we can execute a new position
     if (!can_execute_new_position(current_qty)) {
-        TradingLogs::log_position_limits_reached(to_side_string(side));
+        TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
         return;
     }
     
@@ -128,7 +128,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
 
 // Execute bracket order with proper validation
 void OrderExecutionEngine::execute_bracket_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::ExitTargets& targets) {
-    std::string side_str = to_side_string(side);
+    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     // Use consolidated logging instead of multiple separate tables
     TradingLogs::log_comprehensive_order_execution("Bracket Order", side_str, sizing.quantity, 
@@ -193,7 +193,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
 
 // Execute regular market order for closing positions
 void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) {
-    std::string side_str = to_side_string(side);
+    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     // Use consolidated logging instead of multiple separate debug messages
     TradingLogs::log_comprehensive_order_execution("Market Order", side_str, sizing.quantity, 
@@ -229,13 +229,13 @@ bool OrderExecutionEngine::should_close_opposite_position(OrderSide side, int cu
         return false;
     }
     
-    return (side == OrderSide::Buy && is_short_position(current_qty)) ||
-           (side == OrderSide::Sell && is_long_position(current_qty));
+    return (side == OrderSide::Buy && current_qty < 0) ||
+           (side == OrderSide::Sell && current_qty > 0);
 }
 
 bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_qty) {
-    std::string side_str = to_side_string(side);
-    std::string opposite_side_str = to_opposite_side_string(side);
+    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
+    std::string opposite_side_str = (side == OrderSide::Buy) ? POSITION_SHORT : POSITION_LONG;
     
     TradingLogs::log_position_closure("Closing " + opposite_side_str + " position first for " + side_str + " signal", current_qty);
     
@@ -336,29 +336,12 @@ StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSid
     }
     
     return StrategyLogic::compute_exit_targets(
-        to_side_string(side), 
+        (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL, 
         entry_price, 
         sizing.risk_amount, 
         config.strategy.rr_ratio, 
         config
     );
-}
-
-// Utility methods
-std::string OrderExecutionEngine::to_side_string(OrderSide side) const {
-    return (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
-}
-
-std::string OrderExecutionEngine::to_opposite_side_string(OrderSide side) const {
-    return (side == OrderSide::Buy) ? POSITION_SHORT : POSITION_LONG;
-}
-
-bool OrderExecutionEngine::is_long_position(int qty) const {
-    return qty > 0;
-}
-
-bool OrderExecutionEngine::is_short_position(int qty) const {
-    return qty < 0;
 }
 
 // Order timing methods for wash trade prevention

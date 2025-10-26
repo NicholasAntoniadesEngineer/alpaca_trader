@@ -59,6 +59,7 @@ public:
     ConnectivityState get_state() const;
     int get_seconds_until_retry() const;
     bool is_connectivity_outage() const;
+    bool check_connectivity() const;
     std::string get_status_string() const;
     void reset_connectivity_state();
 };

@@ -17,16 +17,17 @@ using AlpacaTrader::Logging::TradingLogs;
 
 TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
+      risk_manager(cfg),
       order_engine(api_mgr, account_mgr, cfg, data_sync),
       price_manager(api_mgr, cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {}
 
 bool TradingEngine::check_trading_permissions(const ProcessedData& data, double equity) {
-    if (!check_connectivity()) {
+    if (!ConnectivityManager::instance().check_connectivity()) {
         return false;
     }
     
-    return validate_risk_conditions(data, equity);
+    return risk_manager.validate_risk_conditions(data, equity);
 }
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
@@ -44,14 +45,14 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     TradingLogs::log_signal_analysis_start(config.trading_mode.primary_symbol);
 
     // Check if market is open before making any trading decisions
-    if (!is_market_open()) {
+    if (!data_fetcher.is_market_open()) {
         TradingLogs::log_market_status(false, "Market is closed - no trading decisions");
         TradingLogs::log_signal_analysis_complete();
         return;
     }
     
     // Check if market data is fresh enough for trading decisions
-    if (!is_data_fresh()) {
+    if (!data_fetcher.is_data_fresh()) {
         TradingLogs::log_market_status(false, "Market data is stale - no trading decisions");
         AlpacaTrader::Core::Monitoring::SystemMonitor::instance().record_data_freshness_failure();
         TradingLogs::log_signal_analysis_complete();
@@ -91,151 +92,6 @@ void TradingEngine::handle_trading_halt(const std::string& reason) {
     
     perform_halt_countdown(halt_seconds);
     TradingLogs::end_inline_status();
-}
-
-bool TradingEngine::validate_risk_conditions(const ProcessedData& data, double equity) {
-    RiskLogic::TradeGateInput in;
-    in.initial_equity = 0.0;
-    in.current_equity = equity;
-    in.exposure_pct = data.exposure_pct;
-    
-    RiskLogic::TradeGateResult res = RiskLogic::evaluate_trade_gate(in, config);
-    
-    bool trading_allowed = res.pnl_ok && res.exposure_ok;
-    TradingLogs::log_trading_conditions(res.daily_pnl, data.exposure_pct, trading_allowed, config);
-    
-    if (!res.pnl_ok || !res.exposure_ok) {
-        return false;
-    }
-    
-    TradingLogs::log_market_status(true);
-    return true;
-}
-
-bool TradingEngine::validate_market_data(const MarketSnapshot& market) const {
-    // Check if this is a default/empty MarketSnapshot (no data available)
-    if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 && 
-        market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
-        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "No Data Available",
-            "Symbol may not exist or market is closed",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    // Validate that market data is not null/empty
-    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
-        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "NaN or infinite values detected in market data",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    if (market.curr.c <= 0.0) {
-        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "Price is zero or negative",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    if (market.atr <= 0.0) {
-        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Insufficient Data",
-            "ATR is zero or negative - insufficient volatility data for trading",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
-    if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
-        AlpacaTrader::Logging::MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "OHLC relationship violation - invalid price data structure",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    return true;
-}
-
-bool TradingEngine::check_connectivity() {
-    auto& connectivity = ConnectivityManager::instance();
-    if (connectivity.is_connectivity_outage()) {
-        std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
-        TradingLogs::log_market_status(false, connectivity_msg);
-        return false;
-    }
-    return true;
-}
-
-bool TradingEngine::is_market_open() {
-    if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
-        TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
-        return false;
-    }
-    TradingLogs::log_market_status(true, "Market is open - trading allowed");
-    return true;
-}
-
-bool TradingEngine::is_data_fresh() {
-    // Check if data_sync references are properly initialized
-    if (!data_sync.market_data_timestamp) {
-        TradingLogs::log_market_status(false, "Data sync not initialized - market_data_timestamp is null");
-        return false;
-    }
-
-    auto now = std::chrono::steady_clock::now();
-    auto data_timestamp = data_sync.market_data_timestamp->load();
-    
-    // Use crypto-specific staleness threshold for 24/7 markets
-    auto max_age_seconds = config.strategy.is_crypto_asset ? 
-        config.timing.crypto_data_staleness_threshold_seconds : // Crypto: use crypto-specific threshold
-        config.timing.market_data_staleness_threshold_seconds; // Stocks: use standard threshold
-
-    // Additional null check before using the timestamp (defensive programming)
-    if (!data_sync.market_data_timestamp) {
-        TradingLogs::log_market_status(false, "Data sync lost during execution - market_data_timestamp became null");
-        return false;
-    }
-    
-    if (data_timestamp == std::chrono::steady_clock::time_point::min()) {
-        TradingLogs::log_market_status(false, "Market data timestamp is invalid - no data received yet");
-        return false;
-    }
-    
-    auto age_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - data_timestamp).count();
-    bool fresh = age_seconds <= max_age_seconds;
-    
-    if (!fresh) {
-        TradingLogs::log_market_status(false, "Market data is stale - age: " + std::to_string(age_seconds) + 
-                                    "s, max: " + std::to_string(max_age_seconds) + "s");
-    } else {
-        TradingLogs::log_market_status(true, "Market data is fresh - age: " + std::to_string(age_seconds) + "s");
-    }
-    
-    return fresh;
-}
-
-void TradingEngine::setup_data_synchronization(const DataSyncConfig& config) {
-    data_sync = DataSyncReferences(config);
-    TradingLogs::log_market_status(true, "Data synchronization setup completed - market_data_timestamp initialized");
 }
 
 void TradingEngine::process_signal_analysis(const ProcessedData& data) {

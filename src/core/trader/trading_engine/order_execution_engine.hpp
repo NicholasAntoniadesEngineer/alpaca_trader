@@ -55,10 +55,6 @@ private:
     StrategyLogic::ExitTargets calculate_exit_targets(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const;
     
     // Utility methods
-    std::string to_side_string(OrderSide side) const;
-    std::string to_opposite_side_string(OrderSide side) const;
-    bool is_long_position(int qty) const;
-    bool is_short_position(int qty) const;
     bool is_flat_position(int qty) const;
     bool should_cancel_existing_orders() const;
     

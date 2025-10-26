@@ -14,6 +14,7 @@ public:
     RiskManager(const SystemConfig& config);
     
     bool validate_trading_permissions(const ProcessedData& data, double equity);
+    bool validate_risk_conditions(const ProcessedData& data, double equity);
     bool check_exposure_limits(const ProcessedData& data, double equity);
     bool check_daily_limits(double current_equity, double initial_equity);
     void log_risk_assessment(const ProcessedData& data, double equity, bool allowed);

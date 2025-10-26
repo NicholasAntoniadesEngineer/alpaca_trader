@@ -61,6 +61,10 @@ bool RiskManager::evaluate_risk_gate(const RiskLogic::TradeGateInput& input) {
     return result.pnl_ok && result.exposure_ok;
 }
 
+bool RiskManager::validate_risk_conditions(const ProcessedData& data, double equity) {
+    RiskLogic::TradeGateInput input = build_risk_input(data, equity);
+    return evaluate_risk_gate(input);
+}
 
 } // namespace Core
 } // namespace AlpacaTrader

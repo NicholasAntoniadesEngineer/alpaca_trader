@@ -81,7 +81,7 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Process trading cycle
-                if (!trading_engine.validate_market_data(market)) {
+                if (!data_fetcher.validate_market_data(market)) {
                     countdown_to_next_cycle();
                     continue;
                 }
@@ -153,8 +153,8 @@ void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& confi
     // Set up MarketDataFetcher with sync state
     data_fetcher.set_sync_state_references(*reinterpret_cast<MarketDataSyncState*>(&data_sync));
     
-    // Set up TradingEngine with data synchronization
-    trading_engine.setup_data_synchronization(config);
+    // Set up data synchronization
+    data_fetcher.setup_data_synchronization(config);
     
     if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
         TradingLogs::log_market_data_result_table("Invalid data sync configuration", false, 0);

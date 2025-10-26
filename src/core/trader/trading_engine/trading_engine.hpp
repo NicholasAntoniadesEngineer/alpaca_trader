@@ -6,6 +6,7 @@
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
+#include "core/trader/analysis/risk_manager.hpp"
 #include "order_execution_engine.hpp"
 #include "core/trader/analysis/price_manager.hpp"
 #include "core/trader/data/market_data_fetcher.hpp"
@@ -23,14 +24,13 @@ public:
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
-    bool validate_market_data(const MarketSnapshot& market) const;
-    void setup_data_synchronization(const DataSyncConfig& config);
 
 private:
     // Core dependencies
     const SystemConfig& config;
     AccountManager& account_manager;
     API::ApiManager& api_manager;
+    RiskManager risk_manager;
     OrderExecutionEngine order_engine;
     PriceManager price_manager;
     MarketDataFetcher data_fetcher;
@@ -42,11 +42,6 @@ private:
     static constexpr int HALT_SLEEP_SECONDS = 1;
     static constexpr int CONNECTIVITY_RETRY_SECONDS = 1;
     
-    // Core validation methods
-    bool validate_risk_conditions(const ProcessedData& data, double equity);
-    bool check_connectivity();
-    bool is_market_open();
-    bool is_data_fresh();
     
     // Trading decision methods
     void process_signal_analysis(const ProcessedData& data);

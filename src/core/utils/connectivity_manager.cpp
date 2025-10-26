@@ -112,3 +112,7 @@ void ConnectivityManager::reset_connectivity_state() {
     state_.next_retry_time = now;
     state_.last_error_message.clear();
 }
+
+bool ConnectivityManager::check_connectivity() const {
+    return !is_connectivity_outage();
+}
