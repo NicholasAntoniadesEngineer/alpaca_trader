@@ -3,6 +3,8 @@
 #include "core/logging/account_logs.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
+#include <string>
+#include <chrono>
 
 using json = nlohmann::json;
 
@@ -17,19 +19,36 @@ AccountManager::AccountManager(const AccountManagerConfig& cfg, API::ApiManager&
 
 double AccountManager::fetch_account_equity() const {
     try {
+        // Validate API connection before attempting request
+        if (!api_manager.has_provider(AlpacaTrader::Config::ApiProvider::ALPACA_TRADING)) {
+            throw std::runtime_error("Alpaca trading provider not available");
+        }
+        
         std::string account_json = api_manager.get_account_info();
         if (account_json.empty()) {
-            throw std::runtime_error("Empty account response from API");
+            throw std::runtime_error("Empty account response from API - check API credentials and network connectivity");
         }
         
         json account_data = json::parse(account_json);
+        
+        // Check for API error responses
+        if (account_data.contains("message")) {
+            std::string error_message = account_data["message"].get<std::string>();
+            throw std::runtime_error("API returned error: " + error_message);
+        }
+        
+        if (account_data.contains("code")) {
+            std::string error_code = account_data["code"].get<std::string>();
+            throw std::runtime_error("API returned error code: " + error_code);
+        }
+        
         if (account_data.contains("equity") && account_data["equity"].is_string()) {
             return std::stod(account_data["equity"].get<std::string>());
         } else if (account_data.contains("equity") && account_data["equity"].is_number()) {
             return account_data["equity"].get<double>();
         }
         
-        throw std::runtime_error("Account equity not found in API response");
+        throw std::runtime_error("Account equity not found in API response - response may be malformed");
     } catch (const std::exception& e) {
         AlpacaTrader::Logging::log_message("Account equity fetch failed: " + std::string(e.what()), logging.log_file);
         throw std::runtime_error("Failed to fetch account equity: " + std::string(e.what()));

@@ -183,24 +183,9 @@ void StartupLogs::log_thread_system_startup(const SystemConfig& config) {
     log_message("┌───────────────────┬──────────────────────────────────────────────────┐", "");
     log_message("│ Thread System     │ Performance Settings                             │", "");
     log_message("├───────────────────┼──────────────────────────────────────────────────┤", "");
+    log_message("│ Total Threads     │ " + std::to_string(config.thread_registry.thread_settings.size()) + " configured" + std::string(38 - std::to_string(config.thread_registry.thread_settings.size()).length(), ' ') + "│", "");
     log_message("│ Thread Priorities │ ENABLED" + std::string(42, ' ') + "│", "");
     log_message("│ CPU Affinity      │ ENABLED" + std::string(42, ' ') + "│", "");
-    log_message("└───────────────────┴──────────────────────────────────────────────────┘", "");
-    
-    log_message("┌───────────────────┬──────────────────────────────────────────────────┐", "");
-    log_message("│ Thread Config     │ Priority    | CPU Affinity | Status              │", "");
-    log_message("├───────────────────┼──────────────────────────────────────────────────┤", "");
-    
-    for (const auto& [name, settings] : config.thread_registry.thread_settings) {
-        std::string priority_str = "NORMAL";
-        std::string cpu_str = "CPU " + std::to_string(settings.cpu_affinity);
-        std::string line = "│ " + name + std::string(18 - name.length(), ' ') + 
-                          "│ " + priority_str + std::string(11 - priority_str.length(), ' ') + 
-                          "| " + cpu_str + std::string(14 - cpu_str.length(), ' ') + 
-                          "| OK" + std::string(18, ' ') + "│";
-        log_message(line, "");
-    }
-    
     log_message("└───────────────────┴──────────────────────────────────────────────────┘", "");
 }
 

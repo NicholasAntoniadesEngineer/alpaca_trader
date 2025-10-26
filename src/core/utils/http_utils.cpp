@@ -3,16 +3,12 @@
 #include "core/utils/connectivity_manager.hpp"
 #include "core/logging/async_logger.hpp"
 #include "time_utils.hpp"
-#include <iostream>
 #include <chrono>
 #include <thread>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
 #include <ctime>
 #include <curl/curl.h>
-#include <cmath>
 #include <cstdlib>
+#include <string>
 
 // Using declarations for cleaner code
 using AlpacaTrader::Logging::log_message;
@@ -37,6 +33,8 @@ std::string http_get(const HttpRequest& req) {
 
     CURL* curl = curl_easy_init();
     std::string response;
+    long http_response_code = 0;
+    
     if (curl) {
         struct curl_slist* headers = nullptr;
         headers = curl_slist_append(headers, ("APCA-API-KEY-ID: " + *req.api_key).c_str());
@@ -54,12 +52,18 @@ std::string http_get(const HttpRequest& req) {
         
         for (int i = 0; i < req.retries; ++i) {
             res = curl_easy_perform(curl);
+            
+            // Get HTTP response code for better error reporting
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_response_code);
+            
             if (res == CURLE_OK) {
                 success = true;
                 break;
             }
             
-            std::string error_msg = "HTTP retry failed: " + std::string(curl_easy_strerror(res));
+            std::string error_msg = "HTTP GET retry " + std::to_string(i + 1) + "/" + std::to_string(req.retries) + 
+                                  " failed: " + std::string(curl_easy_strerror(res)) + 
+                                  " (HTTP " + std::to_string(http_response_code) + ")";
             log_message(error_msg, *req.log_file);
             connectivity.report_failure(error_msg);
             
@@ -71,11 +75,28 @@ std::string http_get(const HttpRequest& req) {
         
         if (success) {
             connectivity.report_success();
+            
+            // Log successful response details for debugging
+            if (response.empty()) {
+                std::string empty_response_msg = "HTTP GET succeeded but returned empty response (HTTP " + 
+                                               std::to_string(http_response_code) + ") for URL: " + req.url;
+                log_message(empty_response_msg, *req.log_file);
+            }
+        } else {
+            // Log final failure with detailed information
+            std::string final_error = "HTTP GET failed after " + std::to_string(req.retries) + " retries. " +
+                                    "Last error: " + std::string(curl_easy_strerror(res)) + 
+                                    " (HTTP " + std::to_string(http_response_code) + ") " +
+                                    "URL: " + req.url;
+            log_message(final_error, *req.log_file);
         }
         
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
+    } else {
+        log_message("Failed to initialize CURL for HTTP GET request", *req.log_file);
     }
+    
     return response;
 }
 

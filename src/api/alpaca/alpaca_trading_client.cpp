@@ -4,6 +4,8 @@
 #include "json/json.hpp"
 #include <stdexcept>
 #include <sstream>
+#include <string>
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -278,26 +280,58 @@ std::string AlpacaTradingClient::make_authenticated_request(const std::string& u
         throw std::runtime_error("URL is required for authenticated request");
     }
     
+    // Validate configuration before making request
+    if (config.api_key.empty()) {
+        throw std::runtime_error("Alpaca API key is not configured");
+    }
+    
+    if (config.api_secret.empty()) {
+        throw std::runtime_error("Alpaca API secret is not configured");
+    }
+    
+    if (config.base_url.empty()) {
+        throw std::runtime_error("Alpaca base URL is not configured");
+    }
+    
     HttpRequest request(url, config.api_key, config.api_secret, "", config.retry_count, 
                        config.timeout_seconds, config.enable_ssl_verification, 
                        config.rate_limit_delay_ms, body);
     
     std::string response;
-    if (method == "GET") {
-        response = http_get(request);
-    } else if (method == "POST") {
-        response = http_post(request);
-    } else if (method == "DELETE") {
-        response = http_delete(request);
-    } else {
-        throw std::runtime_error("Unsupported HTTP method: " + method);
-    }
+    std::string error_context = "Alpaca API " + method + " request to " + url;
     
-    if (response.empty()) {
-        throw std::runtime_error("Empty response from Alpaca API");
+    try {
+        if (method == "GET") {
+            response = http_get(request);
+        } else if (method == "POST") {
+            response = http_post(request);
+        } else if (method == "DELETE") {
+            response = http_delete(request);
+        } else {
+            throw std::runtime_error("Unsupported HTTP method: " + method);
+        }
+        
+        if (response.empty()) {
+            // Provide detailed error information for debugging
+            std::string detailed_error = error_context + " returned empty response. ";
+            detailed_error += "This could indicate: ";
+            detailed_error += "1) Invalid API credentials (check api_key and api_secret), ";
+            detailed_error += "2) Network connectivity issues, ";
+            detailed_error += "3) API endpoint not accessible, ";
+            detailed_error += "4) Rate limiting or API blocking, ";
+            detailed_error += "5) SSL/TLS certificate issues. ";
+            detailed_error += "Base URL: " + config.base_url + ", ";
+            detailed_error += "API Key: " + config.api_key.substr(0, 8) + "...";
+            throw std::runtime_error(detailed_error);
+        }
+        
+        return response;
+        
+    } catch (const std::exception& e) {
+        // Re-throw with additional context
+        std::string enhanced_error = error_context + " failed: " + std::string(e.what());
+        throw std::runtime_error(enhanced_error);
     }
-    
-    return response;
 }
 
 std::string AlpacaTradingClient::build_url(const std::string& endpoint) const {
