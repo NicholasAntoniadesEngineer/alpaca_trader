@@ -1,3 +1,7 @@
+/**
+ * Trader decision thread.
+ * Executes the main trading logic and decision making.
+ */
 #include "trader_thread.hpp"
 #include "core/trader/trader.hpp"
 #include "core/logging/async_logger.hpp"
@@ -7,9 +11,12 @@
 #include <thread>
 
 // Using declarations for cleaner code
-using AlpacaTrader::Threads::TraderThread;
-using AlpacaTrader::Logging::set_log_thread_tag;
-using AlpacaTrader::Logging::log_message;
+using namespace AlpacaTrader::Threads;
+using namespace AlpacaTrader::Logging;
+
+// ========================================================================
+// THREAD LIFECYCLE MANAGEMENT
+// ========================================================================
 
 void TraderThread::operator()() {
     set_log_thread_tag("DECIDE");
@@ -20,9 +27,9 @@ void TraderThread::operator()() {
 
         // Start the trader's decision loop
         trader.execute_trading_loop();
-    } catch (const std::exception& e) {
-        ThreadLogs::log_thread_exception("TraderThread", std::string(e.what()));
-        log_message("TraderThread exception: " + std::string(e.what()), "trading_system.log");
+    } catch (const std::exception& exception) {
+        ThreadLogs::log_thread_exception("TraderThread", std::string(exception.what()));
+        log_message("TraderThread exception: " + std::string(exception.what()), "trading_system.log");
     } catch (...) {
         ThreadLogs::log_thread_unknown_exception("TraderThread");
         log_message("TraderThread unknown exception", "trading_system.log");

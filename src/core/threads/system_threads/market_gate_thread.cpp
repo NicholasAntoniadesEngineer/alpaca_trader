@@ -10,11 +10,14 @@
 #include <chrono>
 
 // Using declarations for cleaner code
-using AlpacaTrader::Threads::MarketGateThread;
-using AlpacaTrader::Logging::set_log_thread_tag;
-using AlpacaTrader::Logging::log_message;
+using namespace AlpacaTrader::Threads;
+using namespace AlpacaTrader::Logging;
 
-void AlpacaTrader::Threads::MarketGateThread::operator()() {
+// ========================================================================
+// THREAD LIFECYCLE MANAGEMENT
+// ========================================================================
+
+void MarketGateThread::operator()() {
     set_log_thread_tag("GATE  ");
     
     try {
@@ -22,27 +25,27 @@ void AlpacaTrader::Threads::MarketGateThread::operator()() {
         std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
         
         // Start the market gate monitoring loop
-        market_gate_loop();
-    } catch (const std::exception& e) {
-        log_message("MarketGateThread exception: " + std::string(e.what()), logging.log_file);
+        execute_market_gate_monitoring_loop();
+    } catch (const std::exception& exception) {
+        log_message("MarketGateThread exception: " + std::string(exception.what()), logging.log_file);
     } catch (...) {
         log_message("MarketGateThread unknown exception", logging.log_file);
     }
 }
 
-void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
+void MarketGateThread::execute_market_gate_monitoring_loop() {
     try {
-        bool last_within = api_manager.is_within_trading_hours();
-        allow_fetch.store(last_within);
+        bool last_within_trading_hours = api_manager.is_within_trading_hours();
+        allow_fetch.store(last_within_trading_hours);
         
-        auto& connectivity = ConnectivityManager::instance();
-        ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity.get_status();
+        auto& connectivity_manager = ConnectivityManager::instance();
+        ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity_manager.get_status();
         
         while (running.load()) {
             try {
-                check_and_update_fetch_window(last_within);
+                check_and_update_fetch_window(last_within_trading_hours);
                 
-                check_and_report_connectivity_status(connectivity, last_connectivity_status);
+                check_and_report_connectivity_status(connectivity_manager, last_connectivity_status);
                 
                 // Increment iteration counter for monitoring
                 if (iteration_counter) {
@@ -50,8 +53,8 @@ void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
                 }
                 
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
-            } catch (const std::exception& e) {
-                log_message("MarketGateThread loop iteration exception: " + std::string(e.what()), logging.log_file);
+            } catch (const std::exception& exception) {
+                log_message("MarketGateThread loop iteration exception: " + std::string(exception.what()), logging.log_file);
                 // Continue running - don't exit the thread
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
             } catch (...) {
@@ -62,35 +65,39 @@ void AlpacaTrader::Threads::MarketGateThread::market_gate_loop() {
         }
         
         log_message("MarketGateThread loop exited", "trading_system.log");
-    } catch (const std::exception& e) {
-        log_message("MarketGateThread market_gate_loop exception: " + std::string(e.what()), logging.log_file);
+    } catch (const std::exception& exception) {
+        log_message("MarketGateThread market_gate_loop exception: " + std::string(exception.what()), logging.log_file);
     } catch (...) {
         log_message("MarketGateThread market_gate_loop unknown exception", logging.log_file);
     }
 }
 
-void AlpacaTrader::Threads::MarketGateThread::check_and_update_fetch_window(bool& last_within) {
-    bool within = api_manager.is_within_trading_hours();
-    if (within != last_within) {
-        allow_fetch.store(within);
-        log_message(std::string("Market fetch gate ") + (within ? "ENABLED" : "DISABLED") +
+// ========================================================================
+// MARKET GATE PROCESSING
+// ========================================================================
+
+void MarketGateThread::check_and_update_fetch_window(bool& last_within_trading_hours) {
+    bool currently_within_trading_hours = api_manager.is_within_trading_hours();
+    if (currently_within_trading_hours != last_within_trading_hours) {
+        allow_fetch.store(currently_within_trading_hours);
+        log_message(std::string("Market fetch gate ") + (currently_within_trading_hours ? "ENABLED" : "DISABLED") +
                     " (pre/post window applied)", logging.log_file);
-        last_within = within;
+        last_within_trading_hours = currently_within_trading_hours;
     }
 }
 
-void AlpacaTrader::Threads::MarketGateThread::check_and_report_connectivity_status(ConnectivityManager& connectivity,
+void MarketGateThread::check_and_report_connectivity_status(ConnectivityManager& connectivity_manager,
                      ConnectivityManager::ConnectionStatus& last_connectivity_status) {
-    ConnectivityManager::ConnectionStatus current_status = connectivity.get_status();
-    if (current_status != last_connectivity_status) {
-        std::string status_msg = "Connectivity status changed: " + connectivity.get_status_string();
-        auto state = connectivity.get_state();
-        if (current_status == ConnectivityManager::ConnectionStatus::DISCONNECTED) {
-            status_msg += " (retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s)";
-        } else if (current_status == ConnectivityManager::ConnectionStatus::DEGRADED) {
-            status_msg += " (" + std::to_string(state.consecutive_failures) + " failures)";
+    ConnectivityManager::ConnectionStatus current_connectivity_status = connectivity_manager.get_status();
+    if (current_connectivity_status != last_connectivity_status) {
+        std::string status_message = "Connectivity status changed: " + connectivity_manager.get_status_string();
+        auto connectivity_state = connectivity_manager.get_state();
+        if (current_connectivity_status == ConnectivityManager::ConnectionStatus::DISCONNECTED) {
+            status_message += " (retry in " + std::to_string(connectivity_manager.get_seconds_until_retry()) + "s)";
+        } else if (current_connectivity_status == ConnectivityManager::ConnectionStatus::DEGRADED) {
+            status_message += " (" + std::to_string(connectivity_state.consecutive_failures) + " failures)";
         }
-        log_message(status_msg, logging.log_file);
-        last_connectivity_status = current_status;
+        log_message(status_message, logging.log_file);
+        last_connectivity_status = current_connectivity_status;
     }
 }

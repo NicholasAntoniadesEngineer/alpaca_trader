@@ -29,9 +29,9 @@ struct MarketGateThread {
     void operator()();
 
 private:
-    void market_gate_loop();
-    void check_and_update_fetch_window(bool& last_within);
-    void check_and_report_connectivity_status(ConnectivityManager& connectivity,
+    void execute_market_gate_monitoring_loop();
+    void check_and_update_fetch_window(bool& last_within_trading_hours);
+    void check_and_report_connectivity_status(ConnectivityManager& connectivity_manager,
                      ConnectivityManager::ConnectionStatus& last_connectivity_status);
 };
 

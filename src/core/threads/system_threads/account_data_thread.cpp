@@ -8,31 +8,36 @@
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include <chrono>
 
-using AlpacaTrader::Threads::AccountDataThread;
-using AlpacaTrader::Logging::set_log_thread_tag;
-using AlpacaTrader::Logging::log_message;
-using AlpacaTrader::Core::AccountSnapshot;
+// Using declarations for cleaner code
+using namespace AlpacaTrader::Threads;
+using namespace AlpacaTrader::Logging;
+using namespace AlpacaTrader::Core;
 
-void AlpacaTrader::Threads::AccountDataThread::operator()() {
+// ========================================================================
+// THREAD LIFECYCLE MANAGEMENT
+// ========================================================================
+
+void AccountDataThread::operator()() {
     set_log_thread_tag("ACCOUNT");
     
     try {
         // Wait for main thread to complete priority setup
         std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
         
-        account_data_loop();
-    } catch (const std::exception& e) {
-        log_message("AccountDataThread exception: " + std::string(e.what()), "trading_system.log");
+        // Start the account data collection loop
+        execute_account_data_collection_loop();
+    } catch (const std::exception& exception) {
+        log_message("AccountDataThread exception: " + std::string(exception.what()), "trading_system.log");
     } catch (...) {
         log_message("AccountDataThread unknown exception", "trading_system.log");
     }
 }
 
-void AlpacaTrader::Threads::AccountDataThread::account_data_loop() {
+void AccountDataThread::execute_account_data_collection_loop() {
     try {
         while (running.load()) {
             try {
-                if (allow_fetch_ptr && !allow_fetch_ptr->load()) {
+                if (!is_fetch_allowed()) {
                     std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
                     continue;
                 }
@@ -44,8 +49,8 @@ void AlpacaTrader::Threads::AccountDataThread::account_data_loop() {
                 }
 
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
-            } catch (const std::exception& e) {
-                log_message("AccountDataThread loop iteration exception: " + std::string(e.what()), "trading_system.log");
+            } catch (const std::exception& exception) {
+                log_message("AccountDataThread loop iteration exception: " + std::string(exception.what()), "trading_system.log");
                 // Continue running - don't exit the thread
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
             } catch (...) {
@@ -54,19 +59,31 @@ void AlpacaTrader::Threads::AccountDataThread::account_data_loop() {
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
             }
         }
-    } catch (const std::exception& e) {
-        log_message("AccountDataThread account_data_loop exception: " + std::string(e.what()), "trading_system.log");
+    } catch (const std::exception& exception) {
+        log_message("AccountDataThread account_data_loop exception: " + std::string(exception.what()), "trading_system.log");
     } catch (...) {
         log_message("AccountDataThread account_data_loop unknown exception", "trading_system.log");
     }
 }
 
-void AlpacaTrader::Threads::AccountDataThread::fetch_and_update_account_data() {
-    AccountSnapshot temp = account_manager.fetch_account_snapshot();
+// ========================================================================
+// ACCOUNT DATA PROCESSING
+// ========================================================================
+
+void AccountDataThread::fetch_and_update_account_data() {
+    AccountSnapshot temp_snapshot = account_manager.fetch_account_snapshot();
     {
-        std::lock_guard<std::mutex> lock(state_mtx);
-        account_snapshot = temp;
+        std::lock_guard<std::mutex> state_lock(state_mtx);
+        account_snapshot = temp_snapshot;
         has_account.store(true);
     }
     data_cv.notify_all();
+}
+
+// ========================================================================
+// UTILITY FUNCTIONS
+// ========================================================================
+
+bool AccountDataThread::is_fetch_allowed() const {
+    return allow_fetch_ptr && allow_fetch_ptr->load();
 }
