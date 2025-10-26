@@ -335,13 +335,12 @@ ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const P
         }
     }
     
-    return compute_exit_targets(
+    return compute_exit_targets(ExitTargetsRequest(
         (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL, 
         entry_price, 
         sizing.risk_amount, 
-        config.strategy.rr_ratio, 
-        config
-    );
+        config.strategy
+    ));
 }
 
 // Order timing methods for wash trade prevention

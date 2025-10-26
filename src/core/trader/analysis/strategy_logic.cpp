@@ -5,6 +5,10 @@
 #include "core/logging/signal_analysis_logs.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/utils/time_utils.hpp"
+#include "configs/timing_config.hpp"
+#include "configs/logging_config.hpp"
+#include "configs/multi_api_config.hpp"
+#include "core/threads/thread_register.hpp"
 #include <cmath>
 #include <climits>
 
@@ -208,11 +212,11 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemCon
  * @param buying_power Available buying power (0.0 if not provided)
  * @return PositionSizing struct with calculated quantity and risk amount
  */
-PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const SystemConfig& config, double buying_power) {
+PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
     PositionSizing sizing;
 
     // Early return if price is invalid (zero or negative)
-    if (data.curr.c <= 0.0) {
+    if (request.processed_data.curr.c <= 0.0) {
         sizing.quantity = 0;
         sizing.risk_based_qty = 0;
         sizing.exposure_based_qty = 0;
@@ -222,26 +226,26 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
         return sizing;
     }
 
-    double stop_loss_distance = data.atr;
+    double stop_loss_distance = request.processed_data.atr;
     double risk_per_share = stop_loss_distance;
 
     // Calculate total risk budget (percentage of equity)
-    double total_risk_budget = equity * config.strategy.risk_percentage_per_trade;
+    double total_risk_budget = request.account_equity * request.strategy_configuration.risk_percentage_per_trade;
 
     // Set risk_amount to risk per share (ATR), not total budget
     sizing.risk_amount = risk_per_share;
     
     // Check for fixed shares per trade first (if enabled)
-    if (config.strategy.enable_fixed_share_quantity_per_trade && config.strategy.fixed_share_quantity_per_trade > 0) {
-        sizing.quantity = config.strategy.fixed_share_quantity_per_trade;
+    if (request.strategy_configuration.enable_fixed_share_quantity_per_trade && request.strategy_configuration.fixed_share_quantity_per_trade > 0) {
+        sizing.quantity = request.strategy_configuration.fixed_share_quantity_per_trade;
         sizing.risk_based_qty = 0;
         sizing.exposure_based_qty = 0;
         sizing.max_value_qty = 0;
         sizing.buying_power_qty = 0;
         
         // Apply position size multiplier to fixed shares if enabled
-        if (config.strategy.enable_risk_based_position_multiplier) {
-            sizing.quantity = static_cast<int>(sizing.quantity * config.strategy.risk_based_position_size_multiplier);
+        if (request.strategy_configuration.enable_risk_based_position_multiplier) {
+            sizing.quantity = static_cast<int>(sizing.quantity * request.strategy_configuration.risk_based_position_size_multiplier);
         }
         
         // Ensure minimum quantity of 1
@@ -250,13 +254,13 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
     }
     
     // Determine size multiplier for scaling in/out of positions
-    sizing.size_multiplier = (current_qty != 0 && config.strategy.allow_multiple_positions_per_symbol)
-                                 ? config.strategy.position_scaling_multiplier
+    sizing.size_multiplier = (request.current_position_quantity != 0 && request.strategy_configuration.allow_multiple_positions_per_symbol)
+                                 ? request.strategy_configuration.position_scaling_multiplier
                                  : 1.0;
     
     // Apply position size multiplier (if enabled)
-    if (config.strategy.enable_risk_based_position_multiplier) {
-        sizing.size_multiplier *= config.strategy.risk_based_position_size_multiplier;
+    if (request.strategy_configuration.enable_risk_based_position_multiplier) {
+        sizing.size_multiplier *= request.strategy_configuration.risk_based_position_size_multiplier;
     }
     
     // Calculate equity-based quantity with safety checks
@@ -267,30 +271,30 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
         ));
     }
 
-    double max_total_exposure_value = equity * (config.strategy.max_account_exposure_percentage / config.strategy.percentage_calculation_multiplier);
-    double current_exposure_value = std::abs(data.pos_details.current_value);
+    double max_total_exposure_value = request.account_equity * (request.strategy_configuration.max_account_exposure_percentage / request.strategy_configuration.percentage_calculation_multiplier);
+    double current_exposure_value = std::abs(request.processed_data.pos_details.current_value);
     double available_exposure_value = max_total_exposure_value - current_exposure_value;
 
     available_exposure_value = std::max(0.0, available_exposure_value);
 
     // Calculate exposure-based quantity with safety checks
     int exposure_based_qty = 0;
-    if (data.curr.c > 0.0 && available_exposure_value > 0.0) {
-        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / data.curr.c));
+    if (request.processed_data.curr.c > 0.0 && available_exposure_value > 0.0) {
+        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / request.processed_data.curr.c));
     }
     
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
     int max_value_qty = INT_MAX;
-    if (config.strategy.maximum_dollar_value_per_trade > 0.0) {
-        max_value_qty = static_cast<int>(std::floor(config.strategy.maximum_dollar_value_per_trade / data.curr.c));
+    if (request.strategy_configuration.maximum_dollar_value_per_trade > 0.0) {
+        max_value_qty = static_cast<int>(std::floor(request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.c));
         sizing.quantity = std::min(sizing.quantity, max_value_qty);
     }
     
     int buying_power_qty = INT_MAX;
-    if (buying_power > 0.0) {
-        double usable_buying_power = buying_power * config.strategy.buying_power_utilization_percentage;
-        buying_power_qty = static_cast<int>(std::floor(usable_buying_power / data.curr.c));
+    if (request.available_buying_power > 0.0) {
+        double usable_buying_power = request.available_buying_power * request.strategy_configuration.buying_power_utilization_percentage;
+        buying_power_qty = static_cast<int>(std::floor(usable_buying_power / request.processed_data.curr.c));
         sizing.quantity = std::min(sizing.quantity, buying_power_qty);
     }
     
@@ -326,50 +330,50 @@ PositionSizing calculate_position_sizing(const ProcessedData& data, double equit
  * @param rr_ratio Risk-reward ratio (e.g., 3.0 means 3:1 reward:risk)
  * @return ExitTargets struct containing calculated stop_loss and take_profit prices
  */
-ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const SystemConfig& config) {
+ExitTargets compute_exit_targets(const ExitTargetsRequest& request) {
     ExitTargets targets;
     
     // Dynamic buffer system to handle data delays and market volatility
     // Values are now configurable per strategy
-    double price_buffer_pct = config.strategy.price_buffer_pct;
-    double min_price_buffer = config.strategy.min_price_buffer;
-    double max_price_buffer = config.strategy.max_price_buffer;
+    double price_buffer_pct = request.strategy_configuration.price_buffer_pct;
+    double min_price_buffer = request.strategy_configuration.min_price_buffer;
+    double max_price_buffer = request.strategy_configuration.max_price_buffer;
     
     // Calculate dynamic buffer based on entry price
     double price_buffer = std::min(
-        std::max(entry_price * price_buffer_pct, min_price_buffer),
+        std::max(request.entry_price * price_buffer_pct, min_price_buffer),
         max_price_buffer
     );
     
     // Use the larger of risk_amount or calculated buffer for safety
-    double effective_buffer = std::max(risk_amount, price_buffer);
+    double effective_buffer = std::max(request.risk_amount, price_buffer);
     
     // Add minimum buffer to account for market data delays and price movements
     // Use configurable buffer for API validation and market delays
-    double min_stop_buffer = config.strategy.stop_loss_buffer_amount_dollars;
+    double min_stop_buffer = request.strategy_configuration.stop_loss_buffer_amount_dollars;
     
     // Note: Order precision is limited by market data accuracy and API constraints.
-    if (side == "buy") {
+    if (request.position_side == "buy") {
         // Long position: profit when price goes UP, stop when price goes DOWN
         // Ensure stop loss is well below entry price to account for market data delays
-        targets.stop_loss = entry_price - std::max(effective_buffer, min_stop_buffer);
+        targets.stop_loss = request.entry_price - std::max(effective_buffer, min_stop_buffer);
         
         // Calculate take profit using either percentage or risk/reward ratio
-        if (config.strategy.use_take_profit_percentage) {
-            targets.take_profit = entry_price * (1.0 + config.strategy.take_profit_percentage);
+        if (request.strategy_configuration.use_take_profit_percentage) {
+            targets.take_profit = request.entry_price * (1.0 + request.strategy_configuration.take_profit_percentage);
         } else {
-            targets.take_profit = entry_price + (rr_ratio * risk_amount);
+            targets.take_profit = request.entry_price + (request.strategy_configuration.rr_ratio * request.risk_amount);
         }
     } else { // side == "sell" 
         // Short position: profit when price goes DOWN, stop when price goes UP
         // Ensure stop loss is well above entry price to account for market data delays
-        targets.stop_loss = entry_price + std::max(effective_buffer, min_stop_buffer);
+        targets.stop_loss = request.entry_price + std::max(effective_buffer, min_stop_buffer);
         
         // Calculate take profit using either percentage or risk/reward ratio
-        if (config.strategy.use_take_profit_percentage) {
-            targets.take_profit = entry_price * (1.0 - config.strategy.take_profit_percentage);
+        if (request.strategy_configuration.use_take_profit_percentage) {
+            targets.take_profit = request.entry_price * (1.0 - request.strategy_configuration.take_profit_percentage);
         } else {
-            targets.take_profit = entry_price - (rr_ratio * risk_amount);
+            targets.take_profit = request.entry_price - (request.strategy_configuration.rr_ratio * request.risk_amount);
         }
     }
     
@@ -385,24 +389,31 @@ void process_signal_analysis(const ProcessedData& data, const SystemConfig& conf
     AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(data, signal_decision, filter_result, config);
 }
 
-std::pair<PositionSizing, SignalDecision> process_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power, const SystemConfig& config) {
-    PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, config, buying_power);
+std::pair<PositionSizing, SignalDecision> process_position_sizing(const PositionSizingProcessRequest& request) {
+    PositionSizing sizing = calculate_position_sizing(PositionSizingRequest(
+        request.processed_data, request.account_equity, request.current_position_quantity, 
+        request.strategy_configuration, request.available_buying_power
+    ));
 
-    if (!evaluate_trading_filters(data, config).all_pass) {
+    SystemConfig temp_config;
+    temp_config.strategy = request.strategy_configuration;
+    temp_config.trading_mode = request.trading_mode_configuration;
+    
+    if (!evaluate_trading_filters(request.processed_data, temp_config).all_pass) {
         TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
 
         // CSV logging for position sizing when filters not met
         try {
             std::string timestamp = TimeUtils::get_current_human_readable_time();
-            if (config.trading_mode.primary_symbol.empty()) {
+            if (request.trading_mode_configuration.primary_symbol.empty()) {
                 throw std::runtime_error("Primary symbol is required but not configured");
             }
-            std::string symbol = config.trading_mode.primary_symbol;
+            std::string symbol = request.trading_mode_configuration.primary_symbol;
 
             if (AlpacaTrader::Logging::g_csv_trade_logger) {
                 AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
                     timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                    sizing.quantity * data.curr.c, buying_power
+                    sizing.quantity * request.processed_data.curr.c, request.available_buying_power
                 );
             }
         } catch (const std::exception& e) {
@@ -414,24 +425,24 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Processe
     }
     
     TradingLogs::log_filters_passed();
-    TradingLogs::log_current_position(current_qty, config.strategy.symbol);
-    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
+    TradingLogs::log_current_position(request.current_position_quantity, request.strategy_configuration.symbol);
+    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, request.available_buying_power, request.processed_data.curr.c);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
 
-    SignalDecision signal_decision = detect_trading_signals(data, config);
+    SignalDecision signal_decision = detect_trading_signals(request.processed_data, temp_config);
 
     // CSV logging for successful position sizing
     try {
         std::string timestamp = TimeUtils::get_current_human_readable_time();
-        if (config.trading_mode.primary_symbol.empty()) {
+        if (request.trading_mode_configuration.primary_symbol.empty()) {
             throw std::runtime_error("Primary symbol is required but not configured");
         }
-        std::string symbol = config.trading_mode.primary_symbol;
+        std::string symbol = request.trading_mode_configuration.primary_symbol;
 
         if (AlpacaTrader::Logging::g_csv_trade_logger) {
             AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
                 timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                sizing.quantity * data.curr.c, buying_power
+                sizing.quantity * request.processed_data.curr.c, request.available_buying_power
             );
         }
     } catch (const std::exception& e) {

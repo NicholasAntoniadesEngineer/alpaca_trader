@@ -2,6 +2,7 @@
 #define DATA_STRUCTURES_HPP
 
 #include <string>
+#include "configs/system_config.hpp"
 
 // Trading signal constants
 #define SIGNAL_BUY "buy"
@@ -10,6 +11,8 @@
 // Position side constants
 #define POSITION_LONG "LONG"
 #define POSITION_SHORT "SHORT"
+
+using AlpacaTrader::Config::TradingModeConfig;
 
 namespace AlpacaTrader {
 namespace Core {
@@ -128,6 +131,43 @@ struct PositionSizing {
 struct ExitTargets {
     double stop_loss = 0.0;
     double take_profit = 0.0;
+};
+
+// Parameter structures for functions with many parameters
+struct PositionSizingRequest {
+    const ProcessedData& processed_data;
+    double account_equity;
+    int current_position_quantity;
+    const StrategyConfig& strategy_configuration;
+    double available_buying_power;
+    
+    PositionSizingRequest(const ProcessedData& data, double equity, int current_qty, const StrategyConfig& config, double buying_power)
+        : processed_data(data), account_equity(equity), current_position_quantity(current_qty), 
+          strategy_configuration(config), available_buying_power(buying_power) {}
+};
+
+struct ExitTargetsRequest {
+    const std::string& position_side;
+    double entry_price;
+    double risk_amount;
+    const StrategyConfig& strategy_configuration;
+    
+    ExitTargetsRequest(const std::string& side, double entry_price, double risk_amount, const StrategyConfig& config)
+        : position_side(side), entry_price(entry_price), risk_amount(risk_amount), 
+          strategy_configuration(config) {}
+};
+
+struct PositionSizingProcessRequest {
+    const ProcessedData& processed_data;
+    double account_equity;
+    int current_position_quantity;
+    double available_buying_power;
+    const StrategyConfig& strategy_configuration;
+    const TradingModeConfig& trading_mode_configuration;
+    
+    PositionSizingProcessRequest(const ProcessedData& data, double equity, int current_qty, double buying_power, const StrategyConfig& strategy_config, const TradingModeConfig& trading_mode_config)
+        : processed_data(data), account_equity(equity), current_position_quantity(current_qty), 
+          available_buying_power(buying_power), strategy_configuration(strategy_config), trading_mode_configuration(trading_mode_config) {}
 };
 
 } // namespace Core
