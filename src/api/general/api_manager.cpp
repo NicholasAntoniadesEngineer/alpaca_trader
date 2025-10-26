@@ -53,6 +53,11 @@ ApiProviderInterface* ApiManager::get_provider(Config::ApiProvider provider) con
     if (it == providers.end()) {
         throw std::runtime_error("Provider not found or not initialized");
     }
+    
+    if (!it->second) {
+        throw std::runtime_error("Provider is null - initialization failed");
+    }
+    
     return it->second.get();
 }
 
