@@ -29,7 +29,6 @@ private:
     // Core dependencies
     const SystemConfig& config;
     AccountManager& account_manager;
-    API::ApiManager& api_manager;
     RiskManager risk_manager;
     OrderExecutionEngine order_engine;
     PriceManager price_manager;
@@ -51,7 +50,6 @@ private:
     
     // Utility methods
     void perform_halt_countdown(int seconds) const;
-    bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
 };
 
 } // namespace Core

@@ -26,6 +26,9 @@ public:
     // Public method for profit taking
     void execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing);
     
+    // Public validation method
+    bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
+    
 private:
     // Core dependencies
     API::ApiManager& api_manager;
