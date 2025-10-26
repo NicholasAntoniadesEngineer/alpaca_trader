@@ -6,7 +6,7 @@
 namespace AlpacaTrader {
 namespace Core {
 
-TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_trading_system(const Config::SystemConfig& config, Monitoring::SystemMonitor& system_monitor) {
+TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_trading_system(const Config::SystemConfig& config, Monitoring::SystemMonitor& system_monitor, ConnectivityManager& connectivity_manager) {
     validate_configuration(config);
     
     TradingSystemComponents components;
@@ -25,7 +25,7 @@ TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_tradi
     
     // Create trading orchestrator
     components.trading_orchestrator = std::make_unique<TradingOrchestrator>(
-        config, *components.api_manager, *components.account_manager, system_monitor);
+        config, *components.api_manager, *components.account_manager, system_monitor, connectivity_manager);
     
     return components;
 }

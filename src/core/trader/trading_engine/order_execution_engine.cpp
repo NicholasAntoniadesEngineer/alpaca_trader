@@ -209,7 +209,8 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
             TradingLogs::log_market_status(true, "Cancelling pending orders");
             
             // Wait a moment for order cancellation to process
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            int cancellation_delay_ms = config.timing.order_cancellation_processing_delay_milliseconds;
+            std::this_thread::sleep_for(std::chrono::milliseconds(cancellation_delay_ms));
         }
         
         // For closing positions, we need to determine the correct side

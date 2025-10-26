@@ -29,6 +29,7 @@ timing.system_health_logging_interval_seconds,5
 
 # Error Recovery Timing
 timing.emergency_trading_halt_duration_minutes,1
+timing.exception_recovery_sleep_seconds,1
 
 # User Interface Updates
 timing.countdown_display_refresh_interval_seconds,5

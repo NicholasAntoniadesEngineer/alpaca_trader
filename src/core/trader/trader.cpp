@@ -15,11 +15,12 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
-TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon)
+TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon, ConnectivityManager& connectivity_mgr)
     : config(cfg), account_manager(account_mgr),
-      trading_engine(cfg, api_mgr, account_mgr, mon),
+      trading_engine(cfg, api_mgr, account_mgr, mon, connectivity_mgr),
       risk_manager(cfg),
-      data_fetcher(api_mgr, account_mgr, cfg) {
+      data_fetcher(api_mgr, account_mgr, cfg),
+      connectivity_manager(connectivity_mgr) {
     
     runtime.initial_equity = initialize_trading_session();
 }
@@ -35,8 +36,8 @@ void TradingOrchestrator::execute_trading_loop() {
         while (data_sync.running && data_sync.running->load()) {
             try {
                 // Check connectivity status
-                if (!ConnectivityManager::instance().check_connectivity_status()) {
-                    std::string connectivity_msg = "Connectivity outage - status: " + ConnectivityManager::instance().get_status_string();
+                if (!connectivity_manager.check_connectivity_status()) {
+                    std::string connectivity_msg = "Connectivity outage - status: " + connectivity_manager.get_status_string();
                     TradingLogs::log_market_status(false, connectivity_msg);
                     trading_engine.handle_trading_halt("Connectivity issues detected");
                     countdown_to_next_cycle();
@@ -88,7 +89,7 @@ void TradingOrchestrator::execute_trading_loop() {
                     continue;
                 }
                 ProcessedData processed_data(market, account);
-                trading_engine.get_order_engine().handle_market_close_positions(processed_data);
+                trading_engine.handle_market_close_positions(processed_data);
                 trading_engine.execute_trading_decision(processed_data, account.equity);
 
                 // Increment iteration counter
@@ -100,10 +101,12 @@ void TradingOrchestrator::execute_trading_loop() {
 
             } catch (const std::exception& e) {
                 TradingLogs::log_market_data_result_table("Exception in trading cycle: " + std::string(e.what()), false, 0);
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                int recovery_sleep_secs = config.timing.exception_recovery_sleep_seconds;
+                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_secs));
             } catch (...) {
                 TradingLogs::log_market_data_result_table("Unknown exception in trading cycle", false, 0);
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                int recovery_sleep_secs = config.timing.exception_recovery_sleep_seconds;
+                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_secs));
             }
         }
     } catch (const std::exception& e) {

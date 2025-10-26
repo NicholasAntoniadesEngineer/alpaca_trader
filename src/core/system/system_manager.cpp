@@ -76,7 +76,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     SystemModules modules;
 
     // Create core trading modules using the factory
-    auto trading_components = TradingSystemFactory::create_trading_system(state.config, state.system_monitor);
+    auto trading_components = TradingSystemFactory::create_trading_system(state.config, state.system_monitor, state.connectivity_manager);
     
     modules.api_manager = std::move(trading_components.api_manager);
     modules.portfolio_manager = std::move(trading_components.account_manager);
@@ -98,7 +98,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     
     // Create MARKET_GATE thread
     modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
-                                                                   state.allow_fetch, state.running, *modules.api_manager);
+                                                                   state.allow_fetch, state.running, *modules.api_manager, state.connectivity_manager);
     
     // Create LOGGING thread
     static std::atomic<unsigned long> logging_iterations{0};
@@ -198,7 +198,7 @@ static void run_until_shutdown(SystemState& state) {
                     std::chrono::duration_cast<std::chrono::seconds>(now - last_monitor_time).count() >= state.config.timing.system_health_logging_interval_seconds) {
 
                     try {
-                        AlpacaTrader::Core::ThreadSystem::Manager::log_thread_monitoring_stats(state.thread_infos, start_time);
+                        ThreadLogs::log_thread_monitoring_stats(state.thread_infos, start_time);
                         last_monitor_time = now;
                     } catch (const std::exception& e) {
                         std::cerr << "Error logging thread monitoring stats: " << e.what() << std::endl;

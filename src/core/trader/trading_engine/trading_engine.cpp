@@ -11,13 +11,14 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon)
+TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon, ConnectivityManager& connectivity_mgr)
     : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       risk_manager(cfg),
       signal_processor(cfg),
       order_engine(api_mgr, account_mgr, cfg, data_sync, mon),
       data_fetcher(api_mgr, account_mgr, cfg),
-      system_monitor(mon) {}
+      system_monitor(mon),
+      connectivity_manager(connectivity_mgr) {}
 
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
     // Input validation
@@ -69,7 +70,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
 void TradingEngine::handle_trading_halt(const std::string& reason) {
     TradingLogs::log_market_status(false, reason);
     
-    auto& connectivity = ConnectivityManager::instance();
+    auto& connectivity = connectivity_manager;
     
     int halt_seconds = 0;
     if (connectivity.is_connectivity_outage()) {
@@ -133,6 +134,10 @@ PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
 PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
         }
     }
+}
+
+void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
+    order_engine.handle_market_close_positions(data);
 }
 
 } // namespace Core

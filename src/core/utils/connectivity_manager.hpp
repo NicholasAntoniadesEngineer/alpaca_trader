@@ -7,9 +7,9 @@
 #include <string>
 
 /**
- * ConnectivityManager - Shared connectivity state for all threads
+ * ConnectivityManager - Manages connectivity state
  * 
- * This singleton class manages the connectivity status across the entire system,
+ * This class manages the connectivity status across the system,
  * providing a central point for all threads to check network connectivity and
  * coordinate retry behavior. It tracks both current connectivity status and
  * implements intelligent retry logic with exponential backoff.
@@ -42,11 +42,9 @@ private:
     static constexpr int DISCONNECTED_THRESHOLD = 6;   // Failures before disconnected
     static constexpr double BACKOFF_MULTIPLIER = 2.0;  // Exponential backoff factor
 
-    ConnectivityManager();
-
 public:
-    // Singleton access
-    static ConnectivityManager& instance();
+    ConnectivityManager();
+    ~ConnectivityManager() = default;
 
     // Delete copy constructor and assignment operator
     ConnectivityManager(const ConnectivityManager&) = delete;
@@ -58,10 +56,10 @@ public:
     ConnectionStatus get_status() const;
     ConnectivityState get_state() const;
     int get_seconds_until_retry() const;
-        bool is_connectivity_outage() const;
-        bool check_connectivity() const;
-        bool check_connectivity_status() const;
-        std::string get_status_string() const;
+    bool is_connectivity_outage() const;
+    bool check_connectivity() const;
+    bool check_connectivity_status() const;
+    std::string get_status_string() const;
     void reset_connectivity_state();
 };
 

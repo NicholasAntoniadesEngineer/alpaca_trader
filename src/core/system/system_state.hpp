@@ -8,6 +8,7 @@
 #include "core/system/system_modules.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/system/system_monitor.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
@@ -62,6 +63,7 @@ struct SystemState {
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
     AlpacaTrader::Core::ThreadSystem::ThreadManagerState thread_manager_state;  // Thread management state
     AlpacaTrader::Core::Monitoring::SystemMonitor system_monitor;  // System monitoring state
+    ConnectivityManager connectivity_manager;  // System connectivity state
 
     // =========================================================================
     // CONSTRUCTORS

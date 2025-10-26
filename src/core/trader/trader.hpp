@@ -38,12 +38,13 @@ private:
     MarketDataFetcher data_fetcher;
     DataSyncReferences data_sync;
     RuntimeState runtime;
+    ConnectivityManager& connectivity_manager;
 
     double initialize_trading_session();
     void countdown_to_next_cycle();
 
 public:
-    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon);
+    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon, ConnectivityManager& connectivity_mgr);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

@@ -5,11 +5,6 @@ ConnectivityManager::ConnectivityManager() {
     state_.next_retry_time = std::chrono::steady_clock::now();
 }
 
-ConnectivityManager& ConnectivityManager::instance() {
-    static ConnectivityManager instance;
-    return instance;
-}
-
 void ConnectivityManager::report_success() {
     std::lock_guard<std::mutex> lock(state_mutex_);
     auto now = std::chrono::steady_clock::now();

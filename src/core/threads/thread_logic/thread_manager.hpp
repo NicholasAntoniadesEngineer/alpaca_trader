@@ -57,10 +57,6 @@ public:
     static void start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules);
     static void shutdown_threads(ThreadManagerState& manager_state);
     
-    // Thread monitoring and logging
-    static void log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadInfo>& thread_infos, 
-                                          const std::chrono::steady_clock::time_point& start_time);
-    
     // Thread priority management
     static void setup_thread_priorities(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config);
     

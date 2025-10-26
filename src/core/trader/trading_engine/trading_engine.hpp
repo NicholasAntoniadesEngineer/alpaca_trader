@@ -20,15 +20,12 @@ namespace Core {
 
 class TradingEngine {
 public:
-    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager, Monitoring::SystemMonitor& system_monitor);
+    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager, Monitoring::SystemMonitor& system_monitor, ConnectivityManager& connectivity_manager);
     
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
     void handle_market_close_positions(const ProcessedData& data);
-
-    // Access to order execution engine for market close operations
-    OrderExecutionEngine& get_order_engine() { return order_engine; }
 
 private:
     // Core dependencies
@@ -40,6 +37,12 @@ private:
     OrderExecutionEngine order_engine;
     MarketDataFetcher data_fetcher;
     Monitoring::SystemMonitor& system_monitor;
+    ConnectivityManager& connectivity_manager;
+    
+    // Connectivity check wrapper for risk validation
+    bool check_connectivity() const {
+        return connectivity_manager.check_connectivity();
+    }
     
     // Data synchronization references
     DataSyncReferences data_sync;

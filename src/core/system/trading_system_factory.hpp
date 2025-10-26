@@ -6,6 +6,7 @@
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/trader.hpp"
 #include "core/system/system_monitor.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <memory>
 
 namespace AlpacaTrader {
@@ -19,7 +20,7 @@ public:
         std::unique_ptr<TradingOrchestrator> trading_orchestrator;
     };
     
-    static TradingSystemComponents create_trading_system(const Config::SystemConfig& config, Monitoring::SystemMonitor& system_monitor);
+    static TradingSystemComponents create_trading_system(const Config::SystemConfig& config, Monitoring::SystemMonitor& system_monitor, ConnectivityManager& connectivity_manager);
     
 private:
     static Config::MultiApiConfig configure_providers_for_mode(const Config::SystemConfig& config);

@@ -1,6 +1,5 @@
 #include "risk_manager.hpp"
 #include "core/logging/async_logger.hpp"
-#include "core/utils/connectivity_manager.hpp"
 #include <cmath>
 
 namespace AlpacaTrader {
@@ -11,10 +10,6 @@ using AlpacaTrader::Logging::RiskLogs;
 RiskManager::RiskManager(const SystemConfig& cfg) : config(cfg) {}
 
 bool RiskManager::validate_trading_permissions(const ProcessedData& data, double equity) {
-    if (!ConnectivityManager::instance().check_connectivity()) {
-        return false;
-    }
-    
     if (!check_daily_limits(equity, 0.0)) {
         return false;
     }

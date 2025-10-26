@@ -21,12 +21,13 @@ size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* s)
 
 // Implement http_get
 std::string http_get(const HttpRequest& req) {
-    auto& connectivity = ConnectivityManager::instance();
+    static ConnectivityManager connectivity;
+    auto& connectivity_ref = connectivity;
     
     // Check if we should attempt connection
-    if (!connectivity.should_attempt_connection()) {
-        std::string status_msg = "Connectivity check failed - status: " + connectivity.get_status_string() + 
-                                ", retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s";
+    if (!connectivity_ref.should_attempt_connection()) {
+        std::string status_msg = "Connectivity check failed - status: " + connectivity_ref.get_status_string() + 
+                                ", retry in " + std::to_string(connectivity_ref.get_seconds_until_retry()) + "s";
         log_message(status_msg, *req.log_file);
         return "";
     }
@@ -65,7 +66,7 @@ std::string http_get(const HttpRequest& req) {
                                   " failed: " + std::string(curl_easy_strerror(res)) + 
                                   " (HTTP " + std::to_string(http_response_code) + ")";
             log_message(error_msg, *req.log_file);
-            connectivity.report_failure(error_msg);
+            connectivity_ref.report_failure(error_msg);
             
             if (i < req.retries - 1) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(req.rate_limit_delay_ms));
@@ -74,7 +75,7 @@ std::string http_get(const HttpRequest& req) {
         }
         
         if (success) {
-            connectivity.report_success();
+            connectivity_ref.report_success();
             
             // Log successful response details for debugging
             if (response.empty()) {
@@ -102,12 +103,13 @@ std::string http_get(const HttpRequest& req) {
 
 // Implement http_post
 std::string http_post(const HttpRequest& req) {
-    auto& connectivity = ConnectivityManager::instance();
+    static ConnectivityManager connectivity;
+    auto& connectivity_ref = connectivity;
     
     // Check if we should attempt connection
-    if (!connectivity.should_attempt_connection()) {
-        std::string status_msg = "Connectivity check failed - status: " + connectivity.get_status_string() + 
-                                ", retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s";
+    if (!connectivity_ref.should_attempt_connection()) {
+        std::string status_msg = "Connectivity check failed - status: " + connectivity_ref.get_status_string() + 
+                                ", retry in " + std::to_string(connectivity_ref.get_seconds_until_retry()) + "s";
         log_message(status_msg, *req.log_file);
         return "";
     }
@@ -140,7 +142,7 @@ std::string http_post(const HttpRequest& req) {
             
             std::string error_msg = "POST retry failed: " + std::string(curl_easy_strerror(res));
             log_message(error_msg, *req.log_file);
-            connectivity.report_failure(error_msg);
+            connectivity_ref.report_failure(error_msg);
             
             if (i < req.retries - 1) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(req.rate_limit_delay_ms));
@@ -149,7 +151,7 @@ std::string http_post(const HttpRequest& req) {
         }
         
         if (success) {
-            connectivity.report_success();
+            connectivity_ref.report_success();
         }
         
         curl_slist_free_all(headers);
@@ -160,12 +162,13 @@ std::string http_post(const HttpRequest& req) {
 
 // Implement http_delete
 std::string http_delete(const HttpRequest& req) {
-    auto& connectivity = ConnectivityManager::instance();
+    static ConnectivityManager connectivity;
+    auto& connectivity_ref = connectivity;
     
     // Check if we should attempt connection
-    if (!connectivity.should_attempt_connection()) {
-        std::string status_msg = "Connectivity check failed - status: " + connectivity.get_status_string() + 
-                                ", retry in " + std::to_string(connectivity.get_seconds_until_retry()) + "s";
+    if (!connectivity_ref.should_attempt_connection()) {
+        std::string status_msg = "Connectivity check failed - status: " + connectivity_ref.get_status_string() + 
+                                ", retry in " + std::to_string(connectivity_ref.get_seconds_until_retry()) + "s";
         log_message(status_msg, *req.log_file);
         return "";
     }
@@ -197,9 +200,9 @@ std::string http_delete(const HttpRequest& req) {
         if (!success) {
             std::string error_msg = "HTTP DELETE failed: " + std::string(curl_easy_strerror(res));
             log_message(error_msg, *req.log_file);
-            connectivity.report_failure(error_msg);
+            connectivity_ref.report_failure(error_msg);
         } else {
-            connectivity.report_success();
+            connectivity_ref.report_success();
         }
         
         curl_slist_free_all(headers);

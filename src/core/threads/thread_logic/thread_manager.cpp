@@ -33,11 +33,6 @@ void Manager::shutdown_threads(ThreadManagerState& manager_state) {
     manager_state.clear_all_data();
 }
 
-void Manager::log_thread_monitoring_stats(const std::vector<ThreadLogs::ThreadInfo>& thread_infos, 
-                                        const std::chrono::steady_clock::time_point& start_time) {
-    ThreadLogs::log_thread_monitoring_stats(thread_infos, start_time);
-}
-
 void Manager::setup_thread_priorities(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config) 
 {
     manager_state.thread_status_data.clear();

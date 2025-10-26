@@ -45,6 +45,7 @@ struct TimingConfig {
     // ========================================================================
 
     int emergency_trading_halt_duration_minutes;     // Emergency trading halt duration in minutes
+    int exception_recovery_sleep_seconds;             // Sleep time after exceptions in seconds
 
     // ========================================================================
     // USER INTERFACE UPDATES

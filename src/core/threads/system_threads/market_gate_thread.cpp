@@ -38,14 +38,13 @@ void MarketGateThread::execute_market_gate_monitoring_loop() {
         bool last_within_trading_hours = api_manager.is_within_trading_hours();
         allow_fetch.store(last_within_trading_hours);
         
-        auto& connectivity_manager = ConnectivityManager::instance();
         ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity_manager.get_status();
         
         while (running.load()) {
             try {
                 check_and_update_fetch_window(last_within_trading_hours);
                 
-                check_and_report_connectivity_status(connectivity_manager, last_connectivity_status);
+                check_and_report_connectivity_status(last_connectivity_status);
                 
                 // Increment iteration counter for monitoring
                 if (iteration_counter) {
@@ -86,8 +85,7 @@ void MarketGateThread::check_and_update_fetch_window(bool& last_within_trading_h
     }
 }
 
-void MarketGateThread::check_and_report_connectivity_status(ConnectivityManager& connectivity_manager,
-                     ConnectivityManager::ConnectionStatus& last_connectivity_status) {
+void MarketGateThread::check_and_report_connectivity_status(ConnectivityManager::ConnectionStatus& last_connectivity_status) {
     ConnectivityManager::ConnectionStatus current_connectivity_status = connectivity_manager.get_status();
     if (current_connectivity_status != last_connectivity_status) {
         std::string status_message = "Connectivity status changed: " + connectivity_manager.get_status_string();
