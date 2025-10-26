@@ -1,9 +1,5 @@
 #include "trading_engine.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/logging_macros.hpp"
-#include "core/logging/market_data_logs.hpp"
-#include "core/logging/csv_bars_logger.hpp"
-#include "core/logging/csv_trade_logger.hpp"
+#include "core/logging/trading_logs.hpp"
 #include "core/system/system_monitor.hpp"
 #include "core/utils/time_utils.hpp"
 #include "api/general/api_manager.hpp"
@@ -18,6 +14,7 @@ using AlpacaTrader::Logging::TradingLogs;
 TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       risk_manager(cfg),
+      signal_processor(cfg),
       order_engine(api_mgr, account_mgr, cfg, data_sync),
       data_fetcher(api_mgr, account_mgr, cfg) {}
 
@@ -29,7 +26,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     }
 
     if (equity <= 0.0 || !std::isfinite(equity)) {
-        TradingLogs::log_market_status(false, "Invalid equity value");
+        TradingLogs::log_market_status(false, "Invalid equity value - must be positive and finite");
         return;
     }
 
@@ -51,18 +48,18 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     }
     
     int current_qty = data.pos_details.qty;
-    
+
     // Check for profit-taking opportunity first
     if (current_qty != 0 && config.strategy.profit_taking_threshold_dollars > 0.0) {
         check_and_execute_profit_taking(data, current_qty);
     }
-    
+
     // Process signal analysis
-    process_signal_analysis(data, config);
-    
+    signal_processor.process_signal_analysis(data);
+
     // Process position sizing and execute if valid
     double buying_power = account_manager.fetch_buying_power();
-    auto [sizing, signal_decision] = process_position_sizing(data, equity, current_qty, buying_power, config);
+    auto [sizing, signal_decision] = signal_processor.process_position_sizing(data, equity, current_qty, buying_power);
     execute_trade_if_valid(data, current_qty, sizing, signal_decision);
     
     TradingLogs::log_signal_analysis_complete();
@@ -116,16 +113,13 @@ void TradingEngine::check_and_execute_profit_taking(const ProcessedData& data, i
     double position_value = data.pos_details.current_value;
     
     // Log profit calculation using proper TradingLogs class
-    AlpacaTrader::Logging::TradingLogs::log_position_sizing_debug(current_qty, position_value, current_qty, true, false);
-    AlpacaTrader::Logging::TradingLogs::log_exit_targets_table("LONG", current_price, config.strategy.profit_taking_threshold_dollars,
-                                                           config.strategy.rr_ratio, 0.0, 0.0);
+    TradingLogs::log_position_sizing_debug(current_qty, position_value, current_qty, true, false);
+    TradingLogs::log_exit_targets_table("LONG", current_price, config.strategy.profit_taking_threshold_dollars, config.strategy.rr_ratio, 0.0, 0.0);
 
     // Check if profit exceeds threshold
     if (unrealized_pl > config.strategy.profit_taking_threshold_dollars) {
-        AlpacaTrader::Logging::TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", abs(current_qty));
-        AlpacaTrader::Logging::TradingLogs::log_comprehensive_order_execution("MARKET", "SELL", abs(current_qty),
-                                                                              current_price, 0.0, current_qty,
-                                                                              config.strategy.profit_taking_threshold_dollars);
+        TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", abs(current_qty));
+        TradingLogs::log_comprehensive_order_execution("MARKET", "SELL", abs(current_qty), current_price, 0.0, current_qty, config.strategy.profit_taking_threshold_dollars);
         
         // Execute market order to close entire position
         if (current_qty > 0) {

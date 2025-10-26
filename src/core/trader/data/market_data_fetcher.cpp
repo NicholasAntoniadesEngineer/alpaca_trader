@@ -17,36 +17,13 @@ using AlpacaTrader::Logging::TradingLogs;
 
 MarketDataFetcher::MarketDataFetcher(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg)
     : api_manager(api_mgr), account_manager(account_mgr), config(cfg), 
-      data_validator(cfg), session_manager(cfg, api_mgr) {}
+      market_data_manager(cfg, api_mgr, account_mgr), 
+      market_data_validator(cfg), 
+      bars_data_manager(cfg, api_mgr), 
+      session_manager(cfg, api_mgr) {}
 
 ProcessedData MarketDataFetcher::fetch_and_process_data() {
-    ProcessedData data;
-    MarketDataLogs::log_market_data_fetch_table(config.strategy.symbol, config.logging.log_file);
-
-    // Fetch market bars and validate data sufficiency
-        if (!data_validator.fetch_and_validate_market_bars(data, api_manager, config.strategy.symbol)) {
-            return data;
-        }
-
-    // Compute technical indicators
-    if (!AlpacaTrader::Core::compute_technical_indicators(data, cached_bars, config)) {
-        return data;
-    }
-
-    // Fetch account and position data
-    account_manager.fetch_account_and_position_data(data);
-
-    // Log current positions and check for warnings
-    MarketDataLogs::log_position_data_and_warnings(
-        data.pos_details.qty, 
-        data.pos_details.current_value, 
-        data.pos_details.unrealized_pl, 
-        data.exposure_pct, 
-        data.open_orders, 
-        config.logging.log_file
-    );
-
-    return data;
+    return market_data_manager.fetch_and_process_market_data();
 }
 
 std::pair<MarketSnapshot, AccountSnapshot> MarketDataFetcher::fetch_current_snapshots() {

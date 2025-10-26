@@ -2,6 +2,7 @@
 #include "indicators.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/logging/trading_logs.hpp"
+#include "core/logging/signal_analysis_logs.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/utils/time_utils.hpp"
 #include <cmath>
@@ -377,59 +378,11 @@ ExitTargets compute_exit_targets(const std::string& side, double entry_price, do
 
 void process_signal_analysis(const ProcessedData& data, const SystemConfig& config) {
     SignalDecision signal_decision = detect_trading_signals(data, config);
-
-    // Log candle data and enhanced signals table
-    TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
-    TradingLogs::log_signals_table_enhanced(signal_decision);
-
-    // Enhanced detailed signal analysis logging
-    TradingLogs::log_signal_analysis_detailed(data, signal_decision, config);
-
     FilterResult filter_result = evaluate_trading_filters(data, config);
-    TradingLogs::log_filters(filter_result, config, data);
-    TradingLogs::log_summary(data, signal_decision, filter_result, config.strategy.symbol);
-
-    // CSV logging for signal analysis
-    try {
-        std::string timestamp = TimeUtils::get_current_human_readable_time();
-        if (config.trading_mode.primary_symbol.empty()) {
-            throw std::runtime_error("Primary symbol is required but not configured");
-        }
-        std::string symbol = config.trading_mode.primary_symbol;
-
-        // Log signals to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_signal(
-                timestamp, symbol, signal_decision.buy, signal_decision.sell,
-                signal_decision.signal_strength, signal_decision.signal_reason
-            );
-        }
-
-        // Log filters to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_filters(
-                timestamp, symbol, filter_result.atr_pass, filter_result.atr_ratio,
-                config.strategy.use_absolute_atr_threshold ?
-                    config.strategy.atr_absolute_minimum_threshold :
-                    config.strategy.entry_signal_atr_multiplier,
-                filter_result.vol_pass, filter_result.vol_ratio,
-                filter_result.doji_pass
-            );
-        }
-
-        // Log market data to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_market_data(
-                timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
-                data.curr.v, data.atr
-            );
-        }
-
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("CSV logging error in signal analysis: " + std::string(e.what()), false, 0);
-    } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in signal analysis", false, 0);
-    }
+    
+    // Delegate all logging to dedicated logging service
+    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_complete(data, signal_decision, filter_result, config);
+    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(data, signal_decision, filter_result, config);
 }
 
 std::pair<PositionSizing, SignalDecision> process_position_sizing(const ProcessedData& data, double equity, int current_qty, double buying_power, const SystemConfig& config) {

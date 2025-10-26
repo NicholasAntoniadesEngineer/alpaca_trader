@@ -83,7 +83,7 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Process trading cycle
-                if (!data_fetcher.get_data_validator().validate_market_data(market)) {
+                if (!data_fetcher.get_market_data_validator().validate_market_snapshot(market)) {
                     countdown_to_next_cycle();
                     continue;
                 }

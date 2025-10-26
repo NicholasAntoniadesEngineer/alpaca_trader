@@ -26,8 +26,11 @@ SOURCES = src/main.cpp \
   src/core/trader/analysis/indicators.cpp \
   src/core/trader/data/market_processing.cpp \
   src/core/trader/data/market_data_fetcher.cpp \
-  src/core/trader/data/data_validator.cpp \
+  src/core/trader/data/market_data_manager.cpp \
+  src/core/trader/data/market_data_validator.cpp \
+  src/core/trader/data/bars_data_manager.cpp \
   src/core/trader/data/market_session_manager.cpp \
+  src/core/trader/analysis/signal_processor.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
@@ -44,7 +47,8 @@ SOURCES = src/main.cpp \
   src/core/logging/async_logger.cpp \
   src/core/logging/csv_bars_logger.cpp \
   src/core/logging/csv_trade_logger.cpp \
-  src/core/logging/trading_logs.cpp \
+      src/core/logging/trading_logs.cpp \
+      src/core/logging/signal_analysis_logs.cpp \
   src/core/logging/thread_logs.cpp \
   src/core/logging/startup_logs.cpp \
   src/configs/thread_config.cpp \

@@ -7,7 +7,9 @@
 #include "api/general/api_manager.hpp"
 #include "account_manager.hpp"
 #include "market_processing.hpp"
-#include "data_validator.hpp"
+#include "market_data_manager.hpp"
+#include "market_data_validator.hpp"
+#include "bars_data_manager.hpp"
 #include "market_session_manager.hpp"
 #include "core/logging/trading_logs.hpp"
 #include <memory>
@@ -38,10 +40,10 @@ public:
     // Market validation methods
     bool is_data_fresh() const;
 
-    // Access to data validator
-    DataValidator& get_data_validator() { return data_validator; }
-    
-    // Access to session manager
+    // Access to sub-managers
+    MarketDataManager& get_market_data_manager() { return market_data_manager; }
+    MarketDataValidator& get_market_data_validator() { return market_data_validator; }
+    BarsDataManager& get_bars_data_manager() { return bars_data_manager; }
     MarketSessionManager& get_session_manager() { return session_manager; }
     
 private:
@@ -49,7 +51,11 @@ private:
     API::ApiManager& api_manager;
     AccountManager& account_manager;
     const SystemConfig& config;
-    DataValidator data_validator;
+    
+    // Sub-managers for specialized functionality
+    MarketDataManager market_data_manager;
+    MarketDataValidator market_data_validator;
+    BarsDataManager bars_data_manager;
     MarketSessionManager session_manager;
     
     // Data synchronization state (set by TradingOrchestrator)

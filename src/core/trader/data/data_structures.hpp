@@ -60,6 +60,7 @@ struct ProcessedData {
     PositionDetails pos_details;
     int open_orders = 0;
     double exposure_pct = 0.0;
+    bool is_doji = false;
     
     // Default constructor
     ProcessedData() = default;
