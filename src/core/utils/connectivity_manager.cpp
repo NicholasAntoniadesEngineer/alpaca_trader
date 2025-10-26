@@ -116,3 +116,12 @@ void ConnectivityManager::reset_connectivity_state() {
 bool ConnectivityManager::check_connectivity() const {
     return !is_connectivity_outage();
 }
+
+bool ConnectivityManager::check_connectivity_status() const {
+    if (is_connectivity_outage()) {
+        std::string connectivity_msg = "Connectivity outage - status: " + get_status_string();
+        // Note: This method doesn't have access to TradingLogs, so we'll let the caller handle logging
+        return false;
+    }
+    return true;
+}

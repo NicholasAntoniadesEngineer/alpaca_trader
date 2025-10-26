@@ -35,7 +35,9 @@ void TradingOrchestrator::execute_trading_loop() {
         while (data_sync.running && data_sync.running->load()) {
             try {
                 // Check connectivity status
-                if (!check_connectivity_status()) {
+                if (!ConnectivityManager::instance().check_connectivity_status()) {
+                    std::string connectivity_msg = "Connectivity outage - status: " + ConnectivityManager::instance().get_status_string();
+                    TradingLogs::log_market_status(false, connectivity_msg);
                     trading_engine.handle_trading_halt("Connectivity issues detected");
                     countdown_to_next_cycle();
                     continue;
@@ -81,12 +83,12 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Process trading cycle
-                if (!data_fetcher.validate_market_data(market)) {
+                if (!data_fetcher.get_data_validator().validate_market_data(market)) {
                     countdown_to_next_cycle();
                     continue;
                 }
                 ProcessedData processed_data(market, account);
-                trading_engine.handle_market_close_positions(processed_data);
+                trading_engine.get_order_engine().handle_market_close_positions(processed_data);
                 trading_engine.execute_trading_decision(processed_data, account.equity);
 
                 // Increment iteration counter
@@ -156,16 +158,6 @@ void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& confi
     if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
         TradingLogs::log_market_data_result_table("Invalid data sync configuration", false, 0);
     }
-}
-
-bool TradingOrchestrator::check_connectivity_status() {
-    auto& connectivity = ConnectivityManager::instance();
-    if (connectivity.is_connectivity_outage()) {
-        std::string connectivity_msg = "Connectivity outage - status: " + connectivity.get_status_string();
-        TradingLogs::log_market_status(false, connectivity_msg);
-        return false;
-    }
-    return true;
 }
 
 } // namespace Core

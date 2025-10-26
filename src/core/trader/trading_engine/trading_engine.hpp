@@ -20,10 +20,11 @@ class TradingEngine {
 public:
     TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager);
     
-    bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
-    void handle_market_close_positions(const ProcessedData& data);
+
+    // Access to order execution engine for market close operations
+    OrderExecutionEngine& get_order_engine() { return order_engine; }
 
 private:
     // Core dependencies
@@ -43,8 +44,6 @@ private:
     
     
     // Trading decision methods
-    void process_signal_analysis(const ProcessedData& data);
-    void process_position_sizing(const ProcessedData& data, double equity, int current_qty);
     void execute_trade_if_valid(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& signal_decision);
     void check_and_execute_profit_taking(const ProcessedData& data, int current_qty);
     

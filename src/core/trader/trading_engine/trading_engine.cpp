@@ -21,14 +21,6 @@ TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, 
       order_engine(api_mgr, account_mgr, cfg, data_sync),
       data_fetcher(api_mgr, account_mgr, cfg) {}
 
-bool TradingEngine::check_trading_permissions(const ProcessedData& data, double equity) {
-    if (!ConnectivityManager::instance().check_connectivity()) {
-        return false;
-    }
-    
-    return risk_manager.validate_risk_conditions(data, equity);
-}
-
 void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
     // Input validation
     if (config.trading_mode.primary_symbol.empty()) {
@@ -44,7 +36,7 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     TradingLogs::log_signal_analysis_start(config.trading_mode.primary_symbol);
 
     // Check if market is open before making any trading decisions
-    if (!data_fetcher.is_market_open()) {
+    if (!data_fetcher.get_session_manager().is_market_open()) {
         TradingLogs::log_market_status(false, "Market is closed - no trading decisions");
         TradingLogs::log_signal_analysis_complete();
         return;
@@ -66,10 +58,12 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
     }
     
     // Process signal analysis
-    process_signal_analysis(data);
+    process_signal_analysis(data, config);
     
     // Process position sizing and execute if valid
-    process_position_sizing(data, equity, current_qty);
+    double buying_power = account_manager.fetch_buying_power();
+    auto [sizing, signal_decision] = process_position_sizing(data, equity, current_qty, buying_power, config);
+    execute_trade_if_valid(data, current_qty, sizing, signal_decision);
     
     TradingLogs::log_signal_analysis_complete();
 }
@@ -91,121 +85,6 @@ void TradingEngine::handle_trading_halt(const std::string& reason) {
     
     perform_halt_countdown(halt_seconds);
     TradingLogs::end_inline_status();
-}
-
-void TradingEngine::process_signal_analysis(const ProcessedData& data) {
-SignalDecision signal_decision = detect_trading_signals(data, config);
-
-    // Log candle data and enhanced signals table
-    TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
-    TradingLogs::log_signals_table_enhanced(signal_decision);
-
-    // Enhanced detailed signal analysis logging
-    TradingLogs::log_signal_analysis_detailed(data, signal_decision, config);
-
-FilterResult filter_result = evaluate_trading_filters(data, config);
-    TradingLogs::log_filters(filter_result, config, data);
-    TradingLogs::log_summary(data, signal_decision, filter_result, config.strategy.symbol);
-
-    // CSV logging for signal analysis
-    try {
-        std::string timestamp = TimeUtils::get_current_human_readable_time();
-        if (config.trading_mode.primary_symbol.empty()) {
-            throw std::runtime_error("Primary symbol is required but not configured");
-        }
-        std::string symbol = config.trading_mode.primary_symbol;
-
-        // Log signals to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_signal(
-                timestamp, symbol, signal_decision.buy, signal_decision.sell,
-                signal_decision.signal_strength, signal_decision.signal_reason
-            );
-        }
-
-        // Log filters to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_filters(
-                timestamp, symbol, filter_result.atr_pass, filter_result.atr_ratio,
-                config.strategy.use_absolute_atr_threshold ?
-                    config.strategy.atr_absolute_minimum_threshold :
-                    config.strategy.entry_signal_atr_multiplier,
-                filter_result.vol_pass, filter_result.vol_ratio,
-                filter_result.doji_pass
-            );
-        }
-
-        // Log market data to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_market_data(
-                timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
-                data.curr.v, data.atr
-            );
-        }
-
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("CSV logging error in signal analysis: " + std::string(e.what()), false, 0);
-    } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in signal analysis", false, 0);
-    }
-}
-
-void TradingEngine::process_position_sizing(const ProcessedData& data, double equity, int current_qty) {
-    double buying_power = account_manager.fetch_buying_power();
-PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, config, buying_power);
-
-    if (!evaluate_trading_filters(data, config).all_pass) {
-        TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
-
-        // CSV logging for position sizing when filters not met
-        try {
-            std::string timestamp = TimeUtils::get_current_human_readable_time();
-            if (config.trading_mode.primary_symbol.empty()) {
-            throw std::runtime_error("Primary symbol is required but not configured");
-        }
-        std::string symbol = config.trading_mode.primary_symbol;
-
-            if (AlpacaTrader::Logging::g_csv_trade_logger) {
-                AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
-                    timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                    sizing.quantity * data.curr.c, buying_power
-                );
-            }
-        } catch (const std::exception& e) {
-            TradingLogs::log_market_data_result_table("CSV logging error in position sizing: " + std::string(e.what()), false, 0);
-        } catch (...) {
-            TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing", false, 0);
-        }
-        return;
-    }
-    
-    TradingLogs::log_filters_passed();
-    TradingLogs::log_current_position(current_qty, config.strategy.symbol);
-    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
-    TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
-
-SignalDecision signal_decision = detect_trading_signals(data, config);
-    execute_trade_if_valid(data, current_qty, sizing, signal_decision);
-
-    // CSV logging for successful position sizing
-    try {
-        std::string timestamp = TimeUtils::get_current_human_readable_time();
-        if (config.trading_mode.primary_symbol.empty()) {
-            throw std::runtime_error("Primary symbol is required but not configured");
-        }
-        std::string symbol = config.trading_mode.primary_symbol;
-
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
-                timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                sizing.quantity * data.curr.c, buying_power
-            );
-        }
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("CSV logging error in successful position sizing: " + std::string(e.what()), false, 0);
-    } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing", false, 0);
-    }
 }
 
 void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& signal_decision) {
@@ -259,36 +138,6 @@ PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
 PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
         }
     }
-}
-
-void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
-    // Check if market is approaching close - simplified implementation
-    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
-        // Market is still open, no need to close positions yet
-        return;
-    }
-    
-    int current_qty = data.pos_details.qty;
-    if (current_qty == 0) {
-        return;
-    }
-    
-    int minutes_until_close = 5; // Simplified - would need proper market close time calculation
-    if (minutes_until_close > 0) {
-        TradingLogs::log_market_close_warning(minutes_until_close);
-    }
-    
-    std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
-    TradingLogs::log_market_close_position_closure(current_qty, config.trading_mode.primary_symbol, side);
-    
-    try {
-        api_manager.close_position(config.trading_mode.primary_symbol, current_qty);
-        TradingLogs::log_market_status(true, "Market close position closure executed successfully");
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(e.what()));
-    }
-    
-    TradingLogs::log_market_close_complete();
 }
 
 } // namespace Core

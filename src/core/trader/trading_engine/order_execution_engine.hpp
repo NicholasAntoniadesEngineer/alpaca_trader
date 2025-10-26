@@ -23,11 +23,14 @@ public:
     // Order side enumeration
     enum class OrderSide { Buy, Sell };
     
-    // Public method for profit taking
-    void execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing);
-    
-    // Public validation method
-    bool validate_trade_feasibility(const PositionSizing& sizing, double buying_power, double current_price) const;
+        // Public method for profit taking
+        void execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing);
+
+        // Public validation method
+        bool validate_trade_feasibility(const PositionSizing& sizing, double buying_power, double current_price) const;
+
+        // Market close position management
+        void handle_market_close_positions(const ProcessedData& data);
     
 private:
     // Core dependencies

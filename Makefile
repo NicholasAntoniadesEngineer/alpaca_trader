@@ -26,6 +26,8 @@ SOURCES = src/main.cpp \
   src/core/trader/analysis/indicators.cpp \
   src/core/trader/data/market_processing.cpp \
   src/core/trader/data/market_data_fetcher.cpp \
+  src/core/trader/data/data_validator.cpp \
+  src/core/trader/data/market_session_manager.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \

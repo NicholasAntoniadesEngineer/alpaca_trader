@@ -16,16 +16,17 @@ using AlpacaTrader::Logging::MarketDataLogs;
 using AlpacaTrader::Logging::TradingLogs;
 
 MarketDataFetcher::MarketDataFetcher(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg)
-    : api_manager(api_mgr), account_manager(account_mgr), config(cfg) {}
+    : api_manager(api_mgr), account_manager(account_mgr), config(cfg), 
+      data_validator(cfg), session_manager(cfg, api_mgr) {}
 
 ProcessedData MarketDataFetcher::fetch_and_process_data() {
     ProcessedData data;
     MarketDataLogs::log_market_data_fetch_table(config.strategy.symbol, config.logging.log_file);
 
     // Fetch market bars and validate data sufficiency
-    if (!fetch_and_validate_market_bars(data)) {
-        return data;
-    }
+        if (!data_validator.fetch_and_validate_market_bars(data, api_manager, config.strategy.symbol)) {
+            return data;
+        }
 
     // Compute technical indicators
     if (!AlpacaTrader::Core::compute_technical_indicators(data, cached_bars, config)) {
@@ -173,15 +174,6 @@ bool MarketDataFetcher::wait_for_data_availability(MarketDataSyncState& sync_sta
     return true;
 }
 
-bool MarketDataFetcher::is_market_open() const {
-    if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
-        TradingLogs::log_market_status(false, "Market is closed - outside trading hours");
-        return false;
-    }
-    TradingLogs::log_market_status(true, "Market is open - trading allowed");
-    return true;
-}
-
 bool MarketDataFetcher::is_data_fresh() const {
     // Check if sync_state_ptr is properly initialized
     if (!sync_state_ptr || !sync_state_ptr->market_data_timestamp) {
@@ -219,69 +211,6 @@ bool MarketDataFetcher::is_data_fresh() const {
     }
     
     return fresh;
-}
-
-bool MarketDataFetcher::validate_market_data(const MarketSnapshot& market) const {
-    // Check if this is a default/empty MarketSnapshot (no data available)
-    if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 && 
-        market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
-        MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "No Data Available",
-            "Symbol may not exist or market is closed",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    // Validate that market data is not null/empty
-    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
-        MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "NaN or infinite values detected in market data",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    if (market.curr.c <= 0.0) {
-        MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "Price is zero or negative",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    if (market.atr <= 0.0) {
-        MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Insufficient Data",
-            "ATR is zero or negative - insufficient volatility data for trading",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
-    if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
-        MarketDataLogs::log_market_data_failure_summary(
-            config.trading_mode.primary_symbol,
-            "Invalid Data",
-            "OHLC relationship violation - invalid price data structure",
-            0,
-            config.logging.log_file
-        );
-        return false;
-    }
-
-    return true;
 }
 
 } // namespace Core

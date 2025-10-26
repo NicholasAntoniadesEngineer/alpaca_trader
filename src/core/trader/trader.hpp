@@ -40,7 +40,6 @@ private:
 
     double initialize_trading_session();
     void countdown_to_next_cycle();
-    bool check_connectivity_status();
 
 public:
     TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr);
