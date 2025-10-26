@@ -8,15 +8,11 @@
 namespace AlpacaTrader {
 namespace API {
 
-ApiManager::ApiManager() = default;
-
 ApiManager::~ApiManager() {
     shutdown();
 }
 
-bool ApiManager::initialize(const Config::MultiApiConfig& multi_config) {
-    config = multi_config;
-    
+ApiManager::ApiManager(const Config::MultiApiConfig& multi_config) : config(multi_config) {
     if (config.providers.empty()) {
         throw std::runtime_error("No API providers configured");
     }
@@ -37,8 +33,6 @@ bool ApiManager::initialize(const Config::MultiApiConfig& multi_config) {
     if (!has_provider(Config::ApiProvider::ALPACA_TRADING)) {
         throw std::runtime_error("Alpaca trading provider is required but not configured");
     }
-    
-    return true;
 }
 
 void ApiManager::shutdown() {

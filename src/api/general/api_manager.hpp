@@ -22,10 +22,9 @@ private:
     Config::ApiProvider determine_provider_for_trading() const;
 
 public:
-    ApiManager();
+    explicit ApiManager(const Config::MultiApiConfig& multi_config);
     ~ApiManager();
     
-    bool initialize(const Config::MultiApiConfig& multi_config);
     void shutdown();
     
     bool has_provider(Config::ApiProvider provider) const;

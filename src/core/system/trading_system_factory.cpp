@@ -15,10 +15,7 @@ TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_tradi
     Config::MultiApiConfig filtered_api_config = configure_providers_for_mode(config);
     
     // Create API manager
-    components.api_manager = std::make_unique<API::ApiManager>();
-    if (!components.api_manager->initialize(filtered_api_config)) {
-        throw std::runtime_error("Failed to initialize API manager");
-    }
+    components.api_manager = std::make_unique<API::ApiManager>(filtered_api_config);
     
     // Create account manager
     AlpacaTrader::Config::AccountManagerConfig account_config{
