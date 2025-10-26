@@ -4,6 +4,7 @@
 #include "core/logging/csv_trade_logger.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include "core/utils/time_utils.hpp"
+#include "core/trader/data/market_processing.hpp"
 #include <thread>
 #include <chrono>
 #include <iostream>
@@ -15,7 +16,7 @@ using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
 TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
-    : config(cfg), account_manager(account_mgr),
+    : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       trading_engine(cfg, api_mgr, account_mgr),
       risk_manager(cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {
@@ -85,7 +86,7 @@ void TradingOrchestrator::execute_trading_loop() {
                     continue;
                 }
                 ProcessedData processed_data(market, account);
-                trading_engine.handle_market_close_positions(processed_data);
+                MarketProcessing::handle_market_close_positions(processed_data, api_manager, config);
                 trading_engine.execute_trading_decision(processed_data, account.equity);
 
                 // Increment iteration counter

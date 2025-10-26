@@ -1,6 +1,7 @@
 #include "account_manager.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
+#include "core/logging/market_data_logs.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 #include <string>
@@ -12,6 +13,7 @@ namespace AlpacaTrader {
 namespace Core {
 
 using AlpacaTrader::Logging::AccountLogs;
+using AlpacaTrader::Logging::MarketDataLogs;
 
 AccountManager::AccountManager(const AccountManagerConfig& cfg, API::ApiManager& api_mgr)
     : logging(cfg.logging), strategy(cfg.strategy), api_manager(api_mgr),
@@ -237,6 +239,17 @@ std::string AccountManager::replace_url_placeholder(const std::string& url, cons
         result.replace(pos, 8, symbol);
     }
     return result;
+}
+
+void AccountManager::fetch_account_and_position_data(ProcessedData& data) const {
+    MarketDataLogs::log_market_data_attempt_table("Getting position and account data", logging.log_file);
+    
+    SymbolRequest sr{strategy.symbol};
+    data.pos_details = fetch_position_details(sr);
+    data.open_orders = fetch_open_orders_count(sr);
+    
+    double equity = fetch_account_equity();
+    data.exposure_pct = MarketProcessing::calculate_exposure_percentage(data.pos_details.current_value, equity);
 }
 
 } // namespace Core

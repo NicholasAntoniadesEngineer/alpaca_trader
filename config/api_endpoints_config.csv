@@ -2,17 +2,8 @@
 # MULTI-API TRADING CONFIGURATION
 # ========================================================================
 # Complete configuration supporting both STOCKS and CRYPTO trading
-# Switch between modes by changing trading_mode.mode and primary_symbol
-# ========================================================================
 
 # ========================================================================
-# TRADING MODE CONFIGURATION - CHANGE THESE TO SWITCH MODES
-# ========================================================================
-
-# STOCKS MODE: Set mode=stocks, primary_symbol=AAPL (or any stock symbol)
-# CRYPTO MODE: Set mode=crypto, primary_symbol=BTC/USD (or any crypto pair)
-trading_mode.mode,stocks
-trading_mode.primary_symbol,AAPL
 
 # ========================================================================
 # ALPACA TRADING API CONFIGURATION

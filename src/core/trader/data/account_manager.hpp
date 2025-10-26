@@ -6,6 +6,7 @@
 #include "core/threads/thread_register.hpp"
 #include "data_structures.hpp"
 #include "api/general/api_manager.hpp"
+#include "market_processing.hpp"
 #include <string>
 #include <chrono>
 #include <mutex>
@@ -51,6 +52,7 @@ public:
     AccountSnapshot fetch_account_snapshot() const;
     std::pair<AccountInfo, AccountSnapshot> fetch_account_data_bundled() const;
     AccountInfo fetch_account_info() const;
+    void fetch_account_and_position_data(ProcessedData& data) const;
 
 private:
     const LoggingConfig& logging;

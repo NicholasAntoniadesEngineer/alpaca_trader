@@ -18,8 +18,6 @@ using AlpacaTrader::Logging::TradingLogs;
 TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
     : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       order_engine(api_mgr, account_mgr, cfg, data_sync),
-      position_manager(api_mgr, cfg),
-      trade_validator(cfg),
       price_manager(api_mgr, cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {}
 
@@ -362,7 +360,7 @@ void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int curren
     }
     
     double buying_power = account_manager.fetch_buying_power();
-    if (!trade_validator.validate_trade_feasibility(sizing, buying_power, data.curr.c)) {
+    if (!validate_trade_feasibility(sizing, buying_power, data.curr.c)) {
         TradingLogs::log_trade_validation_failed("insufficient buying power");
         return;
     }
@@ -377,9 +375,22 @@ void TradingEngine::perform_halt_countdown(int seconds) const {
     }
 }
 
-void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
-    position_manager.handle_market_close_positions(data);
+bool TradingEngine::validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const {
+    if (sizing.quantity <= 0) {
+        return false;
+    }
+    
+    double position_value = sizing.quantity * current_price;
+    double required_buying_power = position_value * config.strategy.buying_power_validation_safety_margin;
+    
+    if (buying_power < required_buying_power) {
+        TradingLogs::log_insufficient_buying_power(required_buying_power, buying_power, sizing.quantity, current_price);
+        return false;
+    }
+    
+    return true;
 }
+
 
 void TradingEngine::check_and_execute_profit_taking(const ProcessedData& data, int current_qty) {
     // Get unrealized profit/loss from position details

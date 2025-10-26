@@ -16,6 +16,7 @@ public:
     
     // Position logging
     static void log_current_positions_table(int qty, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file);
+    static void log_position_data_and_warnings(int qty, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file);
     
     // Data synchronization logging
     static void log_sync_state_error(const std::string& error_message, const std::string& log_file);

@@ -47,28 +47,30 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         if (!std::getline(ss, value)) continue;
         key = trim(key); value = trim(value);
 
-        // Trading Mode Configuration
-        if (key == "trading_mode.mode") {
-            if (value.empty()) {
-                throw std::runtime_error("Trading mode is required but not provided");
+        // Trading Mode Configuration (only from strategy_config.csv)
+        if (csv_path.find("strategy_config.csv") != std::string::npos) {
+            if (key == "trading_mode.mode") {
+                if (value.empty()) {
+                    throw std::runtime_error("Trading mode is required but not provided");
+                }
+                cfg.trading_mode.mode = AlpacaTrader::Config::TradingModeConfig::parse_mode(value);
+                // Map trading mode to strategy crypto asset indicator
+                cfg.strategy.is_crypto_asset = (cfg.trading_mode.mode == AlpacaTrader::Config::TradingMode::CRYPTO);
             }
-            cfg.trading_mode.mode = AlpacaTrader::Config::TradingModeConfig::parse_mode(value);
-        }
-        else if (key == "trading_mode.primary_symbol") {
-            if (value.empty()) {
-                throw std::runtime_error("Primary symbol is required but not provided");
+            else if (key == "trading_mode.primary_symbol") {
+                if (value.empty()) {
+                    throw std::runtime_error("Primary symbol is required but not provided");
+                }
+                cfg.trading_mode.primary_symbol = value;
+                // Map primary symbol to strategy symbol
+                cfg.strategy.symbol = value;
             }
-            cfg.trading_mode.primary_symbol = value;
         }
 
         // All API configuration handled by multi_api section
 
-        // Strategy Configuration - target and session
-        else if (key == "target.symbol") {
-            cfg.strategy.symbol = value;
-        }
-        else if (key == "strategy.is_crypto_asset") cfg.strategy.is_crypto_asset = (value == "true");
-        else if (key == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(value);
+        // Strategy Configuration - session and other settings
+        if (key == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(value);
         else if (key == "session.market_open_hour") cfg.strategy.market_open_hour = std::stoi(value);
         else if (key == "session.market_open_minute") cfg.strategy.market_open_minute = std::stoi(value);
         else if (key == "session.market_close_hour") cfg.strategy.market_close_hour = std::stoi(value);
@@ -283,13 +285,10 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
 
     file.close();
 
-    // Validate symbol consistency
-    if (!cfg.trading_mode.primary_symbol.empty() && !cfg.strategy.symbol.empty()) {
-        if (cfg.trading_mode.primary_symbol != cfg.strategy.symbol) {
-            log_message("ERROR: Symbol mismatch - trading_mode.primary_symbol (" + cfg.trading_mode.primary_symbol + 
-                       ") must match target.symbol (" + cfg.strategy.symbol + ")", "");
-            return false;
-        }
+    // Validate symbol consistency (single source of truth)
+    if (cfg.trading_mode.primary_symbol.empty()) {
+        log_message("ERROR: Primary trading symbol missing (provide via strategy_config.csv)", "");
+        return false;
     }
 
     // Log successful loading of all discovered threads
@@ -339,8 +338,8 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    // Validate strategy configuration
-    if (config.strategy.symbol.empty()) {
+    // Validate strategy configuration (single source of truth)
+    if (config.trading_mode.primary_symbol.empty()) {
         error_message = "Trading symbol missing (provide via strategy_config.csv)";
         return false;
     }
@@ -353,15 +352,15 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    // Validate trading mode and symbol consistency
+    // Validate trading mode configuration (single source of truth)
     if (config.trading_mode.primary_symbol.empty()) {
-        error_message = "Primary trading symbol missing (provide via api_endpoints_config.csv)";
+        error_message = "Trading mode configuration missing (provide via strategy_config.csv)";
         return false;
     }
     
-    // Validate crypto asset configuration
-    if (config.strategy.symbol.find('/') != std::string::npos && !config.strategy.is_crypto_asset) {
-        error_message = "Crypto symbol format detected (" + config.strategy.symbol + ") but is_crypto_asset is false - set is_crypto_asset=true in strategy_config.csv";
+    // Validate crypto asset configuration (single source of truth)
+    if (config.trading_mode.primary_symbol.find('/') != std::string::npos && config.trading_mode.mode != AlpacaTrader::Config::TradingMode::CRYPTO) {
+        error_message = "Crypto symbol format detected (" + config.trading_mode.primary_symbol + ") but trading_mode.mode is not crypto - set trading_mode.mode=crypto in strategy_config.csv";
         return false;
     }
     if (config.strategy.atr_calculation_period < 2) {

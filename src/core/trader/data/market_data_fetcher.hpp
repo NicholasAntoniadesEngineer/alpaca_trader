@@ -51,10 +51,6 @@ private:
     
     // Data fetching helper methods
     bool fetch_and_validate_market_bars(ProcessedData& data);
-    bool compute_technical_indicators(ProcessedData& data);
-    void fetch_account_and_position_data(ProcessedData& data);
-    void log_position_data_and_warnings(const ProcessedData& data);
-    double calculate_exposure_percentage(double current_value, double equity) const;
     
     // Synchronization helper methods
     bool is_sync_state_valid() const;

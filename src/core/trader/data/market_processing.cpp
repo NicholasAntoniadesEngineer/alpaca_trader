@@ -1,5 +1,8 @@
 #include "market_processing.hpp"
 #include "core/trader/analysis/indicators.hpp"
+#include "core/logging/trading_logs.hpp"
+#include "core/logging/market_data_logs.hpp"
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -42,6 +45,60 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemC
 
 ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) {
     return ProcessedData(market, account);
+}
+
+void handle_market_close_positions(const ProcessedData& data, API::ApiManager& api_manager, const SystemConfig& config) {
+    using AlpacaTrader::Logging::TradingLogs;
+    
+    // Check if market is approaching close - simplified implementation
+    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
+        // Market is still open, no need to close positions yet
+        return;
+    }
+    
+    int current_qty = data.pos_details.qty;
+    if (current_qty == 0) {
+        return;
+    }
+    
+    int minutes_until_close = 5; // Simplified - would need proper market close time calculation
+    if (minutes_until_close > 0) {
+        TradingLogs::log_market_close_warning(minutes_until_close);
+    }
+    
+    std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
+    TradingLogs::log_market_close_position_closure(current_qty, config.trading_mode.primary_symbol, side);
+    
+    try {
+        api_manager.close_position(config.trading_mode.primary_symbol, current_qty);
+        TradingLogs::log_market_status(true, "Market close position closure executed successfully");
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(e.what()));
+    }
+    
+    TradingLogs::log_market_close_complete();
+}
+
+bool compute_technical_indicators(ProcessedData& data, const std::vector<Bar>& bars, const SystemConfig& config) {
+    using AlpacaTrader::Logging::MarketDataLogs;
+    
+    MarketDataLogs::log_market_data_attempt_table("Computing indicators", config.logging.log_file);
+    
+    data = compute_processed_data(bars, config);
+    
+    if (data.atr == 0.0) {
+        MarketDataLogs::log_market_data_result_table("Indicator computation failed", false, 0, config.logging.log_file);
+        return false;
+    }
+    
+    return true;
+}
+
+double calculate_exposure_percentage(double current_value, double equity) {
+    if (equity <= 0.0) {
+        return 0.0;
+    }
+    return (std::abs(current_value) / equity) * 100.0;
 }
 
 } // namespace MarketProcessing

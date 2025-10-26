@@ -9,11 +9,9 @@
 # ========================================================================
 # Trading symbol and market session settings
 
-# Target symbol for trading
-target.symbol,AAPL
-
-# Asset class configuration
-strategy.is_crypto_asset,false
+# Trading mode configuration 
+trading_mode.mode,crypto
+trading_mode.primary_symbol,BTC/USD
 
 
 # Market session timing (Eastern Time)

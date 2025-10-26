@@ -64,6 +64,14 @@ void MarketDataLogs::log_current_positions_table(int qty, double current_value, 
     log_message("|", log_file);
 }
 
+void MarketDataLogs::log_position_data_and_warnings(int qty, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
+    log_current_positions_table(qty, current_value, unrealized_pl, exposure_pct, open_orders, log_file);
+
+    if (qty != 0 && open_orders == 0) {
+        log_market_data_result_table("Missing bracket order warning", true, 0, log_file);
+    }
+}
+
 void MarketDataLogs::log_sync_state_error(const std::string& error_message, const std::string& log_file) {
     log_message("ERROR: " + error_message, log_file);
 }

@@ -7,8 +7,6 @@
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
 #include "order_execution_engine.hpp"
-#include "position_manager.hpp"
-#include "trade_validator.hpp"
 #include "core/trader/analysis/price_manager.hpp"
 #include "core/trader/data/market_data_fetcher.hpp"
 #include "core/trader/data/data_sync_structures.hpp"
@@ -26,7 +24,6 @@ public:
     void execute_trading_decision(const ProcessedData& data, double equity);
     void handle_trading_halt(const std::string& reason);
     bool validate_market_data(const MarketSnapshot& market) const;
-    void handle_market_close_positions(const ProcessedData& data);
     void setup_data_synchronization(const DataSyncConfig& config);
 
 private:
@@ -35,8 +32,6 @@ private:
     AccountManager& account_manager;
     API::ApiManager& api_manager;
     OrderExecutionEngine order_engine;
-    PositionManager position_manager;
-    TradeValidator trade_validator;
     PriceManager price_manager;
     MarketDataFetcher data_fetcher;
     
@@ -61,6 +56,7 @@ private:
     
     // Utility methods
     void perform_halt_countdown(int seconds) const;
+    bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
 };
 
 } // namespace Core

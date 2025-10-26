@@ -25,15 +25,22 @@ ProcessedData MarketDataFetcher::fetch_and_process_data() {
     }
 
     // Compute technical indicators
-    if (!compute_technical_indicators(data)) {
+    if (!MarketProcessing::compute_technical_indicators(data, cached_bars, config)) {
         return data;
     }
 
     // Fetch account and position data
-    fetch_account_and_position_data(data);
+    account_manager.fetch_account_and_position_data(data);
 
     // Log current positions and check for warnings
-    log_position_data_and_warnings(data);
+    MarketDataLogs::log_position_data_and_warnings(
+        data.pos_details.qty, 
+        data.pos_details.current_value, 
+        data.pos_details.unrealized_pl, 
+        data.exposure_pct, 
+        data.open_orders, 
+        config.logging.log_file
+    );
 
     return data;
 }
@@ -121,68 +128,6 @@ bool MarketDataFetcher::fetch_and_validate_market_bars(ProcessedData& data) {
 
 
     return true;
-}
-
-/**
- * Computes technical indicators using the cached market bars.
- * Returns false if indicator computation fails.
- */
-bool MarketDataFetcher::compute_technical_indicators(ProcessedData& data) {
-    MarketDataLogs::log_market_data_attempt_table("Computing indicators", config.logging.log_file);
-    
-    data = MarketProcessing::compute_processed_data(cached_bars, config);
-    
-    if (data.atr == 0.0) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed", false, 0, config.logging.log_file);
-        return false;
-    }
-    
-    return true;
-}
-
-/**
- * Fetches current account and position data from the account manager.
- * Calculates exposure percentage based on current position value and account equity.
- */
-void MarketDataFetcher::fetch_account_and_position_data(ProcessedData& data) {
-    MarketDataLogs::log_market_data_attempt_table("Getting position and account data", config.logging.log_file);
-    
-    SymbolRequest sr{config.strategy.symbol};
-    data.pos_details = account_manager.fetch_position_details(sr);
-    data.open_orders = account_manager.fetch_open_orders_count(sr);
-    
-    double equity = account_manager.fetch_account_equity();
-    data.exposure_pct = calculate_exposure_percentage(data.pos_details.current_value, equity);
-}
-
-/**
- * Logs current position data and checks for trading warnings.
- * Issues a warning if there's a position without corresponding bracket orders.
- */
-void MarketDataFetcher::log_position_data_and_warnings(const ProcessedData& data) {
-    MarketDataLogs::log_current_positions_table(
-        data.pos_details.qty, 
-        data.pos_details.current_value, 
-        data.pos_details.unrealized_pl, 
-        data.exposure_pct, 
-        data.open_orders, 
-        config.logging.log_file
-    );
-
-    if (data.pos_details.qty != 0 && data.open_orders == 0) {
-        MarketDataLogs::log_market_data_result_table("Missing bracket order warning", true, 0, config.logging.log_file);
-    }
-}
-
-/**
- * Calculates the exposure percentage of the current position relative to account equity.
- * Returns 0.0 if equity is zero or negative.
- */
-double MarketDataFetcher::calculate_exposure_percentage(double current_value, double equity) const {
-    if (equity <= 0.0) {
-        return 0.0;
-    }
-    return (std::abs(current_value) / equity) * 100.0;
 }
 
 // Synchronization helper methods
