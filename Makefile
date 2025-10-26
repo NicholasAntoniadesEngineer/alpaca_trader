@@ -22,8 +22,6 @@ SOURCES = src/main.cpp \
   src/core/trader/trading_engine/trading_engine.cpp \
   src/core/trader/analysis/risk_manager.cpp \
   src/core/trader/trading_engine/order_execution_engine.cpp \
-  src/core/trader/trading_engine/position_manager.cpp \
-  src/core/trader/trading_engine/trade_validator.cpp \
   src/core/trader/analysis/strategy_logic.cpp \
   src/core/trader/analysis/risk_logic.cpp \
   src/core/trader/analysis/indicators.cpp \
