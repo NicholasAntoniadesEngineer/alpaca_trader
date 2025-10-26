@@ -7,8 +7,6 @@
 namespace AlpacaTrader {
 namespace Core {
 
-namespace StrategyLogic {
-
 // Helper function to detect doji pattern
 bool detect_doji_pattern(double open, double high, double low, double close, double doji_threshold) {
     double body_size = std::abs(close - open);
@@ -372,7 +370,6 @@ ExitTargets compute_exit_targets(const std::string& side, double entry_price, do
     return targets;
 }
 
-} // namespace StrategyLogic
 } // namespace Core
 } // namespace AlpacaTrader
 

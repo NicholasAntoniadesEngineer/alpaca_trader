@@ -18,16 +18,16 @@ class OrderExecutionEngine {
 public:
     OrderExecutionEngine(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync);
     
-    void execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd);
+    void execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd);
     
     // Order side enumeration
     enum class OrderSide { Buy, Sell };
     
     // Public method for profit taking
-    void execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing);
+    void execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing);
     
     // Public validation method
-    bool validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const;
+    bool validate_trade_feasibility(const PositionSizing& sizing, double buying_power, double current_price) const;
     
 private:
     // Core dependencies
@@ -41,8 +41,8 @@ private:
     static constexpr int MAX_POSITION_VERIFICATION_ATTEMPTS = 3;
     
     // Core execution methods
-    void execute_order(OrderSide side, const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing);
-    void execute_bracket_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::ExitTargets& targets);
+    void execute_order(OrderSide side, const ProcessedData& data, int current_qty, const PositionSizing& sizing);
+    void execute_bracket_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing, const ExitTargets& targets);
     
     // Position management methods
     bool should_close_opposite_position(OrderSide side, int current_qty) const;
@@ -54,8 +54,8 @@ private:
     void update_last_order_timestamp();
     
     // Order validation and preparation
-    bool validate_order_parameters(const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const;
-    StrategyLogic::ExitTargets calculate_exit_targets(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const;
+    bool validate_order_parameters(const ProcessedData& data, const PositionSizing& sizing) const;
+    ExitTargets calculate_exit_targets(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) const;
     
     // Utility methods
     bool is_flat_position(int qty) const;

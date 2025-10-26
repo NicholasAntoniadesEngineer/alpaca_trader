@@ -1,6 +1,7 @@
 #include "alpaca_stocks_client.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 
@@ -214,12 +215,7 @@ std::string AlpacaStocksClient::build_url_with_symbol(const std::string& endpoin
     
     std::string url = config.base_url + endpoint;
     
-    size_t symbol_pos = url.find("{symbol}");
-    if (symbol_pos != std::string::npos) {
-        url.replace(symbol_pos, 8, symbol);
-    }
-    
-    return url;
+    return replace_url_placeholder(url, symbol);
 }
 
 bool AlpacaStocksClient::validate_config() const {

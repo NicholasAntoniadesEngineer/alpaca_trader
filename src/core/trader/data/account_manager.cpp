@@ -2,11 +2,11 @@
 #include "core/logging/async_logger.hpp"
 #include "core/logging/account_logs.hpp"
 #include "core/logging/market_data_logs.hpp"
-#include "core/trader/analysis/risk_logic.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 #include <string>
 #include <chrono>
+#include <cmath>
 
 using json = nlohmann::json;
 
@@ -233,15 +233,6 @@ AccountManager::AccountInfo AccountManager::fetch_account_info() const {
     }
 }
 
-std::string AccountManager::replace_url_placeholder(const std::string& url, const std::string& symbol) const {
-    std::string result = url;
-    size_t pos = result.find("{symbol}");
-    if (pos != std::string::npos) {
-        result.replace(pos, 8, symbol);
-    }
-    return result;
-}
-
 void AccountManager::fetch_account_and_position_data(ProcessedData& data) const {
     MarketDataLogs::log_market_data_attempt_table("Getting position and account data", logging.log_file);
     
@@ -250,7 +241,11 @@ void AccountManager::fetch_account_and_position_data(ProcessedData& data) const 
     data.open_orders = fetch_open_orders_count(sr);
     
     double equity = fetch_account_equity();
-    data.exposure_pct = AlpacaTrader::Core::RiskLogic::calculate_exposure_percentage(data.pos_details.current_value, equity);
+    if (equity <= 0.0) {
+        data.exposure_pct = 0.0;
+    } else {
+        data.exposure_pct = (std::abs(data.pos_details.current_value) / equity) * 100.0;
+    }
 }
 
 } // namespace Core

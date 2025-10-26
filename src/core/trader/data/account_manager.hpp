@@ -59,9 +59,6 @@ private:
     const StrategyConfig& strategy;
     API::ApiManager& api_manager;
 
-    // Helper methods
-    std::string replace_url_placeholder(const std::string& url, const std::string& symbol) const;
-    
     // Caching for rate limit optimization
     mutable std::pair<AccountInfo, AccountSnapshot> cached_data;
     mutable std::chrono::steady_clock::time_point last_cache_time;

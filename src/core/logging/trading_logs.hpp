@@ -28,15 +28,15 @@ public:
     static void log_loop_header(unsigned long loop_number, const std::string& symbol);
     
     // Detailed trading analysis  
-    static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
-    static void log_filters(const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const SystemConfig& config, const AlpacaTrader::Core::ProcessedData& data);
-    static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const AlpacaTrader::Core::StrategyLogic::FilterResult& filters, const std::string& symbol = "");
+    static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals);
+    static void log_filters(const AlpacaTrader::Core::FilterResult& filters, const SystemConfig& config, const AlpacaTrader::Core::ProcessedData& data);
+    static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals, const AlpacaTrader::Core::FilterResult& filters, const std::string& symbol = "");
     
     // Enhanced signal analysis logging
-    static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const SystemConfig& config);
+    static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals, const SystemConfig& config);
     static void log_momentum_analysis(const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config);
-    static void log_signal_strength_breakdown(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals, const SystemConfig& config);
-    static void log_signals_table_enhanced(const AlpacaTrader::Core::StrategyLogic::SignalDecision& signals);
+    static void log_signal_strength_breakdown(const AlpacaTrader::Core::SignalDecision& signals, const SystemConfig& config);
+    static void log_signals_table_enhanced(const AlpacaTrader::Core::SignalDecision& signals);
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_filters_not_met_table(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);

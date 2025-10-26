@@ -13,7 +13,7 @@ using AlpacaTrader::Logging::TradingLogs;
 OrderExecutionEngine::OrderExecutionEngine(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg, DataSyncReferences& data_sync_ref)
     : api_manager(api_mgr), account_manager(account_mgr), config(cfg), data_sync(data_sync_ref) {}
 
-void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& sd) {
+void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd) {
     TradingLogs::log_order_execution_header();
     
     try {
@@ -83,7 +83,7 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
 }
 
 // Core execution method - unified for both buy and sell orders
-void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing) {
+void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& data, int current_qty, const PositionSizing& sizing) {
     TradingLogs::log_debug_position_data(current_qty, data.pos_details.current_value, data.pos_details.qty, current_qty > 0, current_qty < 0);
     
     // Check wash trade prevention first (if enabled)
@@ -115,7 +115,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
     // Determine if this is opening a new position or closing an existing one
     if (current_qty == 0) {
         // Opening new position: use bracket order
-        StrategyLogic::ExitTargets targets = calculate_exit_targets(side, data, sizing);
+ExitTargets targets = calculate_exit_targets(side, data, sizing);
         execute_bracket_order(side, data, sizing, targets);
     } else {
         // Closing existing position: use regular market order
@@ -127,7 +127,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
 }
 
 // Execute bracket order with proper validation
-void OrderExecutionEngine::execute_bracket_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::ExitTargets& targets) {
+void OrderExecutionEngine::execute_bracket_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing, const ExitTargets& targets) {
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     // Use consolidated logging instead of multiple separate tables
@@ -192,7 +192,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
 }
 
 // Execute regular market order for closing positions
-void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) {
+void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) {
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     // Use consolidated logging instead of multiple separate debug messages
@@ -283,7 +283,7 @@ bool OrderExecutionEngine::can_execute_new_position(int current_qty) const {
 }
 
 // Order validation and preparation
-bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const {
+bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, const PositionSizing& sizing) const {
     if (data.curr.c <= 0.0) {
         TradingLogs::log_trade_validation_failed("Invalid price data");
         return false;
@@ -321,7 +321,7 @@ bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, 
     return true;
 }
 
-StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const ProcessedData& data, const StrategyLogic::PositionSizing& sizing) const {
+ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) const {
     double entry_price = data.curr.c;
     
     // Use real-time price if configured and available
@@ -335,7 +335,7 @@ StrategyLogic::ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSid
         }
     }
     
-    return StrategyLogic::compute_exit_targets(
+    return compute_exit_targets(
         (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL, 
         entry_price, 
         sizing.risk_amount, 
@@ -396,7 +396,7 @@ bool OrderExecutionEngine::should_cancel_existing_orders() const {
     return true;
 }
 
-bool OrderExecutionEngine::validate_trade_feasibility(const StrategyLogic::PositionSizing& sizing, double buying_power, double current_price) const {
+bool OrderExecutionEngine::validate_trade_feasibility(const PositionSizing& sizing, double buying_power, double current_price) const {
     if (sizing.quantity <= 0) {
         return false;
     }

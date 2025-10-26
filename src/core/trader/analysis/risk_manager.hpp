@@ -3,8 +3,9 @@
 
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "core/trader/analysis/risk_logic.hpp"
 #include "core/logging/risk_logs.hpp"
+
+using AlpacaTrader::Config::SystemConfig;
 
 namespace AlpacaTrader {
 namespace Core {
@@ -17,13 +18,29 @@ public:
     bool validate_risk_conditions(const ProcessedData& data, double equity);
     bool check_exposure_limits(const ProcessedData& data, double equity);
     bool check_daily_limits(double current_equity, double initial_equity);
-    void log_risk_assessment(const ProcessedData& data, double equity, bool allowed);
 
 private:
     const SystemConfig& config;
     
-    RiskLogic::TradeGateInput build_risk_input(const ProcessedData& data, double equity);
-    bool evaluate_risk_gate(const RiskLogic::TradeGateInput& input);
+    // Risk evaluation data structures
+    struct TradeGateInput {
+        double initial_equity;
+        double current_equity;
+        double exposure_pct;
+    };
+    
+    struct TradeGateResult {
+        bool allowed;
+        bool pnl_ok;
+        bool exposure_ok;
+        double daily_pnl;
+    };
+    
+    // Risk evaluation methods
+    TradeGateInput build_risk_input(const ProcessedData& data, double equity);
+    bool evaluate_risk_gate(const TradeGateInput& input);
+    TradeGateResult evaluate_trade_gate(const TradeGateInput& input);
+    double calculate_exposure_percentage(double current_value, double equity);
 };
 
 } // namespace Core

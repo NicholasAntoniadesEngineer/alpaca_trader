@@ -12,8 +12,8 @@ namespace Logging {
 
 using AlpacaTrader::Core::AccountManager;
 using AlpacaTrader::Core::ProcessedData;
-using AlpacaTrader::Core::StrategyLogic::SignalDecision;
-using AlpacaTrader::Core::StrategyLogic::FilterResult;
+using AlpacaTrader::Core::SignalDecision;
+using AlpacaTrader::Core::FilterResult;
 
 std::string TradingLogs::format_currency(double amount) {
     std::ostringstream oss;

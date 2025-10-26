@@ -9,14 +9,11 @@ using AlpacaTrader::Config::SystemConfig;
 namespace AlpacaTrader {
 namespace Core {
 
-namespace StrategyLogic {
-
 SignalDecision detect_trading_signals(const ProcessedData& data, const SystemConfig& config);
 FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemConfig& config);
 PositionSizing calculate_position_sizing(const ProcessedData& data, double equity, int current_qty, const SystemConfig& config, double buying_power = 0.0);
 ExitTargets compute_exit_targets(const std::string& side, double entry_price, double risk_amount, double rr_ratio, const SystemConfig& config);
 
-} // namespace StrategyLogic
 } // namespace Core
 } // namespace AlpacaTrader
 

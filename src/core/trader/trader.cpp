@@ -16,7 +16,7 @@ using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
 TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
-    : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
+    : config(cfg), account_manager(account_mgr),
       trading_engine(cfg, api_mgr, account_mgr),
       risk_manager(cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {
@@ -86,7 +86,7 @@ void TradingOrchestrator::execute_trading_loop() {
                     continue;
                 }
                 ProcessedData processed_data(market, account);
-                MarketProcessing::handle_market_close_positions(processed_data, api_manager, config);
+                trading_engine.handle_market_close_positions(processed_data);
                 trading_engine.execute_trading_decision(processed_data, account.equity);
 
                 // Increment iteration counter
@@ -152,9 +152,6 @@ void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& confi
     
     // Set up MarketDataFetcher with sync state
     data_fetcher.set_sync_state_references(*reinterpret_cast<MarketDataSyncState*>(&data_sync));
-    
-    // Set up data synchronization
-    data_fetcher.setup_data_synchronization(config);
     
     if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
         TradingLogs::log_market_data_result_table("Invalid data sync configuration", false, 0);

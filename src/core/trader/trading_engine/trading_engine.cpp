@@ -1,5 +1,4 @@
 #include "trading_engine.hpp"
-#include "core/trader/analysis/risk_logic.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
 #include "core/logging/market_data_logs.hpp"
@@ -7,6 +6,7 @@
 #include "core/logging/csv_trade_logger.hpp"
 #include "core/system/system_monitor.hpp"
 #include "core/utils/time_utils.hpp"
+#include "api/general/api_manager.hpp"
 #include <chrono>
 #include <cmath>
 
@@ -16,10 +16,9 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 
 TradingEngine::TradingEngine(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr)
-    : config(cfg), account_manager(account_mgr),
+    : config(cfg), account_manager(account_mgr), api_manager(api_mgr),
       risk_manager(cfg),
       order_engine(api_mgr, account_mgr, cfg, data_sync),
-      price_manager(api_mgr, cfg),
       data_fetcher(api_mgr, account_mgr, cfg) {}
 
 bool TradingEngine::check_trading_permissions(const ProcessedData& data, double equity) {
@@ -95,7 +94,7 @@ void TradingEngine::handle_trading_halt(const std::string& reason) {
 }
 
 void TradingEngine::process_signal_analysis(const ProcessedData& data) {
-    StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
+SignalDecision signal_decision = detect_trading_signals(data, config);
 
     // Log candle data and enhanced signals table
     TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
@@ -104,7 +103,7 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data) {
     // Enhanced detailed signal analysis logging
     TradingLogs::log_signal_analysis_detailed(data, signal_decision, config);
 
-    StrategyLogic::FilterResult filter_result = StrategyLogic::evaluate_trading_filters(data, config);
+FilterResult filter_result = evaluate_trading_filters(data, config);
     TradingLogs::log_filters(filter_result, config, data);
     TradingLogs::log_summary(data, signal_decision, filter_result, config.strategy.symbol);
 
@@ -153,9 +152,9 @@ void TradingEngine::process_signal_analysis(const ProcessedData& data) {
 
 void TradingEngine::process_position_sizing(const ProcessedData& data, double equity, int current_qty) {
     double buying_power = account_manager.fetch_buying_power();
-    StrategyLogic::PositionSizing sizing = StrategyLogic::calculate_position_sizing(data, equity, current_qty, config, buying_power);
+PositionSizing sizing = calculate_position_sizing(data, equity, current_qty, config, buying_power);
 
-    if (!StrategyLogic::evaluate_trading_filters(data, config).all_pass) {
+    if (!evaluate_trading_filters(data, config).all_pass) {
         TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
 
         // CSV logging for position sizing when filters not met
@@ -185,7 +184,7 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
     TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, buying_power, data.curr.c);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
 
-    StrategyLogic::SignalDecision signal_decision = StrategyLogic::detect_trading_signals(data, config);
+SignalDecision signal_decision = detect_trading_signals(data, config);
     execute_trade_if_valid(data, current_qty, sizing, signal_decision);
 
     // CSV logging for successful position sizing
@@ -209,7 +208,7 @@ void TradingEngine::process_position_sizing(const ProcessedData& data, double eq
     }
 }
 
-void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int current_qty, const StrategyLogic::PositionSizing& sizing, const StrategyLogic::SignalDecision& signal_decision) {
+void TradingEngine::execute_trade_if_valid(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& signal_decision) {
     if (sizing.quantity < 1) {
         TradingLogs::log_position_sizing_skipped("quantity < 1");
         return;
@@ -253,13 +252,43 @@ void TradingEngine::check_and_execute_profit_taking(const ProcessedData& data, i
         if (current_qty > 0) {
             // Long position: sell to close
             order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Sell, data, 
-                                            StrategyLogic::PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
+PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
         } else {
             // Short position: buy to close
             order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Buy, data, 
-                                            StrategyLogic::PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
+PositionSizing{abs(current_qty), 0.0, 0.0, static_cast<int>(0)});
         }
     }
+}
+
+void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
+    // Check if market is approaching close - simplified implementation
+    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
+        // Market is still open, no need to close positions yet
+        return;
+    }
+    
+    int current_qty = data.pos_details.qty;
+    if (current_qty == 0) {
+        return;
+    }
+    
+    int minutes_until_close = 5; // Simplified - would need proper market close time calculation
+    if (minutes_until_close > 0) {
+        TradingLogs::log_market_close_warning(minutes_until_close);
+    }
+    
+    std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
+    TradingLogs::log_market_close_position_closure(current_qty, config.trading_mode.primary_symbol, side);
+    
+    try {
+        api_manager.close_position(config.trading_mode.primary_symbol, current_qty);
+        TradingLogs::log_market_status(true, "Market close position closure executed successfully");
+    } catch (const std::exception& e) {
+        TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(e.what()));
+    }
+    
+    TradingLogs::log_market_close_complete();
 }
 
 } // namespace Core

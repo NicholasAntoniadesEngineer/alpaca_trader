@@ -213,4 +213,14 @@ std::string get_iso_time_minus(int minutes) {
     return TimeUtils::get_iso_time_minus_minutes(minutes);
 }
 
+// Implement replace_url_placeholder
+std::string replace_url_placeholder(const std::string& url, const std::string& symbol) {
+    std::string result = url;
+    size_t pos = result.find("{symbol}");
+    if (pos != std::string::npos) {
+        result.replace(pos, 8, symbol);
+    }
+    return result;
+}
+
 

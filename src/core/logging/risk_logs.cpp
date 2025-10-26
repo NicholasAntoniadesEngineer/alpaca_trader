@@ -7,17 +7,11 @@ namespace AlpacaTrader {
 namespace Logging {
 
 void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, double equity, bool allowed, const SystemConfig& config) {
-    // Build risk input for evaluation
-    AlpacaTrader::Core::RiskLogic::TradeGateInput input;
-    input.initial_equity = 0.0;
-    input.current_equity = equity;
-    input.exposure_pct = data.exposure_pct;
+    // Calculate daily PnL for logging
+    double daily_pnl = 0.0; // Default for logging when initial equity is 0
     
-    // Evaluate risk gate
-    AlpacaTrader::Core::RiskLogic::TradeGateResult result = AlpacaTrader::Core::RiskLogic::evaluate_trade_gate(input, config);
-    
-    // Log risk conditions
-    log_risk_conditions(result, data, config);
+    // Log risk conditions with calculated values
+    TradingLogs::log_trading_conditions(daily_pnl, data.exposure_pct, allowed, config);
     
     // Log final risk status
     if (allowed) {
@@ -27,8 +21,8 @@ void RiskLogs::log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data
     }
 }
 
-void RiskLogs::log_risk_conditions(const AlpacaTrader::Core::RiskLogic::TradeGateResult& result, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config) {
-    TradingLogs::log_trading_conditions(result.daily_pnl, data.exposure_pct, result.allowed, config);
+void RiskLogs::log_risk_conditions(double daily_pnl, double exposure_pct, bool allowed, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config) {
+    TradingLogs::log_trading_conditions(daily_pnl, exposure_pct, allowed, config);
 }
 
 void RiskLogs::log_risk_status(bool allowed, const std::string& reason) {

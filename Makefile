@@ -23,9 +23,7 @@ SOURCES = src/main.cpp \
   src/core/trader/analysis/risk_manager.cpp \
   src/core/trader/trading_engine/order_execution_engine.cpp \
   src/core/trader/analysis/strategy_logic.cpp \
-  src/core/trader/analysis/risk_logic.cpp \
   src/core/trader/analysis/indicators.cpp \
-  src/core/trader/analysis/price_manager.cpp \
   src/core/trader/data/market_processing.cpp \
   src/core/trader/data/market_data_fetcher.cpp \
   src/core/utils/connectivity_manager.cpp \

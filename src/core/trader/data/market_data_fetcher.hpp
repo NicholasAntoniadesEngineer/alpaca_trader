@@ -37,7 +37,6 @@ public:
     bool is_market_open() const;
     bool is_data_fresh() const;
     bool validate_market_data(const MarketSnapshot& market) const;
-    void setup_data_synchronization(const DataSyncConfig& config);
     
 private:
     // Core dependencies

@@ -284,11 +284,5 @@ bool MarketDataFetcher::validate_market_data(const MarketSnapshot& market) const
     return true;
 }
 
-void MarketDataFetcher::setup_data_synchronization(const DataSyncConfig& sync_config) {
-    // This method would typically set up the sync_state_ptr references
-    // For now, we'll just log that the setup is complete
-    TradingLogs::log_market_status(true, "Data synchronization setup completed - market_data_timestamp initialized");
-}
-
 } // namespace Core
 } // namespace AlpacaTrader

@@ -3,8 +3,9 @@
 
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "core/trader/analysis/risk_logic.hpp"
 #include <string>
+
+using AlpacaTrader::Config::SystemConfig;
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -13,7 +14,7 @@ class RiskLogs {
 public:
     // Risk assessment logging
     static void log_risk_assessment(const AlpacaTrader::Core::ProcessedData& data, double equity, bool allowed, const SystemConfig& config);
-    static void log_risk_conditions(const AlpacaTrader::Core::RiskLogic::TradeGateResult& result, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config);
+    static void log_risk_conditions(double daily_pnl, double exposure_pct, bool allowed, const AlpacaTrader::Core::ProcessedData& data, const SystemConfig& config);
     static void log_risk_status(bool allowed, const std::string& reason = "");
 };
 

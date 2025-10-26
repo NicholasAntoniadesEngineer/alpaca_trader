@@ -32,7 +32,6 @@ private:
 
     const SystemConfig& config;
     AccountManager& account_manager;
-    API::ApiManager& api_manager;
     TradingEngine trading_engine;
     RiskManager risk_manager;
     MarketDataFetcher data_fetcher;

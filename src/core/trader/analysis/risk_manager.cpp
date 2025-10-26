@@ -1,5 +1,6 @@
 #include "risk_manager.hpp"
 #include "core/logging/async_logger.hpp"
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -44,26 +45,38 @@ bool RiskManager::check_daily_limits(double current_equity, double initial_equit
 }
 
 
-void RiskManager::log_risk_assessment(const ProcessedData& data, double equity, bool allowed) {
-    RiskLogs::log_risk_assessment(data, equity, allowed, config);
-}
-
-RiskLogic::TradeGateInput RiskManager::build_risk_input(const ProcessedData& data, double equity) {
-    RiskLogic::TradeGateInput input;
+RiskManager::TradeGateInput RiskManager::build_risk_input(const ProcessedData& data, double equity) {
+    TradeGateInput input;
     input.initial_equity = 0.0;
     input.current_equity = equity;
     input.exposure_pct = data.exposure_pct;
     return input;
 }
 
-bool RiskManager::evaluate_risk_gate(const RiskLogic::TradeGateInput& input) {
-    RiskLogic::TradeGateResult result = RiskLogic::evaluate_trade_gate(input, config);
+bool RiskManager::evaluate_risk_gate(const TradeGateInput& input) {
+    TradeGateResult result = evaluate_trade_gate(input);
     return result.pnl_ok && result.exposure_ok;
 }
 
 bool RiskManager::validate_risk_conditions(const ProcessedData& data, double equity) {
-    RiskLogic::TradeGateInput input = build_risk_input(data, equity);
+    TradeGateInput input = build_risk_input(data, equity);
     return evaluate_risk_gate(input);
+}
+
+RiskManager::TradeGateResult RiskManager::evaluate_trade_gate(const TradeGateInput& input) {
+    TradeGateResult result;
+    result.daily_pnl = (input.initial_equity == 0.0) ? 0.0 : (input.current_equity - input.initial_equity) / input.initial_equity;
+    result.pnl_ok = result.daily_pnl > config.strategy.max_daily_loss_percentage && result.daily_pnl < config.strategy.daily_profit_target_percentage;
+    result.exposure_ok = input.exposure_pct <= config.strategy.max_account_exposure_percentage;
+    result.allowed = result.pnl_ok && result.exposure_ok;
+    return result;
+}
+
+double RiskManager::calculate_exposure_percentage(double current_value, double equity) {
+    if (equity <= 0.0) {
+        return 0.0;
+    }
+    return (std::abs(current_value) / equity) * 100.0;
 }
 
 } // namespace Core

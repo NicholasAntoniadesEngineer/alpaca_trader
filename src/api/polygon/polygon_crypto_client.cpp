@@ -1,6 +1,7 @@
 #include "polygon_crypto_client.hpp"
 #include "core/logging/async_logger.hpp"
 #include "core/logging/logging_macros.hpp"
+#include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <curl/curl.h>
 #include <sstream>
@@ -265,10 +266,7 @@ std::string PolygonCryptoClient::build_rest_url(const std::string& endpoint, con
     std::string url = config.base_url + endpoint;
     
     // Replace symbol in URL
-    size_t symbol_pos = url.find("{symbol}");
-    if (symbol_pos != std::string::npos) {
-        url.replace(symbol_pos, 8, symbol);
-    }
+    url = replace_url_placeholder(url, symbol);
     
         // Configure bar parameters for bars endpoint
     if (endpoint.find("range") != std::string::npos) {

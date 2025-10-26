@@ -42,6 +42,8 @@ std::string http_delete(const HttpRequest& req);
 
 std::string get_iso_time_minus(int minutes);
 
+std::string replace_url_placeholder(const std::string& url, const std::string& symbol);
+
 
 
 #endif // HTTP_UTILS_HPP

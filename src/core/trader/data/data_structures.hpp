@@ -98,8 +98,6 @@ struct ClosePositionRequest {
 };
 
 // Strategy logic data structures
-namespace StrategyLogic {
-
 struct SignalDecision {
     bool buy = false;
     bool sell = false;
@@ -130,8 +128,6 @@ struct ExitTargets {
     double stop_loss = 0.0;
     double take_profit = 0.0;
 };
-
-} // namespace StrategyLogic
 
 } // namespace Core
 } // namespace AlpacaTrader
