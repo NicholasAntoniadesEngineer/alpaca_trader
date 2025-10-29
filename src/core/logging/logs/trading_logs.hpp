@@ -5,6 +5,7 @@
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
 #include "core/logging/logger/logging_macros.hpp"
+#include "logger_structures.hpp"
 #include <vector>
 
 using AlpacaTrader::Config::SystemConfig;
@@ -64,10 +65,7 @@ public:
     static void log_order_result(const std::string& order_id, bool success, const std::string& reason = "");
     
     // Consolidated order execution logging
-    static void log_comprehensive_order_execution(const std::string& order_type, const std::string& side, int quantity, 
-                                                double current_price, double atr, int position_qty, double risk_amount,
-                                                double stop_loss = 0.0, double take_profit = 0.0, 
-                                                const std::string& symbol = "", const std::string& function_name = "");
+    static void log_comprehensive_order_execution(const ComprehensiveOrderExecutionRequest& order_execution_request);
     static void log_comprehensive_api_response(const std::string& order_id, const std::string& status, 
                                              const std::string& side, const std::string& quantity, 
                                              const std::string& order_class, const std::string& position_intent,
@@ -95,15 +93,15 @@ public:
     static void log_trade_validation_failed(const std::string& reason);
     static void log_insufficient_buying_power(double required_buying_power, double available_buying_power, int quantity, double current_price);
     static void log_position_sizing_skipped(const std::string& reason);
-    static void log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short);
+    static void log_debug_position_data(int current_position_quantity, double position_value, int position_quantity_value, bool is_long, bool is_short);
     static void log_realtime_price_used(double realtime_price, double delayed_price);
     static void log_realtime_price_fallback(double delayed_price);
     static void log_debug_fresh_data_fetch(const std::string& position_type);
-    static void log_debug_fresh_position_data(int fresh_qty, int current_qty);
-    static void log_debug_account_details(int qty, double current_value);
-    static void log_debug_position_closure_attempt(int qty);
+    static void log_debug_fresh_position_data(int fresh_position_quantity, int current_position_quantity);
+    static void log_debug_account_details(int position_quantity, double current_value);
+    static void log_debug_position_closure_attempt(int position_quantity);
     static void log_debug_position_closure_attempted();
-    static void log_debug_position_verification(int verify_qty);
+    static void log_debug_position_verification(int verify_position_quantity);
     static void log_debug_position_still_exists(const std::string& side);
     static void log_debug_no_position_found(const std::string& side);
     static void log_debug_skipping_trading_cycle();
@@ -118,7 +116,7 @@ public:
     static void log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price);
     static void log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
     static void log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
-    static void log_exit_targets_table(const std::string& side, double price, double risk, double rr, double stop_loss, double take_profit);
+    static void log_exit_targets_table(const ExitTargetsTableRequest& exit_targets_request);
     static void log_order_result_table(const std::string& operation, const std::string& response);
     
     // Trading decision tables

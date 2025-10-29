@@ -88,14 +88,14 @@ void AccountLogs::display_positions() const {
     
     log_message("+-- CURRENT POSITIONS", logging.log_file);
     
-    if (snapshot.pos_details.qty == 0) {
+    if (snapshot.pos_details.position_quantity == 0) {
         log_message("|   No positions held", logging.log_file);
     } else {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);
         
-        std::string side = (snapshot.pos_details.qty > 0) ? POSITION_LONG : POSITION_SHORT;
-        oss << "|   Position: " << side << " " << std::abs(snapshot.pos_details.qty) << " shares";
+        std::string side = (snapshot.pos_details.position_quantity > 0) ? POSITION_LONG : POSITION_SHORT;
+        oss << "|   Position: " << side << " " << std::abs(snapshot.pos_details.position_quantity) << " shares";
         log_message(oss.str(), logging.log_file);
         
         oss.str("");

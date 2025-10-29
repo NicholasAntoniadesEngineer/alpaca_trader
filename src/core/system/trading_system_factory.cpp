@@ -1,6 +1,7 @@
 #include "trading_system_factory.hpp"
 #include "core/logging/logger/async_logger.hpp"
 #include "core/threads/thread_register.hpp"
+#include "core/trader/trading_engine/trading_engine_structures.hpp"
 #include <stdexcept>
 
 namespace AlpacaTrader {
@@ -24,8 +25,8 @@ TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_tradi
     components.account_manager = std::make_unique<AccountManager>(account_config, *components.api_manager);
     
     // Create trading orchestrator
-    components.trading_orchestrator = std::make_unique<TradingOrchestrator>(
-        config, *components.api_manager, *components.account_manager, system_monitor, connectivity_manager);
+    TradingOrchestratorConstructionParams orchestrator_params(config, *components.api_manager, *components.account_manager, system_monitor, connectivity_manager);
+    components.trading_orchestrator = std::make_unique<TradingOrchestrator>(orchestrator_params);
     
     return components;
 }

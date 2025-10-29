@@ -45,6 +45,7 @@ timing.position_settlement_timeout_milliseconds,2000
 
 # Order Processing Limits
 timing.maximum_concurrent_order_cancellations,10
+timing.maximum_position_verification_attempts,3
 
 # Trading Safety Constraints
 timing.minimum_interval_between_orders_seconds,30

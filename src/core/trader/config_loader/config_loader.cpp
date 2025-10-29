@@ -197,6 +197,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.position_verification_timeout_milliseconds") cfg.timing.position_verification_timeout_milliseconds = std::stoi(value);
         else if (key == "timing.position_settlement_timeout_milliseconds") cfg.timing.position_settlement_timeout_milliseconds = std::stoi(value);
         else if (key == "timing.maximum_concurrent_order_cancellations") cfg.timing.maximum_concurrent_order_cancellations = std::stoi(value);
+        else if (key == "timing.maximum_position_verification_attempts") cfg.timing.maximum_position_verification_attempts = std::stoi(value);
 
         // Trading Safety Constraints
         else if (key == "timing.minimum_interval_between_orders_seconds") cfg.timing.minimum_interval_between_orders_seconds = std::stoi(value);

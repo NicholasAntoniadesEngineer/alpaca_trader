@@ -9,6 +9,7 @@
 #include "core/trader/data/account_manager.hpp"
 #include "core/logging/logs/trading_logs.hpp"
 #include "core/system/system_monitor.hpp"
+#include "trading_engine_structures.hpp"
 #include <string>
 #include <chrono>
 
@@ -17,9 +18,9 @@ namespace Core {
 
 class OrderExecutionEngine {
 public:
-    OrderExecutionEngine(API::ApiManager& api_manager, AccountManager& account_manager, const SystemConfig& config, DataSyncReferences& data_sync, Monitoring::SystemMonitor& system_monitor);
+    OrderExecutionEngine(const OrderExecutionEngineConstructionParams& construction_params);
     
-    void execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd);
+    void execute_trade(const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing, const SignalDecision& signal_decision);
     
     // Order side enumeration
     enum class OrderSide { Buy, Sell };
@@ -41,18 +42,14 @@ private:
     DataSyncReferences& data_sync;
     Monitoring::SystemMonitor& system_monitor;
     
-    // Configuration constants
-    static constexpr std::chrono::milliseconds POSITION_CLOSE_WAIT_TIME{2000};
-    static constexpr int MAX_POSITION_VERIFICATION_ATTEMPTS = 3;
-    
     // Core execution methods
-    void execute_order(OrderSide side, const ProcessedData& data, int current_qty, const PositionSizing& sizing);
+    void execute_order(OrderSide side, const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing);
     void execute_bracket_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing, const ExitTargets& targets);
     
     // Position management methods
-    bool should_close_opposite_position(OrderSide side, int current_qty) const;
-    bool close_opposite_position(OrderSide side, int current_qty);
-    bool can_execute_new_position(int current_qty) const;
+    bool should_close_opposite_position(OrderSide side, int current_position_quantity) const;
+    bool close_opposite_position(OrderSide side, int current_position_quantity);
+    bool can_execute_new_position(int current_position_quantity) const;
     
     // Order timing methods
     bool can_place_order_now() const;
@@ -63,7 +60,7 @@ private:
     ExitTargets calculate_exit_targets(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) const;
     
     // Utility methods
-    bool is_flat_position(int qty) const;
+    bool is_flat_position(int position_quantity) const;
     bool should_cancel_existing_orders() const;
     
 };

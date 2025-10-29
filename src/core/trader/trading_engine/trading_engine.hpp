@@ -14,13 +14,14 @@
 #include "core/logging/logs/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include "core/system/system_monitor.hpp"
+#include "trading_engine_structures.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
 
 class TradingEngine {
 public:
-    TradingEngine(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager, Monitoring::SystemMonitor& system_monitor, ConnectivityManager& connectivity_manager);
+    TradingEngine(const TradingEngineConstructionParams& construction_params);
     
     bool check_trading_permissions(const ProcessedData& data, double equity);
     void execute_trading_decision(const ProcessedData& data, double equity);
@@ -39,24 +40,14 @@ private:
     Monitoring::SystemMonitor& system_monitor;
     ConnectivityManager& connectivity_manager;
     
-    // Connectivity check wrapper for risk validation
-    bool check_connectivity() const {
-        return connectivity_manager.check_connectivity();
-    }
-    
     // Data synchronization references
     DataSyncReferences data_sync;
     
-    // Configuration constants
-    static constexpr int HALT_SLEEP_SECONDS = 1;
-    static constexpr int CONNECTIVITY_RETRY_SECONDS = 1;
-    
-    
     // Trading decision methods
     void process_signal_analysis(const ProcessedData& data);
-    void process_position_sizing(const ProcessedData& data, double equity, int current_qty);
-    void execute_trade_if_valid(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& signal_decision);
-    void check_and_execute_profit_taking(const ProcessedData& data, int current_qty);
+    void process_position_sizing(const ProcessedData& data, double equity, int current_position_quantity);
+    void execute_trade_if_valid(const TradeExecutionRequest& trade_request);
+    void check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request);
     
     // Utility methods
     void perform_halt_countdown(int seconds) const;

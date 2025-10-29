@@ -68,6 +68,7 @@ struct TimingConfig {
     int position_verification_timeout_milliseconds;        // Position verification timeout in milliseconds
     int position_settlement_timeout_milliseconds;          // Position settlement timeout in milliseconds
     int maximum_concurrent_order_cancellations;            // Maximum concurrent order cancellations
+    int maximum_position_verification_attempts;            // Maximum number of attempts to verify position closure
 
     // ========================================================================
     // TRADING SAFETY CONSTRAINTS

@@ -85,7 +85,7 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
         if (positions_json.empty()) {
             // No positions is valid - return empty position
             PositionDetails details;
-            details.qty = 0;
+            details.position_quantity = 0;
             details.current_value = 0.0;
             details.unrealized_pl = 0.0;
             return details;
@@ -99,7 +99,7 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
                 PositionDetails details;
                 
                 if (position.contains("qty")) {
-                    details.qty = position["qty"].is_string() ? 
+                    details.position_quantity = position["qty"].is_string() ? 
                         std::stoi(position["qty"].get<std::string>()) : 
                         position["qty"].get<int>();
                 }
@@ -122,7 +122,7 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
         
         // Position not found - return empty position
         PositionDetails details;
-        details.qty = 0;
+        details.position_quantity = 0;
         details.current_value = 0.0;
         details.unrealized_pl = 0.0;
         return details;

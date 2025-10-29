@@ -33,7 +33,7 @@ struct QuoteData {
 };
 
 struct PositionDetails {
-    int qty = 0;
+    int position_quantity = 0;
     double unrealized_pl = 0.0;
     double current_value = 0.0;
 };
@@ -88,17 +88,17 @@ struct BarRequest {
 };
 
 struct OrderRequest {
-    std::string side; // "buy" | "sell"
-    int qty = 0;
-    double tp = 0.0;
-    double sl = 0.0;
-    OrderRequest(const std::string& side_, int qty_, double tp_, double sl_)
-        : side(side_), qty(qty_), tp(tp_), sl(sl_) {}
+    std::string side;
+    int position_quantity = 0;
+    double take_profit_price = 0.0;
+    double stop_loss_price = 0.0;
+    OrderRequest(const std::string& side_param, int position_qty_param, double take_profit_param, double stop_loss_param)
+        : side(side_param), position_quantity(position_qty_param), take_profit_price(take_profit_param), stop_loss_price(stop_loss_param) {}
 };
 
 struct ClosePositionRequest {
-    int current_qty = 0;
-    explicit ClosePositionRequest(int q) : current_qty(q) {}
+    int current_position_quantity = 0;
+    explicit ClosePositionRequest(int position_qty_param) : current_position_quantity(position_qty_param) {}
 };
 
 // Strategy logic data structures
@@ -141,8 +141,8 @@ struct PositionSizingRequest {
     const StrategyConfig& strategy_configuration;
     double available_buying_power;
     
-    PositionSizingRequest(const ProcessedData& data, double equity, int current_qty, const StrategyConfig& config, double buying_power)
-        : processed_data(data), account_equity(equity), current_position_quantity(current_qty), 
+    PositionSizingRequest(const ProcessedData& data, double equity, int current_position_qty, const StrategyConfig& config, double buying_power)
+        : processed_data(data), account_equity(equity), current_position_quantity(current_position_qty), 
           strategy_configuration(config), available_buying_power(buying_power) {}
 };
 
@@ -165,8 +165,8 @@ struct PositionSizingProcessRequest {
     const StrategyConfig& strategy_configuration;
     const TradingModeConfig& trading_mode_configuration;
     
-    PositionSizingProcessRequest(const ProcessedData& data, double equity, int current_qty, double buying_power, const StrategyConfig& strategy_config, const TradingModeConfig& trading_mode_config)
-        : processed_data(data), account_equity(equity), current_position_quantity(current_qty), 
+    PositionSizingProcessRequest(const ProcessedData& data, double equity, int current_position_qty, double buying_power, const StrategyConfig& strategy_config, const TradingModeConfig& trading_mode_config)
+        : processed_data(data), account_equity(equity), current_position_quantity(current_position_qty), 
           available_buying_power(buying_power), strategy_configuration(strategy_config), trading_mode_configuration(trading_mode_config) {}
 };
 

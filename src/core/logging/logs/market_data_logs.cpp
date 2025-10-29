@@ -31,17 +31,17 @@ void MarketDataLogs::log_market_data_result_table(const std::string& description
     log_message("|", log_file);
 }
 
-void MarketDataLogs::log_current_positions_table(int qty, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
+void MarketDataLogs::log_current_positions_table(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
     log_message("+-- CURRENT POSITIONS", log_file);
     
-    if (qty == 0) {
+    if (position_quantity == 0) {
         log_message("|   No positions held", log_file);
     } else {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);
         
-        std::string side = (qty > 0) ? POSITION_LONG : POSITION_SHORT;
-        oss << "|   Position: " << side << " " << std::abs(qty) << " shares";
+        std::string side = (position_quantity > 0) ? POSITION_LONG : POSITION_SHORT;
+        oss << "|   Position: " << side << " " << std::abs(position_quantity) << " shares";
         log_message(oss.str(), log_file);
         
         oss.str("");
@@ -64,10 +64,10 @@ void MarketDataLogs::log_current_positions_table(int qty, double current_value, 
     log_message("|", log_file);
 }
 
-void MarketDataLogs::log_position_data_and_warnings(int qty, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
-    log_current_positions_table(qty, current_value, unrealized_pl, exposure_pct, open_orders, log_file);
-
-    if (qty != 0 && open_orders == 0) {
+void MarketDataLogs::log_position_data_and_warnings(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
+    log_current_positions_table(position_quantity, current_value, unrealized_pl, exposure_pct, open_orders, log_file);
+    
+    if (position_quantity != 0 && open_orders == 0) {
         log_market_data_result_table("Missing bracket order warning", true, 0, log_file);
     }
 }

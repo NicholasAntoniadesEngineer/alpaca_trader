@@ -28,7 +28,7 @@ ProcessedData MarketDataManager::fetch_and_process_market_data() {
 
     // Log current positions and check for warnings
     MarketDataLogs::log_position_data_and_warnings(
-        processed_data.pos_details.qty,
+        processed_data.pos_details.position_quantity,
         processed_data.pos_details.current_value,
         processed_data.pos_details.unrealized_pl,
         processed_data.exposure_pct,

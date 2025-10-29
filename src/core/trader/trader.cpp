@@ -15,12 +15,12 @@ namespace Core {
 using AlpacaTrader::Logging::TradingLogs;
 using AlpacaTrader::Logging::set_log_thread_tag;
 
-TradingOrchestrator::TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon, ConnectivityManager& connectivity_mgr)
-    : config(cfg), account_manager(account_mgr),
-      trading_engine(cfg, api_mgr, account_mgr, mon, connectivity_mgr),
-      risk_manager(cfg),
-      data_fetcher(api_mgr, account_mgr, cfg),
-      connectivity_manager(connectivity_mgr) {
+TradingOrchestrator::TradingOrchestrator(const TradingOrchestratorConstructionParams& construction_params)
+    : config(construction_params.system_config), account_manager(construction_params.account_manager_ref),
+      trading_engine(TradingEngineConstructionParams(construction_params.system_config, construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_monitor_ref, construction_params.connectivity_manager_ref)),
+      risk_manager(construction_params.system_config),
+      data_fetcher(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config),
+      connectivity_manager(construction_params.connectivity_manager_ref) {
     
     runtime.initial_equity = initialize_trading_session();
 }

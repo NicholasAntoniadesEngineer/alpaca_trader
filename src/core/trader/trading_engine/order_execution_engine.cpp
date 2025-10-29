@@ -1,5 +1,6 @@
 #include "order_execution_engine.hpp"
 #include "core/logging/logs/trading_logs.hpp"
+#include "core/logging/logs/logger_structures.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/system/system_monitor.hpp"
 #include <thread>
@@ -10,10 +11,12 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-OrderExecutionEngine::OrderExecutionEngine(API::ApiManager& api_mgr, AccountManager& account_mgr, const SystemConfig& cfg, DataSyncReferences& data_sync_ref, Monitoring::SystemMonitor& mon)
-    : api_manager(api_mgr), account_manager(account_mgr), config(cfg), data_sync(data_sync_ref), system_monitor(mon) {}
+OrderExecutionEngine::OrderExecutionEngine(const OrderExecutionEngineConstructionParams& construction_params)
+    : api_manager(construction_params.api_manager_ref), account_manager(construction_params.account_manager_ref), 
+      config(construction_params.system_config), data_sync(construction_params.data_sync_ref), 
+      system_monitor(construction_params.system_monitor_ref) {}
 
-void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_qty, const PositionSizing& sizing, const SignalDecision& sd) {
+void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing, const SignalDecision& signal_decision) {
     TradingLogs::log_order_execution_header();
     
     try {
@@ -48,43 +51,37 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         return;
     }
     
-    bool is_long = current_qty > 0;
-    bool is_short = current_qty < 0;
-    TradingLogs::log_debug_position_data(current_qty, 0.0, current_qty, is_long, is_short);
+    bool is_long = current_position_quantity > 0;
+    bool is_short = current_position_quantity < 0;
+    TradingLogs::log_debug_position_data(current_position_quantity, 0.0, current_position_quantity, is_long, is_short);
 
-    if (sd.buy) {
+    if (signal_decision.buy) {
         TradingLogs::log_signal_triggered(SIGNAL_BUY, true);
-        execute_order(OrderSide::Buy, data, current_qty, sizing);
-    } else if (sd.sell) {
+        execute_order(OrderSide::Buy, data, current_position_quantity, sizing);
+    } else if (signal_decision.sell) {
         TradingLogs::log_signal_triggered(SIGNAL_SELL, true);
-        // For SELL signals, determine the correct order side based on current position
-        if (current_qty == 0) {
-            // No position: check if we can open short position (use sell side for short)
-            if (!api_manager.get_account_info().empty()) { // Simplified check - detailed short availability would need specific implementation
+        if (current_position_quantity == 0) {
+            if (!api_manager.get_account_info().empty()) {
                 TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
                 system_monitor.record_short_blocked(config.trading_mode.primary_symbol);
-                // Don't return early - allow processing of existing position closures if any
             } else {
                 TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
-                execute_order(OrderSide::Sell, data, current_qty, sizing);
+                execute_order(OrderSide::Sell, data, current_position_quantity, sizing);
             }
-        } else if (current_qty > 0) {
-            // Long position: close long position (sell to close)
+        } else if (current_position_quantity > 0) {
             TradingLogs::log_market_status(true, "SELL signal - closing long position with market order");
-            execute_order(OrderSide::Sell, data, current_qty, sizing);
+            execute_order(OrderSide::Sell, data, current_position_quantity, sizing);
         } else {
-            // Short position: close short position (buy to close)
             TradingLogs::log_market_status(true, "SELL signal - closing short position with market order");
-            execute_order(OrderSide::Buy, data, current_qty, sizing);
+            execute_order(OrderSide::Buy, data, current_position_quantity, sizing);
         }
     } else {
         TradingLogs::log_no_trading_pattern();
     }
 }
 
-// Core execution method - unified for both buy and sell orders
-void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& data, int current_qty, const PositionSizing& sizing) {
-    TradingLogs::log_debug_position_data(current_qty, data.pos_details.current_value, data.pos_details.qty, current_qty > 0, current_qty < 0);
+void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing) {
+    TradingLogs::log_debug_position_data(current_position_quantity, data.pos_details.current_value, data.pos_details.position_quantity, current_position_quantity > 0, current_position_quantity < 0);
     
     // Check wash trade prevention first (if enabled)
     if (config.timing.enable_wash_trade_prevention_mechanism) {
@@ -98,27 +95,22 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
         TradingLogs::log_market_status(true, "Wash trade prevention disabled - order allowed");
     }
     
-    // Handle opposite position closure if required
-    if (should_close_opposite_position(side, current_qty)) {
-        if (!close_opposite_position(side, current_qty)) {
+    if (should_close_opposite_position(side, current_position_quantity)) {
+        if (!close_opposite_position(side, current_position_quantity)) {
             TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
             return;
         }
     }
     
-    // Check if we can execute a new position
-    if (!can_execute_new_position(current_qty)) {
+    if (!can_execute_new_position(current_position_quantity)) {
         TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
         return;
     }
     
-    // Determine if this is opening a new position or closing an existing one
-    if (current_qty == 0) {
-        // Opening new position: use bracket order
-ExitTargets targets = calculate_exit_targets(side, data, sizing);
+    if (current_position_quantity == 0) {
+        ExitTargets targets = calculate_exit_targets(side, data, sizing);
         execute_bracket_order(side, data, sizing, targets);
     } else {
-        // Closing existing position: use regular market order
         execute_market_order(side, data, sizing);
     }
     
@@ -131,13 +123,14 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     // Use consolidated logging instead of multiple separate tables
-    TradingLogs::log_comprehensive_order_execution("Bracket Order", side_str, sizing.quantity, 
-                                                  data.curr.c, data.atr, data.pos_details.qty, sizing.risk_amount,
-                                                  targets.stop_loss, targets.take_profit, 
-                                                  config.trading_mode.primary_symbol, "execute_bracket_order");
+    Logging::ComprehensiveOrderExecutionRequest order_request("Bracket Order", side_str, sizing.quantity, 
+                                                    data.curr.c, data.atr, data.pos_details.position_quantity, 
+                                                    sizing.risk_amount, targets.stop_loss, targets.take_profit,
+                                                    config.trading_mode.primary_symbol, "execute_bracket_order");
+    TradingLogs::log_comprehensive_order_execution(order_request);
     
-    // Also log the calculated entry and exit values for bracket orders
-    TradingLogs::log_exit_targets_table(side_str, data.curr.c, sizing.risk_amount, config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
+    Logging::ExitTargetsTableRequest exit_targets_request(side_str, data.curr.c, sizing.risk_amount, config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
+    TradingLogs::log_exit_targets_table(exit_targets_request);
     
     try {
         bool has_pending = false;
@@ -195,11 +188,11 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
 void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) {
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
-    // Use consolidated logging instead of multiple separate debug messages
-    TradingLogs::log_comprehensive_order_execution("Market Order", side_str, sizing.quantity, 
-                                                  data.curr.c, data.atr, data.pos_details.qty, sizing.risk_amount,
-                                                  0.0, 0.0, // No stop loss or take profit for market orders
-                                                  config.trading_mode.primary_symbol, "execute_market_order");
+    Logging::ComprehensiveOrderExecutionRequest order_request("Market Order", side_str, sizing.quantity,
+                                                    data.curr.c, data.atr, data.pos_details.position_quantity,
+                                                    sizing.risk_amount, 0.0, 0.0,
+                                                    config.trading_mode.primary_symbol, "execute_market_order");
+    TradingLogs::log_comprehensive_order_execution(order_request);
     
     try {
         // Check for and cancel any pending orders before placing new ones
@@ -225,38 +218,52 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
 }
 
 // Position management methods
-bool OrderExecutionEngine::should_close_opposite_position(OrderSide side, int current_qty) const {
+bool OrderExecutionEngine::should_close_opposite_position(OrderSide side, int current_position_quantity) const {
     if (!config.strategy.close_positions_on_signal_reversal) {
         return false;
     }
     
-    return (side == OrderSide::Buy && current_qty < 0) ||
-           (side == OrderSide::Sell && current_qty > 0);
+    return (side == OrderSide::Buy && current_position_quantity < 0) ||
+           (side == OrderSide::Sell && current_position_quantity > 0);
 }
 
-bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_qty) {
+bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_position_quantity) {
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     std::string opposite_side_str = (side == OrderSide::Buy) ? POSITION_SHORT : POSITION_LONG;
     
-    TradingLogs::log_position_closure("Closing " + opposite_side_str + " position first for " + side_str + " signal", current_qty);
+    TradingLogs::log_position_closure("Closing " + opposite_side_str + " position first for " + side_str + " signal", current_position_quantity);
     
     try {
-        api_manager.close_position(config.trading_mode.primary_symbol, current_qty);
+        api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
         
-        // Wait for position closure and verify
-        std::this_thread::sleep_for(POSITION_CLOSE_WAIT_TIME);
+        int position_verification_timeout_milliseconds = config.timing.position_verification_timeout_milliseconds;
+        int maximum_position_verification_attempts = config.timing.maximum_position_verification_attempts;
         
-        for (int attempt = 0; attempt < MAX_POSITION_VERIFICATION_ATTEMPTS; ++attempt) {
+        if (position_verification_timeout_milliseconds <= 0) {
+            TradingLogs::log_market_status(false, "Invalid position verification timeout - must be positive");
+            return false;
+        }
+        
+        if (maximum_position_verification_attempts <= 0) {
+            TradingLogs::log_market_status(false, "Invalid maximum position verification attempts - must be positive");
+            return false;
+        }
+        
+        std::chrono::milliseconds position_close_wait_time(position_verification_timeout_milliseconds);
+        
+        std::this_thread::sleep_for(position_close_wait_time);
+        
+        for (int attempt = 0; attempt < maximum_position_verification_attempts; ++attempt) {
             AccountSnapshot verify_account = account_manager.fetch_account_snapshot();
-            int verify_qty = verify_account.pos_details.qty;
+            int verify_position_quantity = verify_account.pos_details.position_quantity;
             
-            if (verify_qty == 0) {
-                TradingLogs::log_debug_position_verification(verify_qty);
+            if (verify_position_quantity == 0) {
+                TradingLogs::log_debug_position_verification(verify_position_quantity);
                 return true;
             }
             
-            if (attempt < MAX_POSITION_VERIFICATION_ATTEMPTS - 1) {
-                std::this_thread::sleep_for(POSITION_CLOSE_WAIT_TIME);
+            if (attempt < maximum_position_verification_attempts - 1) {
+                std::this_thread::sleep_for(position_close_wait_time);
             }
         }
         
@@ -268,18 +275,15 @@ bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_q
     }
 }
 
-bool OrderExecutionEngine::can_execute_new_position(int current_qty) const {
-    // Can always execute if flat
-    if (is_flat_position(current_qty)) {
+bool OrderExecutionEngine::can_execute_new_position(int current_position_quantity) const {
+    if (is_flat_position(current_position_quantity)) {
         return true;
     }
     
-    // Can execute if multiple positions are allowed
     if (config.strategy.allow_multiple_positions_per_symbol) {
         return true;
     }
     
-    // Cannot execute if we have a position and multiple positions are not allowed
     return false;
 }
 
@@ -388,8 +392,8 @@ void OrderExecutionEngine::update_last_order_timestamp() {
     data_sync.last_order_timestamp->store(std::chrono::steady_clock::now());
 }
 
-bool OrderExecutionEngine::is_flat_position(int qty) const {
-    return qty == 0;
+bool OrderExecutionEngine::is_flat_position(int position_quantity) const {
+    return position_quantity == 0;
 }
 
 bool OrderExecutionEngine::should_cancel_existing_orders() const {
@@ -413,27 +417,28 @@ bool OrderExecutionEngine::validate_trade_feasibility(const PositionSizing& sizi
 }
 
 void OrderExecutionEngine::handle_market_close_positions(const ProcessedData& data) {
-    // Check if market is approaching close - simplified implementation
     if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
-        // Market is still open, no need to close positions yet
         return;
     }
     
-    int current_qty = data.pos_details.qty;
-    if (current_qty == 0) {
+    int current_position_quantity = data.pos_details.position_quantity;
+    if (current_position_quantity == 0) {
         return;
     }
     
-    int minutes_until_close = 5; // Simplified - would need proper market close time calculation
-    if (minutes_until_close > 0) {
-        TradingLogs::log_market_close_warning(minutes_until_close);
+    int market_close_grace_period_minutes = config.timing.market_close_grace_period_minutes;
+    if (market_close_grace_period_minutes <= 0) {
+        TradingLogs::log_market_status(false, "Invalid market close grace period - must be positive");
+        return;
     }
     
-    std::string side = (current_qty > 0) ? SIGNAL_SELL : SIGNAL_BUY;
-    TradingLogs::log_market_close_position_closure(current_qty, config.trading_mode.primary_symbol, side);
+    TradingLogs::log_market_close_warning(market_close_grace_period_minutes);
+    
+    std::string side = (current_position_quantity > 0) ? SIGNAL_SELL : SIGNAL_BUY;
+    TradingLogs::log_market_close_position_closure(current_position_quantity, config.trading_mode.primary_symbol, side);
     
     try {
-        api_manager.close_position(config.trading_mode.primary_symbol, current_qty);
+        api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
         TradingLogs::log_market_status(true, "Market close position closure executed successfully");
     } catch (const std::exception& e) {
         TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(e.what()));

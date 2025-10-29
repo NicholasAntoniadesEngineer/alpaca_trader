@@ -129,14 +129,14 @@ void StartupLogs::log_current_positions(const AlpacaTrader::Core::AccountManager
     log_message("│ Current Position  │ Portfolio Status                                 │", "");
     log_message("├───────────────────┼──────────────────────────────────────────────────┤", "");
     
-    if (position.qty == 0) {
+    if (position.position_quantity == 0) {
         log_message("│ Position          │ No position" + std::string(38, ' ') + "│", "");
         log_message("│ Current Value     │ $0.00" + std::string(44, ' ') + "│", "");
         log_message("│ Unrealized P/L    │ $0.00" + std::string(44, ' ') + "│", "");
         log_message("│ Exposure          │ 0.00%" + std::string(44, ' ') + "│", "");
     } else {
         log_message("│ Symbol            │ " + config.trading_mode.primary_symbol + std::string(50 - config.trading_mode.primary_symbol.length(), ' ') + "│", "");
-        log_message("│ Quantity          │ " + std::to_string(position.qty) + std::string(50 - std::to_string(position.qty).length(), ' ') + "│", "");
+        log_message("│ Quantity          │ " + std::to_string(position.position_quantity) + std::string(50 - std::to_string(position.position_quantity).length(), ' ') + "│", "");
         log_message("│ Current Value     │ " + format_currency(position.current_value) + std::string(50 - format_currency(position.current_value).length(), ' ') + "│", "");
         log_message("│ Unrealized P/L    │ " + format_currency(position.unrealized_pl) + std::string(50 - format_currency(position.unrealized_pl).length(), ' ') + "│", "");
     }

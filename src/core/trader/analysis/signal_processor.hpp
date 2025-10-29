@@ -2,7 +2,7 @@
 #define SIGNAL_PROCESSOR_HPP
 
 #include "configs/system_config.hpp"
-#include "../data/data_structures.hpp"
+#include "core/trader/data/data_structures.hpp"
 #include "core/logging/logs/trading_logs.hpp"
 
 using AlpacaTrader::Config::SystemConfig;

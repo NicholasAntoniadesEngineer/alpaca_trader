@@ -8,6 +8,7 @@
 #include "data/data_sync_structures.hpp"
 #include "data/market_data_fetcher.hpp"
 #include "trading_engine/trading_engine.hpp"
+#include "trading_engine/trading_engine_structures.hpp"
 #include "analysis/risk_manager.hpp"
 #include "core/logging/logs/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
@@ -44,7 +45,7 @@ private:
     void countdown_to_next_cycle();
 
 public:
-    TradingOrchestrator(const SystemConfig& cfg, API::ApiManager& api_mgr, AccountManager& account_mgr, Monitoring::SystemMonitor& mon, ConnectivityManager& connectivity_mgr);
+    TradingOrchestrator(const TradingOrchestratorConstructionParams& construction_params);
     ~TradingOrchestrator();
 
     void execute_trading_loop();

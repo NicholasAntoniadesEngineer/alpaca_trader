@@ -131,38 +131,30 @@ void TradingLogs::log_order_result(const std::string& order_id, bool success, co
     }
 }
 
-// Consolidated order execution logging - combines all order execution data into one comprehensive table
-void TradingLogs::log_comprehensive_order_execution(const std::string& order_type, const std::string& side, int quantity, 
-                                                   double current_price, double atr, int position_qty, double risk_amount,
-                                                   double stop_loss, double take_profit, 
-                                                   const std::string& symbol, const std::string& function_name) {
+void TradingLogs::log_comprehensive_order_execution(const ComprehensiveOrderExecutionRequest& order_execution_request) {
     TABLE_HEADER_48("ORDER EXECUTION", "Comprehensive Order Details");
     
-    // Order Configuration
-    TABLE_ROW_48("Order Type", order_type);
-    TABLE_ROW_48("Side", side);
-    TABLE_ROW_48("Quantity", std::to_string(quantity));
-    TABLE_ROW_48("Symbol", symbol);
-    TABLE_ROW_48("Function", function_name);
+    TABLE_ROW_48("Order Type", order_execution_request.order_type);
+    TABLE_ROW_48("Side", order_execution_request.side);
+    TABLE_ROW_48("Quantity", std::to_string(order_execution_request.quantity));
+    TABLE_ROW_48("Symbol", order_execution_request.symbol);
+    TABLE_ROW_48("Function", order_execution_request.function_name);
     
     TABLE_SEPARATOR_48();
     
-    // Market Data (Raw Values)
-    TABLE_ROW_48("Current Price", "$" + std::to_string(current_price));
-    TABLE_ROW_48("ATR", std::to_string(atr));
-    TABLE_ROW_48("Position Qty", std::to_string(position_qty));
-    TABLE_ROW_48("Risk Amount", "$" + std::to_string(risk_amount));
+    TABLE_ROW_48("Current Price", "$" + std::to_string(order_execution_request.current_price));
+    TABLE_ROW_48("ATR", std::to_string(order_execution_request.atr));
+    TABLE_ROW_48("Position Qty", std::to_string(order_execution_request.position_quantity));
+    TABLE_ROW_48("Risk Amount", "$" + std::to_string(order_execution_request.risk_amount));
     
-    // Exit Targets (if applicable)
-    if (stop_loss > 0.0 || take_profit > 0.0) {
+    if (order_execution_request.stop_loss > 0.0 || order_execution_request.take_profit > 0.0) {
         TABLE_SEPARATOR_48();
-        TABLE_ROW_48("Stop Loss", stop_loss > 0.0 ? "$" + std::to_string(stop_loss) : "N/A");
-        TABLE_ROW_48("Take Profit", take_profit > 0.0 ? "$" + std::to_string(take_profit) : "N/A");
-    } else if (order_type == "Market Order") {
-        // For market orders, show that this is a position closing order
+        TABLE_ROW_48("Stop Loss", order_execution_request.stop_loss > 0.0 ? "$" + std::to_string(order_execution_request.stop_loss) : "N/A");
+        TABLE_ROW_48("Take Profit", order_execution_request.take_profit > 0.0 ? "$" + std::to_string(order_execution_request.take_profit) : "N/A");
+    } else if (order_execution_request.order_type == "Market Order") {
         TABLE_SEPARATOR_48();
         TABLE_ROW_48("Order Purpose", "Position Closure");
-        TABLE_ROW_48("Entry Price", "$" + std::to_string(current_price));
+        TABLE_ROW_48("Entry Price", "$" + std::to_string(order_execution_request.current_price));
         TABLE_ROW_48("Exit Strategy", "Market Price");
     }
     
@@ -372,18 +364,18 @@ void TradingLogs::log_sizing_analysis_table(int risk_based_qty, int exposure_bas
     TABLE_FOOTER_30();
 }
 
-void TradingLogs::log_exit_targets_table(const std::string& side, double price, double risk, double rr, double stop_loss, double take_profit) {
+void TradingLogs::log_exit_targets_table(const ExitTargetsTableRequest& exit_targets_request) {
     TABLE_HEADER_30("Exit Targets", "Calculated Prices");
     
-    TABLE_ROW_30("Order Side", side);
-    TABLE_ROW_30("Entry Price", format_currency(price));
-    TABLE_ROW_30("Risk Amount", format_currency(risk));
-    TABLE_ROW_30("Risk/Reward", "1:" + std::to_string(rr));
+    TABLE_ROW_30("Order Side", exit_targets_request.side);
+    TABLE_ROW_30("Entry Price", format_currency(exit_targets_request.price));
+    TABLE_ROW_30("Risk Amount", format_currency(exit_targets_request.risk));
+    TABLE_ROW_30("Risk/Reward", "1:" + std::to_string(exit_targets_request.risk_reward_ratio));
     
     TABLE_SEPARATOR_30();
     
-    TABLE_ROW_30("Stop Loss", format_currency(stop_loss));
-    TABLE_ROW_30("Take Profit", format_currency(take_profit));
+    TABLE_ROW_30("Stop Loss", format_currency(exit_targets_request.stop_loss));
+    TABLE_ROW_30("Take Profit", format_currency(exit_targets_request.take_profit));
     
     TABLE_FOOTER_30();
 }
@@ -927,11 +919,11 @@ void TradingLogs::log_position_sizing_skipped(const std::string& reason) {
     log_message("Position sizing resulted in " + reason + ", skipping trade", "");
 }
 
-void TradingLogs::log_debug_position_data(int current_qty, double position_value, int position_qty, bool is_long, bool is_short) {
+void TradingLogs::log_debug_position_data(int current_position_quantity, double position_value, int position_quantity_value, bool is_long, bool is_short) {
     LOG_THREAD_SECTION_HEADER("POSITION DEBUG");
-    LOG_THREAD_CONTENT("Current Quantity: " + std::to_string(current_qty));
+    LOG_THREAD_CONTENT("Current Quantity: " + std::to_string(current_position_quantity));
     LOG_THREAD_CONTENT("Position Value: $" + std::to_string(position_value));
-    LOG_THREAD_CONTENT("Position Qty: " + std::to_string(position_qty));
+    LOG_THREAD_CONTENT("Position Qty: " + std::to_string(position_quantity_value));
     LOG_THREAD_CONTENT("Is Long: " + std::string(is_long ? "true" : "false") + ", Is Short: " + std::string(is_short ? "true" : "false"));
     LOG_THREAD_SECTION_FOOTER();
 }
@@ -951,9 +943,9 @@ void TradingLogs::log_realtime_price_fallback(double delayed_price) {
     LOG_THREAD_SECTION_FOOTER();
 }
 
-void TradingLogs::log_debug_account_details(int qty, double current_value) {
+void TradingLogs::log_debug_account_details(int position_quantity, double current_value) {
     LOG_THREAD_SECTION_HEADER("ACCOUNT DEBUG");
-    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(qty));
+    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(position_quantity));
     LOG_THREAD_CONTENT("Current Value: $" + std::to_string(current_value));
     LOG_THREAD_SECTION_FOOTER();
 }
@@ -965,17 +957,17 @@ void TradingLogs::log_debug_fresh_data_fetch(const std::string& position_type) {
     LOG_THREAD_SECTION_FOOTER();
 }
 
-void TradingLogs::log_debug_fresh_position_data(int fresh_qty, int current_qty) {
+void TradingLogs::log_debug_fresh_position_data(int fresh_position_quantity, int current_position_quantity) {
     LOG_THREAD_SECTION_HEADER("POSITION DATA UPDATE");
-    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(fresh_qty));
-    LOG_THREAD_CONTENT("Previous Quantity: " + std::to_string(current_qty));
+    LOG_THREAD_CONTENT("Fresh Quantity: " + std::to_string(fresh_position_quantity));
+    LOG_THREAD_CONTENT("Previous Quantity: " + std::to_string(current_position_quantity));
     LOG_THREAD_SECTION_FOOTER();
 }
 
 
-void TradingLogs::log_debug_position_closure_attempt(int qty) {
+void TradingLogs::log_debug_position_closure_attempt(int position_quantity) {
     LOG_THREAD_SECTION_HEADER("POSITION CLOSURE ATTEMPT");
-    LOG_THREAD_CONTENT("Attempting to close fresh position: " + std::to_string(qty));
+    LOG_THREAD_CONTENT("Attempting to close fresh position: " + std::to_string(position_quantity));
     LOG_THREAD_SECTION_FOOTER();
 }
 
@@ -985,9 +977,9 @@ void TradingLogs::log_debug_position_closure_attempted() {
     LOG_THREAD_SECTION_FOOTER();
 }
 
-void TradingLogs::log_debug_position_verification(int verify_qty) {
+void TradingLogs::log_debug_position_verification(int verify_position_quantity) {
     LOG_THREAD_SECTION_HEADER("POSITION VERIFICATION");
-    LOG_THREAD_CONTENT("Verifying position quantity: " + std::to_string(verify_qty));
+    LOG_THREAD_CONTENT("Verifying position quantity: " + std::to_string(verify_position_quantity));
     LOG_THREAD_SECTION_FOOTER();
 }
 
