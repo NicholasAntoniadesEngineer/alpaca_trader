@@ -4,7 +4,7 @@
 #include "configs/system_config.hpp"
 #include "data_structures.hpp"
 #include "data_sync_structures.hpp"
-#include "core/logging/market_data_logs.hpp"
+#include "core/logging/logs/market_data_logs.hpp"
 #include "api/general/api_manager.hpp"
 
 using AlpacaTrader::Config::SystemConfig;

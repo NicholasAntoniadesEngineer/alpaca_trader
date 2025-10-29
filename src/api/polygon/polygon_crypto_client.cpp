@@ -1,6 +1,6 @@
 #include "polygon_crypto_client.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/logging_macros.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include "core/utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <curl/curl.h>

@@ -1,5 +1,5 @@
 #include "trading_engine.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 #include "core/system/system_monitor.hpp"
 #include "core/utils/time_utils.hpp"
 #include "api/general/api_manager.hpp"

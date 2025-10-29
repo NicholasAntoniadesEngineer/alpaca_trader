@@ -1,5 +1,5 @@
 #include "system_monitor.hpp"
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include <sstream>
 #include <iomanip>
 

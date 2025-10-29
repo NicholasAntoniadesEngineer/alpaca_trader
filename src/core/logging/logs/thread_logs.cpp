@@ -1,7 +1,7 @@
 #include "thread_logs.hpp"
 #include "startup_logs.hpp"
-#include "async_logger.hpp"
-#include "logging_macros.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include "configs/system_config.hpp"
 #include <sstream>
 

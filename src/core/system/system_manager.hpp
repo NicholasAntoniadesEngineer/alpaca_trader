@@ -5,7 +5,7 @@
 #include <mutex>
 #include <memory>
 #include <vector>
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include "configs/thread_config.hpp"
 #include "system_state.hpp"
 #include "system_threads.hpp"

@@ -5,8 +5,8 @@
 #include "core/system/system_threads.hpp"
 #include "core/system/system_manager.hpp"
 #include "core/system/system_modules.hpp"
-#include "core/logging/startup_logs.hpp"
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
 
 
 // =============================================================================

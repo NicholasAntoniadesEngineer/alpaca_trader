@@ -1,7 +1,7 @@
 #include "market_processing.hpp"
 #include "core/trader/analysis/indicators.hpp"
-#include "core/logging/trading_logs.hpp"
-#include "core/logging/market_data_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
+#include "core/logging/logs/market_data_logs.hpp"
 #include <cmath>
 
 namespace AlpacaTrader {

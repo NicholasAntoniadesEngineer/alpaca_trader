@@ -7,7 +7,7 @@
 #include "api/general/api_manager.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/data/market_data_validator.hpp"
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include <atomic>
 #include <mutex>
 #include <condition_variable>

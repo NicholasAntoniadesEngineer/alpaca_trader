@@ -3,8 +3,8 @@
  * Handles asynchronous logging operations and console output management.
  */
 #include "logging_thread.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/startup_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
 #include "core/threads/thread_logic/thread_registry.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include <iostream>

@@ -1,7 +1,7 @@
 #include "account_manager.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/account_logs.hpp"
-#include "core/logging/market_data_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/account_logs.hpp"
+#include "core/logging/logs/market_data_logs.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 #include <string>

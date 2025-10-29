@@ -5,9 +5,9 @@
 #include "trading_system_factory.hpp"
 #include "core/threads/thread_logic/thread_registry.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
-#include "core/logging/startup_logs.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/account_logs.hpp"
+#include "core/logging/logs/startup_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/account_logs.hpp"
 #include "configs/system_config.hpp"
 #include "core/system/system_configurations.hpp"
 #include "core/trader/trader.hpp"
@@ -31,7 +31,6 @@
 using namespace AlpacaTrader::Core;
 using namespace AlpacaTrader::Logging;
 using namespace AlpacaTrader::Threads;
-using namespace AlpacaTrader::Core::ThreadSystem;
 
 
 void log_startup_information(const SystemModules& modules, const AlpacaTrader::Config::SystemConfig& config) {

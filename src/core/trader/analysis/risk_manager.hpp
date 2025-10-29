@@ -3,7 +3,7 @@
 
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "core/logging/risk_logs.hpp"
+#include "core/logging/logs/risk_logs.hpp"
 
 using AlpacaTrader::Config::SystemConfig;
 

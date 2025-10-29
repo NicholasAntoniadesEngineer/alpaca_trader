@@ -6,7 +6,7 @@
 #include <fstream>
 #include <memory>
 #include <vector>
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include "configs/system_config.hpp"
 
 namespace AlpacaTrader {

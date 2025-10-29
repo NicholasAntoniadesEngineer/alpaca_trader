@@ -4,7 +4,7 @@
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/trader/analysis/strategy_logic.hpp"
-#include "logging_macros.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include <vector>
 
 using AlpacaTrader::Config::SystemConfig;

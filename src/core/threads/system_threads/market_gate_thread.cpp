@@ -3,8 +3,8 @@
  * Manages when market data fetching is allowed based on market hours and connectivity.
  */
 #include "market_gate_thread.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/startup_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <chrono>

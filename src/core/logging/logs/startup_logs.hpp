@@ -3,7 +3,7 @@
 
 #include "configs/system_config.hpp"
 #include "core/trader/data/account_manager.hpp"
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 
 using AlpacaTrader::Config::SystemConfig;
 

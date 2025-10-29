@@ -1,5 +1,5 @@
 #include "market_session_manager.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 
 namespace AlpacaTrader {
 namespace Core {

@@ -1,5 +1,5 @@
 #include "market_data_manager.hpp"
-#include "core/logging/market_data_logs.hpp"
+#include "core/logging/logs/market_data_logs.hpp"
 #include "core/trader/analysis/indicators.hpp"
 #include <cmath>
 

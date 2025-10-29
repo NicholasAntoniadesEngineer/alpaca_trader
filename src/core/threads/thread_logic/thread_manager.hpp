@@ -5,7 +5,7 @@
 #include "configs/timing_config.hpp"
 #include "thread_definition.hpp"
 #include "thread_registry.hpp"
-#include "core/logging/thread_logs.hpp"
+#include "core/logging/logs/thread_logs.hpp"
 #include "core/system/system_threads.hpp"
 #include "core/system/system_modules.hpp"
 #include "configs/system_config.hpp"
@@ -19,7 +19,6 @@
 
 namespace AlpacaTrader {
 namespace Core {
-namespace ThreadSystem {
 
 // Thread manager state structure to avoid global variables
 struct ThreadManagerState {
@@ -80,7 +79,6 @@ private:
     static bool apply_thread_configuration(ThreadManagerState& manager_state, const AlpacaTrader::Config::ThreadSettings& platform_config);
 };
 
-} // namespace ThreadSystem
 } // namespace Core
 } // namespace AlpacaTrader
 

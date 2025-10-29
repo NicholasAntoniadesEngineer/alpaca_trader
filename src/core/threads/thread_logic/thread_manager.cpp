@@ -1,7 +1,7 @@
 #include "thread_manager.hpp"
 #include "platform/thread_control.hpp"
-#include "core/logging/startup_logs.hpp"
-#include "core/logging/thread_logs.hpp"
+#include "core/logging/logs/startup_logs.hpp"
+#include "core/logging/logs/thread_logs.hpp"
 #include "core/system/system_threads.hpp"
 #include "core/system/system_modules.hpp"
 #include "thread_registry.hpp"
@@ -10,7 +10,6 @@ using ThreadSystem::Platform::ThreadControl;
 
 namespace AlpacaTrader {
 namespace Core {
-namespace ThreadSystem {
 
 void Manager::start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules) 
 {
@@ -80,6 +79,5 @@ bool Manager::apply_thread_configuration(ThreadManagerState& manager_state, cons
     return configuration_success;
 }
 
-} // namespace ThreadSystem
 } // namespace Core
 } // namespace AlpacaTrader

@@ -3,7 +3,7 @@
 
 #include "core/trader/data/account_manager.hpp"
 #include "core/trader/trader.hpp"
-#include "core/logging/account_logs.hpp"
+#include "core/logging/logs/account_logs.hpp"
 #include "api/general/api_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/market_gate_thread.hpp"

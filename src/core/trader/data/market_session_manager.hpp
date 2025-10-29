@@ -3,7 +3,7 @@
 
 #include "configs/system_config.hpp"
 #include "api/general/api_manager.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 
 using AlpacaTrader::Config::SystemConfig;
 

@@ -11,7 +11,7 @@
 #include "market_data_validator.hpp"
 #include "bars_data_manager.hpp"
 #include "market_session_manager.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 #include <memory>
 #include <atomic>
 #include <mutex>

@@ -9,11 +9,11 @@
  * - Updating shared market data snapshots
  */
 #include "market_data_thread.hpp"
-#include "core/logging/market_data_thread_logs.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/csv_bars_logger.hpp"
-#include "core/logging/startup_logs.hpp"
-#include "core/logging/logging_macros.hpp"
+#include "core/logging/logs/market_data_thread_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logger/csv_bars_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include "core/trader/data/market_processing.hpp"
 #include "core/trader/data/bars_data_manager.hpp"

@@ -4,9 +4,9 @@
  */
 #include "trader_thread.hpp"
 #include "core/trader/trader.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/startup_logs.hpp"
-#include "core/logging/thread_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
+#include "core/logging/logs/thread_logs.hpp"
 #include <chrono>
 #include <thread>
 

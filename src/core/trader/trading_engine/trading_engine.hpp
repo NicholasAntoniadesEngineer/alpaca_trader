@@ -11,7 +11,7 @@
 #include "order_execution_engine.hpp"
 #include "core/trader/data/market_data_fetcher.hpp"
 #include "core/trader/data/data_sync_structures.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include "core/system/system_monitor.hpp"
 

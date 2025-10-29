@@ -6,8 +6,8 @@
 #include "core/system/system_modules.hpp"
 #include "core/system/system_threads.hpp"
 #include "configs/system_config.hpp"
-#include "core/logging/thread_logs.hpp"
-#include "core/logging/logging_macros.hpp"
+#include "core/logging/logs/thread_logs.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include "thread_definition.hpp"
 #include <vector>
 #include <memory>

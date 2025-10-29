@@ -1,5 +1,5 @@
 #include "trading_system_factory.hpp"
-#include "core/logging/async_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include "core/threads/thread_register.hpp"
 #include <stdexcept>
 

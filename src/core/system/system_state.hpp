@@ -4,7 +4,7 @@
 #include "configs/system_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "configs/system_config.hpp"
-#include "core/logging/thread_logs.hpp"
+#include "core/logging/logs/thread_logs.hpp"
 #include "core/system/system_modules.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/system/system_monitor.hpp"
@@ -61,7 +61,7 @@ struct SystemState {
     const SystemConfig& trader_view = config;  // Trader-specific configuration view
     std::unique_ptr<SystemModules> trading_modules;  // All system modules
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
-    AlpacaTrader::Core::ThreadSystem::ThreadManagerState thread_manager_state;  // Thread management state
+    AlpacaTrader::Core::ThreadManagerState thread_manager_state;  // Thread management state
     AlpacaTrader::Core::Monitoring::SystemMonitor system_monitor;  // System monitoring state
     ConnectivityManager connectivity_manager;  // System connectivity state
 

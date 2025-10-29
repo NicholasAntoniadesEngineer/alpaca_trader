@@ -1,7 +1,7 @@
 #include "thread_registry.hpp"
 #include "thread_manager.hpp"
-#include "core/logging/thread_logs.hpp"
-#include "core/logging/logging_macros.hpp"
+#include "core/logging/logs/thread_logs.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include <iostream>
 
 namespace AlpacaTrader {

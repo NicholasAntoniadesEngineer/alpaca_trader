@@ -9,7 +9,7 @@
 #include "data/market_data_fetcher.hpp"
 #include "trading_engine/trading_engine.hpp"
 #include "analysis/risk_manager.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include "core/system/system_monitor.hpp"
 #include <thread>

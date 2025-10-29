@@ -1,8 +1,8 @@
 #include "market_data_thread_logs.hpp"
-#include "async_logger.hpp"
-#include "csv_bars_logger.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logger/csv_bars_logger.hpp"
 #include "core/utils/time_utils.hpp"
-#include "core/logging/logging_macros.hpp"
+#include "core/logging/logger/logging_macros.hpp"
 #include <sstream>
 #include <iomanip>
 

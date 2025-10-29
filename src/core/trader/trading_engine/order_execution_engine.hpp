@@ -7,7 +7,7 @@
 #include "core/trader/analysis/strategy_logic.hpp"
 #include "api/general/api_manager.hpp"
 #include "core/trader/data/account_manager.hpp"
-#include "core/logging/trading_logs.hpp"
+#include "core/logging/logs/trading_logs.hpp"
 #include "core/system/system_monitor.hpp"
 #include <string>
 #include <chrono>

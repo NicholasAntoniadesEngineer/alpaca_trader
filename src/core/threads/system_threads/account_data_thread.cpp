@@ -3,8 +3,8 @@
  * Maintains current account state for trading decisions.
  */
 #include "account_data_thread.hpp"
-#include "core/logging/async_logger.hpp"
-#include "core/logging/startup_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
+#include "core/logging/logs/startup_logs.hpp"
 #include "core/threads/thread_logic/platform/thread_control.hpp"
 #include <chrono>
 

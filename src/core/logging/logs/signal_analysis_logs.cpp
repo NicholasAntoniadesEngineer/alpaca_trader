@@ -1,7 +1,7 @@
 #include "signal_analysis_logs.hpp"
 #include "trading_logs.hpp"
 #include "core/utils/time_utils.hpp"
-#include "core/logging/csv_trade_logger.hpp"
+#include "core/logging/logger/csv_trade_logger.hpp"
 #include <stdexcept>
 
 namespace AlpacaTrader {
