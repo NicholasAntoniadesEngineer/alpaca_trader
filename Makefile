@@ -6,6 +6,10 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 INCLUDES = -I. -Isrc
 LIBS = -lcurl -pthread
 
+# Sanitized build flags
+ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -g -O0
+ASAN_LIBS = -fsanitize=address
+
 # Directories
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -19,6 +23,8 @@ SOURCES = src/main.cpp \
   src/api/alpaca/alpaca_stocks_client.cpp \
   src/api/polygon/polygon_crypto_client.cpp \
   src/core/trader/trader.cpp \
+  src/core/trader/market_data_coordinator.cpp \
+  src/core/trader/account_data_coordinator.cpp \
   src/core/trader/trading_engine/trading_engine.cpp \
   src/core/trader/analysis/risk_manager.cpp \
   src/core/trader/trading_engine/order_execution_engine.cpp \
@@ -40,18 +46,18 @@ SOURCES = src/main.cpp \
   src/core/system/trading_system_factory.cpp \
   src/core/trader/data/account_manager.cpp \
   src/core/utils/time_utils.cpp \
-  src/core/logging/account_logs.cpp \
-  src/core/logging/market_data_logs.cpp \
-  src/core/logging/risk_logs.cpp \
+  src/core/logging/logs/account_logs.cpp \
+  src/core/logging/logs/market_data_logs.cpp \
+  src/core/logging/logs/risk_logs.cpp \
   src/core/utils/http_utils.cpp \
-  src/core/logging/async_logger.cpp \
-  src/core/logging/csv_bars_logger.cpp \
-  src/core/logging/csv_trade_logger.cpp \
-  src/core/logging/trading_logs.cpp \
-  src/core/logging/signal_analysis_logs.cpp \
-  src/core/logging/market_data_thread_logs.cpp \
-  src/core/logging/thread_logs.cpp \
-  src/core/logging/startup_logs.cpp \
+  src/core/logging/logger/async_logger.cpp \
+  src/core/logging/logger/csv_bars_logger.cpp \
+  src/core/logging/logger/csv_trade_logger.cpp \
+  src/core/logging/logs/trading_logs.cpp \
+  src/core/logging/logs/signal_analysis_logs.cpp \
+  src/core/logging/logs/market_data_thread_logs.cpp \
+  src/core/logging/logs/thread_logs.cpp \
+  src/core/logging/logs/startup_logs.cpp \
   src/configs/thread_config.cpp \
   src/core/threads/thread_logic/platform/thread_control.cpp \
   src/core/threads/thread_logic/platform/linux/linux_thread_control.cpp \
@@ -89,7 +95,8 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/core/trader/config_loader
 	mkdir -p $(OBJ_DIR)/src/core/trader/data
 	mkdir -p $(OBJ_DIR)/src/core/trader/trading_engine
-	mkdir -p $(OBJ_DIR)/src/core/logging
+	mkdir -p $(OBJ_DIR)/src/core/logging/logger
+	mkdir -p $(OBJ_DIR)/src/core/logging/logs
 	mkdir -p $(OBJ_DIR)/src/core/utils
 	mkdir -p $(OBJ_DIR)/src/core/threads
 	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic
@@ -111,6 +118,12 @@ $(TARGET): $(OBJECTS) | $(BIN_DIR)
 # Compile source files to object files
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# AddressSanitizer build
+asan: CXXFLAGS := $(CXXFLAGS) $(ASAN_FLAGS)
+asan: LIBS := $(LIBS) $(ASAN_LIBS)
+asan: clean $(TARGET)
+	@echo "ASAN build complete"
 
 # Clean build artifacts
 clean:
@@ -140,6 +153,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all          - Build production executable"
+	@echo "  asan         - Build with AddressSanitizer and debug info"
 	@echo "  clean        - Remove build artifacts"
 	@echo "  clean-all    - Remove all artifacts and logs"
 	@echo "  rebuild      - Force rebuild from scratch"
@@ -150,4 +164,4 @@ help:
 	@echo "  Symlink:     alpaca_trader_latest"
 
 # Prevent make from treating file names as targets
-.PHONY: all clean clean-obj clean-all rebuild help build-and-clean
+.PHONY: all clean clean-obj clean-all rebuild help build-and-clean asan
