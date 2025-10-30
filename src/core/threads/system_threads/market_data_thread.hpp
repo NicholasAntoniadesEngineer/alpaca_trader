@@ -4,9 +4,8 @@
 #include "configs/strategy_config.hpp"
 #include "configs/timing_config.hpp"
 #include "core/threads/thread_register.hpp"
-#include "api/general/api_manager.hpp"
+#include "core/trader/market_data_coordinator.hpp"
 #include "core/trader/data/data_structures.hpp"
-#include "core/trader/data/market_data_validator.hpp"
 #include "core/logging/logger/async_logger.hpp"
 #include <atomic>
 #include <mutex>
@@ -21,9 +20,9 @@ using namespace AlpacaTrader::Core;
 using namespace AlpacaTrader::API;
 
 struct MarketDataThread {
-    const StrategyConfig& strategy;  // Now contains target settings
+    const StrategyConfig& strategy;
     const TimingConfig& timing;
-    ApiManager& api_manager;
+    AlpacaTrader::Core::MarketDataCoordinator& market_data_coordinator;
     std::mutex& state_mtx;
     std::condition_variable& data_cv;
     MarketSnapshot& market_snapshot;
@@ -32,14 +31,13 @@ struct MarketDataThread {
     std::atomic<std::chrono::steady_clock::time_point>& market_data_timestamp;
     std::atomic<bool>& market_data_fresh;
 
-    // For tracking previous bar data to detect changes
     Bar previous_bar{};
     std::chrono::steady_clock::time_point last_bar_log_time{};
     std::atomic<bool>* allow_fetch_ptr {nullptr};
     std::atomic<unsigned long>* iteration_counter {nullptr};
 
     MarketDataThread(const AlpacaTrader::Config::MarketDataThreadConfig& cfg,
-                    ApiManager& api_mgr,
+                    AlpacaTrader::Core::MarketDataCoordinator& coordinator_ref,
                     std::mutex& mtx,
                     std::condition_variable& cv,
                     MarketSnapshot& snapshot,
@@ -47,7 +45,7 @@ struct MarketDataThread {
                    std::atomic<bool>& running_flag,
                    std::atomic<std::chrono::steady_clock::time_point>& timestamp,
                    std::atomic<bool>& fresh_flag)
-        : strategy(cfg.strategy), timing(cfg.timing), api_manager(api_mgr),
+        : strategy(cfg.strategy), timing(cfg.timing), market_data_coordinator(coordinator_ref),
           state_mtx(mtx), data_cv(cv), market_snapshot(snapshot), has_market(has_market_flag),
           running(running_flag), market_data_timestamp(timestamp), market_data_fresh(fresh_flag) {}
 
@@ -64,9 +62,6 @@ private:
     // Thread lifecycle management
     void execute_market_data_collection_loop();
     void process_market_data_iteration();
-    
-    // Market data processing
-    void update_market_data_snapshot(const ProcessedData& computed_data);
 };
 
 } // namespace Threads

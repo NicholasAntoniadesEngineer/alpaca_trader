@@ -27,6 +27,7 @@ struct ApiProviderConfig {
     // Bar configuration (for providers that support configurable bars)
     std::string bar_timespan;
     int bar_multiplier;
+    int bars_range_minutes;
     
     struct EndpointConfig {
         std::string bars;

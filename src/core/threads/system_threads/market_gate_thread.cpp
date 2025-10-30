@@ -23,6 +23,7 @@ void MarketGateThread::operator()() {
     try {
         // Wait for main thread to complete priority setup
         std::this_thread::sleep_for(std::chrono::milliseconds(timing.thread_startup_sequence_delay_milliseconds));
+        log_message("MarketGateThread starting", "trading_system.log");
         
         // Start the market gate monitoring loop
         execute_market_gate_monitoring_loop();
@@ -35,16 +36,32 @@ void MarketGateThread::operator()() {
 
 void MarketGateThread::execute_market_gate_monitoring_loop() {
     try {
-        bool last_within_trading_hours = api_manager.is_within_trading_hours();
+        log_message("MarketGateThread before initial is_within_trading_hours", "trading_system.log");
+        bool last_within_trading_hours = false;
+        try {
+            last_within_trading_hours = api_manager.is_within_trading_hours(trading_symbol);
+            connectivity_manager.report_success();
+        } catch (const std::exception& e) {
+            connectivity_manager.report_failure(e.what());
+            last_within_trading_hours = false;
+        } catch (...) {
+            connectivity_manager.report_failure("Unknown error in is_within_trading_hours");
+            last_within_trading_hours = false;
+        }
+        log_message(std::string("MarketGateThread initial within_trading_hours=") + (last_within_trading_hours?"true":"false"), "trading_system.log");
         allow_fetch.store(last_within_trading_hours);
         
         ConnectivityManager::ConnectionStatus last_connectivity_status = connectivity_manager.get_status();
         
         while (running.load()) {
             try {
+                log_message("MarketGateThread before check_and_update_fetch_window", "trading_system.log");
                 check_and_update_fetch_window(last_within_trading_hours);
+                log_message("MarketGateThread after check_and_update_fetch_window", "trading_system.log");
                 
+                log_message("MarketGateThread before check_and_report_connectivity_status", "trading_system.log");
                 check_and_report_connectivity_status(last_connectivity_status);
+                log_message("MarketGateThread after check_and_report_connectivity_status", "trading_system.log");
                 
                 // Increment iteration counter for monitoring
                 if (iteration_counter) {
@@ -54,11 +71,13 @@ void MarketGateThread::execute_market_gate_monitoring_loop() {
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
             } catch (const std::exception& exception) {
                 log_message("MarketGateThread loop iteration exception: " + std::string(exception.what()), logging.log_file);
-                // Continue running - don't exit the thread
+                connectivity_manager.report_failure(exception.what());
+                allow_fetch.store(false);
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
             } catch (...) {
                 log_message("MarketGateThread loop iteration unknown exception", logging.log_file);
-                // Continue running - don't exit the thread
+                connectivity_manager.report_failure("Unknown gate loop error");
+                allow_fetch.store(false);
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_gate_poll_interval_sec));
             }
         }
@@ -76,7 +95,19 @@ void MarketGateThread::execute_market_gate_monitoring_loop() {
 // ========================================================================
 
 void MarketGateThread::check_and_update_fetch_window(bool& last_within_trading_hours) {
-    bool currently_within_trading_hours = api_manager.is_within_trading_hours();
+    log_message("MarketGateThread check_and_update_fetch_window BEFORE api", "trading_system.log");
+    bool currently_within_trading_hours = false;
+    try {
+        currently_within_trading_hours = api_manager.is_within_trading_hours(trading_symbol);
+        connectivity_manager.report_success();
+    } catch (const std::exception& e) {
+        connectivity_manager.report_failure(e.what());
+        currently_within_trading_hours = false;
+    } catch (...) {
+        connectivity_manager.report_failure("Unknown error in trading hours check");
+        currently_within_trading_hours = false;
+    }
+    log_message(std::string("MarketGateThread check_and_update_fetch_window within_trading_hours=") + (currently_within_trading_hours?"true":"false"), "trading_system.log");
     if (currently_within_trading_hours != last_within_trading_hours) {
         allow_fetch.store(currently_within_trading_hours);
         log_message(std::string("Market fetch gate ") + (currently_within_trading_hours ? "ENABLED" : "DISABLED") +

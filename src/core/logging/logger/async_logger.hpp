@@ -15,6 +15,7 @@
 namespace AlpacaTrader {
 namespace Logging {
 
+
 // Named constants
 constexpr int LOG_TAG_WIDTH = 6;
 static_assert(LOG_TAG_WIDTH > 0, "LOG_TAG_WIDTH must be positive");
@@ -38,9 +39,14 @@ public:
 
 void set_async_logger(AsyncLogger* logger);
 
-// Global console synchronization
-extern std::mutex g_console_mtx;
-extern std::atomic<bool> g_inline_active;
+struct LoggingContext {
+    std::shared_ptr<AsyncLogger> async_logger;
+    std::shared_ptr<CSVBarsLogger> csv_bars_logger;
+    std::shared_ptr<CSVTradeLogger> csv_trade_logger;
+    std::mutex console_mutex;
+    std::atomic<bool> inline_active{false};
+    std::string run_folder;
+};
 
 // Console inline status (no newline, overwrites same line; not written to file)
 void log_inline_status(const std::string& message);
@@ -59,7 +65,7 @@ void log_message(const std::string& message, const std::string& log_file_path);
 std::string get_git_commit_hash();
 std::string generate_timestamped_log_filename(const std::string& base_filename);
 
-// Global lifecycle helpers
+// Global lifecycle helpers (use context internally)
 void initialize_global_logger(AsyncLogger& logger);
 void shutdown_global_logger(AsyncLogger& logger);
 
@@ -70,9 +76,13 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
 std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename);
 std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename);
 
-// Global CSV logger access
-extern std::shared_ptr<CSVBarsLogger> g_csv_bars_logger;
-extern std::shared_ptr<CSVTradeLogger> g_csv_trade_logger;
+// Context-backed accessors (no externs)
+std::shared_ptr<CSVBarsLogger> get_csv_bars_logger();
+std::shared_ptr<CSVTradeLogger> get_csv_trade_logger();
+std::mutex& get_console_mutex();
+std::atomic<bool>& get_inline_active_flag();
+const std::string& get_run_folder();
+void set_logging_context(LoggingContext& context);
 
 } // namespace Logging
 } // namespace AlpacaTrader

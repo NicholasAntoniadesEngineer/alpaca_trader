@@ -88,6 +88,12 @@ bool BarsDataManager::compute_technical_indicators_from_bars(ProcessedData& proc
         return false;
     }
 
+    // Defensive: need at least 2 bars for prev/curr semantics downstream
+    if (bars_data.size() < 2) {
+        MarketDataLogs::log_market_data_result_table("Indicator computation failed - insufficient bars for tail access", false, bars_data.size(), config.logging.log_file);
+        return false;
+    }
+
     const Bar& current_bar = bars_data.back();
     processed_data.curr = current_bar;
 
@@ -151,12 +157,15 @@ MarketSnapshot BarsDataManager::create_market_snapshot_from_bars(const std::vect
 std::vector<Bar> BarsDataManager::fetch_historical_market_data(const MarketDataFetchRequest& fetch_request) const {
     MarketDataLogs::log_market_data_fetch_table(fetch_request.symbol, config.logging.log_file);
     
-    BarRequest bar_request{fetch_request.symbol, fetch_request.bars_to_fetch};
-    auto historical_bars = api_manager.get_recent_bars(bar_request);
-    
-    MarketDataLogs::log_market_data_result_table("Bars fetched", true, historical_bars.size(), config.logging.log_file);
-    
-    return historical_bars;
+    try {
+        BarRequest bar_request{fetch_request.symbol, fetch_request.bars_to_fetch};
+        auto historical_bars = api_manager.get_recent_bars(bar_request);
+        MarketDataLogs::log_market_data_result_table("Bars fetched", true, historical_bars.size(), config.logging.log_file);
+        return historical_bars;
+    } catch (const std::exception& e) {
+        MarketDataLogs::log_market_data_failure_summary(fetch_request.symbol, "API Exception", e.what(), 0, config.logging.log_file);
+        return {};
+    }
 }
 
 bool BarsDataManager::has_sufficient_bars_for_calculations(const std::vector<Bar>& historical_bars, int required_bars) const {

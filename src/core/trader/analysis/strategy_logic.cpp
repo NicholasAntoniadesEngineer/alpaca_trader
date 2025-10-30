@@ -12,6 +12,8 @@
 #include <cmath>
 #include <climits>
 
+using namespace AlpacaTrader::Logging;
+
 namespace AlpacaTrader {
 namespace Core {
 
@@ -410,8 +412,8 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
             }
             std::string symbol = request.trading_mode_configuration.primary_symbol;
 
-            if (AlpacaTrader::Logging::g_csv_trade_logger) {
-                AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
+            if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
+                csv->log_position_sizing(
                     timestamp, symbol, sizing.quantity, sizing.risk_amount,
                     sizing.quantity * request.processed_data.curr.c, request.available_buying_power
                 );
@@ -439,8 +441,8 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
         }
         std::string symbol = request.trading_mode_configuration.primary_symbol;
 
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_position_sizing(
+        if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
+            csv->log_position_sizing(
                 timestamp, symbol, sizing.quantity, sizing.risk_amount,
                 sizing.quantity * request.processed_data.curr.c, request.available_buying_power
             );

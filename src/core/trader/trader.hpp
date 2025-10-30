@@ -27,7 +27,6 @@ private:
 
     struct RuntimeState {
         double initial_equity = 0.0;
-        std::thread decision_thread;
         std::atomic<unsigned long> loop_counter{0};
         std::atomic<unsigned long>* iteration_counter = nullptr;
     };
@@ -38,6 +37,7 @@ private:
     RiskManager risk_manager;
     MarketDataFetcher data_fetcher;
     DataSyncReferences data_sync;
+    MarketDataSyncState fetcher_sync_state; // persistent sync state for data_fetcher
     RuntimeState runtime;
     ConnectivityManager& connectivity_manager;
 
@@ -46,7 +46,6 @@ private:
 
 public:
     TradingOrchestrator(const TradingOrchestratorConstructionParams& construction_params);
-    ~TradingOrchestrator();
 
     void execute_trading_loop();
     void setup_data_synchronization(const DataSyncConfig& config);

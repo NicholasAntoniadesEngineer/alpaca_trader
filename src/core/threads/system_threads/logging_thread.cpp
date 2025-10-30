@@ -172,10 +172,10 @@ void LoggingThread::process_logging_queue(std::ofstream& log_file) {
 
 void LoggingThread::output_log_line(const std::string& log_line, std::ofstream& log_file) {
     {
-        std::lock_guard<std::mutex> cguard(g_console_mtx);
-        if (g_inline_active.load()) {
+        std::lock_guard<std::mutex> cguard(get_console_mutex());
+        if (get_inline_active_flag().load()) {
             std::cout << std::endl;
-            g_inline_active.store(false);
+            get_inline_active_flag().store(false);
         }
         std::cout << log_line << std::flush;
     }

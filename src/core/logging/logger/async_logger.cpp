@@ -21,15 +21,7 @@ namespace Logging {
 
 static std::atomic<AsyncLogger*> g_async_logger{nullptr};
 static thread_local std::string t_log_tag = "MAIN  ";
-std::mutex g_console_mtx;
-std::atomic<bool> g_inline_active{false};
-
-// Global CSV loggers
-std::shared_ptr<CSVBarsLogger> g_csv_bars_logger;
-std::shared_ptr<CSVTradeLogger> g_csv_trade_logger;
-
-// Global run folder for this instance
-std::string g_current_run_folder;
+static std::atomic<LoggingContext*> g_logging_context{nullptr};
 
 void set_async_logger(AsyncLogger* logger) {
     g_async_logger.store(logger);
@@ -69,10 +61,12 @@ void log_message(const std::string& message, const std::string& log_file_path) {
 
         {
             try {
-                std::lock_guard<std::mutex> cguard(g_console_mtx);
-                if (g_inline_active.load()) {
+                auto* ctx = g_logging_context.load();
+                if (!ctx) { throw std::runtime_error("Logging context not set"); }
+                std::lock_guard<std::mutex> cguard(ctx->console_mutex);
+                if (ctx->inline_active.load()) {
                     std::cout << std::endl;
-                    g_inline_active.store(false);
+                    ctx->inline_active.store(false);
                 }
                 std::cout << log_str << std::flush;
             } catch (...) {
@@ -101,16 +95,20 @@ void log_message(const std::string& message, const std::string& log_file_path) {
 
 
 void log_inline_status(const std::string& message) {
-    std::lock_guard<std::mutex> cguard(g_console_mtx);
+    auto* ctx = g_logging_context.load();
+    if (!ctx) { return; }
+    std::lock_guard<std::mutex> cguard(ctx->console_mutex);
     std::cout << "\r" << message << std::flush;
-    g_inline_active.store(true);
+    ctx->inline_active.store(true);
 }
 
 void end_inline_status() {
-    std::lock_guard<std::mutex> cguard(g_console_mtx);
-    if (g_inline_active.load()) {
+    auto* ctx = g_logging_context.load();
+    if (!ctx) { return; }
+    std::lock_guard<std::mutex> cguard(ctx->console_mutex);
+    if (ctx->inline_active.load()) {
         std::cout << std::endl;
-        g_inline_active.store(false);
+        ctx->inline_active.store(false);
     }
 }
 
@@ -145,7 +143,9 @@ std::string get_git_commit_hash() {
 
 std::string create_unique_run_folder() {
     std::time_t now = std::time(nullptr);
-    std::tm* local_tm = std::localtime(&now);
+    std::tm local_tm_buf;
+    std::tm* local_tm = &local_tm_buf;
+    localtime_r(&now, &local_tm_buf);
     std::string git_hash = get_git_commit_hash();
 
     // Create unique run folder: runtime_logs/run_DD-HH-MM_githash
@@ -176,7 +176,9 @@ std::string extract_base_filename(const std::string& full_path) {
 
 std::string generate_timestamped_log_filename(const std::string& base_filename) {
     std::time_t now = std::time(nullptr);
-    std::tm* local_tm = std::localtime(&now);
+    std::tm local_tm_buf;
+    std::tm* local_tm = &local_tm_buf;
+    localtime_r(&now, &local_tm_buf);
     std::string git_hash = get_git_commit_hash();
 
     // Extract base name without extension
@@ -222,11 +224,17 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
 }
 
 std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config) {
+    // Create or fetch context
+    auto* ctx = g_logging_context.load();
+    if (!ctx) {
+        throw std::runtime_error("Logging context not set before initialization");
+    }
+
     // Create unique run folder for this instance
-    g_current_run_folder = create_unique_run_folder();
+    ctx->run_folder = create_unique_run_folder();
 
     // Generate timestamped log filename in the run folder
-    std::string base_filename = g_current_run_folder + "/" + extract_base_filename(config.logging.log_file);
+    std::string base_filename = ctx->run_folder + "/" + extract_base_filename(config.logging.log_file);
     std::string timestamped_log_file = generate_timestamped_log_filename(base_filename);
 
     // Create logger instance
@@ -241,6 +249,7 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
     }
 
     // Initialize global logger (logger already created with timestamped filename)
+    ctx->async_logger = logger;
     initialize_global_logger(*logger);
     set_log_thread_tag("MAIN  ");
 
@@ -249,12 +258,16 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
 
 std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename) {
     try {
+        auto* ctx = g_logging_context.load();
+        if (!ctx) {
+            throw std::runtime_error("Logging context not available");
+        }
         // Use the already created run folder
-        if (g_current_run_folder.empty()) {
+        if (ctx->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string bars_filename = g_current_run_folder + "/" + extract_base_filename(base_filename) + "_bars";
+        std::string bars_filename = ctx->run_folder + "/" + extract_base_filename(base_filename) + "_bars";
         std::string timestamped_bars_filename = generate_timestamped_log_filename(bars_filename);
         auto bars_logger = std::make_shared<CSVBarsLogger>(timestamped_bars_filename);
 
@@ -262,7 +275,7 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
             throw std::runtime_error("Failed to initialize CSV bars logger");
         }
 
-        g_csv_bars_logger = bars_logger;
+        ctx->csv_bars_logger = bars_logger;
         return bars_logger;
     } catch (const std::exception& e) {
         std::cerr << "CRITICAL ERROR: Failed to initialize CSV bars logger: " << e.what() << std::endl;
@@ -275,12 +288,16 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
 
 std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename) {
     try {
+        auto* ctx = g_logging_context.load();
+        if (!ctx) {
+            throw std::runtime_error("Logging context not available");
+        }
         // Use the already created run folder
-        if (g_current_run_folder.empty()) {
+        if (ctx->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string trade_filename = g_current_run_folder + "/" + extract_base_filename(base_filename) + "_trades";
+        std::string trade_filename = ctx->run_folder + "/" + extract_base_filename(base_filename) + "_trades";
         std::string timestamped_trade_filename = generate_timestamped_log_filename(trade_filename);
         auto trade_logger = std::make_shared<CSVTradeLogger>(timestamped_trade_filename);
 
@@ -288,7 +305,7 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
             throw std::runtime_error("Failed to initialize CSV trade logger");
         }
 
-        g_csv_trade_logger = trade_logger;
+        ctx->csv_trade_logger = trade_logger;
         return trade_logger;
     } catch (const std::exception& e) {
         std::cerr << "CRITICAL ERROR: Failed to initialize CSV trade logger: " << e.what() << std::endl;
@@ -297,6 +314,47 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
         std::cerr << "CRITICAL ERROR: Unknown error initializing CSV trade logger" << std::endl;
         throw std::runtime_error("Failed to initialize CSV trade logger");
     }
+}
+
+std::shared_ptr<CSVBarsLogger> get_csv_bars_logger() {
+    auto* ctx = g_logging_context.load();
+    return ctx ? ctx->csv_bars_logger : nullptr;
+}
+
+std::shared_ptr<CSVTradeLogger> get_csv_trade_logger() {
+    auto* ctx = g_logging_context.load();
+    return ctx ? ctx->csv_trade_logger : nullptr;
+}
+
+std::mutex& get_console_mutex() {
+    auto* ctx = g_logging_context.load();
+    if (!ctx) {
+        static std::mutex fallback;
+        return fallback;
+    }
+    return ctx->console_mutex;
+}
+
+std::atomic<bool>& get_inline_active_flag() {
+    auto* ctx = g_logging_context.load();
+    if (!ctx) {
+        static std::atomic<bool> fallback{false};
+        return fallback;
+    }
+    return ctx->inline_active;
+}
+
+const std::string& get_run_folder() {
+    auto* ctx = g_logging_context.load();
+    if (!ctx) {
+        static std::string empty;
+        return empty;
+    }
+    return ctx->run_folder;
+}
+
+void set_logging_context(LoggingContext& context) {
+    g_logging_context.store(&context);
 }
 
 } // namespace Logging

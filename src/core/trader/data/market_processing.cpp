@@ -3,6 +3,7 @@
 #include "core/logging/logs/trading_logs.hpp"
 #include "core/logging/logs/market_data_logs.hpp"
 #include <cmath>
+#include <stdexcept>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -37,6 +38,10 @@ ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemC
     data.avg_atr = AlpacaTrader::Core::compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.average_atr_comparison_multiplier);
     data.avg_vol = AlpacaTrader::Core::compute_average_volume(inputs.volumes, atr_period, cfg.strategy.minimum_volume_threshold);
     
+    // Defensive checks before accessing tail elements
+    if (bars.size() < 2) {
+        throw std::runtime_error("Insufficient bars for processed data tail access");
+    }
     
     data.curr = bars.back();
     data.prev = bars[bars.size() - 2];

@@ -16,8 +16,8 @@ void Manager::start_threads(ThreadManagerState& manager_state, const std::vector
     manager_state.clear_all_data();
    
     for (const auto& thread_definition : thread_definitions) {
-        // Use get_function directly with modules
-        manager_state.add_active_thread(std::thread([&thread_definition, &modules]() { 
+        // Capture thread_definition by value to avoid dangling reference
+        manager_state.add_active_thread(std::thread([thread_definition, &modules]() {
             thread_definition.get_function(modules);
         }));
     }

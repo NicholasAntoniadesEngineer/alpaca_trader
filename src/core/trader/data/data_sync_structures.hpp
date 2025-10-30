@@ -81,6 +81,23 @@ struct DataSyncReferences {
             throw std::invalid_argument("DataSyncReferences: market_data_timestamp cannot be null");
         }
     }
+    
+    // Safe conversion to MarketDataSyncState (structures have identical layout)
+    MarketDataSyncState to_market_data_sync_state() const {
+        MarketDataSyncState sync_state;
+        sync_state.mtx = mtx;
+        sync_state.cv = cv;
+        sync_state.market = market;
+        sync_state.account = account;
+        sync_state.has_market = has_market;
+        sync_state.has_account = has_account;
+        sync_state.running = running;
+        sync_state.allow_fetch = allow_fetch;
+        sync_state.market_data_timestamp = market_data_timestamp;
+        sync_state.market_data_fresh = market_data_fresh;
+        sync_state.last_order_timestamp = last_order_timestamp;
+        return sync_state;
+    }
 };
 
 } // namespace Core

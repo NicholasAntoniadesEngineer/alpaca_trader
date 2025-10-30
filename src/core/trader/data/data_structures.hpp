@@ -172,12 +172,12 @@ struct PositionSizingProcessRequest {
 
 // Market data thread parameter structures
 struct MarketDataFetchRequest {
-    const std::string& symbol;
+    std::string symbol;
     int bars_to_fetch;
     int atr_calculation_bars;
     
-    MarketDataFetchRequest(const std::string& symbol, int bars_to_fetch, int atr_calculation_bars)
-        : symbol(symbol), bars_to_fetch(bars_to_fetch), atr_calculation_bars(atr_calculation_bars) {}
+    MarketDataFetchRequest(const std::string& s, int bars, int atr_bars)
+        : symbol(s), bars_to_fetch(bars), atr_calculation_bars(atr_bars) {}
 };
 
 struct QuoteDataProcessingRequest {

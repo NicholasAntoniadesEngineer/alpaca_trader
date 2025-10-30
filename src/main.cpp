@@ -25,6 +25,10 @@ int main() {
         // Create system state
         SystemState system_state(initial_config);
         
+        // Initialize logging context
+        system_state.logging_context = std::make_shared<AlpacaTrader::Logging::LoggingContext>();
+        AlpacaTrader::Logging::set_logging_context(*system_state.logging_context);
+        
         // Initialize application foundation (logging, validation)
         auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
 

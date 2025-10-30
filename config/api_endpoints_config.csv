@@ -44,6 +44,9 @@ alpaca_stocks.timeout_seconds,30
 alpaca_stocks.enable_ssl_verification,true
 alpaca_stocks.rate_limit_delay_ms,100
 alpaca_stocks.api_version,v2
+alpaca_stocks.bar_timespan,minute
+alpaca_stocks.bar_multiplier,1
+alpaca_stocks.bars_range_minutes,120
 
 # Alpaca Stocks Market Data API Endpoints
 alpaca_stocks.endpoints.bars,/v2/stocks/{symbol}/bars
@@ -66,6 +69,9 @@ polygon_crypto.timeout_seconds,30
 polygon_crypto.enable_ssl_verification,true
 polygon_crypto.rate_limit_delay_ms,100
 polygon_crypto.api_version,v1
+polygon_crypto.bar_timespan,minute
+polygon_crypto.bar_multiplier,1
+polygon_crypto.bars_range_minutes,120
 
 # Polygon Crypto API Endpoints
 polygon_crypto.endpoints.bars,/v2/aggs/ticker/{symbol}/range/1/minute/{from}/{to}

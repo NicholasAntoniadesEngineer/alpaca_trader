@@ -61,12 +61,23 @@ std::vector<Core::Bar> PolygonCryptoClient::get_recent_bars(const Core::BarReque
     if (request.limit <= 0) {
         throw std::runtime_error("Limit must be greater than 0 for bar request");
     }
+
+    if (config.bar_multiplier <= 0) {
+        throw std::runtime_error("Polygon bar_multiplier must be configured and > 0");
+    }
+    if (config.bar_timespan.empty()) {
+        throw std::runtime_error("Polygon bar_timespan must be configured (e.g., minute, hour, day)");
+    }
     
     std::string url = build_rest_url(config.endpoints.bars, request.symbol);
     url += "&limit=" + std::to_string(request.limit);
-    url += "&timespan=minute&multiplier=1";
+    url += "&timespan=" + config.bar_timespan + "&multiplier=" + std::to_string(config.bar_multiplier);
     
     std::string response = make_authenticated_request(url);
+    
+    if (response.empty() || response[0] != '{') {
+        throw std::runtime_error("Polygon bars response is not JSON (possible HTTP error): " + (response.size() > 64 ? response.substr(0, 64) : response));
+    }
     
     std::vector<Core::Bar> bars;
     
@@ -268,39 +279,41 @@ std::string PolygonCryptoClient::build_rest_url(const std::string& endpoint, con
     // Replace symbol in URL
     url = replace_url_placeholder(url, symbol);
     
-        // Configure bar parameters for bars endpoint
     if (endpoint.find("range") != std::string::npos) {
-        // Set multiplier
+        // Enforce configured multiplier
         size_t multiplier_pos = url.find("{multiplier}");
         if (multiplier_pos != std::string::npos) {
-            std::string multiplier_str = std::to_string(config.bar_multiplier > 0 ? config.bar_multiplier : 1);
+            if (config.bar_multiplier <= 0) {
+                throw std::runtime_error("Polygon bar_multiplier must be configured and > 0");
+            }
+            std::string multiplier_str = std::to_string(config.bar_multiplier);
             url.replace(multiplier_pos, 12, multiplier_str);
         }
         
-        // Set timespan
+        // Enforce configured timespan
         size_t timespan_pos = url.find("{timespan}");
         if (timespan_pos != std::string::npos) {
-            std::string timespan = config.bar_timespan.empty() ? "minute" : config.bar_timespan;
-            url.replace(timespan_pos, 10, timespan);
+            if (config.bar_timespan.empty()) {
+                throw std::runtime_error("Polygon bar_timespan must be configured (e.g., minute, hour, day)");
+            }
+            url.replace(timespan_pos, 10, config.bar_timespan);
         }
         
-        // For now, use a default time range (last 24 hours)
+        if (config.bars_range_minutes <= 0) {
+            throw std::runtime_error("Polygon bars_range_minutes must be configured and > 0");
+        }
         auto now = std::chrono::system_clock::now();
-        auto yesterday = now - std::chrono::hours(24);
-        
+        auto from_time = now - std::chrono::minutes(config.bars_range_minutes);
         auto now_time_t = std::chrono::system_clock::to_time_t(now);
-        auto yesterday_time_t = std::chrono::system_clock::to_time_t(yesterday);
-        
-        std::string from_date = std::to_string(yesterday_time_t * 1000); // Polygon expects milliseconds
+        auto from_time_t = std::chrono::system_clock::to_time_t(from_time);
+        std::string from_date = std::to_string(from_time_t * 1000);
         std::string to_date = std::to_string(now_time_t * 1000);
         
-        // Set from date
         size_t from_pos = url.find("{from}");
         if (from_pos != std::string::npos) {
             url.replace(from_pos, 6, from_date);
         }
         
-        // Set to date
         size_t to_pos = url.find("{to}");
         if (to_pos != std::string::npos) {
             url.replace(to_pos, 4, to_date);
@@ -325,6 +338,10 @@ std::string PolygonCryptoClient::make_authenticated_request(const std::string& u
     
     if (response.empty()) {
         throw std::runtime_error("Empty response from Polygon.io API");
+    }
+    // Basic guard against non-JSON error payloads like "400 Bad Request"
+    if (!response.empty() && (response.rfind("Bad Request", 0) == 0 || response.rfind("400", 0) == 0 || response[0] != '{')) {
+        throw std::runtime_error("Polygon API returned error payload: " + (response.size() > 64 ? response.substr(0, 64) : response));
     }
     
     return response;

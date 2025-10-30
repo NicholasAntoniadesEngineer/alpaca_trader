@@ -28,16 +28,16 @@ void SignalAnalysisLogs::log_signal_analysis_csv_data(const AlpacaTrader::Core::
         std::string symbol = config.trading_mode.primary_symbol;
 
         // Log signals to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_signal(
+        if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
+            csv->log_signal(
                 timestamp, symbol, signal_decision.buy, signal_decision.sell,
                 signal_decision.signal_strength, signal_decision.signal_reason
             );
         }
 
         // Log filters to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_filters(
+        if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
+            csv->log_filters(
                 timestamp, symbol, filter_result.atr_pass, filter_result.atr_ratio,
                 config.strategy.use_absolute_atr_threshold ?
                     config.strategy.atr_absolute_minimum_threshold :
@@ -48,8 +48,8 @@ void SignalAnalysisLogs::log_signal_analysis_csv_data(const AlpacaTrader::Core::
         }
 
         // Log market data to CSV
-        if (AlpacaTrader::Logging::g_csv_trade_logger) {
-            AlpacaTrader::Logging::g_csv_trade_logger->log_market_data(
+        if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
+            csv->log_market_data(
                 timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
                 data.curr.v, data.atr
             );

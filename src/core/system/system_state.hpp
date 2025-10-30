@@ -5,6 +5,7 @@
 #include "core/trader/data/data_structures.hpp"
 #include "configs/system_config.hpp"
 #include "core/logging/logs/thread_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include "core/system/system_modules.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/system/system_monitor.hpp"
@@ -64,6 +65,7 @@ struct SystemState {
     AlpacaTrader::Core::ThreadManagerState thread_manager_state;  // Thread management state
     AlpacaTrader::Core::Monitoring::SystemMonitor system_monitor;  // System monitoring state
     ConnectivityManager connectivity_manager;  // System connectivity state
+    std::shared_ptr<AlpacaTrader::Logging::LoggingContext> logging_context;  // Logging context
 
     // =========================================================================
     // CONSTRUCTORS

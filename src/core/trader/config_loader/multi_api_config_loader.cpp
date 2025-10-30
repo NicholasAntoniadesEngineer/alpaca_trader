@@ -119,6 +119,11 @@ void MultiApiConfigLoader::parse_provider_config(const std::string& key, const s
         if (!value.empty()) {
             provider_config.bar_multiplier = std::stoi(value);
         }
+    } else if (field == "bars_range_minutes") {
+        if (value.empty()) {
+            throw std::runtime_error("bars_range_minutes is required for provider: " + provider_str);
+        }
+        provider_config.bars_range_minutes = std::stoi(value);
     } else if (field.find("endpoints.") == 0) {
         std::string endpoint_name = field.substr(10);
         
@@ -246,6 +251,15 @@ void MultiApiConfigLoader::validate_provider_config(Config::ApiProvider provider
         }
         if (config.endpoints.quotes_latest.empty()) {
             throw std::runtime_error("Quotes endpoint is required for market data provider: " + provider_name);
+        }
+        if (config.bar_multiplier <= 0) {
+            throw std::runtime_error("bar_multiplier must be > 0 for market data provider: " + provider_name);
+        }
+        if (config.bar_timespan.empty()) {
+            throw std::runtime_error("bar_timespan is required for market data provider: " + provider_name);
+        }
+        if (config.bars_range_minutes <= 0) {
+            throw std::runtime_error("bars_range_minutes must be > 0 for market data provider: " + provider_name);
         }
     }
 }

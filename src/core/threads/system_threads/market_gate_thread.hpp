@@ -17,6 +17,7 @@ struct MarketGateThread {
     std::atomic<bool>& running;
     AlpacaTrader::API::ApiManager& api_manager;
     ConnectivityManager& connectivity_manager;
+    const std::string& trading_symbol;
     std::atomic<unsigned long>* iteration_counter {nullptr};
 
     MarketGateThread(const TimingConfig& timing_cfg,
@@ -24,8 +25,9 @@ struct MarketGateThread {
                    std::atomic<bool>& allow,
                    std::atomic<bool>& running_flag,
                    AlpacaTrader::API::ApiManager& api_mgr,
-                   ConnectivityManager& connectivity_mgr)
-        : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), api_manager(api_mgr), connectivity_manager(connectivity_mgr) {}
+                   ConnectivityManager& connectivity_mgr,
+                   const std::string& symbol)
+        : timing(timing_cfg), logging(logging_cfg), allow_fetch(allow), running(running_flag), api_manager(api_mgr), connectivity_manager(connectivity_mgr), trading_symbol(symbol) {}
     
     void set_iteration_counter(std::atomic<unsigned long>& counter) { iteration_counter = &counter; }
     void operator()();

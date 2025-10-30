@@ -3,7 +3,7 @@
 
 #include "configs/timing_config.hpp"
 #include "core/threads/thread_register.hpp"
-#include "core/trader/data/account_manager.hpp"
+#include "core/trader/account_data_coordinator.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include <atomic>
 #include <mutex>
@@ -16,7 +16,7 @@ using AccountDataThreadConfig = AlpacaTrader::Config::AccountDataThreadConfig;
 
 struct AccountDataThread {
     const TimingConfig& timing;
-    AlpacaTrader::Core::AccountManager& account_manager;
+    AlpacaTrader::Core::AccountDataCoordinator& account_data_coordinator;
     std::mutex& state_mtx;
     std::condition_variable& data_cv;
     AlpacaTrader::Core::AccountSnapshot& account_snapshot;
@@ -26,13 +26,13 @@ struct AccountDataThread {
     std::atomic<unsigned long>* iteration_counter {nullptr};
 
     AccountDataThread(const AccountDataThreadConfig& cfg,
-                    AlpacaTrader::Core::AccountManager& account_mgr,
+                    AlpacaTrader::Core::AccountDataCoordinator& coordinator_ref,
                     std::mutex& mtx,
                     std::condition_variable& cv,
                     AlpacaTrader::Core::AccountSnapshot& snapshot,
                     std::atomic<bool>& has_account_flag,
                     std::atomic<bool>& running_flag)
-        : timing(cfg.timing), account_manager(account_mgr), state_mtx(mtx),
+        : timing(cfg.timing), account_data_coordinator(coordinator_ref), state_mtx(mtx),
           data_cv(cv), account_snapshot(snapshot), has_account(has_account_flag),
           running(running_flag) {}
 

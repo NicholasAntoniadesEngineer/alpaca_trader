@@ -10,17 +10,18 @@
 using AlpacaTrader::Logging::log_message;
 
 namespace {
-    inline std::string trim(const std::string& s) {
-        const char* ws = " \t\r\n";
-        auto b = s.find_first_not_of(ws);
-        auto e = s.find_last_not_of(ws);
-        if (b == std::string::npos) return "";
-        return s.substr(b, e - b + 1);
+    inline std::string trim(const std::string& input_string) {
+        const char* whitespace_chars = " \t\r\n";
+        auto begin_position = input_string.find_first_not_of(whitespace_chars);
+        auto end_position = input_string.find_last_not_of(whitespace_chars);
+        if (begin_position == std::string::npos) return "";
+        return input_string.substr(begin_position, end_position - begin_position + 1);
     }
 
-    inline bool to_bool(const std::string& v) {
-        std::string s = v; std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-        return s == "1" || s == "true" || s == "yes";
+    inline bool to_bool(const std::string& input_value) {
+        std::string normalized_value = input_value; 
+        std::transform(normalized_value.begin(), normalized_value.end(), normalized_value.begin(), ::tolower);
+        return normalized_value == "1" || normalized_value == "true" || normalized_value == "yes";
     }
 
 }

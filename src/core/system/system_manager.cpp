@@ -82,22 +82,26 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     modules.trading_engine = std::move(trading_components.trading_orchestrator);
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
     
+    // Create coordinator interfaces for thread access to trader components
+    modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(*modules.api_manager, state.config);
+    modules.account_data_coordinator = std::make_unique<AlpacaTrader::Core::AccountDataCoordinator>(*modules.portfolio_manager);
+    
     // Create thread modules
     
     // Create MARKET_DATA thread
-    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.api_manager,
+    modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_data_coordinator,
                                                                    state.mtx, state.cv, state.market,
                                                                    state.has_market, state.running,
                                                                    state.market_data_timestamp, state.market_data_fresh);
     
     // Create ACCOUNT_DATA thread
-    modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.portfolio_manager, 
+    modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.account_data_coordinator, 
                                                                      state.mtx, state.cv, state.account, 
                                                                      state.has_account, state.running);
     
     // Create MARKET_GATE thread
     modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
-                                                                   state.allow_fetch, state.running, *modules.api_manager, state.connectivity_manager);
+                                                                   state.allow_fetch, state.running, *modules.api_manager, state.connectivity_manager, state.config.trading_mode.primary_symbol);
     
     // Create LOGGING thread
     static std::atomic<unsigned long> logging_iterations{0};
@@ -155,16 +159,16 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     // Start all threads
     try {
         Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules);
-    } catch (const std::exception& exception) {
-        std::cerr << "Error starting threads: " << exception.what() << std::endl;
+    } catch (const std::exception& exception_error) {
+        std::cerr << "Error starting threads: " << exception_error.what() << std::endl;
         return handles;
     }
     
     // Setup thread priorities after threads are started
     try {
         Manager::setup_thread_priorities(system_state.thread_manager_state, thread_definitions, system_state.config);
-    } catch (const std::exception& exception) {
-        std::cerr << "Error setting thread priorities: " << exception.what() << std::endl;
+    } catch (const std::exception& exception_error) {
+        std::cerr << "Error setting thread priorities: " << exception_error.what() << std::endl;
         return handles;
     }
     
@@ -199,8 +203,8 @@ static void run_until_shutdown(SystemState& state) {
                     try {
                         ThreadLogs::log_thread_monitoring_stats(state.thread_infos, start_time);
                         last_monitor_time = now;
-                    } catch (const std::exception& e) {
-                        std::cerr << "Error logging thread monitoring stats: " << e.what() << std::endl;
+                    } catch (const std::exception& exception_error) {
+                        std::cerr << "Error logging thread monitoring stats: " << exception_error.what() << std::endl;
                     } catch (...) {
                         std::cerr << "Unknown error logging thread monitoring stats" << std::endl;
                     }
@@ -208,16 +212,14 @@ static void run_until_shutdown(SystemState& state) {
 
                 // Sleep for main loop interval based on configuration
                 std::this_thread::sleep_for(std::chrono::seconds(state.config.timing.thread_market_data_poll_interval_sec));
-            } catch (const std::exception& e) {
-                // Log error and continue
-                std::cerr << "Error in main loop: " << e.what() << std::endl;
+            } catch (const std::exception& exception_error) {
+                std::cerr << "Error in main loop: " << exception_error.what() << std::endl;
             } catch (...) {
-                // Log unknown error and continue
                 std::cerr << "Unknown error in main loop" << std::endl;
             }
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Fatal error in run_until_shutdown: " << e.what() << std::endl;
+    } catch (const std::exception& exception_error) {
+        std::cerr << "Fatal error in run_until_shutdown: " << exception_error.what() << std::endl;
     } catch (...) {
         std::cerr << "Unknown fatal error in run_until_shutdown" << std::endl;
     }
