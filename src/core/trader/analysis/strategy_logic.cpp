@@ -30,169 +30,169 @@ bool detect_doji_pattern(double open, double high, double low, double close, dou
     return (body_size / total_range) < doji_threshold;
 }
 
-SignalDecision detect_trading_signals(const ProcessedData& data, const SystemConfig& config) {
-    SignalDecision decision;
+SignalDecision detect_trading_signals(const ProcessedData& processed_data_input, const SystemConfig& system_config) {
+    SignalDecision signal_decision_result;
     
     // Calculate momentum indicators for better signal detection
-    double price_change = data.curr.close_price - data.prev.close_price;
-    double price_change_pct = (data.prev.close_price > 0.0) ? (price_change / data.prev.close_price) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double price_change_amount = processed_data_input.curr.close_price - processed_data_input.prev.close_price;
+    double price_change_percentage = (processed_data_input.prev.close_price > 0.0) ? (price_change_amount / processed_data_input.prev.close_price) * system_config.strategy.percentage_calculation_multiplier : 0.0;
     
     // Calculate volume momentum with crypto-specific handling
-    double volume_change = data.curr.volume - data.prev.volume;
-    double volume_change_pct = (data.prev.volume > 0) ? (volume_change / data.prev.volume) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double volume_change_amount = processed_data_input.curr.volume - processed_data_input.prev.volume;
+    double volume_change_percentage = (processed_data_input.prev.volume > 0) ? (volume_change_amount / processed_data_input.prev.volume) * system_config.strategy.percentage_calculation_multiplier : 0.0;
     
     // For crypto: normalize volume change percentage to be more sensitive to small changes
-    if (config.strategy.is_crypto_asset) {
+    if (system_config.strategy.is_crypto_asset) {
         // Crypto volumes are much smaller, so amplify the percentage for better signal detection
-        volume_change_pct *= config.strategy.crypto_volume_change_amplification_factor;
+        volume_change_percentage *= system_config.strategy.crypto_volume_change_amplification_factor;
     }
     
     // Calculate volatility (ATR-based)
-    double volatility_pct = (data.prev.close_price > 0.0) ? (data.atr / data.prev.close_price) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double volatility_percentage = (processed_data_input.prev.close_price > 0.0) ? (processed_data_input.atr / processed_data_input.prev.close_price) * system_config.strategy.percentage_calculation_multiplier : 0.0;
     
     // Enhanced BUY signal conditions with momentum confirmation
-    bool basic_buy_close = config.strategy.buy_signals_allow_equal_close ? 
-                          (data.curr.close_price >= data.curr.open_price) : 
-                          (data.curr.close_price > data.curr.open_price);
+    bool basic_buy_close_condition = system_config.strategy.buy_signals_allow_equal_close ? 
+                          (processed_data_input.curr.close_price >= processed_data_input.curr.open_price) : 
+                          (processed_data_input.curr.close_price > processed_data_input.curr.open_price);
     
-    bool buy_high_condition = config.strategy.buy_signals_require_higher_high ? 
-                             (data.curr.high_price > data.prev.high_price) : 
+    bool buy_high_condition_result = system_config.strategy.buy_signals_require_higher_high ? 
+                             (processed_data_input.curr.high_price > processed_data_input.prev.high_price) : 
                              true;
     
-    bool buy_low_condition = config.strategy.buy_signals_require_higher_low ? 
-                            (data.curr.low_price >= data.prev.low_price) : 
+    bool buy_low_condition_result = system_config.strategy.buy_signals_require_higher_low ? 
+                            (processed_data_input.curr.low_price >= processed_data_input.prev.low_price) : 
                             true;
     
     // Momentum-based buy confirmation (configurable thresholds)
-    bool momentum_buy = price_change_pct > config.strategy.minimum_price_change_percentage_for_momentum;
-    bool volume_confirmation = volume_change_pct > config.strategy.minimum_volume_increase_percentage_for_buy_signals;
-    bool volatility_adequate = volatility_pct > config.strategy.minimum_volatility_percentage_for_buy_signals;
+    bool momentum_buy_signal = price_change_percentage > system_config.strategy.minimum_price_change_percentage_for_momentum;
+    bool volume_confirmation_result = volume_change_percentage > system_config.strategy.minimum_volume_increase_percentage_for_buy_signals;
+    bool volatility_adequate_result = volatility_percentage > system_config.strategy.minimum_volatility_percentage_for_buy_signals;
     
     // Calculate signal strength and reasoning
-    double buy_strength = 0.0;
-    std::string buy_reason = "";
+    double buy_strength_value = 0.0;
+    std::string buy_reason_string = "";
     
-    if (basic_buy_close && buy_high_condition && buy_low_condition) {
-        buy_strength += config.strategy.basic_price_pattern_weight; // Basic pattern strength
-        buy_reason += "Basic pattern OK; ";
+    if (basic_buy_close_condition && buy_high_condition_result && buy_low_condition_result) {
+        buy_strength_value += system_config.strategy.basic_price_pattern_weight; // Basic pattern strength
+        buy_reason_string += "Basic pattern OK; ";
         
-        if (momentum_buy) {
-            buy_strength += config.strategy.momentum_indicator_weight; // Momentum strength
-            buy_reason += "Momentum OK; ";
+        if (momentum_buy_signal) {
+            buy_strength_value += system_config.strategy.momentum_indicator_weight; // Momentum strength
+            buy_reason_string += "Momentum OK; ";
         } else {
-            buy_reason += "No momentum; ";
+            buy_reason_string += "No momentum; ";
         }
         
-        if (volume_confirmation) {
-            buy_strength += config.strategy.volume_analysis_weight; // Volume confirmation
-            buy_reason += "Volume OK; ";
+        if (volume_confirmation_result) {
+            buy_strength_value += system_config.strategy.volume_analysis_weight; // Volume confirmation
+            buy_reason_string += "Volume OK; ";
         } else {
-            buy_reason += "Low volume; ";
+            buy_reason_string += "Low volume; ";
         }
         
-        if (volatility_adequate) {
-            buy_strength += config.strategy.volatility_analysis_weight; // Volatility confirmation
-            buy_reason += "Volatility OK; ";
+        if (volatility_adequate_result) {
+            buy_strength_value += system_config.strategy.volatility_analysis_weight; // Volatility confirmation
+            buy_reason_string += "Volatility OK; ";
         } else {
-            buy_reason += "Low volatility; ";
+            buy_reason_string += "Low volatility; ";
         }
     } else {
-        buy_reason = "Basic pattern failed";
+        buy_reason_string = "Basic pattern failed";
     }
     
     // Set buy signal if strength is above threshold
-    decision.buy = buy_strength >= config.strategy.minimum_signal_strength_threshold;
-    decision.signal_strength = buy_strength;
-    decision.signal_reason = buy_reason;
+    signal_decision_result.buy = buy_strength_value >= system_config.strategy.minimum_signal_strength_threshold;
+    signal_decision_result.signal_strength = buy_strength_value;
+    signal_decision_result.signal_reason = buy_reason_string;
     
     // Enhanced SELL signal conditions with momentum confirmation
-    bool basic_sell_close = config.strategy.sell_signals_allow_equal_close ? 
-                           (data.curr.close_price <= data.curr.open_price) : 
-                           (data.curr.close_price < data.curr.open_price);
+    bool basic_sell_close_condition = system_config.strategy.sell_signals_allow_equal_close ? 
+                           (processed_data_input.curr.close_price <= processed_data_input.curr.open_price) : 
+                           (processed_data_input.curr.close_price < processed_data_input.curr.open_price);
     
-    bool sell_low_condition = config.strategy.sell_signals_require_lower_low ? 
-                             (data.curr.low_price < data.prev.low_price) : 
+    bool sell_low_condition_result = system_config.strategy.sell_signals_require_lower_low ? 
+                             (processed_data_input.curr.low_price < processed_data_input.prev.low_price) : 
                              true;
     
-    bool sell_high_condition = config.strategy.sell_signals_require_lower_high ? 
-                              (data.curr.high_price <= data.prev.high_price) : 
+    bool sell_high_condition_result = system_config.strategy.sell_signals_require_lower_high ? 
+                              (processed_data_input.curr.high_price <= processed_data_input.prev.high_price) : 
                               true;
     
     // Momentum-based sell confirmation (configurable thresholds)
-    bool momentum_sell = price_change_pct < -config.strategy.minimum_price_change_percentage_for_momentum;
-    bool volume_sell_confirmation = volume_change_pct > config.strategy.minimum_volume_increase_percentage_for_sell_signals;
-    bool volatility_sell_adequate = volatility_pct > config.strategy.minimum_volatility_percentage_for_sell_signals;
+    bool momentum_sell_signal = price_change_percentage < -system_config.strategy.minimum_price_change_percentage_for_momentum;
+    bool volume_sell_confirmation_result = volume_change_percentage > system_config.strategy.minimum_volume_increase_percentage_for_sell_signals;
+    bool volatility_sell_adequate_result = volatility_percentage > system_config.strategy.minimum_volatility_percentage_for_sell_signals;
     
     // Calculate sell signal strength and reasoning
-    double sell_strength = 0.0;
-    std::string sell_reason = "";
+    double sell_strength_value = 0.0;
+    std::string sell_reason_string = "";
     
-    if (basic_sell_close && sell_low_condition && sell_high_condition) {
-        sell_strength += config.strategy.basic_price_pattern_weight; // Basic pattern strength
-        sell_reason += "Basic pattern OK; ";
+    if (basic_sell_close_condition && sell_low_condition_result && sell_high_condition_result) {
+        sell_strength_value += system_config.strategy.basic_price_pattern_weight; // Basic pattern strength
+        sell_reason_string += "Basic pattern OK; ";
         
-        if (momentum_sell) {
-            sell_strength += config.strategy.momentum_indicator_weight; // Momentum strength
-            sell_reason += "Momentum OK; ";
+        if (momentum_sell_signal) {
+            sell_strength_value += system_config.strategy.momentum_indicator_weight; // Momentum strength
+            sell_reason_string += "Momentum OK; ";
         } else {
-            sell_reason += "No momentum; ";
+            sell_reason_string += "No momentum; ";
         }
         
-        if (volume_sell_confirmation) {
-            sell_strength += config.strategy.volume_analysis_weight; // Volume confirmation
-            sell_reason += "Volume OK; ";
+        if (volume_sell_confirmation_result) {
+            sell_strength_value += system_config.strategy.volume_analysis_weight; // Volume confirmation
+            sell_reason_string += "Volume OK; ";
         } else {
-            sell_reason += "Low volume; ";
+            sell_reason_string += "Low volume; ";
         }
         
-        if (volatility_sell_adequate) {
-            sell_strength += config.strategy.volatility_analysis_weight; // Volatility confirmation
-            sell_reason += "Volatility OK; ";
+        if (volatility_sell_adequate_result) {
+            sell_strength_value += system_config.strategy.volatility_analysis_weight; // Volatility confirmation
+            sell_reason_string += "Volatility OK; ";
         } else {
-            sell_reason += "Low volatility; ";
+            sell_reason_string += "Low volatility; ";
         }
     } else {
-        sell_reason = "Basic pattern failed";
+        sell_reason_string = "Basic pattern failed";
     }
     
     // Set sell signal if strength is above threshold
-    decision.sell = sell_strength >= config.strategy.minimum_signal_strength_threshold;
+    signal_decision_result.sell = sell_strength_value >= system_config.strategy.minimum_signal_strength_threshold;
     
     // Update signal strength and reason (use the stronger signal)
-    if (sell_strength > decision.signal_strength) {
-        decision.signal_strength = sell_strength;
-        decision.signal_reason = sell_reason;
+    if (sell_strength_value > signal_decision_result.signal_strength) {
+        signal_decision_result.signal_strength = sell_strength_value;
+        signal_decision_result.signal_reason = sell_reason_string;
     }
     
-    return decision;
+    return signal_decision_result;
 }
 
-FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemConfig& config) {
-    FilterResult result;
+FilterResult evaluate_trading_filters(const ProcessedData& processed_data_input, const SystemConfig& system_config) {
+    FilterResult filter_result_output;
     
     // ATR filter: use absolute threshold if enabled, otherwise use relative threshold
-    if (config.strategy.use_absolute_atr_threshold) {
-        result.atr_pass = data.atr > config.strategy.atr_absolute_minimum_threshold;
+    if (system_config.strategy.use_absolute_atr_threshold) {
+        filter_result_output.atr_pass = processed_data_input.atr > system_config.strategy.atr_absolute_minimum_threshold;
     } else {
-        result.atr_pass = data.atr > config.strategy.entry_signal_atr_multiplier * data.avg_atr;
+        filter_result_output.atr_pass = processed_data_input.atr > system_config.strategy.entry_signal_atr_multiplier * processed_data_input.avg_atr;
     }
     
     // Crypto-specific volume filtering: use different thresholds for crypto vs stocks
-    if (config.strategy.is_crypto_asset) {
+    if (system_config.strategy.is_crypto_asset) {
         // For crypto: use crypto-specific volume multiplier for fractional volumes
-        double crypto_threshold = config.strategy.crypto_volume_multiplier * data.avg_vol;
-        result.vol_pass = data.curr.volume > crypto_threshold;
+        double crypto_volume_threshold = system_config.strategy.crypto_volume_multiplier * processed_data_input.avg_vol;
+        filter_result_output.vol_pass = processed_data_input.curr.volume > crypto_volume_threshold;
         
     } else {
         // For stocks: use original volume multiplier
-        result.vol_pass = data.curr.volume > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
+        filter_result_output.vol_pass = processed_data_input.curr.volume > system_config.strategy.entry_signal_volume_multiplier * processed_data_input.avg_vol;
     }
     
-    result.doji_pass = !detect_doji_pattern(data.curr.open_price, data.curr.high_price, data.curr.low_price, data.curr.close_price, config.strategy.doji_candlestick_body_size_threshold_percentage);
-    result.all_pass = result.atr_pass && result.vol_pass && result.doji_pass;
-    result.atr_ratio = (data.avg_atr > 0.0) ? (data.atr / data.avg_atr) : 0.0;
-    result.vol_ratio = (data.avg_vol > 0.0) ? (data.curr.volume / data.avg_vol) : 0.0;
-    return result;
+    filter_result_output.doji_pass = !detect_doji_pattern(processed_data_input.curr.open_price, processed_data_input.curr.high_price, processed_data_input.curr.low_price, processed_data_input.curr.close_price, system_config.strategy.doji_candlestick_body_size_threshold_percentage);
+    filter_result_output.all_pass = filter_result_output.atr_pass && filter_result_output.vol_pass && filter_result_output.doji_pass;
+    filter_result_output.atr_ratio = (processed_data_input.avg_atr > 0.0) ? (processed_data_input.atr / processed_data_input.avg_atr) : 0.0;
+    filter_result_output.vol_ratio = (processed_data_input.avg_vol > 0.0) ? (processed_data_input.curr.volume / processed_data_input.avg_vol) : 0.0;
+    return filter_result_output;
 }
 
 /**
@@ -382,13 +382,13 @@ ExitTargets compute_exit_targets(const ExitTargetsRequest& request) {
     return targets;
 }
 
-void process_signal_analysis(const ProcessedData& data, const SystemConfig& config) {
-    SignalDecision signal_decision = detect_trading_signals(data, config);
-    FilterResult filter_result = evaluate_trading_filters(data, config);
+void process_signal_analysis(const ProcessedData& processed_data_input, const SystemConfig& system_config) {
+    SignalDecision signal_decision_result = detect_trading_signals(processed_data_input, system_config);
+    FilterResult filter_result_output = evaluate_trading_filters(processed_data_input, system_config);
     
     // Delegate all logging to dedicated logging service
-    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_complete(data, signal_decision, filter_result, config);
-    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(data, signal_decision, filter_result, config);
+    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_complete(processed_data_input, signal_decision_result, filter_result_output, system_config);
+    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(processed_data_input, signal_decision_result, filter_result_output, system_config);
 }
 
 std::pair<PositionSizing, SignalDecision> process_position_sizing(const PositionSizingProcessRequest& request) {
@@ -397,11 +397,11 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
         request.strategy_configuration, request.available_buying_power
     ));
 
-    SystemConfig temp_config;
-    temp_config.strategy = request.strategy_configuration;
-    temp_config.trading_mode = request.trading_mode_configuration;
+    SystemConfig temp_system_config;
+    temp_system_config.strategy = request.strategy_configuration;
+    temp_system_config.trading_mode = request.trading_mode_configuration;
     
-    if (!evaluate_trading_filters(request.processed_data, temp_config).all_pass) {
+    if (!evaluate_trading_filters(request.processed_data, temp_system_config).all_pass) {
         TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
 
         // CSV logging for position sizing when filters not met
@@ -431,7 +431,7 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
     TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, request.available_buying_power, request.processed_data.curr.close_price);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
 
-    SignalDecision signal_decision = detect_trading_signals(request.processed_data, temp_config);
+    SignalDecision signal_decision_result = detect_trading_signals(request.processed_data, temp_system_config);
 
     // CSV logging for successful position sizing
     try {
@@ -453,7 +453,7 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
         TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing", false, 0);
     }
 
-    return {sizing, signal_decision};
+    return {sizing, signal_decision_result};
 }
 
 } // namespace Core

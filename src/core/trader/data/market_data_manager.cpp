@@ -70,7 +70,7 @@ void MarketDataManager::process_account_and_position_data(ProcessedData& process
     if (account_equity <= 0.0) {
         processed_data.exposure_pct = 0.0;
     } else {
-        processed_data.exposure_pct = (std::abs(processed_data.pos_details.current_value) / account_equity) * 100.0;
+        processed_data.exposure_pct = (std::abs(processed_data.pos_details.current_value) / account_equity) * config.strategy.percentage_calculation_multiplier;
     }
 }
 
@@ -121,7 +121,7 @@ AccountSnapshot MarketDataManager::create_account_snapshot() const {
     
     // Calculate exposure percentage
     if (account_snapshot.equity > 0.0) {
-        account_snapshot.exposure_pct = (std::abs(account_snapshot.pos_details.current_value) / account_snapshot.equity) * 100.0;
+        account_snapshot.exposure_pct = (std::abs(account_snapshot.pos_details.current_value) / account_snapshot.equity) * config.strategy.percentage_calculation_multiplier;
     } else {
         account_snapshot.exposure_pct = 0.0;
     }

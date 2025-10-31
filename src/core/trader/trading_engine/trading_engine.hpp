@@ -23,10 +23,10 @@ class TradingEngine {
 public:
     TradingEngine(const TradingEngineConstructionParams& construction_params);
     
-    bool check_trading_permissions(const ProcessedData& data, double equity);
-    void execute_trading_decision(const ProcessedData& data, double equity);
+    bool check_trading_permissions(const ProcessedData& processed_data_input, double account_equity);
+    void execute_trading_decision(const ProcessedData& processed_data_input, double account_equity);
     void handle_trading_halt(const std::string& reason);
-    void handle_market_close_positions(const ProcessedData& data);
+    void handle_market_close_positions(const ProcessedData& processed_data_for_close);
 
 private:
     // Core dependencies
@@ -44,13 +44,13 @@ private:
     DataSyncReferences data_sync;
     
     // Trading decision methods
-    void process_signal_analysis(const ProcessedData& data);
-    void process_position_sizing(const ProcessedData& data, double equity, int current_position_quantity);
+    void process_signal_analysis(const ProcessedData& processed_data_input);
+    void process_position_sizing(const ProcessedData& processed_data_input, double account_equity_amount, int current_position_quantity);
     void execute_trade_if_valid(const TradeExecutionRequest& trade_request);
     void check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request);
     
     // Utility methods
-    void perform_halt_countdown(int seconds) const;
+    void perform_halt_countdown(int halt_duration_seconds) const;
 };
 
 } // namespace Core

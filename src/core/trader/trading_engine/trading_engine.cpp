@@ -22,14 +22,14 @@ TradingEngine::TradingEngine(const TradingEngineConstructionParams& construction
       system_monitor(construction_params.system_monitor_ref),
       connectivity_manager(construction_params.connectivity_manager_ref) {}
 
-void TradingEngine::execute_trading_decision(const ProcessedData& data, double equity) {
+void TradingEngine::execute_trading_decision(const ProcessedData& processed_data_input, double account_equity) {
     // Input validation
     if (config.trading_mode.primary_symbol.empty()) {
         TradingLogs::log_market_status(false, "Invalid configuration - primary symbol is empty");
         return;
     }
 
-    if (equity <= 0.0 || !std::isfinite(equity)) {
+    if (account_equity <= 0.0 || !std::isfinite(account_equity)) {
         TradingLogs::log_market_status(false, "Invalid equity value - must be positive and finite");
         return;
     }
@@ -51,18 +51,18 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
         return;
     }
     
-    int current_position_quantity = data.pos_details.position_quantity;
+    int current_position_quantity = processed_data_input.pos_details.position_quantity;
 
     if (current_position_quantity != 0 && config.strategy.profit_taking_threshold_dollars > 0.0) {
-        ProfitTakingRequest profit_taking_request(data, current_position_quantity, config.strategy.profit_taking_threshold_dollars);
+        ProfitTakingRequest profit_taking_request(processed_data_input, current_position_quantity, config.strategy.profit_taking_threshold_dollars);
         check_and_execute_profit_taking(profit_taking_request);
     }
 
-    signal_processor.process_signal_analysis(data);
+    signal_processor.process_signal_analysis(processed_data_input);
 
-    double buying_power = account_manager.fetch_buying_power();
-    auto [sizing, signal_decision] = signal_processor.process_position_sizing(data, equity, current_position_quantity, buying_power);
-    TradeExecutionRequest trade_request(data, current_position_quantity, sizing, signal_decision);
+    double buying_power_amount = account_manager.fetch_buying_power();
+    auto [position_sizing_result, signal_decision_result] = signal_processor.process_position_sizing(processed_data_input, account_equity, current_position_quantity, buying_power_amount);
+    TradeExecutionRequest trade_request(processed_data_input, current_position_quantity, position_sizing_result, signal_decision_result);
     execute_trade_if_valid(trade_request);
     
     TradingLogs::log_signal_analysis_complete();
@@ -71,28 +71,28 @@ void TradingEngine::execute_trading_decision(const ProcessedData& data, double e
 void TradingEngine::handle_trading_halt(const std::string& reason) {
     TradingLogs::log_market_status(false, reason);
     
-    auto& connectivity = connectivity_manager;
+    ConnectivityManager& connectivity_manager_ref = connectivity_manager;
     
-    int halt_seconds = 0;
-    if (connectivity.is_connectivity_outage()) {
-        halt_seconds = connectivity.get_seconds_until_retry();
-        if (halt_seconds <= 0) {
+    int halt_seconds_amount = 0;
+    if (connectivity_manager_ref.is_connectivity_outage()) {
+        halt_seconds_amount = connectivity_manager_ref.get_seconds_until_retry();
+        if (halt_seconds_amount <= 0) {
             int emergency_trading_halt_duration_seconds = config.timing.emergency_trading_halt_duration_minutes * 60;
             if (emergency_trading_halt_duration_seconds <= 0) {
                 TradingLogs::log_market_status(false, "Invalid emergency trading halt duration");
                 return;
             }
-            halt_seconds = emergency_trading_halt_duration_seconds;
+            halt_seconds_amount = emergency_trading_halt_duration_seconds;
         }
     } else {
-        halt_seconds = config.timing.emergency_trading_halt_duration_minutes * 60;
-        if (halt_seconds <= 0) {
+        halt_seconds_amount = config.timing.emergency_trading_halt_duration_minutes * 60;
+        if (halt_seconds_amount <= 0) {
             TradingLogs::log_market_status(false, "Invalid emergency trading halt duration");
             return;
         }
     }
     
-    perform_halt_countdown(halt_seconds);
+    perform_halt_countdown(halt_seconds_amount);
     TradingLogs::end_inline_status();
 }
 
@@ -102,8 +102,8 @@ void TradingEngine::execute_trade_if_valid(const TradeExecutionRequest& trade_re
         return;
     }
     
-    double buying_power = account_manager.fetch_buying_power();
-    if (!order_engine.validate_trade_feasibility(trade_request.position_sizing, buying_power, trade_request.processed_data.curr.close_price)) {
+    double buying_power_amount = account_manager.fetch_buying_power();
+    if (!order_engine.validate_trade_feasibility(trade_request.position_sizing, buying_power_amount, trade_request.processed_data.curr.close_price)) {
         TradingLogs::log_trade_validation_failed("insufficient buying power");
         return;
     }
@@ -111,44 +111,44 @@ void TradingEngine::execute_trade_if_valid(const TradeExecutionRequest& trade_re
     order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
 }
 
-void TradingEngine::perform_halt_countdown(int seconds) const {
-    for (int remaining_seconds = seconds; remaining_seconds > 0; --remaining_seconds) {
-        TradingLogs::log_inline_halt_status(remaining_seconds);
+void TradingEngine::perform_halt_countdown(int halt_duration_seconds) const {
+    for (int remaining_seconds_count = halt_duration_seconds; remaining_seconds_count > 0; --remaining_seconds_count) {
+        TradingLogs::log_inline_halt_status(remaining_seconds_count);
         std::this_thread::sleep_for(std::chrono::seconds(config.timing.countdown_display_refresh_interval_seconds));
     }
 }
 
 void TradingEngine::check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request) {
-    const ProcessedData& data = profit_taking_request.processed_data;
+    const ProcessedData& processed_data_for_profit_taking = profit_taking_request.processed_data;
     int current_position_quantity = profit_taking_request.current_position_quantity;
-    double profit_threshold = profit_taking_request.profit_taking_threshold_dollars;
+    double profit_threshold_dollars = profit_taking_request.profit_taking_threshold_dollars;
     
-    double unrealized_pl = data.pos_details.unrealized_pl;
-    double current_price = data.curr.close_price;
-    double position_value = data.pos_details.current_value;
+    double unrealized_profit_loss = processed_data_for_profit_taking.pos_details.unrealized_pl;
+    double current_market_price = processed_data_for_profit_taking.curr.close_price;
+    double current_position_value = processed_data_for_profit_taking.pos_details.current_value;
     
-    TradingLogs::log_position_sizing_debug(current_position_quantity, position_value, current_position_quantity, true, false);
-    Logging::ExitTargetsTableRequest exit_targets_request("LONG", current_price, profit_threshold, config.strategy.rr_ratio, 0.0, 0.0);
-    TradingLogs::log_exit_targets_table(exit_targets_request);
+    TradingLogs::log_position_sizing_debug(current_position_quantity, current_position_value, current_position_quantity, true, false);
+    Logging::ExitTargetsTableRequest exit_targets_request_object("LONG", current_market_price, profit_threshold_dollars, config.strategy.rr_ratio, 0.0, 0.0);
+    TradingLogs::log_exit_targets_table(exit_targets_request_object);
 
-    if (unrealized_pl > profit_threshold) {
+    if (unrealized_profit_loss > profit_threshold_dollars) {
         TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", abs(current_position_quantity));
-        Logging::ComprehensiveOrderExecutionRequest order_request("MARKET", "SELL", abs(current_position_quantity),
-                                                       current_price, 0.0, current_position_quantity,
-                                                       profit_threshold, 0.0, 0.0, "", "");
-        TradingLogs::log_comprehensive_order_execution(order_request);
+        Logging::ComprehensiveOrderExecutionRequest order_request_object("MARKET", "SELL", abs(current_position_quantity),
+                                                       current_market_price, 0.0, current_position_quantity,
+                                                       profit_threshold_dollars, 0.0, 0.0, "", "");
+        TradingLogs::log_comprehensive_order_execution(order_request_object);
         
-        PositionSizing profit_sizing{abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
+        PositionSizing profit_taking_position_sizing{abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
         if (current_position_quantity > 0) {
-            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Sell, data, profit_sizing);
+            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Sell, processed_data_for_profit_taking, profit_taking_position_sizing);
         } else {
-            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Buy, data, profit_sizing);
+            order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Buy, processed_data_for_profit_taking, profit_taking_position_sizing);
         }
     }
 }
 
-void TradingEngine::handle_market_close_positions(const ProcessedData& data) {
-    order_engine.handle_market_close_positions(data);
+void TradingEngine::handle_market_close_positions(const ProcessedData& processed_data_for_close) {
+    order_engine.handle_market_close_positions(processed_data_for_close);
 }
 
 } // namespace Core

@@ -33,8 +33,8 @@ bool RiskManager::check_exposure_limits(const ProcessedData& data, double equity
     }
     
     // Check absolute exposure amount limit (if configured)
-    double max_exposure_amount = equity * config.strategy.max_account_exposure_percentage / 100.0;
-    double current_exposure_amount = equity * data.exposure_pct / 100.0;
+    double max_exposure_amount = equity * config.strategy.max_account_exposure_percentage / config.strategy.percentage_calculation_multiplier;
+    double current_exposure_amount = equity * data.exposure_pct / config.strategy.percentage_calculation_multiplier;
     
     // Additional validation: ensure we don't exceed maximum exposure amount
     return current_exposure_amount <= max_exposure_amount;
@@ -99,7 +99,7 @@ double RiskManager::calculate_exposure_percentage(double current_value, double e
     if (!std::isfinite(current_value)) {
         throw std::runtime_error("Invalid current value for exposure percentage calculation: " + std::to_string(current_value));
     }
-    return (std::abs(current_value) / equity) * 100.0;
+    return (std::abs(current_value) / equity) * config.strategy.percentage_calculation_multiplier;
 }
 
 } // namespace Core

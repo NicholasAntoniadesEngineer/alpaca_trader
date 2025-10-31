@@ -52,9 +52,9 @@ void TradingOrchestrator::execute_trading_loop() {
                 if (!data_sync.running->load()) break;
 
                 // Fetch current market and account data
-                auto snapshots = data_fetcher.fetch_current_snapshots();
-                MarketSnapshot market = snapshots.first;
-                AccountSnapshot account = snapshots.second;
+                auto market_and_account_snapshots = data_fetcher.fetch_current_snapshots();
+                MarketSnapshot current_market_snapshot = market_and_account_snapshots.first;
+                AccountSnapshot current_account_snapshot = market_and_account_snapshots.second;
 
                 // Display trading loop header and increment counter
                 runtime.loop_counter.fetch_add(1);
@@ -69,9 +69,9 @@ void TradingOrchestrator::execute_trading_loop() {
                     std::string timestamp = TimeUtils::get_current_human_readable_time();
                     double buying_power = account_manager.fetch_buying_power();
 
-                    if (auto trade_csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
-                        trade_csv->log_account_update(
-                            timestamp, account.equity, buying_power, account.exposure_pct
+                    if (auto csv_trade_logger = AlpacaTrader::Logging::get_csv_trade_logger()) {
+                        csv_trade_logger->log_account_update(
+                            timestamp, current_account_snapshot.equity, buying_power, current_account_snapshot.exposure_pct
                         );
                     }
                 } catch (const std::exception& exception_error) {
@@ -81,19 +81,19 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Validate trading permissions
-                if (!risk_manager.validate_trading_permissions(ProcessedData{}, account.equity, runtime.initial_equity)) {
+                if (!risk_manager.validate_trading_permissions(ProcessedData{}, current_account_snapshot.equity, runtime.initial_equity)) {
                     trading_engine.handle_trading_halt("Trading conditions not met");
                     continue;
                 }
 
                 // Process trading cycle
-                if (!data_fetcher.get_market_data_validator().validate_market_snapshot(market)) {
+                if (!data_fetcher.get_market_data_validator().validate_market_snapshot(current_market_snapshot)) {
                     countdown_to_next_cycle();
                     continue;
                 }
-                ProcessedData processed_data(market, account);
-                trading_engine.handle_market_close_positions(processed_data);
-                trading_engine.execute_trading_decision(processed_data, account.equity);
+                ProcessedData processed_data_for_trading(current_market_snapshot, current_account_snapshot);
+                trading_engine.handle_market_close_positions(processed_data_for_trading);
+                trading_engine.execute_trading_decision(processed_data_for_trading, current_account_snapshot.equity);
 
                 // Increment iteration counter
                 if (runtime.iteration_counter) {

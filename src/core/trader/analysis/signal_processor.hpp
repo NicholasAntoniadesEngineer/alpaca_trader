@@ -12,18 +12,18 @@ namespace Core {
 
 class SignalProcessor {
 public:
-    SignalProcessor(const SystemConfig& config);
+    SignalProcessor(const SystemConfig& system_config);
 
     // Signal processing methods
-    void process_signal_analysis(const ProcessedData& processed_data);
-    std::pair<PositionSizing, SignalDecision> process_position_sizing(const ProcessedData& processed_data, double account_equity, int current_quantity, double buying_power);
+    void process_signal_analysis(const ProcessedData& processed_data_input);
+    std::pair<PositionSizing, SignalDecision> process_position_sizing(const ProcessedData& processed_data_input, double account_equity_amount, int current_position_quantity, double buying_power_amount);
 
 private:
     const SystemConfig& config;
     
     // Signal processing helper methods
-    void log_signal_analysis_results(const ProcessedData& processed_data, const SignalDecision& signal_decision, const FilterResult& filter_result);
-    void log_csv_signal_data(const ProcessedData& processed_data, const SignalDecision& signal_decision, const FilterResult& filter_result);
+    void log_signal_analysis_results(const ProcessedData& processed_data_input, const SignalDecision& signal_decision_input, const FilterResult& filter_result_input);
+    void log_csv_signal_data(const ProcessedData& processed_data_input, const SignalDecision& signal_decision_input, const FilterResult& filter_result_input);
 };
 
 } // namespace Core

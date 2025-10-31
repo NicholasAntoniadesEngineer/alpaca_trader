@@ -20,19 +20,19 @@ class OrderExecutionEngine {
 public:
     OrderExecutionEngine(const OrderExecutionEngineConstructionParams& construction_params);
     
-    void execute_trade(const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing, const SignalDecision& signal_decision);
+    void execute_trade(const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input, const SignalDecision& signal_decision_input);
     
     // Order side enumeration
     enum class OrderSide { Buy, Sell };
     
         // Public method for profit taking
-        void execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing);
+        void execute_market_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input);
 
         // Public validation method
-        bool validate_trade_feasibility(const PositionSizing& sizing, double buying_power, double current_price) const;
+        bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
 
         // Market close position management
-        void handle_market_close_positions(const ProcessedData& data);
+        void handle_market_close_positions(const ProcessedData& processed_data_input);
     
 private:
     // Core dependencies
@@ -43,12 +43,12 @@ private:
     Monitoring::SystemMonitor& system_monitor;
     
     // Core execution methods
-    void execute_order(OrderSide side, const ProcessedData& data, int current_position_quantity, const PositionSizing& sizing);
-    void execute_bracket_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing, const ExitTargets& targets);
+    void execute_order(OrderSide order_side_input, const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input);
+    void execute_bracket_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, const ExitTargets& exit_targets_input);
     
     // Position management methods
-    bool should_close_opposite_position(OrderSide side, int current_position_quantity) const;
-    bool close_opposite_position(OrderSide side, int current_position_quantity);
+    bool should_close_opposite_position(OrderSide order_side_input, int current_position_quantity) const;
+    bool close_opposite_position(OrderSide order_side_input, int current_position_quantity);
     bool can_execute_new_position(int current_position_quantity) const;
     
     // Order timing methods
@@ -56,8 +56,8 @@ private:
     void update_last_order_timestamp();
     
     // Order validation and preparation
-    bool validate_order_parameters(const ProcessedData& data, const PositionSizing& sizing) const;
-    ExitTargets calculate_exit_targets(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) const;
+    bool validate_order_parameters(const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
+    ExitTargets calculate_exit_targets(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
     
     // Utility methods
     bool is_flat_position(int position_quantity) const;

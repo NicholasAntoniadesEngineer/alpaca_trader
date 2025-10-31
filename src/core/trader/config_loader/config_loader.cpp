@@ -37,218 +37,218 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         }
     }
     
-    std::ifstream in(csv_path);
-    if (!in.is_open()) return false;
-    std::string line;
-    while (std::getline(in, line)) {
-        if (line.empty()) continue;
-        std::stringstream ss(line);
-        std::string key, value;
-        if (!std::getline(ss, key, ',')) continue;
-        if (!std::getline(ss, value)) continue;
-        key = trim(key); value = trim(value);
+    std::ifstream config_file_stream(csv_path);
+    if (!config_file_stream.is_open()) return false;
+    std::string config_line_string;
+    while (std::getline(config_file_stream, config_line_string)) {
+        if (config_line_string.empty()) continue;
+        std::stringstream config_line_stream(config_line_string);
+        std::string config_key_string, config_value_string;
+        if (!std::getline(config_line_stream, config_key_string, ',')) continue;
+        if (!std::getline(config_line_stream, config_value_string)) continue;
+        config_key_string = trim(config_key_string); config_value_string = trim(config_value_string);
 
         // Trading Mode Configuration (only from strategy_config.csv)
         if (csv_path.find("strategy_config.csv") != std::string::npos) {
-            if (key == "trading_mode.mode") {
-                if (value.empty()) {
+            if (config_key_string == "trading_mode.mode") {
+                if (config_value_string.empty()) {
                     throw std::runtime_error("Trading mode is required but not provided");
                 }
-                cfg.trading_mode.mode = AlpacaTrader::Config::TradingModeConfig::parse_mode(value);
+                cfg.trading_mode.mode = AlpacaTrader::Config::TradingModeConfig::parse_mode(config_value_string);
                 // Map trading mode to strategy crypto asset indicator
                 cfg.strategy.is_crypto_asset = (cfg.trading_mode.mode == AlpacaTrader::Config::TradingMode::CRYPTO);
             }
-            else if (key == "trading_mode.primary_symbol") {
-                if (value.empty()) {
+            else if (config_key_string == "trading_mode.primary_symbol") {
+                if (config_value_string.empty()) {
                     throw std::runtime_error("Primary symbol is required but not provided");
                 }
-                cfg.trading_mode.primary_symbol = value;
+                cfg.trading_mode.primary_symbol = config_value_string;
                 // Map primary symbol to strategy symbol
-                cfg.strategy.symbol = value;
+                cfg.strategy.symbol = config_value_string;
             }
         }
 
         // All API configuration handled by multi_api section
 
         // Strategy Configuration - session and other settings
-        if (key == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(value);
-        else if (key == "session.market_open_hour") cfg.strategy.market_open_hour = std::stoi(value);
-        else if (key == "session.market_open_minute") cfg.strategy.market_open_minute = std::stoi(value);
-        else if (key == "session.market_close_hour") cfg.strategy.market_close_hour = std::stoi(value);
-        else if (key == "session.market_close_minute") cfg.strategy.market_close_minute = std::stoi(value);
+        if (config_key_string == "session.et_utc_offset_hours") cfg.strategy.et_utc_offset_hours = std::stoi(config_value_string);
+        else if (config_key_string == "session.market_open_hour") cfg.strategy.market_open_hour = std::stoi(config_value_string);
+        else if (config_key_string == "session.market_open_minute") cfg.strategy.market_open_minute = std::stoi(config_value_string);
+        else if (config_key_string == "session.market_close_hour") cfg.strategy.market_close_hour = std::stoi(config_value_string);
+        else if (config_key_string == "session.market_close_minute") cfg.strategy.market_close_minute = std::stoi(config_value_string);
 
         // Strategy parameters
-        else if (key == "strategy.atr_calculation_period") cfg.strategy.atr_calculation_period = std::stoi(value);
-        else if (key == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(value);
-        else if (key == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(value);
-        else if (key == "strategy.atr_calculation_bars") cfg.strategy.atr_calculation_bars = std::stoi(value);
-        else if (key == "strategy.daily_bars_timeframe") cfg.strategy.daily_bars_timeframe = value;
-        else if (key == "strategy.daily_bars_count") cfg.strategy.daily_bars_count = std::stoi(value);
-        else if (key == "strategy.entry_signal_atr_multiplier") cfg.strategy.entry_signal_atr_multiplier = std::stod(value);
-        else if (key == "strategy.entry_signal_volume_multiplier") cfg.strategy.entry_signal_volume_multiplier = std::stod(value);
-        else if (key == "strategy.crypto_volume_multiplier") cfg.strategy.crypto_volume_multiplier = std::stod(value);
-        else if (key == "strategy.crypto_volume_change_amplification_factor") cfg.strategy.crypto_volume_change_amplification_factor = std::stod(value);
-        else if (key == "strategy.percentage_calculation_multiplier") cfg.strategy.percentage_calculation_multiplier = std::stod(value);
-        else if (key == "strategy.minimum_volume_threshold") cfg.strategy.minimum_volume_threshold = std::stod(value);
-        else if (key == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(value);
-        else if (key == "strategy.average_atr_comparison_multiplier") cfg.strategy.average_atr_comparison_multiplier = std::stoi(value);
-        else if (key == "strategy.atr_absolute_minimum_threshold") cfg.strategy.atr_absolute_minimum_threshold = std::stod(value);
-        else if (key == "strategy.use_absolute_atr_threshold_instead_of_relative") cfg.strategy.use_absolute_atr_threshold = (value == "true");
+        else if (config_key_string == "strategy.atr_calculation_period") cfg.strategy.atr_calculation_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.atr_calculation_bars") cfg.strategy.atr_calculation_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.daily_bars_timeframe") cfg.strategy.daily_bars_timeframe = config_value_string;
+        else if (config_key_string == "strategy.daily_bars_count") cfg.strategy.daily_bars_count = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.entry_signal_atr_multiplier") cfg.strategy.entry_signal_atr_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.entry_signal_volume_multiplier") cfg.strategy.entry_signal_volume_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.crypto_volume_multiplier") cfg.strategy.crypto_volume_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.crypto_volume_change_amplification_factor") cfg.strategy.crypto_volume_change_amplification_factor = std::stod(config_value_string);
+        else if (config_key_string == "strategy.percentage_calculation_multiplier") cfg.strategy.percentage_calculation_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_volume_threshold") cfg.strategy.minimum_volume_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.rr_ratio") cfg.strategy.rr_ratio = std::stod(config_value_string);
+        else if (config_key_string == "strategy.average_atr_comparison_multiplier") cfg.strategy.average_atr_comparison_multiplier = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.atr_absolute_minimum_threshold") cfg.strategy.atr_absolute_minimum_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.use_absolute_atr_threshold_instead_of_relative") cfg.strategy.use_absolute_atr_threshold = (config_value_string == "true");
         
         // Momentum signal configuration
-        else if (key == "strategy.minimum_price_change_percentage_for_momentum") cfg.strategy.minimum_price_change_percentage_for_momentum = std::stod(value);
-        else if (key == "strategy.minimum_volume_increase_percentage_for_buy_signals") cfg.strategy.minimum_volume_increase_percentage_for_buy_signals = std::stod(value);
-        else if (key == "strategy.minimum_volatility_percentage_for_buy_signals") cfg.strategy.minimum_volatility_percentage_for_buy_signals = std::stod(value);
-        else if (key == "strategy.minimum_volume_increase_percentage_for_sell_signals") cfg.strategy.minimum_volume_increase_percentage_for_sell_signals = std::stod(value);
-        else if (key == "strategy.minimum_volatility_percentage_for_sell_signals") cfg.strategy.minimum_volatility_percentage_for_sell_signals = std::stod(value);
-        else if (key == "strategy.minimum_signal_strength_threshold") cfg.strategy.minimum_signal_strength_threshold = std::stod(value);
+        else if (config_key_string == "strategy.minimum_price_change_percentage_for_momentum") cfg.strategy.minimum_price_change_percentage_for_momentum = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_volume_increase_percentage_for_buy_signals") cfg.strategy.minimum_volume_increase_percentage_for_buy_signals = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_volatility_percentage_for_buy_signals") cfg.strategy.minimum_volatility_percentage_for_buy_signals = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_volume_increase_percentage_for_sell_signals") cfg.strategy.minimum_volume_increase_percentage_for_sell_signals = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_volatility_percentage_for_sell_signals") cfg.strategy.minimum_volatility_percentage_for_sell_signals = std::stod(config_value_string);
+        else if (config_key_string == "strategy.minimum_signal_strength_threshold") cfg.strategy.minimum_signal_strength_threshold = std::stod(config_value_string);
         
         // Signal strength weighting configuration
-        else if (key == "strategy.basic_price_pattern_weight") cfg.strategy.basic_price_pattern_weight = std::stod(value);
-        else if (key == "strategy.momentum_indicator_weight") cfg.strategy.momentum_indicator_weight = std::stod(value);
-        else if (key == "strategy.volume_analysis_weight") cfg.strategy.volume_analysis_weight = std::stod(value);
-        else if (key == "strategy.volatility_analysis_weight") cfg.strategy.volatility_analysis_weight = std::stod(value);
+        else if (config_key_string == "strategy.basic_price_pattern_weight") cfg.strategy.basic_price_pattern_weight = std::stod(config_value_string);
+        else if (config_key_string == "strategy.momentum_indicator_weight") cfg.strategy.momentum_indicator_weight = std::stod(config_value_string);
+        else if (config_key_string == "strategy.volume_analysis_weight") cfg.strategy.volume_analysis_weight = std::stod(config_value_string);
+        else if (config_key_string == "strategy.volatility_analysis_weight") cfg.strategy.volatility_analysis_weight = std::stod(config_value_string);
         
         // Doji pattern detection configuration
-        else if (key == "strategy.doji_candlestick_body_size_threshold_percentage") cfg.strategy.doji_candlestick_body_size_threshold_percentage = std::stod(value);
-        else if (key == "strategy.buy_signals_allow_equal_close") cfg.strategy.buy_signals_allow_equal_close = to_bool(value);
-        else if (key == "strategy.buy_signals_require_higher_high") cfg.strategy.buy_signals_require_higher_high = to_bool(value);
-        else if (key == "strategy.buy_signals_require_higher_low") cfg.strategy.buy_signals_require_higher_low = to_bool(value);
-        else if (key == "strategy.sell_signals_allow_equal_close") cfg.strategy.sell_signals_allow_equal_close = to_bool(value);
-        else if (key == "strategy.sell_signals_require_lower_low") cfg.strategy.sell_signals_require_lower_low = to_bool(value);
-        else if (key == "strategy.sell_signals_require_lower_high") cfg.strategy.sell_signals_require_lower_high = to_bool(value);
-        else if (key == "strategy.price_buffer_pct") cfg.strategy.price_buffer_pct = std::stod(value);
-        else if (key == "strategy.min_price_buffer") cfg.strategy.min_price_buffer = std::stod(value);
-        else if (key == "strategy.max_price_buffer") cfg.strategy.max_price_buffer = std::stod(value);
-        else if (key == "strategy.stop_loss_buffer_amount_dollars") cfg.strategy.stop_loss_buffer_amount_dollars = std::stod(value);
-        else if (key == "strategy.use_current_market_price_for_order_execution") cfg.strategy.use_current_market_price_for_order_execution = to_bool(value);
-        else if (key == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(value);
-        else if (key == "strategy.take_profit_percentage") cfg.strategy.take_profit_percentage = std::stod(value);
-        else if (key == "strategy.use_take_profit_percentage") cfg.strategy.use_take_profit_percentage = to_bool(value);
-        else if (key == "strategy.enable_fixed_share_quantity_per_trade") cfg.strategy.enable_fixed_share_quantity_per_trade = to_bool(value);
-        else if (key == "strategy.enable_risk_based_position_multiplier") cfg.strategy.enable_risk_based_position_multiplier = to_bool(value);
-        else if (key == "strategy.fixed_share_quantity_per_trade") cfg.strategy.fixed_share_quantity_per_trade = std::stoi(value);
-        else if (key == "strategy.risk_based_position_size_multiplier") cfg.strategy.risk_based_position_size_multiplier = std::stod(value);
-        else if (key == "strategy.maximum_share_quantity_per_single_trade") cfg.strategy.maximum_share_quantity_per_single_trade = std::stoi(value);
-        else if (key == "strategy.minimum_acceptable_price_for_signals") cfg.strategy.minimum_acceptable_price_for_signals = std::stod(value);
-        else if (key == "strategy.maximum_acceptable_price_for_signals") cfg.strategy.maximum_acceptable_price_for_signals = std::stod(value);
+        else if (config_key_string == "strategy.doji_candlestick_body_size_threshold_percentage") cfg.strategy.doji_candlestick_body_size_threshold_percentage = std::stod(config_value_string);
+        else if (config_key_string == "strategy.buy_signals_allow_equal_close") cfg.strategy.buy_signals_allow_equal_close = to_bool(config_value_string);
+        else if (config_key_string == "strategy.buy_signals_require_higher_high") cfg.strategy.buy_signals_require_higher_high = to_bool(config_value_string);
+        else if (config_key_string == "strategy.buy_signals_require_higher_low") cfg.strategy.buy_signals_require_higher_low = to_bool(config_value_string);
+        else if (config_key_string == "strategy.sell_signals_allow_equal_close") cfg.strategy.sell_signals_allow_equal_close = to_bool(config_value_string);
+        else if (config_key_string == "strategy.sell_signals_require_lower_low") cfg.strategy.sell_signals_require_lower_low = to_bool(config_value_string);
+        else if (config_key_string == "strategy.sell_signals_require_lower_high") cfg.strategy.sell_signals_require_lower_high = to_bool(config_value_string);
+        else if (config_key_string == "strategy.price_buffer_pct") cfg.strategy.price_buffer_pct = std::stod(config_value_string);
+        else if (config_key_string == "strategy.min_price_buffer") cfg.strategy.min_price_buffer = std::stod(config_value_string);
+        else if (config_key_string == "strategy.max_price_buffer") cfg.strategy.max_price_buffer = std::stod(config_value_string);
+        else if (config_key_string == "strategy.stop_loss_buffer_amount_dollars") cfg.strategy.stop_loss_buffer_amount_dollars = std::stod(config_value_string);
+        else if (config_key_string == "strategy.use_current_market_price_for_order_execution") cfg.strategy.use_current_market_price_for_order_execution = to_bool(config_value_string);
+        else if (config_key_string == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(config_value_string);
+        else if (config_key_string == "strategy.take_profit_percentage") cfg.strategy.take_profit_percentage = std::stod(config_value_string);
+        else if (config_key_string == "strategy.use_take_profit_percentage") cfg.strategy.use_take_profit_percentage = to_bool(config_value_string);
+        else if (config_key_string == "strategy.enable_fixed_share_quantity_per_trade") cfg.strategy.enable_fixed_share_quantity_per_trade = to_bool(config_value_string);
+        else if (config_key_string == "strategy.enable_risk_based_position_multiplier") cfg.strategy.enable_risk_based_position_multiplier = to_bool(config_value_string);
+        else if (config_key_string == "strategy.fixed_share_quantity_per_trade") cfg.strategy.fixed_share_quantity_per_trade = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.risk_based_position_size_multiplier") cfg.strategy.risk_based_position_size_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.maximum_share_quantity_per_single_trade") cfg.strategy.maximum_share_quantity_per_single_trade = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.minimum_acceptable_price_for_signals") cfg.strategy.minimum_acceptable_price_for_signals = std::stod(config_value_string);
+        else if (config_key_string == "strategy.maximum_acceptable_price_for_signals") cfg.strategy.maximum_acceptable_price_for_signals = std::stod(config_value_string);
         
         // Strategy precision configuration
-        else if (key == "strategy.ratio_display_precision") cfg.strategy.ratio_display_precision = std::stoi(value);
-        else if (key == "strategy.factor_display_precision") cfg.strategy.factor_display_precision = std::stoi(value);
-        else if (key == "strategy.atr_volume_display_precision") cfg.strategy.atr_volume_display_precision = std::stoi(value);
+        else if (config_key_string == "strategy.ratio_display_precision") cfg.strategy.ratio_display_precision = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.factor_display_precision") cfg.strategy.factor_display_precision = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.atr_volume_display_precision") cfg.strategy.atr_volume_display_precision = std::stoi(config_value_string);
         
         // Signal and position label configuration
-        else if (key == "strategy.signal_buy_string") {
-            if (value.empty()) {
+        else if (config_key_string == "strategy.signal_buy_string") {
+            if (config_value_string.empty()) {
                 throw std::runtime_error("Signal buy string is required but not provided");
             }
-            cfg.strategy.signal_buy_string = value;
+            cfg.strategy.signal_buy_string = config_value_string;
         }
-        else if (key == "strategy.signal_sell_string") {
-            if (value.empty()) {
+        else if (config_key_string == "strategy.signal_sell_string") {
+            if (config_value_string.empty()) {
                 throw std::runtime_error("Signal sell string is required but not provided");
             }
-            cfg.strategy.signal_sell_string = value;
+            cfg.strategy.signal_sell_string = config_value_string;
         }
-        else if (key == "strategy.position_long_string") {
-            if (value.empty()) {
+        else if (config_key_string == "strategy.position_long_string") {
+            if (config_value_string.empty()) {
                 throw std::runtime_error("Position long string is required but not provided");
             }
-            cfg.strategy.position_long_string = value;
+            cfg.strategy.position_long_string = config_value_string;
         }
-        else if (key == "strategy.position_short_string") {
-            if (value.empty()) {
+        else if (config_key_string == "strategy.position_short_string") {
+            if (config_value_string.empty()) {
                 throw std::runtime_error("Position short string is required but not provided");
             }
-            cfg.strategy.position_short_string = value;
+            cfg.strategy.position_short_string = config_value_string;
         }
 
         // Short selling configuration
-        else if (key == "strategy.enable_short_selling") cfg.strategy.enable_short_selling = to_bool(value);
-        else if (key == "strategy.short_availability_check") cfg.strategy.short_availability_check = to_bool(value);
-        else if (key == "strategy.default_shortable_quantity") cfg.strategy.default_shortable_quantity = std::stoi(value);
-        else if (key == "strategy.existing_short_multiplier") cfg.strategy.existing_short_multiplier = std::stod(value);
-        else if (key == "strategy.short_safety_margin") cfg.strategy.short_safety_margin = std::stod(value);
-        else if (key == "strategy.short_retry_attempts") cfg.strategy.short_retry_attempts = std::stoi(value);
-        else if (key == "strategy.short_retry_delay_ms") cfg.strategy.short_retry_delay_ms = std::stoi(value);
+        else if (config_key_string == "strategy.enable_short_selling") cfg.strategy.enable_short_selling = to_bool(config_value_string);
+        else if (config_key_string == "strategy.short_availability_check") cfg.strategy.short_availability_check = to_bool(config_value_string);
+        else if (config_key_string == "strategy.default_shortable_quantity") cfg.strategy.default_shortable_quantity = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.existing_short_multiplier") cfg.strategy.existing_short_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.short_safety_margin") cfg.strategy.short_safety_margin = std::stod(config_value_string);
+        else if (config_key_string == "strategy.short_retry_attempts") cfg.strategy.short_retry_attempts = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.short_retry_delay_ms") cfg.strategy.short_retry_delay_ms = std::stoi(config_value_string);
 
         // Risk Management
-        else if (key == "risk.max_daily_loss_percentage") cfg.strategy.max_daily_loss_percentage = std::stod(value);
-        else if (key == "risk.daily_profit_target_percentage") cfg.strategy.daily_profit_target_percentage = std::stod(value);
-        else if (key == "risk.max_account_exposure_percentage") cfg.strategy.max_account_exposure_percentage = std::stod(value);
-        else if (key == "risk.position_scaling_multiplier") cfg.strategy.position_scaling_multiplier = std::stod(value);
-        else if (key == "risk.buying_power_utilization_percentage") cfg.strategy.buying_power_utilization_percentage = std::stod(value);
-        else if (key == "risk.buying_power_validation_safety_margin") cfg.strategy.buying_power_validation_safety_margin = std::stod(value);
-        else if (key == "risk.risk_percentage_per_trade") cfg.strategy.risk_percentage_per_trade = std::stod(value);
-        else if (key == "risk.maximum_dollar_value_per_trade") cfg.strategy.maximum_dollar_value_per_trade = std::stod(value);
-        else if (key == "risk.allow_multiple_positions_per_symbol") cfg.strategy.allow_multiple_positions_per_symbol = to_bool(value);
-        else if (key == "risk.maximum_position_layers") cfg.strategy.maximum_position_layers = std::stoi(value);
-        else if (key == "risk.close_positions_on_signal_reversal") cfg.strategy.close_positions_on_signal_reversal = to_bool(value);
+        else if (config_key_string == "risk.max_daily_loss_percentage") cfg.strategy.max_daily_loss_percentage = std::stod(config_value_string);
+        else if (config_key_string == "risk.daily_profit_target_percentage") cfg.strategy.daily_profit_target_percentage = std::stod(config_value_string);
+        else if (config_key_string == "risk.max_account_exposure_percentage") cfg.strategy.max_account_exposure_percentage = std::stod(config_value_string);
+        else if (config_key_string == "risk.position_scaling_multiplier") cfg.strategy.position_scaling_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "risk.buying_power_utilization_percentage") cfg.strategy.buying_power_utilization_percentage = std::stod(config_value_string);
+        else if (config_key_string == "risk.buying_power_validation_safety_margin") cfg.strategy.buying_power_validation_safety_margin = std::stod(config_value_string);
+        else if (config_key_string == "risk.risk_percentage_per_trade") cfg.strategy.risk_percentage_per_trade = std::stod(config_value_string);
+        else if (config_key_string == "risk.maximum_dollar_value_per_trade") cfg.strategy.maximum_dollar_value_per_trade = std::stod(config_value_string);
+        else if (config_key_string == "risk.allow_multiple_positions_per_symbol") cfg.strategy.allow_multiple_positions_per_symbol = to_bool(config_value_string);
+        else if (config_key_string == "risk.maximum_position_layers") cfg.strategy.maximum_position_layers = std::stoi(config_value_string);
+        else if (config_key_string == "risk.close_positions_on_signal_reversal") cfg.strategy.close_positions_on_signal_reversal = to_bool(config_value_string);
 
         // Thread Polling Intervals
-        else if (key == "timing.market_data_thread_polling_interval_seconds") cfg.timing.thread_market_data_poll_interval_sec = std::stoi(value);
-        else if (key == "timing.account_data_thread_polling_interval_seconds") cfg.timing.thread_account_data_poll_interval_sec = std::stoi(value);
-        else if (key == "timing.market_gate_thread_polling_interval_seconds") cfg.timing.thread_market_gate_poll_interval_sec = std::stoi(value);
-        else if (key == "timing.trader_decision_thread_polling_interval_seconds") cfg.timing.thread_trader_poll_interval_sec = std::stoi(value);
-        else if (key == "timing.logging_thread_polling_interval_seconds") cfg.timing.thread_logging_poll_interval_sec = std::stoi(value);
+        else if (config_key_string == "timing.market_data_thread_polling_interval_seconds") cfg.timing.thread_market_data_poll_interval_sec = std::stoi(config_value_string);
+        else if (config_key_string == "timing.account_data_thread_polling_interval_seconds") cfg.timing.thread_account_data_poll_interval_sec = std::stoi(config_value_string);
+        else if (config_key_string == "timing.market_gate_thread_polling_interval_seconds") cfg.timing.thread_market_gate_poll_interval_sec = std::stoi(config_value_string);
+        else if (config_key_string == "timing.trader_decision_thread_polling_interval_seconds") cfg.timing.thread_trader_poll_interval_sec = std::stoi(config_value_string);
+        else if (config_key_string == "timing.logging_thread_polling_interval_seconds") cfg.timing.thread_logging_poll_interval_sec = std::stoi(config_value_string);
 
         // Market Session Buffer Times
-        else if (key == "timing.pre_market_open_buffer_minutes") cfg.timing.pre_market_open_buffer_minutes = std::stoi(value);
-        else if (key == "timing.post_market_close_buffer_minutes") cfg.timing.post_market_close_buffer_minutes = std::stoi(value);
-        else if (key == "timing.market_close_grace_period_minutes") cfg.timing.market_close_grace_period_minutes = std::stoi(value);
+        else if (config_key_string == "timing.pre_market_open_buffer_minutes") cfg.timing.pre_market_open_buffer_minutes = std::stoi(config_value_string);
+        else if (config_key_string == "timing.post_market_close_buffer_minutes") cfg.timing.post_market_close_buffer_minutes = std::stoi(config_value_string);
+        else if (config_key_string == "timing.market_close_grace_period_minutes") cfg.timing.market_close_grace_period_minutes = std::stoi(config_value_string);
 
         // Historical Data Configuration
-        else if (key == "timing.historical_data_fetch_period_minutes") cfg.timing.historical_data_fetch_period_minutes = std::stoi(value);
-        else if (key == "timing.historical_data_buffer_size") cfg.timing.historical_data_buffer_size = std::stoi(value);
-        else if (key == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(value);
-        else if (key == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(value);
-        else if (key == "timing.crypto_data_staleness_threshold_seconds") cfg.timing.crypto_data_staleness_threshold_seconds = std::stoi(value);
+        else if (config_key_string == "timing.historical_data_fetch_period_minutes") cfg.timing.historical_data_fetch_period_minutes = std::stoi(config_value_string);
+        else if (config_key_string == "timing.historical_data_buffer_size") cfg.timing.historical_data_buffer_size = std::stoi(config_value_string);
+        else if (config_key_string == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.crypto_data_staleness_threshold_seconds") cfg.timing.crypto_data_staleness_threshold_seconds = std::stoi(config_value_string);
 
         // System Health Monitoring
-        else if (key == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(value);
-        else if (key == "timing.system_health_logging_interval_seconds") cfg.timing.system_health_logging_interval_seconds = std::stoi(value);
+        else if (config_key_string == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(config_value_string);
+        else if (config_key_string == "timing.system_health_logging_interval_seconds") cfg.timing.system_health_logging_interval_seconds = std::stoi(config_value_string);
 
         // Error Recovery Timing
-        else if (key == "timing.emergency_trading_halt_duration_minutes") cfg.timing.emergency_trading_halt_duration_minutes = std::stoi(value);
+        else if (config_key_string == "timing.emergency_trading_halt_duration_minutes") cfg.timing.emergency_trading_halt_duration_minutes = std::stoi(config_value_string);
 
         // User Interface Updates
-        else if (key == "timing.countdown_display_refresh_interval_seconds") cfg.timing.countdown_display_refresh_interval_seconds = std::stoi(value);
+        else if (config_key_string == "timing.countdown_display_refresh_interval_seconds") cfg.timing.countdown_display_refresh_interval_seconds = std::stoi(config_value_string);
 
         // Thread Lifecycle Management
-        else if (key == "timing.thread_initialization_delay_milliseconds") cfg.timing.thread_initialization_delay_milliseconds = std::stoi(value);
-        else if (key == "timing.thread_startup_sequence_delay_milliseconds") cfg.timing.thread_startup_sequence_delay_milliseconds = std::stoi(value);
+        else if (config_key_string == "timing.thread_initialization_delay_milliseconds") cfg.timing.thread_initialization_delay_milliseconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.thread_startup_sequence_delay_milliseconds") cfg.timing.thread_startup_sequence_delay_milliseconds = std::stoi(config_value_string);
 
         // Order Management Timing
-        else if (key == "timing.order_cancellation_processing_delay_milliseconds") cfg.timing.order_cancellation_processing_delay_milliseconds = std::stoi(value);
-        else if (key == "timing.position_verification_timeout_milliseconds") cfg.timing.position_verification_timeout_milliseconds = std::stoi(value);
-        else if (key == "timing.position_settlement_timeout_milliseconds") cfg.timing.position_settlement_timeout_milliseconds = std::stoi(value);
-        else if (key == "timing.maximum_concurrent_order_cancellations") cfg.timing.maximum_concurrent_order_cancellations = std::stoi(value);
-        else if (key == "timing.maximum_position_verification_attempts") cfg.timing.maximum_position_verification_attempts = std::stoi(value);
+        else if (config_key_string == "timing.order_cancellation_processing_delay_milliseconds") cfg.timing.order_cancellation_processing_delay_milliseconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.position_verification_timeout_milliseconds") cfg.timing.position_verification_timeout_milliseconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.position_settlement_timeout_milliseconds") cfg.timing.position_settlement_timeout_milliseconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.maximum_concurrent_order_cancellations") cfg.timing.maximum_concurrent_order_cancellations = std::stoi(config_value_string);
+        else if (config_key_string == "timing.maximum_position_verification_attempts") cfg.timing.maximum_position_verification_attempts = std::stoi(config_value_string);
 
         // Trading Safety Constraints
-        else if (key == "timing.minimum_interval_between_orders_seconds") cfg.timing.minimum_interval_between_orders_seconds = std::stoi(value);
-        else if (key == "timing.enable_wash_trade_prevention_mechanism") cfg.timing.enable_wash_trade_prevention_mechanism = to_bool(value);
+        else if (config_key_string == "timing.minimum_interval_between_orders_seconds") cfg.timing.minimum_interval_between_orders_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.enable_wash_trade_prevention_mechanism") cfg.timing.enable_wash_trade_prevention_mechanism = to_bool(config_value_string);
 
         // Precision Settings for Metrics
-        else if (key == "timing.cpu_usage_display_precision") cfg.timing.cpu_usage_display_precision = std::stoi(value);
-        else if (key == "timing.performance_rate_display_precision") cfg.timing.performance_rate_display_precision = std::stoi(value);
+        else if (config_key_string == "timing.cpu_usage_display_precision") cfg.timing.cpu_usage_display_precision = std::stoi(config_value_string);
+        else if (config_key_string == "timing.performance_rate_display_precision") cfg.timing.performance_rate_display_precision = std::stoi(config_value_string);
 
         // Connectivity Retry Configuration
-        else if (key == "timing.connectivity_max_retry_delay_seconds") cfg.timing.connectivity_max_retry_delay_seconds = std::stoi(value);
-        else if (key == "timing.connectivity_degraded_threshold") cfg.timing.connectivity_degraded_threshold = std::stoi(value);
-        else if (key == "timing.connectivity_disconnected_threshold") cfg.timing.connectivity_disconnected_threshold = std::stoi(value);
-        else if (key == "timing.connectivity_backoff_multiplier") cfg.timing.connectivity_backoff_multiplier = std::stod(value);
+        else if (config_key_string == "timing.connectivity_max_retry_delay_seconds") cfg.timing.connectivity_max_retry_delay_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.connectivity_degraded_threshold") cfg.timing.connectivity_degraded_threshold = std::stoi(config_value_string);
+        else if (config_key_string == "timing.connectivity_disconnected_threshold") cfg.timing.connectivity_disconnected_threshold = std::stoi(config_value_string);
+        else if (config_key_string == "timing.connectivity_backoff_multiplier") cfg.timing.connectivity_backoff_multiplier = std::stod(config_value_string);
 
         // Logging
-        else if (key == "logging.log_file") cfg.logging.log_file = value;
-        else if (key == "logging.max_log_file_size_mb") cfg.logging.max_log_file_size_mb = std::stoi(value);
-        else if (key == "logging.log_backup_count") cfg.logging.log_backup_count = std::stoi(value);
-        else if (key == "logging.console_log_level") cfg.logging.console_log_level = value;
-        else if (key == "logging.file_log_level") cfg.logging.file_log_level = value;
-        else if (key == "logging.include_timestamp") cfg.logging.include_timestamp = to_bool(value);
-        else if (key == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(value);
-        else if (key == "logging.include_function_name") cfg.logging.include_function_name = to_bool(value);
+        else if (config_key_string == "logging.log_file") cfg.logging.log_file = config_value_string;
+        else if (config_key_string == "logging.max_log_file_size_mb") cfg.logging.max_log_file_size_mb = std::stoi(config_value_string);
+        else if (config_key_string == "logging.log_backup_count") cfg.logging.log_backup_count = std::stoi(config_value_string);
+        else if (config_key_string == "logging.console_log_level") cfg.logging.console_log_level = config_value_string;
+        else if (config_key_string == "logging.file_log_level") cfg.logging.file_log_level = config_value_string;
+        else if (config_key_string == "logging.include_timestamp") cfg.logging.include_timestamp = to_bool(config_value_string);
+        else if (config_key_string == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(config_value_string);
+        else if (config_key_string == "logging.include_function_name") cfg.logging.include_function_name = to_bool(config_value_string);
     }
     return true;
 }
@@ -261,13 +261,13 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
     }
 
     // Helper function to convert priority string to enum
-    auto parse_priority = [](const std::string& value) -> AlpacaTrader::Config::Priority {
-        if (value == "REALTIME") return AlpacaTrader::Config::Priority::REALTIME;
-        else if (value == "HIGHEST") return AlpacaTrader::Config::Priority::HIGHEST;
-        else if (value == "HIGH") return AlpacaTrader::Config::Priority::HIGH;
-        else if (value == "NORMAL") return AlpacaTrader::Config::Priority::NORMAL;
-        else if (value == "LOW") return AlpacaTrader::Config::Priority::LOW;
-        else if (value == "LOWEST") return AlpacaTrader::Config::Priority::LOWEST;
+    auto parse_priority = [](const std::string& priority_value_string) -> AlpacaTrader::Config::Priority {
+        if (priority_value_string == "REALTIME") return AlpacaTrader::Config::Priority::REALTIME;
+        else if (priority_value_string == "HIGHEST") return AlpacaTrader::Config::Priority::HIGHEST;
+        else if (priority_value_string == "HIGH") return AlpacaTrader::Config::Priority::HIGH;
+        else if (priority_value_string == "NORMAL") return AlpacaTrader::Config::Priority::NORMAL;
+        else if (priority_value_string == "LOW") return AlpacaTrader::Config::Priority::LOW;
+        else if (priority_value_string == "LOWEST") return AlpacaTrader::Config::Priority::LOWEST;
         else return AlpacaTrader::Config::Priority::NORMAL; // Default fallback
     };
 
@@ -276,43 +276,43 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
         return &cfg.thread_registry.get_thread_settings_for_loading(thread_name);
     };
 
-    std::string line;
-    while (std::getline(file, line)) {
+    std::string thread_config_line_string;
+    while (std::getline(file, thread_config_line_string)) {
         // Skip empty lines and comments
-        if (line.empty() || line[0] == '#') continue;
+        if (thread_config_line_string.empty() || thread_config_line_string[0] == '#') continue;
 
-        std::istringstream ss(line);
-        std::string key, value;
-        if (!std::getline(ss, key, ',')) continue;
-        if (!std::getline(ss, value)) continue;
-        key = trim(key); value = trim(value);
+        std::istringstream thread_config_line_stream(thread_config_line_string);
+        std::string thread_config_key_string, thread_config_value_string;
+        if (!std::getline(thread_config_line_stream, thread_config_key_string, ',')) continue;
+        if (!std::getline(thread_config_line_stream, thread_config_value_string)) continue;
+        thread_config_key_string = trim(thread_config_key_string); thread_config_value_string = trim(thread_config_value_string);
 
         // Parse thread configuration with format: thread.{thread_name}.{property}
-        if (key.substr(0, 7) == "thread.") {
+        if (thread_config_key_string.substr(0, 7) == "thread.") {
             // Extract thread name and property
-            size_t first_dot = key.find('.', 7);
-            if (first_dot == std::string::npos) continue;
+            size_t first_dot_position = thread_config_key_string.find('.', 7);
+            if (first_dot_position == std::string::npos) continue;
 
-            std::string thread_name = key.substr(7, first_dot - 7);
-            std::string property = key.substr(first_dot + 1);
+            std::string thread_name_string = thread_config_key_string.substr(7, first_dot_position - 7);
+            std::string thread_property_string = thread_config_key_string.substr(first_dot_position + 1);
 
-            AlpacaTrader::Config::ThreadSettings* settings = get_thread_settings_for_loading(thread_name);
+            AlpacaTrader::Config::ThreadSettings* thread_settings_pointer = get_thread_settings_for_loading(thread_name_string);
 
             // Set the appropriate property
-            if (property == "priority") {
-                settings->priority = parse_priority(value);
+            if (thread_property_string == "priority") {
+                thread_settings_pointer->priority = parse_priority(thread_config_value_string);
             }
-            else if (property == "cpu_affinity") {
-                settings->cpu_affinity = std::stoi(value);
+            else if (thread_property_string == "cpu_affinity") {
+                thread_settings_pointer->cpu_affinity = std::stoi(thread_config_value_string);
             }
-            else if (property == "name") {
-                settings->name = value;
+            else if (thread_property_string == "name") {
+                thread_settings_pointer->name = thread_config_value_string;
             }
-            else if (property == "use_cpu_affinity") {
-                settings->use_cpu_affinity = to_bool(value);
+            else if (thread_property_string == "use_cpu_affinity") {
+                thread_settings_pointer->use_cpu_affinity = to_bool(thread_config_value_string);
             }
             else {
-                log_message("WARNING: Unknown thread property: " + property + " for thread: " + thread_name, "");
+                log_message("WARNING: Unknown thread property: " + thread_property_string + " for thread: " + thread_name_string, "");
             }
         }
     }

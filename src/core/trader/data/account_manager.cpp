@@ -170,7 +170,7 @@ AccountSnapshot AccountManager::fetch_account_snapshot() const {
     
     // Calculate exposure percentage
     if (snapshot.equity > 0.0) {
-        snapshot.exposure_pct = (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * 100.0;
+        snapshot.exposure_pct = (std::abs(snapshot.pos_details.current_value) / snapshot.equity) * strategy.percentage_calculation_multiplier;
     } else {
         snapshot.exposure_pct = 0.0;
     }
@@ -256,7 +256,7 @@ void AccountManager::fetch_account_and_position_data(ProcessedData& data) const 
     if (equity <= 0.0) {
         data.exposure_pct = 0.0;
     } else {
-        data.exposure_pct = (std::abs(data.pos_details.current_value) / equity) * 100.0;
+        data.exposure_pct = (std::abs(data.pos_details.current_value) / equity) * strategy.percentage_calculation_multiplier;
     }
 }
 
