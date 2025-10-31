@@ -24,8 +24,8 @@ struct ComprehensiveOrderExecutionRequest {
     ComprehensiveOrderExecutionRequest(const std::string& order_type_param, const std::string& side_param,
                                      int quantity_param, double current_price_param, double atr_param,
                                      int position_qty_param, double risk_amount_param,
-                                     double stop_loss_param = 0.0, double take_profit_param = 0.0,
-                                     const std::string& symbol_param = "", const std::string& function_name_param = "")
+                                     double stop_loss_param, double take_profit_param,
+                                     const std::string& symbol_param, const std::string& function_name_param)
         : order_type(order_type_param), side(side_param), quantity(quantity_param),
           current_price(current_price_param), atr(atr_param), position_quantity(position_qty_param),
           risk_amount(risk_amount_param), stop_loss(stop_loss_param), take_profit(take_profit_param),
@@ -55,9 +55,9 @@ struct ComprehensiveApiResponseRequest {
                                    const std::string& order_class_param, const std::string& position_intent_param,
                                    const std::string& created_at_param, const std::string& filled_at_param,
                                    const std::string& filled_qty_param, const std::string& filled_avg_price_param,
-                                   const std::string& error_code_param = "", const std::string& error_message_param = "",
-                                   const std::string& available_qty_param = "", const std::string& existing_qty_param = "",
-                                   const std::string& held_for_orders_param = "", const std::string& related_orders_param = "")
+                                   const std::string& error_code_param, const std::string& error_message_param,
+                                   const std::string& available_qty_param, const std::string& existing_qty_param,
+                                   const std::string& held_for_orders_param, const std::string& related_orders_param)
         : order_id(order_id_param), status(status_param), side(side_param), quantity(quantity_param),
           order_class(order_class_param), position_intent(position_intent_param),
           created_at(created_at_param), filled_at(filled_at_param), filled_quantity(filled_qty_param),

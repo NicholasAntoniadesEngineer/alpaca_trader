@@ -9,7 +9,7 @@ namespace Logging {
 
 void SignalAnalysisLogs::log_signal_analysis_complete(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signal_decision, const AlpacaTrader::Core::FilterResult& filter_result, const SystemConfig& config) {
     // Log candle data and enhanced signals table
-    TradingLogs::log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
+    TradingLogs::log_candle_data_table(data.curr.open_price, data.curr.high_price, data.curr.low_price, data.curr.close_price);
     TradingLogs::log_signals_table_enhanced(signal_decision);
 
     // Enhanced detailed signal analysis logging
@@ -50,8 +50,8 @@ void SignalAnalysisLogs::log_signal_analysis_csv_data(const AlpacaTrader::Core::
         // Log market data to CSV
         if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
             csv->log_market_data(
-                timestamp, symbol, data.curr.o, data.curr.h, data.curr.l, data.curr.c,
-                data.curr.v, data.atr
+                timestamp, symbol, data.curr.open_price, data.curr.high_price, data.curr.low_price, data.curr.close_price,
+                data.curr.volume, data.atr
             );
         }
 

@@ -18,31 +18,31 @@ struct HttpRequest {
     int rate_limit_delay_ms;
     std::string body; // for POST; leave empty for GET
 
-    HttpRequest(const std::string& u,
-                const std::string& key,
-                const std::string& secret,
-                const std::string& logfile,
-                int r = 3,
-                int timeout = 30,
-                bool ssl_verify = true,
-                int rate_delay = 100,
-                std::string b = "")
-        : url(u), api_key(&key), api_secret(&secret), log_file(&logfile), 
-          retries(r), timeout_seconds(timeout), enable_ssl_verification(ssl_verify),
-          rate_limit_delay_ms(rate_delay), body(std::move(b)) {}
+    HttpRequest(const std::string& request_url,
+                const std::string& api_key_string,
+                const std::string& api_secret_string,
+                const std::string& log_file_path,
+                int retry_count,
+                int timeout_seconds_param,
+                bool enable_ssl_verification_param,
+                int rate_limit_delay_milliseconds,
+                const std::string& request_body)
+        : url(request_url), api_key(&api_key_string), api_secret(&api_secret_string), log_file(&log_file_path), 
+          retries(retry_count), timeout_seconds(timeout_seconds_param), enable_ssl_verification(enable_ssl_verification_param),
+          rate_limit_delay_ms(rate_limit_delay_milliseconds), body(request_body) {}
 };
 
-size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* s);
+size_t write_callback(void* contents, size_t size, size_t nmemb, std::string* response_string);
 
-std::string http_get(const HttpRequest& req);
+std::string http_get(const HttpRequest& http_request, ConnectivityManager& connectivity_manager);
 
-std::string http_post(const HttpRequest& req);
+std::string http_post(const HttpRequest& http_request, ConnectivityManager& connectivity_manager);
 
-std::string http_delete(const HttpRequest& req);
+std::string http_delete(const HttpRequest& http_request, ConnectivityManager& connectivity_manager);
 
 std::string get_iso_time_minus(int minutes);
 
-std::string replace_url_placeholder(const std::string& url, const std::string& symbol);
+std::string replace_url_placeholder(const std::string& request_url, const std::string& symbol);
 
 
 

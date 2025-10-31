@@ -208,6 +208,12 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "timing.cpu_usage_display_precision") cfg.timing.cpu_usage_display_precision = std::stoi(value);
         else if (key == "timing.performance_rate_display_precision") cfg.timing.performance_rate_display_precision = std::stoi(value);
 
+        // Connectivity Retry Configuration
+        else if (key == "timing.connectivity_max_retry_delay_seconds") cfg.timing.connectivity_max_retry_delay_seconds = std::stoi(value);
+        else if (key == "timing.connectivity_degraded_threshold") cfg.timing.connectivity_degraded_threshold = std::stoi(value);
+        else if (key == "timing.connectivity_disconnected_threshold") cfg.timing.connectivity_disconnected_threshold = std::stoi(value);
+        else if (key == "timing.connectivity_backoff_multiplier") cfg.timing.connectivity_backoff_multiplier = std::stod(value);
+
         // Logging
         else if (key == "logging.log_file") cfg.logging.log_file = value;
         else if (key == "logging.max_log_file_size_mb") cfg.logging.max_log_file_size_mb = std::stoi(value);
@@ -467,6 +473,29 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         error_message = "timing polling intervals must be > 0 (thread polling interval seconds)";
         return false;
     }
+
+    // Validate connectivity retry configuration
+    if (config.timing.connectivity_max_retry_delay_seconds <= 0) {
+        error_message = "timing.connectivity_max_retry_delay_seconds must be greater than 0";
+        return false;
+    }
+    if (config.timing.connectivity_degraded_threshold <= 0) {
+        error_message = "timing.connectivity_degraded_threshold must be greater than 0";
+        return false;
+    }
+    if (config.timing.connectivity_disconnected_threshold <= 0) {
+        error_message = "timing.connectivity_disconnected_threshold must be greater than 0";
+        return false;
+    }
+    if (config.timing.connectivity_backoff_multiplier <= 1.0) {
+        error_message = "timing.connectivity_backoff_multiplier must be greater than 1.0";
+        return false;
+    }
+    if (config.timing.connectivity_disconnected_threshold <= config.timing.connectivity_degraded_threshold) {
+        error_message = "timing.connectivity_disconnected_threshold must be greater than connectivity_degraded_threshold";
+        return false;
+    }
+
     return true;
 }
 

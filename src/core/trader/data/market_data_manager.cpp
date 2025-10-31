@@ -88,10 +88,10 @@ MarketSnapshot MarketDataManager::create_market_snapshot_from_bars(const std::ve
     // Extract inputs for technical indicators
     std::vector<double> highs, lows, closes, volumes;
     for (const auto& bar : bars_data) {
-        highs.push_back(bar.h);
-        lows.push_back(bar.l);
-        closes.push_back(bar.c);
-        volumes.push_back(bar.v);
+        highs.push_back(bar.high_price);
+        lows.push_back(bar.low_price);
+        closes.push_back(bar.close_price);
+        volumes.push_back(bar.volume);
     }
 
     // Compute technical indicators

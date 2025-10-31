@@ -34,7 +34,7 @@ public:
     };
     
     static AlpacaTrader::Config::ThreadSettings get_thread_config(Type type, const AlpacaTrader::Config::SystemConfig& system_config);
-    static std::vector<ThreadDefinition> create_thread_definitions(SystemThreads& handles, SystemModules& modules);
+    static std::vector<ThreadDefinition> create_thread_definitions(SystemThreads& handles, SystemModules& modules, const AlpacaTrader::Config::SystemConfig& system_config);
     static std::vector<Type> create_thread_types();
     static std::vector<ThreadLogs::ThreadInfo> create_thread_infos(const std::vector<ThreadDefinition>& definitions);
     static AlpacaTrader::Config::ThreadSettings get_config_for_type(Type type, const AlpacaTrader::Config::SystemConfig& system_config);

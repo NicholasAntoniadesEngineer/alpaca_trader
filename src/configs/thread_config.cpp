@@ -23,7 +23,7 @@ Priority ConfigProvider::string_to_priority(const std::string& str) {
     if (str == "NORMAL")   return Priority::NORMAL;
     if (str == "LOW")      return Priority::LOW;
     if (str == "LOWEST")   return Priority::LOWEST;
-    return Priority::NORMAL; // Default fallback, this is wrong need to fix
+    throw std::runtime_error("Invalid priority string: " + str + ". Must be one of: REALTIME, HIGHEST, HIGH, NORMAL, LOW, LOWEST");
 }
 
 } // namespace Config

@@ -37,7 +37,7 @@ struct StrategyConfig {
     double crypto_volume_change_amplification_factor; // Amplification factor for crypto volume change percentages
     double percentage_calculation_multiplier;        // Multiplier for percentage calculations (default 100.0)
     double minimum_volume_threshold;                 // Minimum volume threshold to avoid division by zero
-    int atr_calculation_period;                      // ATR calculation period in bars (deprecated - use atr_calculation_bars)
+    int atr_calculation_period;                      // ATR calculation period in bars
     int average_atr_comparison_multiplier;           // Average ATR comparison multiplier
 
     // Volatility calculation configuration

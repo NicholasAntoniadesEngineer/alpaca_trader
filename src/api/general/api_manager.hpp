@@ -4,6 +4,7 @@
 #include "api_provider_interface.hpp"
 #include "configs/multi_api_config.hpp"
 #include "core/trader/data/data_structures.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -16,13 +17,14 @@ class ApiManager {
 private:
     std::unordered_map<Config::ApiProvider, std::unique_ptr<ApiProviderInterface>> providers;
     Config::MultiApiConfig config;
+    ConnectivityManager& connectivity_manager;
     
     std::unique_ptr<ApiProviderInterface> create_provider(Config::ApiProvider provider_type);
     Config::ApiProvider determine_provider_for_symbol(const std::string& symbol) const;
     Config::ApiProvider determine_provider_for_trading() const;
 
 public:
-    explicit ApiManager(const Config::MultiApiConfig& multi_config);
+    ApiManager(const Config::MultiApiConfig& multi_config, ConnectivityManager& connectivity_mgr);
     ~ApiManager();
     
     void shutdown();

@@ -18,119 +18,120 @@ namespace AlpacaTrader {
 namespace Core {
 
 struct Bar {
-    double o, h, l, c;
-    double v; /* volume */
-    std::string t; /* timestamp */
+    double open_price;
+    double high_price;
+    double low_price;
+    double close_price;
+    double volume;
+    std::string timestamp;
 };
 
 struct QuoteData {
-    double ask_price = 0.0;
-    double bid_price = 0.0;
-    double ask_size = 0.0;
-    double bid_size = 0.0;
-    std::string timestamp = "";
-    double mid_price = 0.0; // Calculated as (ask + bid) / 2
+    double ask_price;
+    double bid_price;
+    double ask_size;
+    double bid_size;
+    std::string timestamp;
+    double mid_price;
 };
 
 struct PositionDetails {
-    int position_quantity = 0;
-    double unrealized_pl = 0.0;
-    double current_value = 0.0;
+    int position_quantity;
+    double unrealized_pl;
+    double current_value;
 };
 
 // Optional split views for multi-threading.
 struct MarketSnapshot {
-    double atr = 0.0;
-    double avg_atr = 0.0;
-    double avg_vol = 0.0;
-    Bar curr{};
-    Bar prev{};
+    double atr;
+    double avg_atr;
+    double avg_vol;
+    Bar curr;
+    Bar prev;
 };
 
 struct AccountSnapshot {
-    double equity = 0.0;
-    PositionDetails pos_details{};
-    int open_orders = 0;
-    double exposure_pct = 0.0;
+    double equity;
+    PositionDetails pos_details;
+    int open_orders;
+    double exposure_pct;
 };
 
 struct ProcessedData {
-    double atr = 0.0;
-    double avg_atr = 0.0;
-    double avg_vol = 0.0;
+    double atr;
+    double avg_atr;
+    double avg_vol;
     Bar curr;
     Bar prev;
     PositionDetails pos_details;
-    int open_orders = 0;
-    double exposure_pct = 0.0;
-    bool is_doji = false;
+    int open_orders;
+    double exposure_pct;
+    bool is_doji;
     
-    // Default constructor
-    ProcessedData() = default;
+    ProcessedData();
     
-    // Constructor from MarketSnapshot and AccountSnapshot
     ProcessedData(const MarketSnapshot& market, const AccountSnapshot& account)
         : atr(market.atr), avg_atr(market.avg_atr), avg_vol(market.avg_vol),
           curr(market.curr), prev(market.prev), pos_details(account.pos_details),
-          open_orders(account.open_orders), exposure_pct(account.exposure_pct) {}
+          open_orders(account.open_orders), exposure_pct(account.exposure_pct), is_doji(false) {}
 };
 
 // Request objects (to avoid multi-parameter functions).
 struct SymbolRequest {
     std::string symbol;
-    explicit SymbolRequest(const std::string& s) : symbol(s) {}
+    explicit SymbolRequest(const std::string& input_symbol) : symbol(input_symbol) {}
 };
 
 struct BarRequest {
     std::string symbol;
     int limit;
-    BarRequest(const std::string& s, int l) : symbol(s), limit(l) {}
+    BarRequest(const std::string& input_symbol, int bar_limit) : symbol(input_symbol), limit(bar_limit) {}
 };
 
 struct OrderRequest {
     std::string side;
-    int position_quantity = 0;
-    double take_profit_price = 0.0;
-    double stop_loss_price = 0.0;
+    int position_quantity;
+    double take_profit_price;
+    double stop_loss_price;
     OrderRequest(const std::string& side_param, int position_qty_param, double take_profit_param, double stop_loss_param)
         : side(side_param), position_quantity(position_qty_param), take_profit_price(take_profit_param), stop_loss_price(stop_loss_param) {}
 };
 
 struct ClosePositionRequest {
-    int current_position_quantity = 0;
+    int current_position_quantity;
     explicit ClosePositionRequest(int position_qty_param) : current_position_quantity(position_qty_param) {}
 };
 
 // Strategy logic data structures
 struct SignalDecision {
-    bool buy = false;
-    bool sell = false;
-    double signal_strength = 0.0;  // Signal strength (0.0 to 1.0)
-    std::string signal_reason = ""; // Reason for signal/no signal
+    bool buy;
+    bool sell;
+    double signal_strength;
+    std::string signal_reason;
 };
 
 struct FilterResult {
-    bool atr_pass = false;
-    bool vol_pass = false;
-    bool doji_pass = false;
-    bool all_pass = false;
-    double atr_ratio = 0.0;
-    double vol_ratio = 0.0;
+    bool atr_pass;
+    bool vol_pass;
+    bool doji_pass;
+    bool all_pass;
+    double atr_ratio;
+    double vol_ratio;
 };
 
 struct PositionSizing {
-    int quantity = 0;
-    double risk_amount = 0.0;
-    double size_multiplier = 1.0;
-    int risk_based_qty = 0;
-    int exposure_based_qty = 0;
-    int max_value_qty = 0;
-    int buying_power_qty = 0;
+    int quantity;
+    double risk_amount;
+    double size_multiplier;
+    int risk_based_qty;
+    int exposure_based_qty;
+    int max_value_qty;
+    int buying_power_qty;
 };
 
 struct ExitTargets {
-    double stop_loss = 0.0;
-    double take_profit = 0.0;
+    double stop_loss;
+    double take_profit;
 };
 
 // Parameter structures for functions with many parameters
@@ -176,8 +177,8 @@ struct MarketDataFetchRequest {
     int bars_to_fetch;
     int atr_calculation_bars;
     
-    MarketDataFetchRequest(const std::string& s, int bars, int atr_bars)
-        : symbol(s), bars_to_fetch(bars), atr_calculation_bars(atr_bars) {}
+    MarketDataFetchRequest(const std::string& input_symbol, int bars_to_fetch_param, int atr_calculation_bars_param)
+        : symbol(input_symbol), bars_to_fetch(bars_to_fetch_param), atr_calculation_bars(atr_calculation_bars_param) {}
 };
 
 struct QuoteDataProcessingRequest {

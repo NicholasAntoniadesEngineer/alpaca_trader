@@ -16,7 +16,7 @@ TradingSystemFactory::TradingSystemComponents TradingSystemFactory::create_tradi
     Config::MultiApiConfig filtered_api_config = configure_providers_for_mode(config);
     
     // Create API manager
-    components.api_manager = std::make_unique<API::ApiManager>(filtered_api_config);
+    components.api_manager = std::make_unique<API::ApiManager>(filtered_api_config, connectivity_manager);
     
     // Create account manager
     AlpacaTrader::Config::AccountManagerConfig account_config{

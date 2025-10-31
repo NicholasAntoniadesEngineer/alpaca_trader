@@ -5,6 +5,7 @@
 #include "configs/multi_api_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/utils/http_utils.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <string>
 #include <vector>
 
@@ -15,15 +16,16 @@ class AlpacaTradingClient : public ApiProviderInterface {
 private:
     Config::ApiProviderConfig config;
     bool connected;
+    ConnectivityManager& connectivity_manager;
     
-    std::string make_authenticated_request(const std::string& url, const std::string& method = "GET", 
-                                         const std::string& body = "") const;
+    std::string make_authenticated_request(const std::string& request_url, const std::string& method, 
+                                         const std::string& request_body) const;
     std::string build_url(const std::string& endpoint) const;
     std::string build_url_with_symbol(const std::string& endpoint, const std::string& symbol) const;
     bool validate_config() const;
 
 public:
-    AlpacaTradingClient();
+    explicit AlpacaTradingClient(ConnectivityManager& connectivity_mgr);
     ~AlpacaTradingClient() override;
     
     bool initialize(const Config::ApiProviderConfig& config) override;

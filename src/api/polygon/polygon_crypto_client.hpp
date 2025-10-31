@@ -5,6 +5,7 @@
 #include "configs/multi_api_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/utils/http_utils.hpp"
+#include "core/utils/connectivity_manager.hpp"
 #include <string>
 #include <vector>
 #include <atomic>
@@ -21,6 +22,7 @@ private:
     Config::ApiProviderConfig config;
     std::atomic<bool> connected{false};
     std::atomic<bool> websocket_active{false};
+    ConnectivityManager& connectivity_manager;
     
     std::thread websocket_thread;
     mutable std::mutex data_mutex;
@@ -38,7 +40,7 @@ private:
     void cleanup_resources();
 
 public:
-    PolygonCryptoClient();
+    explicit PolygonCryptoClient(ConnectivityManager& connectivity_mgr);
     ~PolygonCryptoClient() override;
     
     bool initialize(const Config::ApiProviderConfig& config) override;

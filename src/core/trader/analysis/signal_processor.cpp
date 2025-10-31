@@ -17,7 +17,7 @@ void SignalProcessor::process_signal_analysis(const ProcessedData& processed_dat
     SignalDecision signal_decision = detect_trading_signals(processed_data, config);
 
     // Log candle data and enhanced signals table and detailed signal analysis
-    TradingLogs::log_candle_data_table(processed_data.curr.o, processed_data.curr.h, processed_data.curr.l, processed_data.curr.c);
+    TradingLogs::log_candle_data_table(processed_data.curr.open_price, processed_data.curr.high_price, processed_data.curr.low_price, processed_data.curr.close_price);
     TradingLogs::log_signals_table_enhanced(signal_decision);
     TradingLogs::log_signal_analysis_detailed(processed_data, signal_decision, config);
 
@@ -78,8 +78,8 @@ void SignalProcessor::log_csv_signal_data(const ProcessedData& processed_data, c
     // Log market data to CSV
     if (auto trade_csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
         trade_csv->log_market_data(
-            timestamp, symbol, processed_data.curr.o, processed_data.curr.h, processed_data.curr.l, processed_data.curr.c,
-            processed_data.curr.v, processed_data.atr
+            timestamp, symbol, processed_data.curr.open_price, processed_data.curr.high_price, processed_data.curr.low_price, processed_data.curr.close_price,
+            processed_data.curr.volume, processed_data.atr
         );
     }
 }

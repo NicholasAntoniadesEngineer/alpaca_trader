@@ -72,19 +72,13 @@ struct SystemState {
     // =========================================================================
 
     /**
-     * @brief Default constructor
-     */
-    SystemState() {}
-
-    /**
      * @brief Constructor with custom configuration
      * @param initial System configuration
      */
     explicit SystemState(const AlpacaTrader::Config::SystemConfig& initial)
-        : config(initial) {
-        // Verify that the symbol was loaded correctly
+        : config(initial), connectivity_manager(config.timing) {
         if (config.strategy.symbol.empty()) {
-            AlpacaTrader::Logging::log_message("WARNING: Target symbol is empty! Config may not be loaded properly.", "");
+            throw std::runtime_error("Target symbol is required but not configured");
         }
     }
 };

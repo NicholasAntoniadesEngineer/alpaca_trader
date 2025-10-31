@@ -45,8 +45,8 @@ int main() {
         // Clean shutdown
         SystemManager::shutdown(system_state, logger);
         return 0;
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message(std::string("FATAL: ") + e.what(), "");
+    } catch (const std::exception& exception_error) {
+        AlpacaTrader::Logging::log_message(std::string("FATAL: ") + exception_error.what(), "");
         return 1;
     } catch (...) {
         AlpacaTrader::Logging::log_message("FATAL: Unknown fatal error", "");

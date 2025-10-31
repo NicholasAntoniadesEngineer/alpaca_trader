@@ -37,20 +37,22 @@ std::vector<ThreadRegistry::Type> ThreadRegistry::create_thread_types() {
     return types;
 }
 
-std::vector<ThreadRegistry::ThreadDefinition> ThreadRegistry::create_thread_definitions(SystemThreads& handles, SystemModules& modules) {
+std::vector<ThreadRegistry::ThreadDefinition> ThreadRegistry::create_thread_definitions(SystemThreads& handles, SystemModules& modules, const AlpacaTrader::Config::SystemConfig& system_config) {
     std::vector<ThreadDefinition> definitions;
     definitions.reserve(THREAD_REGISTRY.size());
     
     for (const auto& entry : THREAD_REGISTRY) {
+        AlpacaTrader::Config::ThreadSettings thread_config = entry.get_config(system_config);
         ThreadDefinition def(
             entry.identifier,
             entry.get_function,
             entry.set_iteration_counter,
             entry.get_counter,
             entry.get_config,
-            entry.get_counter(handles)
+            entry.get_counter(handles),
+            thread_config.use_cpu_affinity,
+            thread_config.cpu_affinity
         );
-        // Set up the thread function with the modules parameter
         def.set_thread_function([&entry, &modules]() { 
             entry.get_function(modules); 
         });

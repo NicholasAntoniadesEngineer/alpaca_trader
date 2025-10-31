@@ -153,7 +153,7 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     
     // Create thread configurations from single source
     auto& modules = *system_state.trading_modules;
-    auto thread_definitions = AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules);
+    auto thread_definitions = AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules, system_state.config);
     auto thread_infos = AlpacaTrader::Core::ThreadRegistry::create_thread_infos(thread_definitions);
     
     // Start all threads

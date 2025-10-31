@@ -34,12 +34,12 @@ SignalDecision detect_trading_signals(const ProcessedData& data, const SystemCon
     SignalDecision decision;
     
     // Calculate momentum indicators for better signal detection
-    double price_change = data.curr.c - data.prev.c;
-    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double price_change = data.curr.close_price - data.prev.close_price;
+    double price_change_pct = (data.prev.close_price > 0.0) ? (price_change / data.prev.close_price) * config.strategy.percentage_calculation_multiplier : 0.0;
     
     // Calculate volume momentum with crypto-specific handling
-    double volume_change = data.curr.v - data.prev.v;
-    double volume_change_pct = (data.prev.v > 0) ? (volume_change / data.prev.v) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double volume_change = data.curr.volume - data.prev.volume;
+    double volume_change_pct = (data.prev.volume > 0) ? (volume_change / data.prev.volume) * config.strategy.percentage_calculation_multiplier : 0.0;
     
     // For crypto: normalize volume change percentage to be more sensitive to small changes
     if (config.strategy.is_crypto_asset) {
@@ -48,19 +48,19 @@ SignalDecision detect_trading_signals(const ProcessedData& data, const SystemCon
     }
     
     // Calculate volatility (ATR-based)
-    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * config.strategy.percentage_calculation_multiplier : 0.0;
+    double volatility_pct = (data.prev.close_price > 0.0) ? (data.atr / data.prev.close_price) * config.strategy.percentage_calculation_multiplier : 0.0;
     
     // Enhanced BUY signal conditions with momentum confirmation
     bool basic_buy_close = config.strategy.buy_signals_allow_equal_close ? 
-                          (data.curr.c >= data.curr.o) : 
-                          (data.curr.c > data.curr.o);
+                          (data.curr.close_price >= data.curr.open_price) : 
+                          (data.curr.close_price > data.curr.open_price);
     
     bool buy_high_condition = config.strategy.buy_signals_require_higher_high ? 
-                             (data.curr.h > data.prev.h) : 
+                             (data.curr.high_price > data.prev.high_price) : 
                              true;
     
     bool buy_low_condition = config.strategy.buy_signals_require_higher_low ? 
-                            (data.curr.l >= data.prev.l) : 
+                            (data.curr.low_price >= data.prev.low_price) : 
                             true;
     
     // Momentum-based buy confirmation (configurable thresholds)
@@ -107,15 +107,15 @@ SignalDecision detect_trading_signals(const ProcessedData& data, const SystemCon
     
     // Enhanced SELL signal conditions with momentum confirmation
     bool basic_sell_close = config.strategy.sell_signals_allow_equal_close ? 
-                           (data.curr.c <= data.curr.o) : 
-                           (data.curr.c < data.curr.o);
+                           (data.curr.close_price <= data.curr.open_price) : 
+                           (data.curr.close_price < data.curr.open_price);
     
     bool sell_low_condition = config.strategy.sell_signals_require_lower_low ? 
-                             (data.curr.l < data.prev.l) : 
+                             (data.curr.low_price < data.prev.low_price) : 
                              true;
     
     bool sell_high_condition = config.strategy.sell_signals_require_lower_high ? 
-                              (data.curr.h <= data.prev.h) : 
+                              (data.curr.high_price <= data.prev.high_price) : 
                               true;
     
     // Momentum-based sell confirmation (configurable thresholds)
@@ -181,17 +181,17 @@ FilterResult evaluate_trading_filters(const ProcessedData& data, const SystemCon
     if (config.strategy.is_crypto_asset) {
         // For crypto: use crypto-specific volume multiplier for fractional volumes
         double crypto_threshold = config.strategy.crypto_volume_multiplier * data.avg_vol;
-        result.vol_pass = data.curr.v > crypto_threshold;
+        result.vol_pass = data.curr.volume > crypto_threshold;
         
     } else {
         // For stocks: use original volume multiplier
-        result.vol_pass = data.curr.v > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
+        result.vol_pass = data.curr.volume > config.strategy.entry_signal_volume_multiplier * data.avg_vol;
     }
     
-    result.doji_pass = !detect_doji_pattern(data.curr.o, data.curr.h, data.curr.l, data.curr.c, config.strategy.doji_candlestick_body_size_threshold_percentage);
+    result.doji_pass = !detect_doji_pattern(data.curr.open_price, data.curr.high_price, data.curr.low_price, data.curr.close_price, config.strategy.doji_candlestick_body_size_threshold_percentage);
     result.all_pass = result.atr_pass && result.vol_pass && result.doji_pass;
     result.atr_ratio = (data.avg_atr > 0.0) ? (data.atr / data.avg_atr) : 0.0;
-    result.vol_ratio = (data.avg_vol > 0.0) ? (data.curr.v / data.avg_vol) : 0.0;
+    result.vol_ratio = (data.avg_vol > 0.0) ? (data.curr.volume / data.avg_vol) : 0.0;
     return result;
 }
 
@@ -218,7 +218,7 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
     PositionSizing sizing;
 
     // Early return if price is invalid (zero or negative)
-    if (request.processed_data.curr.c <= 0.0) {
+    if (request.processed_data.curr.close_price <= 0.0) {
         sizing.quantity = 0;
         sizing.risk_based_qty = 0;
         sizing.exposure_based_qty = 0;
@@ -281,22 +281,22 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
 
     // Calculate exposure-based quantity with safety checks
     int exposure_based_qty = 0;
-    if (request.processed_data.curr.c > 0.0 && available_exposure_value > 0.0) {
-        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / request.processed_data.curr.c));
+    if (request.processed_data.curr.close_price > 0.0 && available_exposure_value > 0.0) {
+        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / request.processed_data.curr.close_price));
     }
     
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
     int max_value_qty = INT_MAX;
     if (request.strategy_configuration.maximum_dollar_value_per_trade > 0.0) {
-        max_value_qty = static_cast<int>(std::floor(request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.c));
+        max_value_qty = static_cast<int>(std::floor(request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.close_price));
         sizing.quantity = std::min(sizing.quantity, max_value_qty);
     }
     
     int buying_power_qty = INT_MAX;
     if (request.available_buying_power > 0.0) {
         double usable_buying_power = request.available_buying_power * request.strategy_configuration.buying_power_utilization_percentage;
-        buying_power_qty = static_cast<int>(std::floor(usable_buying_power / request.processed_data.curr.c));
+        buying_power_qty = static_cast<int>(std::floor(usable_buying_power / request.processed_data.curr.close_price));
         sizing.quantity = std::min(sizing.quantity, buying_power_qty);
     }
     
@@ -415,7 +415,7 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
             if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
                 csv->log_position_sizing(
                     timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                    sizing.quantity * request.processed_data.curr.c, request.available_buying_power
+                    sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
                 );
             }
         } catch (const std::exception& e) {
@@ -428,7 +428,7 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
     
     TradingLogs::log_filters_passed();
     TradingLogs::log_current_position(request.current_position_quantity, request.strategy_configuration.symbol);
-    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, request.available_buying_power, request.processed_data.curr.c);
+    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, request.available_buying_power, request.processed_data.curr.close_price);
     TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
 
     SignalDecision signal_decision = detect_trading_signals(request.processed_data, temp_config);
@@ -444,7 +444,7 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
         if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
             csv->log_position_sizing(
                 timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                sizing.quantity * request.processed_data.curr.c, request.available_buying_power
+                sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
             );
         }
     } catch (const std::exception& e) {

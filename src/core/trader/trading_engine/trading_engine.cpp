@@ -103,7 +103,7 @@ void TradingEngine::execute_trade_if_valid(const TradeExecutionRequest& trade_re
     }
     
     double buying_power = account_manager.fetch_buying_power();
-    if (!order_engine.validate_trade_feasibility(trade_request.position_sizing, buying_power, trade_request.processed_data.curr.c)) {
+    if (!order_engine.validate_trade_feasibility(trade_request.position_sizing, buying_power, trade_request.processed_data.curr.close_price)) {
         TradingLogs::log_trade_validation_failed("insufficient buying power");
         return;
     }
@@ -124,7 +124,7 @@ void TradingEngine::check_and_execute_profit_taking(const ProfitTakingRequest& p
     double profit_threshold = profit_taking_request.profit_taking_threshold_dollars;
     
     double unrealized_pl = data.pos_details.unrealized_pl;
-    double current_price = data.curr.c;
+    double current_price = data.curr.close_price;
     double position_value = data.pos_details.current_value;
     
     TradingLogs::log_position_sizing_debug(current_position_quantity, position_value, current_position_quantity, true, false);
@@ -138,7 +138,7 @@ void TradingEngine::check_and_execute_profit_taking(const ProfitTakingRequest& p
                                                        profit_threshold, 0.0, 0.0, "", "");
         TradingLogs::log_comprehensive_order_execution(order_request);
         
-        PositionSizing profit_sizing{abs(current_position_quantity), 0.0, 0.0, static_cast<int>(0)};
+        PositionSizing profit_sizing{abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
         if (current_position_quantity > 0) {
             order_engine.execute_market_order(OrderExecutionEngine::OrderSide::Sell, data, profit_sizing);
         } else {

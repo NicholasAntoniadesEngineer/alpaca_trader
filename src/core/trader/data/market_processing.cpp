@@ -16,11 +16,11 @@ IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars) {
     inputs.lows.reserve(bars.size());
     inputs.closes.reserve(bars.size());
     inputs.volumes.reserve(bars.size());
-    for (const Bar& b : bars) {
-        inputs.highs.push_back(b.h);
-        inputs.lows.push_back(b.l);
-        inputs.closes.push_back(b.c);
-        inputs.volumes.push_back(b.v);
+    for (const Bar& current_bar : bars) {
+        inputs.highs.push_back(current_bar.high_price);
+        inputs.lows.push_back(current_bar.low_price);
+        inputs.closes.push_back(current_bar.close_price);
+        inputs.volumes.push_back(current_bar.volume);
     }
     return inputs;
 }
@@ -28,7 +28,7 @@ IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars) {
 ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemConfig& cfg) {
     ProcessedData data;
     if (bars.empty()) return data;
-    // Use configurable ATR calculation bars (new parameter) instead of deprecated atr_calculation_period
+    // Use configurable ATR calculation bars for period calculations
     const int atr_period = cfg.strategy.atr_calculation_bars;
     if (static_cast<int>(bars.size()) < atr_period + 2) return data;
 
@@ -53,6 +53,10 @@ ProcessedData create_processed_data(const MarketSnapshot& market, const AccountS
 }
 
 } // namespace MarketProcessing
+
+ProcessedData::ProcessedData()
+    : atr(0.0), avg_atr(0.0), avg_vol(0.0), curr(), prev(), pos_details(), open_orders(0), exposure_pct(0.0), is_doji(false) {}
+
 } // namespace Core
 } // namespace AlpacaTrader
 

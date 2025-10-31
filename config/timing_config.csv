@@ -54,3 +54,9 @@ timing.enable_wash_trade_prevention_mechanism,true
 # Precision Settings for Metrics
 timing.cpu_usage_display_precision,1
 timing.performance_rate_display_precision,1
+
+# Connectivity Retry Configuration
+timing.connectivity_max_retry_delay_seconds,300
+timing.connectivity_degraded_threshold,3
+timing.connectivity_disconnected_threshold,6
+timing.connectivity_backoff_multiplier,2.0

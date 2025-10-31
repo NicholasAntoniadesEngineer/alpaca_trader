@@ -13,7 +13,8 @@ using json = nlohmann::json;
 namespace AlpacaTrader {
 namespace API {
 
-AlpacaTradingClient::AlpacaTradingClient() : connected(false) {}
+AlpacaTradingClient::AlpacaTradingClient(ConnectivityManager& connectivity_mgr) 
+    : connected(false), connectivity_manager(connectivity_mgr) {}
 
 AlpacaTradingClient::~AlpacaTradingClient() {
     disconnect();
@@ -63,11 +64,11 @@ std::vector<Core::Bar> AlpacaTradingClient::get_recent_bars(const Core::BarReque
         throw std::runtime_error("Limit must be greater than 0 for bar request");
     }
     
-    std::string url = build_url_with_symbol(config.endpoints.bars, request.symbol);
-    url += "?limit=" + std::to_string(request.limit);
-    url += "&timeframe=1Min";
+    std::string request_url = build_url_with_symbol(config.endpoints.bars, request.symbol);
+    request_url += "?limit=" + std::to_string(request.limit);
+    request_url += "&timeframe=1Min";
     
-    std::string response = make_authenticated_request(url);
+    std::string response = make_authenticated_request(request_url, "GET", "");
     
     std::vector<Core::Bar> bars;
     
@@ -86,18 +87,18 @@ std::vector<Core::Bar> AlpacaTradingClient::get_recent_bars(const Core::BarReque
             }
             
             Core::Bar bar;
-            bar.o = bar_data["o"].get<double>();
-            bar.h = bar_data["h"].get<double>();
-            bar.l = bar_data["l"].get<double>();
-            bar.c = bar_data["c"].get<double>();
-            bar.v = bar_data["v"].get<double>();
-            bar.t = bar_data["t"].get<std::string>();
+            bar.open_price = bar_data["o"].get<double>();
+            bar.high_price = bar_data["h"].get<double>();
+            bar.low_price = bar_data["l"].get<double>();
+            bar.close_price = bar_data["c"].get<double>();
+            bar.volume = bar_data["v"].get<double>();
+            bar.timestamp = bar_data["t"].get<std::string>();
             
             bars.push_back(bar);
         }
         
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Failed to parse Alpaca bars response: " + std::string(e.what()));
+    } catch (const std::exception& exception_error) {
+        throw std::runtime_error("Failed to parse Alpaca bars response: " + std::string(exception_error.what()));
     }
     
     return bars;
@@ -112,8 +113,8 @@ double AlpacaTradingClient::get_current_price(const std::string& symbol) const {
         throw std::runtime_error("Symbol is required for price request");
     }
     
-    std::string url = build_url_with_symbol(config.endpoints.quotes_latest, symbol);
-    std::string response = make_authenticated_request(url);
+    std::string request_url = build_url_with_symbol(config.endpoints.quotes_latest, symbol);
+    std::string response = make_authenticated_request(request_url, "GET", "");
     
     try {
         json response_json = json::parse(response);
@@ -122,18 +123,18 @@ double AlpacaTradingClient::get_current_price(const std::string& symbol) const {
             throw std::runtime_error("Invalid response format from Alpaca quotes API");
         }
         
-        const auto& quote = response_json["quote"];
-        if (!quote.contains("ap") || !quote.contains("bp")) {
+        const auto& quote_data = response_json["quote"];
+        if (!quote_data.contains("ap") || !quote_data.contains("bp")) {
             throw std::runtime_error("Price data not found in Alpaca response");
         }
         
-        double ask_price = quote["ap"].get<double>();
-        double bid_price = quote["bp"].get<double>();
+        double ask_price_value = quote_data["ap"].get<double>();
+        double bid_price_value = quote_data["bp"].get<double>();
         
-        return (ask_price + bid_price) / 2.0;
+        return (ask_price_value + bid_price_value) / 2.0;
         
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Failed to parse Alpaca price response: " + std::string(e.what()));
+    } catch (const std::exception& exception_error) {
+        throw std::runtime_error("Failed to parse Alpaca price response: " + std::string(exception_error.what()));
     }
 }
 
@@ -146,8 +147,8 @@ Core::QuoteData AlpacaTradingClient::get_realtime_quotes(const std::string& symb
         throw std::runtime_error("Symbol is required for quote request");
     }
     
-    std::string url = build_url_with_symbol(config.endpoints.quotes_latest, symbol);
-    std::string response = make_authenticated_request(url);
+    std::string request_url = build_url_with_symbol(config.endpoints.quotes_latest, symbol);
+    std::string response = make_authenticated_request(request_url, "GET", "");
     
     Core::QuoteData quote_data;
     
@@ -158,16 +159,16 @@ Core::QuoteData AlpacaTradingClient::get_realtime_quotes(const std::string& symb
             throw std::runtime_error("Invalid response format from Alpaca quotes API");
         }
         
-        const auto& quote = response_json["quote"];
-        quote_data.ask_price = quote.value("ap", 0.0);
-        quote_data.bid_price = quote.value("bp", 0.0);
-        quote_data.ask_size = quote.value("as", 0.0);
-        quote_data.bid_size = quote.value("bs", 0.0);
-        quote_data.timestamp = quote.value("t", "");
+        const auto& quote_object = response_json["quote"];
+        quote_data.ask_price = quote_object.value("ap", 0.0);
+        quote_data.bid_price = quote_object.value("bp", 0.0);
+        quote_data.ask_size = quote_object.value("as", 0.0);
+        quote_data.bid_size = quote_object.value("bs", 0.0);
+        quote_data.timestamp = quote_object.value("t", "");
         quote_data.mid_price = (quote_data.ask_price + quote_data.bid_price) / 2.0;
         
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Failed to parse Alpaca quote response: " + std::string(e.what()));
+    } catch (const std::exception& exception_error) {
+        throw std::runtime_error("Failed to parse Alpaca quote response: " + std::string(exception_error.what()));
     }
     
     return quote_data;
@@ -178,13 +179,14 @@ bool AlpacaTradingClient::is_market_open() const {
         return false;
     }
     
-    std::string url = build_url(config.endpoints.clock);
-    std::string response = make_authenticated_request(url);
+    std::string request_url = build_url(config.endpoints.clock);
+    std::string response = make_authenticated_request(request_url, "GET", "");
     
     try {
         json response_json = json::parse(response);
         return response_json.value("is_open", false);
-    } catch (const std::exception&) {
+    } catch (const std::exception& exception_error) {
+        AlpacaTrader::Logging::log_message("Error checking market open status: " + std::string(exception_error.what()), "");
         return false;
     }
 }
@@ -206,8 +208,8 @@ std::string AlpacaTradingClient::get_account_info() const {
         throw std::runtime_error("Alpaca trading client not connected");
     }
     
-    std::string url = build_url(config.endpoints.account);
-    return make_authenticated_request(url);
+    std::string request_url = build_url(config.endpoints.account);
+    return make_authenticated_request(request_url, "GET", "");
 }
 
 std::string AlpacaTradingClient::get_positions() const {
@@ -215,8 +217,8 @@ std::string AlpacaTradingClient::get_positions() const {
         throw std::runtime_error("Alpaca trading client not connected");
     }
     
-    std::string url = build_url(config.endpoints.positions);
-    return make_authenticated_request(url);
+    std::string request_url = build_url(config.endpoints.positions);
+    return make_authenticated_request(request_url, "GET", "");
 }
 
 std::string AlpacaTradingClient::get_open_orders() const {
@@ -224,8 +226,8 @@ std::string AlpacaTradingClient::get_open_orders() const {
         throw std::runtime_error("Alpaca trading client not connected");
     }
     
-    std::string url = build_url(config.endpoints.orders) + "?status=open";
-    return make_authenticated_request(url);
+    std::string request_url = build_url(config.endpoints.orders) + "?status=open";
+    return make_authenticated_request(request_url, "GET", "");
 }
 
 void AlpacaTradingClient::place_order(const std::string& order_json) const {
@@ -237,8 +239,8 @@ void AlpacaTradingClient::place_order(const std::string& order_json) const {
         throw std::runtime_error("Order JSON is required");
     }
     
-    std::string url = build_url(config.endpoints.orders);
-    make_authenticated_request(url, "POST", order_json);
+    std::string request_url = build_url(config.endpoints.orders);
+    make_authenticated_request(request_url, "POST", order_json);
 }
 
 void AlpacaTradingClient::cancel_order(const std::string& order_id) const {
@@ -250,8 +252,8 @@ void AlpacaTradingClient::cancel_order(const std::string& order_id) const {
         throw std::runtime_error("Order ID is required");
     }
     
-    std::string url = build_url(config.endpoints.orders) + "/" + order_id;
-    make_authenticated_request(url, "DELETE");
+    std::string request_url = build_url(config.endpoints.orders) + "/" + order_id;
+    make_authenticated_request(request_url, "DELETE", "");
 }
 
 void AlpacaTradingClient::close_position(const std::string& symbol, int quantity) const {
@@ -267,17 +269,17 @@ void AlpacaTradingClient::close_position(const std::string& symbol, int quantity
         throw std::runtime_error("Quantity must be non-zero for position closure");
     }
     
-    std::string url = build_url(config.endpoints.positions) + "/" + symbol;
+    std::string request_url = build_url(config.endpoints.positions) + "/" + symbol;
     
     json close_request;
     close_request["qty"] = std::to_string(abs(quantity));
     
-    make_authenticated_request(url, "DELETE", close_request.dump());
+    make_authenticated_request(request_url, "DELETE", close_request.dump());
 }
 
-std::string AlpacaTradingClient::make_authenticated_request(const std::string& url, const std::string& method, 
+std::string AlpacaTradingClient::make_authenticated_request(const std::string& request_url, const std::string& method, 
                                                           const std::string& body) const {
-    if (url.empty()) {
+    if (request_url.empty()) {
         throw std::runtime_error("URL is required for authenticated request");
     }
     
@@ -294,20 +296,20 @@ std::string AlpacaTradingClient::make_authenticated_request(const std::string& u
         throw std::runtime_error("Alpaca base URL is not configured");
     }
     
-    HttpRequest request(url, config.api_key, config.api_secret, "", config.retry_count, 
+    HttpRequest http_request(request_url, config.api_key, config.api_secret, "", config.retry_count, 
                        config.timeout_seconds, config.enable_ssl_verification, 
                        config.rate_limit_delay_ms, body);
     
     std::string response;
-    std::string error_context = "Alpaca API " + method + " request to " + url;
+    std::string error_context = "Alpaca API " + method + " request to " + request_url;
     
     try {
         if (method == "GET") {
-            response = http_get(request);
+            response = http_get(http_request, connectivity_manager);
         } else if (method == "POST") {
-            response = http_post(request);
+            response = http_post(http_request, connectivity_manager);
         } else if (method == "DELETE") {
-            response = http_delete(request);
+            response = http_delete(http_request, connectivity_manager);
         } else {
             throw std::runtime_error("Unsupported HTTP method: " + method);
         }
@@ -328,9 +330,9 @@ std::string AlpacaTradingClient::make_authenticated_request(const std::string& u
         
         return response;
         
-    } catch (const std::exception& e) {
+    } catch (const std::exception& exception_error) {
         // Re-throw with additional context
-        std::string enhanced_error = error_context + " failed: " + std::string(e.what());
+        std::string enhanced_error = error_context + " failed: " + std::string(exception_error.what());
         throw std::runtime_error(enhanced_error);
     }
 }
@@ -352,9 +354,9 @@ std::string AlpacaTradingClient::build_url_with_symbol(const std::string& endpoi
         throw std::runtime_error("Symbol is required for URL construction");
     }
     
-    std::string url = config.base_url + endpoint;
+    std::string constructed_url = config.base_url + endpoint;
     
-    return replace_url_placeholder(url, symbol);
+    return replace_url_placeholder(constructed_url, symbol);
 }
 
 bool AlpacaTradingClient::validate_config() const {

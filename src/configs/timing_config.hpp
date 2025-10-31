@@ -48,6 +48,15 @@ struct TimingConfig {
     int exception_recovery_sleep_seconds;             // Sleep time after exceptions in seconds
 
     // ========================================================================
+    // CONNECTIVITY RETRY CONFIGURATION
+    // ========================================================================
+
+    int connectivity_max_retry_delay_seconds;        // Maximum retry delay in seconds for connectivity
+    int connectivity_degraded_threshold;             // Number of consecutive failures before degraded status
+    int connectivity_disconnected_threshold;         // Number of consecutive failures before disconnected status
+    double connectivity_backoff_multiplier;          // Exponential backoff multiplier for retry delays
+
+    // ========================================================================
     // USER INTERFACE UPDATES
     // ========================================================================
 

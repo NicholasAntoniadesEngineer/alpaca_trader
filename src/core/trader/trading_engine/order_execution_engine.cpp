@@ -25,7 +25,7 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
             return;
         }
         
-        if (data.curr.c <= 0.0) {
+        if (data.curr.close_price <= 0.0) {
             TradingLogs::log_market_status(false, "Invalid price data - price is zero or negative");
             return;
         }
@@ -36,7 +36,7 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
         }
         
         double buying_power = account_manager.fetch_buying_power();
-        double required_capital = data.curr.c * sizing.quantity;
+        double required_capital = data.curr.close_price * sizing.quantity;
         double safety_margin = config.strategy.short_safety_margin > 0 ? config.strategy.short_safety_margin : 0.9;
         
         if (required_capital > buying_power * safety_margin) {
@@ -124,12 +124,12 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
     
     // Use consolidated logging instead of multiple separate tables
     Logging::ComprehensiveOrderExecutionRequest order_request("Bracket Order", side_str, sizing.quantity, 
-                                                    data.curr.c, data.atr, data.pos_details.position_quantity, 
+                                                    data.curr.close_price, data.atr, data.pos_details.position_quantity, 
                                                     sizing.risk_amount, targets.stop_loss, targets.take_profit,
                                                     config.trading_mode.primary_symbol, "execute_bracket_order");
     TradingLogs::log_comprehensive_order_execution(order_request);
     
-    Logging::ExitTargetsTableRequest exit_targets_request(side_str, data.curr.c, sizing.risk_amount, config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
+    Logging::ExitTargetsTableRequest exit_targets_request(side_str, data.curr.close_price, sizing.risk_amount, config.strategy.rr_ratio, targets.stop_loss, targets.take_profit);
     TradingLogs::log_exit_targets_table(exit_targets_request);
     
     try {
@@ -189,7 +189,7 @@ void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedD
     std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
     
     Logging::ComprehensiveOrderExecutionRequest order_request("Market Order", side_str, sizing.quantity,
-                                                    data.curr.c, data.atr, data.pos_details.position_quantity,
+                                                    data.curr.close_price, data.atr, data.pos_details.position_quantity,
                                                     sizing.risk_amount, 0.0, 0.0,
                                                     config.trading_mode.primary_symbol, "execute_market_order");
     TradingLogs::log_comprehensive_order_execution(order_request);
@@ -289,7 +289,7 @@ bool OrderExecutionEngine::can_execute_new_position(int current_position_quantit
 
 // Order validation and preparation
 bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, const PositionSizing& sizing) const {
-    if (data.curr.c <= 0.0) {
+    if (data.curr.close_price <= 0.0) {
         TradingLogs::log_trade_validation_failed("Invalid price data");
         return false;
     }
@@ -311,13 +311,13 @@ bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, 
     }
     
     // Validate price is within configured range
-    if (data.curr.c < config.strategy.minimum_acceptable_price_for_signals || data.curr.c > config.strategy.maximum_acceptable_price_for_signals) {
+    if (data.curr.close_price < config.strategy.minimum_acceptable_price_for_signals || data.curr.close_price > config.strategy.maximum_acceptable_price_for_signals) {
         TradingLogs::log_trade_validation_failed("Price out of configured range: $" + std::to_string(config.strategy.minimum_acceptable_price_for_signals) + " - $" + std::to_string(config.strategy.maximum_acceptable_price_for_signals));
         return false;
     }
     
     // Check if order value exceeds configured maximum
-    double order_value = data.curr.c * sizing.quantity;
+    double order_value = data.curr.close_price * sizing.quantity;
     if (order_value > config.strategy.maximum_dollar_value_per_single_trade) {
         TradingLogs::log_trade_validation_failed("Order value too large - max $" + std::to_string(config.strategy.maximum_dollar_value_per_single_trade));
         return false;
@@ -327,16 +327,16 @@ bool OrderExecutionEngine::validate_order_parameters(const ProcessedData& data, 
 }
 
 ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) const {
-    double entry_price = data.curr.c;
+    double entry_price = data.curr.close_price;
     
     // Use real-time price if configured and available
     if (config.strategy.use_current_market_price_for_order_execution) {
         double realtime_price = api_manager.get_current_price(config.trading_mode.primary_symbol);
         if (realtime_price > 0.0) {
             entry_price = realtime_price;
-            TradingLogs::log_realtime_price_used(realtime_price, data.curr.c);
+            TradingLogs::log_realtime_price_used(realtime_price, data.curr.close_price);
         } else {
-            TradingLogs::log_realtime_price_fallback(data.curr.c);
+            TradingLogs::log_realtime_price_fallback(data.curr.close_price);
         }
     }
     

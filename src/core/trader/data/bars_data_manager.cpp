@@ -54,7 +54,7 @@ bool BarsDataManager::fetch_and_validate_bars(const std::string& symbol, std::ve
 
     // Validate individual bars
     for (const auto& bar : bars_data) {
-        if (bar.c <= 0.0 || bar.h <= 0.0 || bar.l <= 0.0 || bar.o <= 0.0) {
+        if (bar.close_price <= 0.0 || bar.high_price <= 0.0 || bar.low_price <= 0.0 || bar.open_price <= 0.0) {
             MarketDataLogs::log_market_data_failure_summary(
                 symbol,
                 "Invalid Bar Data",
@@ -65,7 +65,7 @@ bool BarsDataManager::fetch_and_validate_bars(const std::string& symbol, std::ve
             return false;
         }
         
-        if (bar.h < bar.l || bar.h < bar.c || bar.l > bar.c) {
+        if (bar.high_price < bar.low_price || bar.high_price < bar.close_price || bar.low_price > bar.close_price) {
             MarketDataLogs::log_market_data_failure_summary(
                 symbol,
                 "Invalid Bar Data",
@@ -111,7 +111,7 @@ bool BarsDataManager::compute_technical_indicators_from_bars(ProcessedData& proc
     processed_data.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, config.strategy.atr_calculation_period, config.strategy.minimum_volume_threshold);
 
     // Detect doji pattern
-    processed_data.is_doji = AlpacaTrader::Core::detect_doji_pattern(current_bar.o, current_bar.h, current_bar.l, current_bar.c);
+    processed_data.is_doji = AlpacaTrader::Core::detect_doji_pattern(current_bar.open_price, current_bar.high_price, current_bar.low_price, current_bar.close_price);
 
     if (processed_data.atr == 0.0) {
         MarketDataLogs::log_market_data_result_table("Indicator computation failed - ATR is zero", false, 0, config.logging.log_file);
@@ -185,7 +185,7 @@ std::vector<double> BarsDataManager::extract_highs_from_bars(const std::vector<B
     std::vector<double> highs;
     highs.reserve(bars_data.size());
     for (const auto& bar : bars_data) {
-        highs.push_back(bar.h);
+        highs.push_back(bar.high_price);
     }
     return highs;
 }
@@ -194,7 +194,7 @@ std::vector<double> BarsDataManager::extract_lows_from_bars(const std::vector<Ba
     std::vector<double> lows;
     lows.reserve(bars_data.size());
     for (const auto& bar : bars_data) {
-        lows.push_back(bar.l);
+        lows.push_back(bar.low_price);
     }
     return lows;
 }
@@ -203,7 +203,7 @@ std::vector<double> BarsDataManager::extract_closes_from_bars(const std::vector<
     std::vector<double> closes;
     closes.reserve(bars_data.size());
     for (const auto& bar : bars_data) {
-        closes.push_back(bar.c);
+        closes.push_back(bar.close_price);
     }
     return closes;
 }
@@ -212,7 +212,7 @@ std::vector<double> BarsDataManager::extract_volumes_from_bars(const std::vector
     std::vector<double> volumes;
     volumes.reserve(bars_data.size());
     for (const auto& bar : bars_data) {
-        volumes.push_back(bar.v);
+        volumes.push_back(bar.volume);
     }
     return volumes;
 }

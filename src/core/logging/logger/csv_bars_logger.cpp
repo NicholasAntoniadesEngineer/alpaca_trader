@@ -81,11 +81,11 @@ void CSVBarsLogger::log_bar(const std::string& timestamp, const std::string& sym
 
     file_stream << timestamp << ","
                 << symbol << ","
-                << std::fixed << std::setprecision(2) << bar.o << ","
-                << std::fixed << std::setprecision(2) << bar.h << ","
-                << std::fixed << std::setprecision(2) << bar.l << ","
-                << std::fixed << std::setprecision(2) << bar.c << ","
-                << std::fixed << std::setprecision(0) << bar.v << ","
+                << std::fixed << std::setprecision(2) << bar.open_price << ","
+                << std::fixed << std::setprecision(2) << bar.high_price << ","
+                << std::fixed << std::setprecision(2) << bar.low_price << ","
+                << std::fixed << std::setprecision(2) << bar.close_price << ","
+                << std::fixed << std::setprecision(0) << bar.volume << ","
                 << std::fixed << std::setprecision(4) << atr << ","
                 << std::fixed << std::setprecision(4) << avg_atr << ","
                 << std::fixed << std::setprecision(0) << avg_vol << "\n";
@@ -101,11 +101,11 @@ void CSVBarsLogger::log_market_snapshot(const std::string& timestamp, const std:
 
     file_stream << timestamp << ","
                 << symbol << ","
-                << std::fixed << std::setprecision(2) << snapshot.curr.o << ","
-                << std::fixed << std::setprecision(2) << snapshot.curr.h << ","
-                << std::fixed << std::setprecision(2) << snapshot.curr.l << ","
-                << std::fixed << std::setprecision(2) << snapshot.curr.c << ","
-                << std::fixed << std::setprecision(0) << snapshot.curr.v << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.open_price << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.high_price << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.low_price << ","
+                << std::fixed << std::setprecision(2) << snapshot.curr.close_price << ","
+                << std::fixed << std::setprecision(0) << snapshot.curr.volume << ","
                 << std::fixed << std::setprecision(4) << snapshot.atr << ","
                 << std::fixed << std::setprecision(4) << snapshot.avg_atr << ","
                 << std::fixed << std::setprecision(0) << snapshot.avg_vol << "\n";

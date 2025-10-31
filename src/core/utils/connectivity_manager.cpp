@@ -1,6 +1,26 @@
 #include "connectivity_manager.hpp"
+#include "configs/timing_config.hpp"
 
-ConnectivityManager::ConnectivityManager() {
+ConnectivityManager::ConnectivityManager(const TimingConfig& timing_config)
+    : max_retry_delay_seconds(timing_config.connectivity_max_retry_delay_seconds),
+      degraded_threshold(timing_config.connectivity_degraded_threshold),
+      disconnected_threshold(timing_config.connectivity_disconnected_threshold),
+      backoff_multiplier(timing_config.connectivity_backoff_multiplier) {
+    if (max_retry_delay_seconds <= 0) {
+        throw std::runtime_error("connectivity_max_retry_delay_seconds must be greater than 0");
+    }
+    if (degraded_threshold <= 0) {
+        throw std::runtime_error("connectivity_degraded_threshold must be greater than 0");
+    }
+    if (disconnected_threshold <= 0) {
+        throw std::runtime_error("connectivity_disconnected_threshold must be greater than 0");
+    }
+    if (backoff_multiplier <= 1.0) {
+        throw std::runtime_error("connectivity_backoff_multiplier must be greater than 1.0");
+    }
+    if (disconnected_threshold <= degraded_threshold) {
+        throw std::runtime_error("connectivity_disconnected_threshold must be greater than connectivity_degraded_threshold");
+    }
     state_.last_success = std::chrono::steady_clock::now();
     state_.next_retry_time = std::chrono::steady_clock::now();
 }
@@ -26,16 +46,16 @@ void ConnectivityManager::report_failure(const std::string& error_message) {
     state_.last_error_message = error_message;
     
     // Update status based on failure count
-    if (state_.consecutive_failures >= DISCONNECTED_THRESHOLD) {
+    if (state_.consecutive_failures >= disconnected_threshold) {
         state_.status = ConnectionStatus::DISCONNECTED;
-    } else if (state_.consecutive_failures >= DEGRADED_THRESHOLD) {
+    } else if (state_.consecutive_failures >= degraded_threshold) {
         state_.status = ConnectionStatus::DEGRADED;
     }
     
     // Calculate exponential backoff
     state_.retry_delay_seconds = std::min(
-        static_cast<int>(state_.retry_delay_seconds * BACKOFF_MULTIPLIER),
-        MAX_RETRY_DELAY
+        static_cast<int>(state_.retry_delay_seconds * backoff_multiplier),
+        max_retry_delay_seconds
     );
     
     state_.next_retry_time = now + std::chrono::seconds(state_.retry_delay_seconds);

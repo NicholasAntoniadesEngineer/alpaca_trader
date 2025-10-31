@@ -63,10 +63,10 @@ bool compute_technical_indicators(ProcessedData& processed_data, const std::vect
     // Extract price data for calculations
     std::vector<double> highs, lows, closes, volumes;
     for (const auto& bar : bars) {
-        highs.push_back(bar.h);
-        lows.push_back(bar.l);
-        closes.push_back(bar.c);
-        volumes.push_back(bar.v);
+        highs.push_back(bar.high_price);
+        lows.push_back(bar.low_price);
+        closes.push_back(bar.close_price);
+        volumes.push_back(bar.volume);
     }
     
     // Compute ATR

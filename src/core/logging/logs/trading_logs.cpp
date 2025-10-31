@@ -179,7 +179,7 @@ void TradingLogs::log_comprehensive_api_response(const std::string& order_id, co
         
         TABLE_ROW_48("Error Code", error_code.empty() ? "N/A" : error_code);
         TABLE_ROW_48("Error Message", error_message.empty() ? "N/A" : error_message);
-        TABLE_ROW_48("Symbol", side.empty() ? "N/A" : "SPY");
+        TABLE_ROW_48("Symbol", "N/A");
         TABLE_ROW_48("Requested Qty", quantity.empty() ? "N/A" : quantity);
         TABLE_ROW_48("Available Qty", available_qty.empty() ? "N/A" : available_qty);
         TABLE_ROW_48("Existing Qty", existing_qty.empty() ? "N/A" : existing_qty);
@@ -232,7 +232,7 @@ void TradingLogs::log_loop_header(unsigned long loop_number, const std::string& 
 
 
 void TradingLogs::log_candle_and_signals(const ProcessedData& data, const SignalDecision& signals) {
-    log_candle_data_table(data.curr.o, data.curr.h, data.curr.l, data.curr.c);
+    log_candle_data_table(data.curr.open_price, data.curr.high_price, data.curr.low_price, data.curr.close_price);
     log_signals_table(signals.buy, signals.sell);
 }
 
@@ -253,8 +253,11 @@ void TradingLogs::log_filters(const FilterResult& filters, const SystemConfig& c
 }
 
 void TradingLogs::log_summary(const ProcessedData& data, const SignalDecision& signals, const FilterResult& filters, const std::string& symbol) {
-    std::string display_symbol = symbol.empty() ? "SPY" : symbol;
-    log_decision_summary_table(display_symbol, data.curr.c, signals.buy, signals.sell, 
+    if (symbol.empty()) {
+        throw std::runtime_error("Symbol is required for log_summary but not provided");
+    }
+    std::string display_symbol = symbol;
+    log_decision_summary_table(display_symbol, data.curr.close_price, signals.buy, signals.sell, 
                               filters.atr_pass, filters.vol_pass, filters.doji_pass, 
                               data.exposure_pct, filters.atr_ratio, filters.vol_ratio);
 }
@@ -1041,19 +1044,19 @@ void TradingLogs::log_signal_analysis_detailed(const ProcessedData& data, const 
 
 void TradingLogs::log_momentum_analysis(const ProcessedData& data, const SystemConfig& config) {
     // Calculate momentum indicators
-    double price_change = data.curr.c - data.prev.c;
-    double price_change_pct = (data.prev.c > 0.0) ? (price_change / data.prev.c) * 100.0 : 0.0;
+    double price_change = data.curr.close_price - data.prev.close_price;
+    double price_change_pct = (data.prev.close_price > 0.0) ? (price_change / data.prev.close_price) * 100.0 : 0.0;
     
-    double volume_change = static_cast<double>(data.curr.v) - static_cast<double>(data.prev.v);
-    double volume_change_pct = (data.prev.v > 0) ? (volume_change / static_cast<double>(data.prev.v)) * 100.0 : 0.0;
+    double volume_change = static_cast<double>(data.curr.volume) - static_cast<double>(data.prev.volume);
+    double volume_change_pct = (data.prev.volume > 0) ? (volume_change / static_cast<double>(data.prev.volume)) * 100.0 : 0.0;
     
-    double volatility_pct = (data.prev.c > 0.0) ? (data.atr / data.prev.c) * 100.0 : 0.0;
+    double volatility_pct = (data.prev.close_price > 0.0) ? (data.atr / data.prev.close_price) * 100.0 : 0.0;
     
     // Log momentum analysis table
     TABLE_HEADER_48("Momentum Analysis", "Current vs Previous Values");
     
     // Show actual price values for debugging
-    std::string price_debug = "Prev: $" + std::to_string(data.prev.c).substr(0,6) + " | Curr: $" + std::to_string(data.curr.c).substr(0,6);
+    std::string price_debug = "Prev: $" + std::to_string(data.prev.close_price).substr(0,6) + " | Curr: $" + std::to_string(data.curr.close_price).substr(0,6);
     TABLE_ROW_48("Price Values", price_debug);
     
     std::string price_status = (price_change_pct > config.strategy.minimum_price_change_percentage_for_momentum) ? "PASS" : "FAIL";

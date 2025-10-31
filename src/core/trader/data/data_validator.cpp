@@ -13,7 +13,7 @@ DataValidator::DataValidator(const SystemConfig& cfg) : config(cfg) {}
 bool DataValidator::validate_market_data(const MarketSnapshot& market) const {
     // Check if this is a default/empty MarketSnapshot (no data available)
     if (market.atr == 0.0 && market.avg_atr == 0.0 && market.avg_vol == 0.0 &&
-        market.curr.o == 0.0 && market.curr.h == 0.0 && market.curr.l == 0.0 && market.curr.c == 0.0) {
+        market.curr.open_price == 0.0 && market.curr.high_price == 0.0 && market.curr.low_price == 0.0 && market.curr.close_price == 0.0) {
         MarketDataLogs::log_market_data_failure_summary(
             config.trading_mode.primary_symbol,
             "No Data Available",
@@ -25,7 +25,7 @@ bool DataValidator::validate_market_data(const MarketSnapshot& market) const {
     }
 
     // Validate that market data is not null/empty
-    if (std::isnan(market.curr.c) || std::isnan(market.atr) || !std::isfinite(market.curr.c) || !std::isfinite(market.atr)) {
+    if (std::isnan(market.curr.close_price) || std::isnan(market.atr) || !std::isfinite(market.curr.close_price) || !std::isfinite(market.atr)) {
         MarketDataLogs::log_market_data_failure_summary(
             config.trading_mode.primary_symbol,
             "Invalid Data",
@@ -36,7 +36,7 @@ bool DataValidator::validate_market_data(const MarketSnapshot& market) const {
         return false;
     }
 
-    if (market.curr.c <= 0.0) {
+    if (market.curr.close_price <= 0.0) {
         MarketDataLogs::log_market_data_failure_summary(
             config.trading_mode.primary_symbol,
             "Invalid Data",
@@ -59,7 +59,7 @@ bool DataValidator::validate_market_data(const MarketSnapshot& market) const {
     }
 
     // Validate OHLC data is reasonable (H >= L, H >= C, L <= C)
-    if (market.curr.h < market.curr.l || market.curr.h < market.curr.c || market.curr.l > market.curr.c) {
+    if (market.curr.high_price < market.curr.low_price || market.curr.high_price < market.curr.close_price || market.curr.low_price > market.curr.close_price) {
         MarketDataLogs::log_market_data_failure_summary(
             config.trading_mode.primary_symbol,
             "Invalid Data",
@@ -111,7 +111,7 @@ bool DataValidator::fetch_and_validate_market_bars(ProcessedData& data, API::Api
 
         // Validate individual bars
         for (const auto& bar : bars) {
-            if (bar.c <= 0.0 || bar.h <= 0.0 || bar.l <= 0.0 || bar.o <= 0.0) {
+            if (bar.close_price <= 0.0 || bar.high_price <= 0.0 || bar.low_price <= 0.0 || bar.open_price <= 0.0) {
                 MarketDataLogs::log_market_data_failure_summary(
                     symbol,
                     "Invalid Bar Data",
@@ -122,7 +122,7 @@ bool DataValidator::fetch_and_validate_market_bars(ProcessedData& data, API::Api
                 return false;
             }
             
-            if (bar.h < bar.l || bar.h < bar.c || bar.l > bar.c) {
+            if (bar.high_price < bar.low_price || bar.high_price < bar.close_price || bar.low_price > bar.close_price) {
                 MarketDataLogs::log_market_data_failure_summary(
                     symbol,
                     "Invalid Bar Data",

@@ -5,6 +5,7 @@
 #include <chrono>
 #include <mutex>
 #include <string>
+#include "configs/timing_config.hpp"
 
 /**
  * ConnectivityManager - Manages connectivity state
@@ -35,15 +36,13 @@ public:
 private:
     mutable std::mutex state_mutex_;
     ConnectivityState state_;
-    
-    // Configuration constants
-    static constexpr int MAX_RETRY_DELAY = 5;        // 5 minutes max backoff
-    static constexpr int DEGRADED_THRESHOLD = 3;       // Failures before degraded
-    static constexpr int DISCONNECTED_THRESHOLD = 6;   // Failures before disconnected
-    static constexpr double BACKOFF_MULTIPLIER = 2.0;  // Exponential backoff factor
+    int max_retry_delay_seconds;
+    int degraded_threshold;
+    int disconnected_threshold;
+    double backoff_multiplier;
 
 public:
-    ConnectivityManager();
+    explicit ConnectivityManager(const TimingConfig& timing_config);
     ~ConnectivityManager() = default;
 
     // Delete copy constructor and assignment operator

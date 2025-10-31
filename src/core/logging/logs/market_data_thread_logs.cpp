@@ -91,7 +91,7 @@ void MarketDataThreadLogs::log_fresh_quote_data_to_csv(const QuoteData& quote_da
     auto csv_logger = get_csv_bars_logger();
     if (csv_logger) {
         csv_logger->log_market_data(
-            timestamp, processed_data.curr.t, quote_data.bid_price, quote_data.ask_price, 
+            timestamp, processed_data.curr.timestamp, quote_data.bid_price, quote_data.ask_price, 
             quote_data.bid_price, quote_data.mid_price, quote_data.ask_size + quote_data.bid_size,
             processed_data.atr, processed_data.avg_atr, processed_data.avg_vol
         );
@@ -105,9 +105,9 @@ void MarketDataThreadLogs::log_historical_bars_to_csv(const std::vector<Bar>& hi
         // Log ALL bars that were fetched, not just the last one
         // Use individual bar timestamps instead of current system time
         for (const auto& bar : historical_bars) {
-            std::string bar_timestamp = bar.t.empty() ? timestamp : bar.t;
+            std::string bar_timestamp = bar.timestamp.empty() ? timestamp : bar.timestamp;
             csv_logger2->log_bar(
-                bar_timestamp, bar.t, bar, processed_data.atr, processed_data.avg_atr, processed_data.avg_vol
+                bar_timestamp, bar.timestamp, bar, processed_data.atr, processed_data.avg_atr, processed_data.avg_vol
             );
         }
     }
@@ -148,12 +148,12 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
             // Only log bars if we haven't logged them before (prevent duplicate historical data)
             if (!historical_bars.empty()) {
                 const auto& latest_bar = historical_bars.back();
-                if (previous_bar.t.empty() || latest_bar.t != previous_bar.t) {
+                if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
                     MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp);
                     // Update previous_bar to track the latest bar we logged
                     previous_bar = latest_bar;
                 } else {
-                    MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.t);
+                    MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
                 }
             } else {
                 log_message("No historical bars available for CSV logging", "trading_system.log");

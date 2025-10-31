@@ -12,7 +12,8 @@ ApiManager::~ApiManager() {
     shutdown();
 }
 
-ApiManager::ApiManager(const Config::MultiApiConfig& multi_config) : config(multi_config) {
+ApiManager::ApiManager(const Config::MultiApiConfig& multi_config, ConnectivityManager& connectivity_mgr) 
+    : config(multi_config), connectivity_manager(connectivity_mgr) {
     if (config.providers.empty()) {
         throw std::runtime_error("No API providers configured");
     }
@@ -188,10 +189,7 @@ bool ApiManager::is_crypto_symbol(const std::string& symbol) const {
     std::string upper_symbol = symbol;
     std::transform(upper_symbol.begin(), upper_symbol.end(), upper_symbol.begin(), ::toupper);
     
-    return upper_symbol.find("BTC") != std::string::npos ||
-           upper_symbol.find("ETH") != std::string::npos ||
-           upper_symbol.find("USD") != std::string::npos ||
-           upper_symbol.find("/") != std::string::npos ||
+    return upper_symbol.find("/") != std::string::npos ||
            upper_symbol.find("-") != std::string::npos;
 }
 
@@ -202,11 +200,11 @@ bool ApiManager::is_stock_symbol(const std::string& symbol) const {
 std::unique_ptr<ApiProviderInterface> ApiManager::create_provider(Config::ApiProvider provider_type) {
     switch (provider_type) {
         case Config::ApiProvider::ALPACA_TRADING:
-            return std::make_unique<AlpacaTradingClient>();
+            return std::make_unique<AlpacaTradingClient>(connectivity_manager);
         case Config::ApiProvider::ALPACA_STOCKS:
-            return std::make_unique<AlpacaStocksClient>();
+            return std::make_unique<AlpacaStocksClient>(connectivity_manager);
         case Config::ApiProvider::POLYGON_CRYPTO:
-            return std::make_unique<PolygonCryptoClient>();
+            return std::make_unique<PolygonCryptoClient>(connectivity_manager);
         default:
             throw std::runtime_error("Unknown API provider type");
     }
