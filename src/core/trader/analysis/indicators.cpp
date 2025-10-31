@@ -10,36 +10,36 @@ namespace Core {
 
 double compute_atr(const std::vector<double>& highs, const std::vector<double>& lows, const std::vector<double>& closes, int period) {
     if (highs.size() < static_cast<size_t>(period + 1)) return 0.0;
-    std::vector<double> trs;
-    for (size_t i = 1; i < highs.size(); ++i) {
-        double tr = std::max({highs[i] - lows[i], std::abs(highs[i] - closes[i-1]), std::abs(lows[i] - closes[i-1])});
-        trs.push_back(tr);
+    std::vector<double> true_range_values;
+    for (size_t current_bar_index = 1; current_bar_index < highs.size(); ++current_bar_index) {
+        double true_range_value = std::max({highs[current_bar_index] - lows[current_bar_index], std::abs(highs[current_bar_index] - closes[current_bar_index-1]), std::abs(lows[current_bar_index] - closes[current_bar_index-1])});
+        true_range_values.push_back(true_range_value);
     }
-    double sum = 0.0;
-    int start = static_cast<int>(trs.size()) - period;
-    for (int i = start; i < static_cast<int>(trs.size()); ++i) sum += trs[i];
-    return sum / period;
+    double true_range_sum = 0.0;
+    int true_range_start_index = static_cast<int>(true_range_values.size()) - period;
+    for (int true_range_index = true_range_start_index; true_range_index < static_cast<int>(true_range_values.size()); ++true_range_index) true_range_sum += true_range_values[true_range_index];
+    return true_range_sum / period;
 }
 
 double compute_average_volume(const std::vector<double>& volumes, int period, double minimum_threshold) {
     if (volumes.size() < static_cast<size_t>(period)) return 0.0;
-    double sum = 0.0;
-    int start = static_cast<int>(volumes.size()) - period;
+    double volume_sum = 0.0;
+    int volume_start_index = static_cast<int>(volumes.size()) - period;
     
     // Calculate average over the period, including zero volumes
-    for (int i = start; i < static_cast<int>(volumes.size()); ++i) {
-        sum += volumes[i];
+    for (int volume_calculation_index = volume_start_index; volume_calculation_index < static_cast<int>(volumes.size()); ++volume_calculation_index) {
+        volume_sum += volumes[volume_calculation_index];
     }
     
-    double avg = sum / period;
+    double average_volume_result = volume_sum / period;
     
     // If average is 0, use the minimum threshold to avoid division by zero
     // This provides a small but meaningful baseline for volume calculations
-    if (avg == 0.0) {
+    if (average_volume_result == 0.0) {
         return minimum_threshold;
     }
     
-    return avg;
+    return average_volume_result;
 }
 
 bool detect_doji_pattern(double open, double high, double low, double close) {

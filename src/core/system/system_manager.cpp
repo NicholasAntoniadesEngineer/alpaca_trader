@@ -70,7 +70,7 @@ SystemConfigurations create_trading_configurations(const SystemState& state) {
     };
 }
 
-SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger, SystemThreads& thread_handles) {
     SystemConfigurations configs = create_trading_configurations(state);
     SystemModules modules;
 
@@ -80,7 +80,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     modules.api_manager = std::move(trading_components.api_manager);
     modules.portfolio_manager = std::move(trading_components.account_manager);
     modules.trading_engine = std::move(trading_components.trading_orchestrator);
-    modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager);
+    modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager, state.config.strategy.position_long_string, state.config.strategy.position_short_string);
     
     // Create coordinator interfaces for thread access to trader components
     modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(*modules.api_manager, state.config);
@@ -104,12 +104,10 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
                                                                    state.allow_fetch, state.running, *modules.api_manager, state.connectivity_manager, state.config.trading_mode.primary_symbol);
     
     // Create LOGGING thread
-    static std::atomic<unsigned long> logging_iterations{0};
-    modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, logging_iterations, state.config);
+    modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, thread_handles.logger_iterations, state.config);
     
     // Create TRADER_DECISION thread
-    static std::atomic<unsigned long> trader_iterations{0};
-    modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(*modules.trading_engine, trader_iterations, state.config.timing);
+    modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(*modules.trading_engine, thread_handles.trader_iterations, state.config.timing);
     
     return modules;
 }
@@ -137,7 +135,7 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     }
     
     // Create all trading system modules and store them in system_state for lifetime management
-    system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger));
+    system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger, handles));
     
         // Set up data synchronization for trading orchestrator
         DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 

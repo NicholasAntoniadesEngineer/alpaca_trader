@@ -137,6 +137,32 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (key == "strategy.ratio_display_precision") cfg.strategy.ratio_display_precision = std::stoi(value);
         else if (key == "strategy.factor_display_precision") cfg.strategy.factor_display_precision = std::stoi(value);
         else if (key == "strategy.atr_volume_display_precision") cfg.strategy.atr_volume_display_precision = std::stoi(value);
+        
+        // Signal and position label configuration
+        else if (key == "strategy.signal_buy_string") {
+            if (value.empty()) {
+                throw std::runtime_error("Signal buy string is required but not provided");
+            }
+            cfg.strategy.signal_buy_string = value;
+        }
+        else if (key == "strategy.signal_sell_string") {
+            if (value.empty()) {
+                throw std::runtime_error("Signal sell string is required but not provided");
+            }
+            cfg.strategy.signal_sell_string = value;
+        }
+        else if (key == "strategy.position_long_string") {
+            if (value.empty()) {
+                throw std::runtime_error("Position long string is required but not provided");
+            }
+            cfg.strategy.position_long_string = value;
+        }
+        else if (key == "strategy.position_short_string") {
+            if (value.empty()) {
+                throw std::runtime_error("Position short string is required but not provided");
+            }
+            cfg.strategy.position_short_string = value;
+        }
 
         // Short selling configuration
         else if (key == "strategy.enable_short_selling") cfg.strategy.enable_short_selling = to_bool(value);

@@ -14,7 +14,7 @@ class RiskManager {
 public:
     RiskManager(const SystemConfig& config);
     
-    bool validate_trading_permissions(const ProcessedData& data, double equity);
+    bool validate_trading_permissions(const ProcessedData& data, double current_equity, double initial_equity);
     bool check_exposure_limits(const ProcessedData& data, double equity);
     bool check_daily_limits(double current_equity, double initial_equity);
 
@@ -36,7 +36,7 @@ private:
     };
     
     // Risk evaluation methods
-    TradeGateInput build_risk_input(const ProcessedData& data, double equity);
+    TradeGateInput build_risk_input(const ProcessedData& data, double current_equity, double initial_equity);
     bool evaluate_risk_gate(const TradeGateInput& input);
     TradeGateResult evaluate_trade_gate(const TradeGateInput& input);
     double calculate_exposure_percentage(double current_value, double equity);

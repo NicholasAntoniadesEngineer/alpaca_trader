@@ -4,14 +4,6 @@
 #include <string>
 #include "configs/system_config.hpp"
 
-// Trading signal constants
-#define SIGNAL_BUY "buy"
-#define SIGNAL_SELL "sell"
-
-// Position side constants
-#define POSITION_LONG "LONG"
-#define POSITION_SHORT "SHORT"
-
 using AlpacaTrader::Config::TradingModeConfig;
 
 namespace AlpacaTrader {

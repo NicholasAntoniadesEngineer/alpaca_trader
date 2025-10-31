@@ -11,9 +11,11 @@ class AccountLogs {
 private:
     const LoggingConfig& logging;
     Core::AccountManager& account_manager;
+    const std::string& position_long_string;
+    const std::string& position_short_string;
 
 public:
-    AccountLogs(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr);
+    AccountLogs(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr, const std::string& position_long_label, const std::string& position_short_label);
 
     void display_account_status() const;
     

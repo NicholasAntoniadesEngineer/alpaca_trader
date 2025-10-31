@@ -9,8 +9,8 @@
 namespace AlpacaTrader {
 namespace Logging {
 
-AccountLogs::AccountLogs(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr)
-    : logging(logging_cfg), account_manager(account_mgr) {}
+AccountLogs::AccountLogs(const LoggingConfig& logging_cfg, Core::AccountManager& account_mgr, const std::string& position_long_label, const std::string& position_short_label)
+    : logging(logging_cfg), account_manager(account_mgr), position_long_string(position_long_label), position_short_string(position_short_label) {}
 
 void AccountLogs::display_account_status() const {
     log_message("", logging.log_file);
@@ -94,7 +94,7 @@ void AccountLogs::display_positions() const {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);
         
-        std::string side = (snapshot.pos_details.position_quantity > 0) ? POSITION_LONG : POSITION_SHORT;
+        std::string side = (snapshot.pos_details.position_quantity > 0) ? position_long_string : position_short_string;
         oss << "|   Position: " << side << " " << std::abs(snapshot.pos_details.position_quantity) << " shares";
         log_message(oss.str(), logging.log_file);
         

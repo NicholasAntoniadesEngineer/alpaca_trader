@@ -112,8 +112,8 @@ void TradingEngine::execute_trade_if_valid(const TradeExecutionRequest& trade_re
 }
 
 void TradingEngine::perform_halt_countdown(int seconds) const {
-    for (int s = seconds; s > 0; --s) {
-        TradingLogs::log_inline_halt_status(s);
+    for (int remaining_seconds = seconds; remaining_seconds > 0; --remaining_seconds) {
+        TradingLogs::log_inline_halt_status(remaining_seconds);
         std::this_thread::sleep_for(std::chrono::seconds(config.timing.countdown_display_refresh_interval_seconds));
     }
 }

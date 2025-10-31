@@ -31,7 +31,7 @@ void MarketDataLogs::log_market_data_result_table(const std::string& description
     log_message("|", log_file);
 }
 
-void MarketDataLogs::log_current_positions_table(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
+void MarketDataLogs::log_current_positions_table(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file, const std::string& position_long_string, const std::string& position_short_string) {
     log_message("+-- CURRENT POSITIONS", log_file);
     
     if (position_quantity == 0) {
@@ -40,7 +40,7 @@ void MarketDataLogs::log_current_positions_table(int position_quantity, double c
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2);
         
-        std::string side = (position_quantity > 0) ? POSITION_LONG : POSITION_SHORT;
+        std::string side = (position_quantity > 0) ? position_long_string : position_short_string;
         oss << "|   Position: " << side << " " << std::abs(position_quantity) << " shares";
         log_message(oss.str(), log_file);
         
@@ -64,8 +64,8 @@ void MarketDataLogs::log_current_positions_table(int position_quantity, double c
     log_message("|", log_file);
 }
 
-void MarketDataLogs::log_position_data_and_warnings(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file) {
-    log_current_positions_table(position_quantity, current_value, unrealized_pl, exposure_pct, open_orders, log_file);
+void MarketDataLogs::log_position_data_and_warnings(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file, const std::string& position_long_string, const std::string& position_short_string) {
+    log_current_positions_table(position_quantity, current_value, unrealized_pl, exposure_pct, open_orders, log_file, position_long_string, position_short_string);
     
     if (position_quantity != 0 && open_orders == 0) {
         log_market_data_result_table("Missing bracket order warning", true, 0, log_file);
@@ -109,8 +109,8 @@ void MarketDataLogs::log_market_data_failure_summary(const std::string& symbol, 
     log_message("PROVIDER-SPECIFIC SOLUTIONS:", log_file);
     
     if (error_type == "Invalid Symbol") {
-        log_message("  • STOCKS: Use format 'AAPL' (Alpaca Trading/Stocks providers)", log_file);
-        log_message("  • CRYPTO: Use format 'BTC/USD' (Polygon Crypto provider)", log_file);
+        log_message("  • STOCKS: Use format 'SYMBOL' (Alpaca Trading/Stocks providers)", log_file);
+        log_message("  • CRYPTO: Use format 'SYMBOL/PAIR' (Polygon Crypto provider)", log_file);
         log_message("  • Verify symbol exists on the configured provider", log_file);
     } else if (error_type == "No Data Available") {
         log_message("  • Check if market is open for the asset class", log_file);

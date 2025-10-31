@@ -18,6 +18,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <limits>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -26,9 +27,11 @@ class TradingOrchestrator {
 private:
 
     struct RuntimeState {
-        double initial_equity = 0.0;
+        double initial_equity;
         std::atomic<unsigned long> loop_counter{0};
         std::atomic<unsigned long>* iteration_counter = nullptr;
+        
+        RuntimeState() : initial_equity(std::numeric_limits<double>::quiet_NaN()) {}
     };
 
     const SystemConfig& config;
@@ -48,7 +51,7 @@ public:
     TradingOrchestrator(const TradingOrchestratorConstructionParams& construction_params);
 
     void execute_trading_loop();
-    void setup_data_synchronization(const DataSyncConfig& config);
+    void setup_data_synchronization(const DataSyncConfig& sync_configuration);
 };
 
 } // namespace Core

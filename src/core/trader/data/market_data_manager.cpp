@@ -33,7 +33,9 @@ ProcessedData MarketDataManager::fetch_and_process_market_data() {
         processed_data.pos_details.unrealized_pl,
         processed_data.exposure_pct,
         processed_data.open_orders,
-        config.logging.log_file
+        config.logging.log_file,
+        config.strategy.position_long_string,
+        config.strategy.position_short_string
     );
 
     return processed_data;

@@ -31,7 +31,7 @@ public:
     // Detailed trading analysis  
     static void log_candle_and_signals(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals);
     static void log_filters(const AlpacaTrader::Core::FilterResult& filters, const SystemConfig& config, const AlpacaTrader::Core::ProcessedData& data);
-    static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals, const AlpacaTrader::Core::FilterResult& filters, const std::string& symbol = "");
+    static void log_summary(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals, const AlpacaTrader::Core::FilterResult& filters, const std::string& symbol);
     
     // Enhanced signal analysis logging
     static void log_signal_analysis_detailed(const AlpacaTrader::Core::ProcessedData& data, const AlpacaTrader::Core::SignalDecision& signals, const SystemConfig& config);
@@ -48,12 +48,12 @@ public:
     
     
     // Market conditions
-    static void log_market_status(bool is_open, const std::string& reason = "");
+    static void log_market_status(bool is_open, const std::string& reason);
     static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config);
     static void log_equity_update(double current_equity);
     
     // Signal processing
-    static void log_market_data_status(bool has_data, size_t data_points = 0);
+    static void log_market_data_status(bool has_data, size_t data_points);
     static void log_signal_triggered(const std::string& signal_type, bool triggered);
     static void log_filters_passed();
     static void log_position_closure(const std::string& reason, int quantity);
@@ -62,7 +62,7 @@ public:
     
     // Order management
     static void log_order_intent(const std::string& side, double entry_price, double stop_loss, double take_profit);
-    static void log_order_result(const std::string& order_id, bool success, const std::string& reason = "");
+    static void log_order_result(const std::string& order_id, bool success, const std::string& reason);
     
     // Consolidated order execution logging
     static void log_comprehensive_order_execution(const ComprehensiveOrderExecutionRequest& order_execution_request);
@@ -71,12 +71,12 @@ public:
                                              const std::string& order_class, const std::string& position_intent,
                                              const std::string& created_at, const std::string& filled_at,
                                              const std::string& filled_qty, const std::string& filled_avg_price,
-                                             const std::string& error_code = "", const std::string& error_message = "",
-                                             const std::string& available_qty = "", const std::string& existing_qty = "",
-                                             const std::string& held_for_orders = "", const std::string& related_orders = "");
+                                             const std::string& error_code, const std::string& error_message,
+                                             const std::string& available_qty, const std::string& existing_qty,
+                                             const std::string& held_for_orders, const std::string& related_orders);
     
     // Order cancellation
-    static void log_cancellation_start(const std::string& strategy, const std::string& signal_side = "");
+    static void log_cancellation_start(const std::string& strategy, const std::string& signal_side);
     static void log_orders_found(int count, const std::string& symbol);
     static void log_orders_filtered(int count, const std::string& reason);
     static void log_cancellation_complete(int cancelled_count, const std::string& symbol);
@@ -133,7 +133,7 @@ public:
     static void log_current_positions_table(int quantity, double current_value, double unrealized_pnl, double exposure_pct, int open_orders);
     static void log_data_source_table(const std::string& symbol, const std::string& account_type);
     static void log_thread_system_table(bool priorities_enabled, bool cpu_affinity_enabled);
-    static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses = {});
+    static void log_thread_priorities_table(const std::vector<std::tuple<std::string, std::string, bool>>& thread_statuses);
     static void log_data_source_info_table(const std::string& source, double price, const std::string& status);
     static void log_runtime_config_table(const AlpacaTrader::Config::SystemConfig& config);
     static void log_strategy_config_table(const AlpacaTrader::Config::SystemConfig& config);

@@ -25,27 +25,27 @@ IndicatorInputs extract_inputs_from_bars(const std::vector<Bar>& bars) {
     return inputs;
 }
 
-ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemConfig& cfg) {
-    ProcessedData data;
-    if (bars.empty()) return data;
+ProcessedData compute_processed_data(const std::vector<Bar>& bars, const SystemConfig& system_config) {
+    ProcessedData processed_data_result;
+    if (bars.empty()) return processed_data_result;
     // Use configurable ATR calculation bars for period calculations
-    const int atr_period = cfg.strategy.atr_calculation_bars;
-    if (static_cast<int>(bars.size()) < atr_period + 2) return data;
+    const int atr_calculation_period = system_config.strategy.atr_calculation_bars;
+    if (static_cast<int>(bars.size()) < atr_calculation_period + 2) return processed_data_result;
 
-    IndicatorInputs inputs = extract_inputs_from_bars(bars);
-    data.atr = AlpacaTrader::Core::compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period);
-    if (data.atr == 0.0) return data;
-    data.avg_atr = AlpacaTrader::Core::compute_atr(inputs.highs, inputs.lows, inputs.closes, atr_period * cfg.strategy.average_atr_comparison_multiplier);
-    data.avg_vol = AlpacaTrader::Core::compute_average_volume(inputs.volumes, atr_period, cfg.strategy.minimum_volume_threshold);
+    IndicatorInputs indicator_inputs = extract_inputs_from_bars(bars);
+    processed_data_result.atr = AlpacaTrader::Core::compute_atr(indicator_inputs.highs, indicator_inputs.lows, indicator_inputs.closes, atr_calculation_period);
+    if (processed_data_result.atr == 0.0) return processed_data_result;
+    processed_data_result.avg_atr = AlpacaTrader::Core::compute_atr(indicator_inputs.highs, indicator_inputs.lows, indicator_inputs.closes, atr_calculation_period * system_config.strategy.average_atr_comparison_multiplier);
+    processed_data_result.avg_vol = AlpacaTrader::Core::compute_average_volume(indicator_inputs.volumes, atr_calculation_period, system_config.strategy.minimum_volume_threshold);
     
     // Defensive checks before accessing tail elements
     if (bars.size() < 2) {
         throw std::runtime_error("Insufficient bars for processed data tail access");
     }
     
-    data.curr = bars.back();
-    data.prev = bars[bars.size() - 2];
-    return data;
+    processed_data_result.curr = bars.back();
+    processed_data_result.prev = bars[bars.size() - 2];
+    return processed_data_result;
 }
 
 ProcessedData create_processed_data(const MarketSnapshot& market, const AccountSnapshot& account) {

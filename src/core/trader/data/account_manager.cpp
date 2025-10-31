@@ -16,9 +16,9 @@ namespace Core {
 using AlpacaTrader::Logging::AccountLogs;
 using AlpacaTrader::Logging::MarketDataLogs;
 
-AccountManager::AccountManager(const AccountManagerConfig& cfg, API::ApiManager& api_mgr)
-    : logging(cfg.logging), strategy(cfg.strategy), api_manager(api_mgr),
-      last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(cfg.timing.account_data_cache_duration_seconds + 1)) {}
+AccountManager::AccountManager(const AccountManagerConfig& account_manager_config, API::ApiManager& api_mgr)
+    : logging(account_manager_config.logging), strategy(account_manager_config.strategy), api_manager(api_mgr),
+      last_cache_time(std::chrono::steady_clock::now() - std::chrono::seconds(account_manager_config.timing.account_data_cache_duration_seconds + 1)) {}
 
 double AccountManager::fetch_account_equity() const {
     try {
@@ -179,9 +179,9 @@ AccountSnapshot AccountManager::fetch_account_snapshot() const {
 }
 
 std::pair<AccountManager::AccountInfo, AccountSnapshot> AccountManager::fetch_account_data_bundled() const {
-    AccountInfo info = fetch_account_info();
+        AccountInfo account_info = fetch_account_info();
     AccountSnapshot snapshot = fetch_account_snapshot();
-    return std::make_pair(info, snapshot);
+        return std::make_pair(account_info, snapshot);
 }
 
 AccountManager::AccountInfo AccountManager::fetch_account_info() const {
@@ -192,40 +192,52 @@ AccountManager::AccountInfo AccountManager::fetch_account_info() const {
         }
         
         json account_data = json::parse(account_json);
-        AccountInfo info;
+        AccountInfo account_info_result;
         
         // Extract account information with proper error handling
-        info.account_number = account_data.value("account_number", "");
-        info.status = account_data.value("status", "UNKNOWN");
-        info.currency = account_data.value("currency", "USD");
-        info.pattern_day_trader = account_data.value("pattern_day_trader", false);
-        info.trading_blocked_reason = account_data.value("trading_blocked_reason", "");
-        info.transfers_blocked_reason = account_data.value("transfers_blocked_reason", "");
-        info.account_blocked_reason = account_data.value("account_blocked_reason", "");
-        info.created_at = account_data.value("created_at", "");
+        account_info_result.account_number = account_data.value("account_number", "");
+        account_info_result.status = account_data.value("status", "UNKNOWN");
+        account_info_result.currency = account_data.value("currency", "USD");
+        account_info_result.pattern_day_trader = account_data.value("pattern_day_trader", false);
+        account_info_result.trading_blocked_reason = account_data.value("trading_blocked_reason", "");
+        account_info_result.transfers_blocked_reason = account_data.value("transfers_blocked_reason", "");
+        account_info_result.account_blocked_reason = account_data.value("account_blocked_reason", "");
+        account_info_result.created_at = account_data.value("created_at", "");
         
         // Handle numeric fields that might be strings or numbers
-        auto parse_numeric = [](const json& j, const std::string& key, double default_val = 0.0) -> double {
-            if (!j.contains(key)) return default_val;
-            if (j[key].is_string()) return std::stod(j[key].get<std::string>());
-            if (j[key].is_number()) return j[key].get<double>();
-            return default_val;
+        auto parse_numeric = [](const json& json_data, const std::string& field_key, double default_value) -> double {
+            if (!json_data.contains(field_key)) return default_value;
+            if (json_data[field_key].is_string()) return std::stod(json_data[field_key].get<std::string>());
+            if (json_data[field_key].is_number()) return json_data[field_key].get<double>();
+            return default_value;
         };
         
-        info.equity = parse_numeric(account_data, "equity");
-        info.last_equity = parse_numeric(account_data, "last_equity");
-        info.long_market_value = parse_numeric(account_data, "long_market_value");
-        info.short_market_value = parse_numeric(account_data, "short_market_value");
-        info.cash = parse_numeric(account_data, "cash");
-        info.buying_power = parse_numeric(account_data, "buying_power");
-        info.initial_margin = parse_numeric(account_data, "initial_margin");
-        info.maintenance_margin = parse_numeric(account_data, "maintenance_margin");
-        info.sma = parse_numeric(account_data, "sma");
-        info.day_trade_count = parse_numeric(account_data, "day_trade_count");
-        info.regt_buying_power = parse_numeric(account_data, "regt_buying_power");
-        info.daytrading_buying_power = parse_numeric(account_data, "daytrading_buying_power");
+        if (!account_data.contains("equity")) {
+            throw std::runtime_error("Required field 'equity' missing from account data");
+        }
+        account_info_result.equity = parse_numeric(account_data, "equity", 0.0);
         
-        return info;
+        if (!account_data.contains("cash")) {
+            throw std::runtime_error("Required field 'cash' missing from account data");
+        }
+        account_info_result.cash = parse_numeric(account_data, "cash", 0.0);
+        
+        if (!account_data.contains("buying_power")) {
+            throw std::runtime_error("Required field 'buying_power' missing from account data");
+        }
+        account_info_result.buying_power = parse_numeric(account_data, "buying_power", 0.0);
+        
+        account_info_result.last_equity = parse_numeric(account_data, "last_equity", 0.0);
+        account_info_result.long_market_value = parse_numeric(account_data, "long_market_value", 0.0);
+        account_info_result.short_market_value = parse_numeric(account_data, "short_market_value", 0.0);
+        account_info_result.initial_margin = parse_numeric(account_data, "initial_margin", 0.0);
+        account_info_result.maintenance_margin = parse_numeric(account_data, "maintenance_margin", 0.0);
+        account_info_result.sma = parse_numeric(account_data, "sma", 0.0);
+        account_info_result.day_trade_count = parse_numeric(account_data, "day_trade_count", 0.0);
+        account_info_result.regt_buying_power = parse_numeric(account_data, "regt_buying_power", 0.0);
+        account_info_result.daytrading_buying_power = parse_numeric(account_data, "daytrading_buying_power", 0.0);
+        
+        return account_info_result;
         
     } catch (const std::exception& e) {
         AlpacaTrader::Logging::log_message("Account info fetch failed: " + std::string(e.what()), logging.log_file);

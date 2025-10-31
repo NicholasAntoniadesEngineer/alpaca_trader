@@ -15,8 +15,8 @@ public:
     static void log_market_data_result_table(const std::string& description, bool success, size_t bar_count, const std::string& log_file);
     
     // Position logging
-    static void log_current_positions_table(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file);
-    static void log_position_data_and_warnings(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file);
+    static void log_current_positions_table(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file, const std::string& position_long_string, const std::string& position_short_string);
+    static void log_position_data_and_warnings(int position_quantity, double current_value, double unrealized_pl, double exposure_pct, int open_orders, const std::string& log_file, const std::string& position_long_string, const std::string& position_short_string);
     
     // Data synchronization logging
     static void log_sync_state_error(const std::string& error_message, const std::string& log_file);

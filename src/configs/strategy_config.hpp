@@ -207,6 +207,15 @@ struct StrategyConfig {
     int ratio_display_precision;                     // Decimal places for ratios (e.g., rr_ratio)
     int factor_display_precision;                    // Decimal places for factors (e.g., multipliers)
     int atr_volume_display_precision;                // Decimal places for ATR and volume values
+
+    // ========================================================================
+    // SIGNAL AND POSITION LABEL CONFIGURATION
+    // ========================================================================
+
+    std::string signal_buy_string;                   // String label for buy signals
+    std::string signal_sell_string;                  // String label for sell signals
+    std::string position_long_string;                 // String label for long positions
+    std::string position_short_string;                // String label for short positions
 };
 
 #endif // STRATEGY_CONFIG_HPP

@@ -222,6 +222,16 @@ strategy.ratio_display_precision,2
 strategy.factor_display_precision,3
 strategy.atr_volume_display_precision,3
 
+# ========================================================================
+# SIGNAL AND POSITION LABEL CONFIGURATION
+# ========================================================================
+# String labels for trading signals and position sides
+
+strategy.signal_buy_string,buy
+strategy.signal_sell_string,sell
+strategy.position_long_string,LONG
+strategy.position_short_string,SHORT
+
 # Risk precision configuration
 risk.percentage_display_precision,1
 risk.exposure_calculation_precision,2

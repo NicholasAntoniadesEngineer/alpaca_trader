@@ -56,10 +56,10 @@ void OrderExecutionEngine::execute_trade(const ProcessedData& data, int current_
     TradingLogs::log_debug_position_data(current_position_quantity, 0.0, current_position_quantity, is_long, is_short);
 
     if (signal_decision.buy) {
-        TradingLogs::log_signal_triggered(SIGNAL_BUY, true);
+        TradingLogs::log_signal_triggered(config.strategy.signal_buy_string, true);
         execute_order(OrderSide::Buy, data, current_position_quantity, sizing);
     } else if (signal_decision.sell) {
-        TradingLogs::log_signal_triggered(SIGNAL_SELL, true);
+        TradingLogs::log_signal_triggered(config.strategy.signal_sell_string, true);
         if (current_position_quantity == 0) {
             if (!api_manager.get_account_info().empty()) {
                 TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
@@ -97,13 +97,13 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
     
     if (should_close_opposite_position(side, current_position_quantity)) {
         if (!close_opposite_position(side, current_position_quantity)) {
-            TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
+            TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
             return;
         }
     }
     
     if (!can_execute_new_position(current_position_quantity)) {
-        TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL);
+        TradingLogs::log_position_limits_reached((side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
         return;
     }
     
@@ -120,7 +120,7 @@ void OrderExecutionEngine::execute_order(OrderSide side, const ProcessedData& da
 
 // Execute bracket order with proper validation
 void OrderExecutionEngine::execute_bracket_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing, const ExitTargets& targets) {
-    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
+    std::string side_str = (side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
     
     // Use consolidated logging instead of multiple separate tables
     Logging::ComprehensiveOrderExecutionRequest order_request("Bracket Order", side_str, sizing.quantity, 
@@ -186,7 +186,7 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide side, const Processed
 
 // Execute regular market order for closing positions
 void OrderExecutionEngine::execute_market_order(OrderSide side, const ProcessedData& data, const PositionSizing& sizing) {
-    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
+    std::string side_str = (side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
     
     Logging::ComprehensiveOrderExecutionRequest order_request("Market Order", side_str, sizing.quantity,
                                                     data.curr.close_price, data.atr, data.pos_details.position_quantity,
@@ -228,8 +228,8 @@ bool OrderExecutionEngine::should_close_opposite_position(OrderSide side, int cu
 }
 
 bool OrderExecutionEngine::close_opposite_position(OrderSide side, int current_position_quantity) {
-    std::string side_str = (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL;
-    std::string opposite_side_str = (side == OrderSide::Buy) ? POSITION_SHORT : POSITION_LONG;
+    std::string side_str = (side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
+    std::string opposite_side_str = (side == OrderSide::Buy) ? config.strategy.position_short_string : config.strategy.position_long_string;
     
     TradingLogs::log_position_closure("Closing " + opposite_side_str + " position first for " + side_str + " signal", current_position_quantity);
     
@@ -341,7 +341,7 @@ ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide side, const P
     }
     
     return compute_exit_targets(ExitTargetsRequest(
-        (side == OrderSide::Buy) ? SIGNAL_BUY : SIGNAL_SELL, 
+        (side == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string, 
         entry_price, 
         sizing.risk_amount, 
         config.strategy
@@ -434,7 +434,7 @@ void OrderExecutionEngine::handle_market_close_positions(const ProcessedData& da
     
     TradingLogs::log_market_close_warning(market_close_grace_period_minutes);
     
-    std::string side = (current_position_quantity > 0) ? SIGNAL_SELL : SIGNAL_BUY;
+    std::string side = (current_position_quantity > 0) ? config.strategy.signal_sell_string : config.strategy.signal_buy_string;
     TradingLogs::log_market_close_position_closure(current_position_quantity, config.trading_mode.primary_symbol, side);
     
     try {

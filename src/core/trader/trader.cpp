@@ -7,6 +7,7 @@
 #include "core/trader/data/market_processing.hpp"
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -20,7 +21,11 @@ TradingOrchestrator::TradingOrchestrator(const TradingOrchestratorConstructionPa
       data_fetcher(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config),
       connectivity_manager(construction_params.connectivity_manager_ref) {
     
-    runtime.initial_equity = initialize_trading_session();
+    double fetched_initial_equity = initialize_trading_session();
+    if (fetched_initial_equity <= 0.0 || !std::isfinite(fetched_initial_equity)) {
+        throw std::runtime_error("Failed to initialize trading session - invalid initial equity: " + std::to_string(fetched_initial_equity));
+    }
+    runtime.initial_equity = fetched_initial_equity;
 }
 
 
@@ -76,7 +81,7 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Validate trading permissions
-                if (!risk_manager.validate_trading_permissions(ProcessedData{}, account.equity)) {
+                if (!risk_manager.validate_trading_permissions(ProcessedData{}, account.equity, runtime.initial_equity)) {
                     trading_engine.handle_trading_halt("Trading conditions not met");
                     continue;
                 }
@@ -148,10 +153,10 @@ void TradingOrchestrator::countdown_to_next_cycle() {
     TradingLogs::end_inline_status();
 }
 
-void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& sync_config_param) {
+void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& sync_configuration) {
     
     // Initialize data synchronization references with the provided configuration
-    data_sync = DataSyncReferences(sync_config_param);
+    data_sync = DataSyncReferences(sync_configuration);
     
     // Set up MarketDataFetcher with sync state using safe conversion into persistent storage
     fetcher_sync_state = data_sync.to_market_data_sync_state();
