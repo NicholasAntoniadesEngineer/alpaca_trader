@@ -40,8 +40,6 @@ void log_startup_information(const SystemModules& modules, const AlpacaTrader::C
     // Log API endpoints table
     StartupLogs::log_api_endpoints_table(config);
     
-    // Note: Main startup logging is handled separately to avoid duplication
-    
     // Log account information if available
     if (modules.portfolio_manager) {
         StartupLogs::log_account_overview(*modules.portfolio_manager);
@@ -156,7 +154,10 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     
     // Start all threads
     try {
-        Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules);
+        if (!system_state.logging_context) {
+            throw std::runtime_error("Logging context not initialized - system must fail without context");
+        }
+        Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules, *system_state.logging_context);
     } catch (const std::exception& exception_error) {
         log_message(std::string("ERROR: Error starting threads: ") + exception_error.what(), "");
         throw;
@@ -169,8 +170,6 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
         log_message(std::string("ERROR: Failed to set thread priorities: ") + exception_error.what(), "");
         throw;
     }
-    
-    // Note: Main startup logging moved to run_until_shutdown to avoid conflicts with threads
     
     // Store thread infos for monitoring
     system_state.thread_infos = std::move(thread_infos);

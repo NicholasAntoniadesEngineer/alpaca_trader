@@ -40,8 +40,8 @@ void MarketGateThread::execute_market_gate_monitoring_loop() {
         try {
             last_within_trading_hours = api_manager.is_within_trading_hours(trading_symbol);
             connectivity_manager.report_success();
-        } catch (const std::exception& e) {
-            connectivity_manager.report_failure(e.what());
+        } catch (const std::exception& trading_hours_check_exception_error) {
+            connectivity_manager.report_failure(trading_hours_check_exception_error.what());
             last_within_trading_hours = false;
         } catch (...) {
             connectivity_manager.report_failure("Unknown error in is_within_trading_hours");
@@ -99,8 +99,8 @@ void MarketGateThread::check_and_update_fetch_window(bool& last_within_trading_h
     try {
         currently_within_trading_hours = api_manager.is_within_trading_hours(trading_symbol);
         connectivity_manager.report_success();
-    } catch (const std::exception& e) {
-        connectivity_manager.report_failure(e.what());
+    } catch (const std::exception& trading_hours_status_exception_error) {
+        connectivity_manager.report_failure(trading_hours_status_exception_error.what());
         currently_within_trading_hours = false;
     } catch (...) {
         connectivity_manager.report_failure("Unknown error in trading hours check");

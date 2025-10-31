@@ -15,11 +15,11 @@ std::vector<Bar> BarsDataManager::fetch_bars_data(const std::string& symbol) con
     try {
         BarRequest bar_request(symbol, config.strategy.bars_to_fetch_for_calculations);
         return api_manager.get_recent_bars(bar_request);
-    } catch (const std::exception& e) {
+    } catch (const std::exception& bars_fetch_exception_error) {
         MarketDataLogs::log_market_data_failure_summary(
             symbol,
             "API Exception",
-            e.what(),
+            bars_fetch_exception_error.what(),
             0,
             config.logging.log_file
         );
@@ -163,8 +163,8 @@ std::vector<Bar> BarsDataManager::fetch_historical_market_data(const MarketDataF
         auto historical_bars = api_manager.get_recent_bars(bar_request);
         MarketDataLogs::log_market_data_result_table("Bars fetched", true, historical_bars.size(), config.logging.log_file);
         return historical_bars;
-    } catch (const std::exception& e) {
-        MarketDataLogs::log_market_data_failure_summary(fetch_request.symbol, "API Exception", e.what(), 0, config.logging.log_file);
+    } catch (const std::exception& historical_bars_exception_error) {
+        MarketDataLogs::log_market_data_failure_summary(fetch_request.symbol, "API Exception", historical_bars_exception_error.what(), 0, config.logging.log_file);
         return {};
     }
 }

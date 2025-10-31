@@ -52,9 +52,9 @@ double AccountManager::fetch_account_equity() const {
         }
         
         throw std::runtime_error("Account equity not found in API response - response may be malformed");
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message("Account equity fetch failed: " + std::string(e.what()), logging.log_file);
-        throw std::runtime_error("Failed to fetch account equity: " + std::string(e.what()));
+    } catch (const std::exception& account_equity_exception_error) {
+        AlpacaTrader::Logging::log_message("Account equity fetch failed: " + std::string(account_equity_exception_error.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch account equity: " + std::string(account_equity_exception_error.what()));
     }
 }
 
@@ -73,9 +73,9 @@ double AccountManager::fetch_buying_power() const {
         }
         
         throw std::runtime_error("Buying power not found in API response");
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message("Buying power fetch failed: " + std::string(e.what()), logging.log_file);
-        throw std::runtime_error("Failed to fetch buying power: " + std::string(e.what()));
+    } catch (const std::exception& buying_power_exception_error) {
+        AlpacaTrader::Logging::log_message("Buying power fetch failed: " + std::string(buying_power_exception_error.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch buying power: " + std::string(buying_power_exception_error.what()));
     }
 }
 
@@ -127,9 +127,9 @@ PositionDetails AccountManager::fetch_position_details(const SymbolRequest& req_
         details.unrealized_pl = 0.0;
         return details;
         
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message("Position details fetch failed: " + std::string(e.what()), logging.log_file);
-        throw std::runtime_error("Failed to fetch position details: " + std::string(e.what()));
+    } catch (const std::exception& position_details_exception_error) {
+        AlpacaTrader::Logging::log_message("Position details fetch failed: " + std::string(position_details_exception_error.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch position details: " + std::string(position_details_exception_error.what()));
     }
 }
 
@@ -156,9 +156,9 @@ int AccountManager::fetch_open_orders_count(const SymbolRequest& req_sym) const 
         
         return count;
         
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message("Open orders count fetch failed: " + std::string(e.what()), logging.log_file);
-        throw std::runtime_error("Failed to fetch open orders count: " + std::string(e.what()));
+    } catch (const std::exception& open_orders_exception_error) {
+        AlpacaTrader::Logging::log_message("Open orders count fetch failed: " + std::string(open_orders_exception_error.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch open orders count: " + std::string(open_orders_exception_error.what()));
     }
 }
 
@@ -239,9 +239,9 @@ AccountManager::AccountInfo AccountManager::fetch_account_info() const {
         
         return account_info_result;
         
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message("Account info fetch failed: " + std::string(e.what()), logging.log_file);
-        throw std::runtime_error("Failed to fetch account info: " + std::string(e.what()));
+    } catch (const std::exception& account_info_exception_error) {
+        AlpacaTrader::Logging::log_message("Account info fetch failed: " + std::string(account_info_exception_error.what()), logging.log_file);
+        throw std::runtime_error("Failed to fetch account info: " + std::string(account_info_exception_error.what()));
     }
 }
 

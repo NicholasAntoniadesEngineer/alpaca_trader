@@ -15,7 +15,11 @@
 
 int main() {
     try {
-        // Load system configuration
+        // Initialize minimal logging context early - required before any logging calls
+        auto early_logging_context = std::make_shared<AlpacaTrader::Logging::LoggingContext>();
+        AlpacaTrader::Logging::set_logging_context(*early_logging_context);
+        
+        // Load system configuration (may call log_message during loading)
         AlpacaTrader::Config::SystemConfig initial_config;
         if (int result = load_system_config(initial_config)) {
             AlpacaTrader::Logging::log_message(std::string("ERROR: Config load failed with result: ") + std::to_string(result), "");
@@ -25,9 +29,8 @@ int main() {
         // Create system state
         SystemState system_state(initial_config);
         
-        // Initialize logging context
-        system_state.logging_context = std::make_shared<AlpacaTrader::Logging::LoggingContext>();
-        AlpacaTrader::Logging::set_logging_context(*system_state.logging_context);
+        // Transfer logging context to system state
+        system_state.logging_context = early_logging_context;
         
         // Initialize application foundation (logging, validation)
         auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);

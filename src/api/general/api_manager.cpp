@@ -91,7 +91,7 @@ Core::QuoteData ApiManager::get_realtime_quotes(const std::string& symbol) const
 
 bool ApiManager::is_market_open(const std::string& symbol) const {
     if (symbol.empty()) {
-        return get_provider(Config::ApiProvider::ALPACA_TRADING)->is_market_open();
+        throw std::runtime_error("Symbol is required for market open check");
     }
     
     Config::ApiProvider provider = determine_provider_for_symbol(symbol);
@@ -100,7 +100,7 @@ bool ApiManager::is_market_open(const std::string& symbol) const {
 
 bool ApiManager::is_within_trading_hours(const std::string& symbol) const {
     if (symbol.empty()) {
-        return get_provider(Config::ApiProvider::ALPACA_TRADING)->is_within_trading_hours();
+        throw std::runtime_error("Symbol is required for trading hours check");
     }
     
     Config::ApiProvider provider = determine_provider_for_symbol(symbol);

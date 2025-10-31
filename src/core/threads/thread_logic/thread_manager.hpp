@@ -53,7 +53,7 @@ struct ThreadManagerState {
 class Manager {
 public:
     // Thread lifecycle management
-    static void start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules);
+    static void start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules, AlpacaTrader::Logging::LoggingContext& logging_context);
     static void shutdown_threads(ThreadManagerState& manager_state);
     
     // Thread priority management

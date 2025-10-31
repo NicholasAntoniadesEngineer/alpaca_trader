@@ -13,7 +13,7 @@ using AlpacaTrader::Logging::TradingLogs;
 
 OrderExecutionEngine::OrderExecutionEngine(const OrderExecutionEngineConstructionParams& construction_params)
     : api_manager(construction_params.api_manager_ref), account_manager(construction_params.account_manager_ref), 
-      config(construction_params.system_config), data_sync(construction_params.data_sync_ref), 
+      config(construction_params.system_config), data_sync_ptr(construction_params.data_sync_ptr), 
       system_monitor(construction_params.system_monitor_ref) {}
 
 void OrderExecutionEngine::execute_trade(const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input, const SignalDecision& signal_decision_input) {
@@ -185,7 +185,9 @@ void OrderExecutionEngine::execute_bracket_order(OrderSide order_side_input, con
             }
         }
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Order execution failed: " + std::string(exception_error.what()));
+        TradingLogs::log_market_status(false, "Order execution failed (execute_order): " + std::string(exception_error.what()));
+    } catch (...) {
+        TradingLogs::log_market_status(false, "Unknown exception in order execution (execute_order)");
     }
 }
 
@@ -356,7 +358,7 @@ ExitTargets OrderExecutionEngine::calculate_exit_targets(OrderSide order_side_in
 // Order timing methods for wash trade prevention
 bool OrderExecutionEngine::can_place_order_now() const {
     // Validate data_sync is properly initialized
-    if (!data_sync.last_order_timestamp) {
+    if (!data_sync_ptr || !data_sync_ptr->last_order_timestamp) {
         TradingLogs::log_market_status(false, "Data sync not initialized - cannot check wash trade prevention");
         return false;
     }
@@ -364,7 +366,7 @@ bool OrderExecutionEngine::can_place_order_now() const {
     auto now = std::chrono::steady_clock::now();
 
     // Read the timestamp once to avoid race condition
-    auto last_order = data_sync.last_order_timestamp->load();
+    auto last_order = data_sync_ptr->last_order_timestamp->load();
 
     // Check if timestamp is properly initialized (not default-constructed)
     if (last_order == std::chrono::steady_clock::time_point{}) {
@@ -389,12 +391,16 @@ bool OrderExecutionEngine::can_place_order_now() const {
 
 void OrderExecutionEngine::update_last_order_timestamp() {
     // Validate data_sync is properly initialized
-    if (!data_sync.last_order_timestamp) {
+    if (!data_sync_ptr || !data_sync_ptr->last_order_timestamp) {
         TradingLogs::log_market_status(false, "Data sync not initialized - cannot update last order timestamp");
         return;
     }
 
-    data_sync.last_order_timestamp->store(std::chrono::steady_clock::now());
+    data_sync_ptr->last_order_timestamp->store(std::chrono::steady_clock::now());
+}
+
+void OrderExecutionEngine::set_data_sync_reference(DataSyncReferences* data_sync_reference) {
+    data_sync_ptr = data_sync_reference;
 }
 
 bool OrderExecutionEngine::is_flat_position(int position_quantity) const {

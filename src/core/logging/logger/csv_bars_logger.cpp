@@ -23,8 +23,8 @@ CSVBarsLogger::CSVBarsLogger(const std::string& log_file_path) : file_path(log_f
 
         initialized = true;
         write_header();
-    } catch (const std::exception& e) {
-        AlpacaTrader::Logging::log_message(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + e.what(), "");
+    } catch (const std::exception& csv_bars_logger_exception_error) {
+        AlpacaTrader::Logging::log_message(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + csv_bars_logger_exception_error.what(), "");
         throw; // Re-throw to ensure system fails - no defaults allowed
     } catch (...) {
         AlpacaTrader::Logging::log_message("CRITICAL ERROR: Unknown error initializing CSV bars logger", "");

@@ -48,8 +48,8 @@ void MarketDataFetcher::wait_for_fresh_data(MarketDataSyncState& sync_state) {
         MarketDataLogs::log_data_available(config.logging.log_file);
         mark_data_as_consumed(sync_state);
         
-    } catch (const std::exception& e) {
-        MarketDataLogs::log_data_exception("Exception in wait_for_fresh_data: " + std::string(e.what()), config.logging.log_file);
+    } catch (const std::exception& exception_error) {
+        MarketDataLogs::log_data_exception("Exception in wait_for_fresh_data: " + std::string(exception_error.what()), config.logging.log_file);
     } catch (...) {
         MarketDataLogs::log_data_exception("Unknown exception in wait_for_fresh_data", config.logging.log_file);
     }

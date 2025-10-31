@@ -17,10 +17,11 @@ TradingEngine::TradingEngine(const TradingEngineConstructionParams& construction
       api_manager(construction_params.api_manager_ref),
       risk_manager(construction_params.system_config),
       signal_processor(construction_params.system_config),
-      order_engine(OrderExecutionEngineConstructionParams(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config, data_sync, construction_params.system_monitor_ref)),
+      order_engine(OrderExecutionEngineConstructionParams(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config, nullptr, construction_params.system_monitor_ref)),
       data_fetcher(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config),
       system_monitor(construction_params.system_monitor_ref),
-      connectivity_manager(construction_params.connectivity_manager_ref) {}
+      connectivity_manager(construction_params.connectivity_manager_ref),
+      data_sync_ptr(nullptr) {}
 
 void TradingEngine::execute_trading_decision(const ProcessedData& processed_data_input, double account_equity) {
     // Input validation
@@ -149,6 +150,20 @@ void TradingEngine::check_and_execute_profit_taking(const ProfitTakingRequest& p
 
 void TradingEngine::handle_market_close_positions(const ProcessedData& processed_data_for_close) {
     order_engine.handle_market_close_positions(processed_data_for_close);
+}
+
+void TradingEngine::setup_data_synchronization(const DataSyncConfig& sync_configuration) {
+    if (data_sync_ptr) {
+        throw std::runtime_error("Data synchronization already initialized");
+    }
+    
+    data_sync_ptr = std::make_unique<DataSyncReferences>(sync_configuration);
+    order_engine.set_data_sync_reference(data_sync_ptr.get());
+    
+    if (!data_sync_ptr->mtx || !data_sync_ptr->cv || !data_sync_ptr->market || !data_sync_ptr->account || 
+        !data_sync_ptr->has_market || !data_sync_ptr->has_account || !data_sync_ptr->running || !data_sync_ptr->allow_fetch) {
+        throw std::runtime_error("Invalid data sync configuration: one or more required pointers are null");
+    }
 }
 
 } // namespace Core

@@ -91,7 +91,7 @@ void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thre
                 unsigned long iterations = thread_info.iterations.load();
                 total_iterations += iterations;
                 if (iterations > 0) active_threads++;
-            } catch (const std::exception& e) {
+            } catch (const std::exception& thread_info_exception_error) {
                 // Skip invalid thread info and continue
                 continue;
             }
@@ -136,9 +136,9 @@ void ThreadLogs::log_thread_monitoring_stats(const std::vector<ThreadInfo>& thre
 
         LOG_MESSAGE_BAR();
         
-    } catch (const std::exception& e) {
+    } catch (const std::exception& thread_status_exception_error) {
         // Log error and continue
-        log_message("ERROR in thread monitoring stats: " + std::string(e.what()), "trading_system.log");
+        log_message("ERROR in thread monitoring stats: " + std::string(thread_status_exception_error.what()), "trading_system.log");
     } catch (...) {
         // Log unknown error and continue
         log_message("Unknown error in thread monitoring stats", "trading_system.log");

@@ -418,10 +418,10 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
                     sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
                 );
             }
-        } catch (const std::exception& e) {
-            TradingLogs::log_market_data_result_table("CSV logging error in position sizing: " + std::string(e.what()), false, 0);
+        } catch (const std::exception& exception_error) {
+            TradingLogs::log_market_data_result_table("CSV logging error in position sizing (calculate_position_sizing): " + std::string(exception_error.what()), false, 0);
         } catch (...) {
-            TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing", false, 0);
+            TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing (calculate_position_sizing)", false, 0);
         }
         return {sizing, SignalDecision{}};
     }
@@ -447,10 +447,10 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
                 sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
             );
         }
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("CSV logging error in successful position sizing: " + std::string(e.what()), false, 0);
+    } catch (const std::exception& exception_error) {
+        TradingLogs::log_market_data_result_table("CSV logging error in successful position sizing (process_position_sizing): " + std::string(exception_error.what()), false, 0);
     } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing", false, 0);
+        TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing (process_position_sizing)", false, 0);
     }
 
     return {sizing, signal_decision_result};

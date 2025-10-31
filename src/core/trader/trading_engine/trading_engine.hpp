@@ -27,6 +27,7 @@ public:
     void execute_trading_decision(const ProcessedData& processed_data_input, double account_equity);
     void handle_trading_halt(const std::string& reason);
     void handle_market_close_positions(const ProcessedData& processed_data_for_close);
+    void setup_data_synchronization(const DataSyncConfig& sync_configuration);
 
 private:
     // Core dependencies
@@ -40,8 +41,8 @@ private:
     Monitoring::SystemMonitor& system_monitor;
     ConnectivityManager& connectivity_manager;
     
-    // Data synchronization references
-    DataSyncReferences data_sync;
+    // Data synchronization references - initialized via setup_data_synchronization
+    std::unique_ptr<DataSyncReferences> data_sync_ptr;
     
     // Trading decision methods
     void process_signal_analysis(const ProcessedData& processed_data_input);

@@ -12,17 +12,31 @@ namespace Core {
 
 // Market and account data synchronization state
 struct MarketDataSyncState {
-    std::mutex* mtx = nullptr;
-    std::condition_variable* cv = nullptr;
-    MarketSnapshot* market = nullptr;
-    AccountSnapshot* account = nullptr;
-    std::atomic<bool>* has_market = nullptr;
-    std::atomic<bool>* has_account = nullptr;
-    std::atomic<bool>* running = nullptr;
-    std::atomic<bool>* allow_fetch = nullptr;
-    std::atomic<std::chrono::steady_clock::time_point>* market_data_timestamp = nullptr;
-    std::atomic<bool>* market_data_fresh = nullptr;
-    std::atomic<std::chrono::steady_clock::time_point>* last_order_timestamp = nullptr;
+    std::mutex* mtx;
+    std::condition_variable* cv;
+    MarketSnapshot* market;
+    AccountSnapshot* account;
+    std::atomic<bool>* has_market;
+    std::atomic<bool>* has_account;
+    std::atomic<bool>* running;
+    std::atomic<bool>* allow_fetch;
+    std::atomic<std::chrono::steady_clock::time_point>* market_data_timestamp;
+    std::atomic<bool>* market_data_fresh;
+    std::atomic<std::chrono::steady_clock::time_point>* last_order_timestamp;
+    
+    // No default constructor - must be initialized explicitly
+    MarketDataSyncState() = delete;
+    
+    // Member-wise constructor for manual initialization
+    MarketDataSyncState(std::mutex* mtx_ptr, std::condition_variable* cv_ptr, MarketSnapshot* market_ptr, AccountSnapshot* account_ptr,
+                       std::atomic<bool>* has_market_ptr, std::atomic<bool>* has_account_ptr, std::atomic<bool>* running_ptr, std::atomic<bool>* allow_fetch_ptr,
+                       std::atomic<std::chrono::steady_clock::time_point>* market_data_timestamp_ptr, std::atomic<bool>* market_data_fresh_ptr,
+                       std::atomic<std::chrono::steady_clock::time_point>* last_order_timestamp_ptr)
+        : mtx(mtx_ptr), cv(cv_ptr), market(market_ptr), account(account_ptr),
+          has_market(has_market_ptr), has_account(has_account_ptr),
+          running(running_ptr), allow_fetch(allow_fetch_ptr),
+          market_data_timestamp(market_data_timestamp_ptr), market_data_fresh(market_data_fresh_ptr),
+          last_order_timestamp(last_order_timestamp_ptr) {}
 };
 
 // Data synchronization configuration for TradingOrchestrator
@@ -54,20 +68,20 @@ struct DataSyncConfig {
 
 // Data synchronization references for TradingEngine
 struct DataSyncReferences {
-    std::mutex* mtx = nullptr;
-    std::condition_variable* cv = nullptr;
-    MarketSnapshot* market = nullptr;
-    AccountSnapshot* account = nullptr;
-    std::atomic<bool>* has_market = nullptr;
-    std::atomic<bool>* has_account = nullptr;
-    std::atomic<bool>* running = nullptr;
-    std::atomic<bool>* allow_fetch = nullptr;
-    std::atomic<std::chrono::steady_clock::time_point>* market_data_timestamp = nullptr;
-    std::atomic<bool>* market_data_fresh = nullptr;
-    std::atomic<std::chrono::steady_clock::time_point>* last_order_timestamp = nullptr;
+    std::mutex* mtx;
+    std::condition_variable* cv;
+    MarketSnapshot* market;
+    AccountSnapshot* account;
+    std::atomic<bool>* has_market;
+    std::atomic<bool>* has_account;
+    std::atomic<bool>* running;
+    std::atomic<bool>* allow_fetch;
+    std::atomic<std::chrono::steady_clock::time_point>* market_data_timestamp;
+    std::atomic<bool>* market_data_fresh;
+    std::atomic<std::chrono::steady_clock::time_point>* last_order_timestamp;
     
-    // Default constructor
-    DataSyncReferences() = default;
+    // No default constructor - must be initialized explicitly
+    DataSyncReferences() = delete;
     
     // Constructor for easy initialization from DataSyncConfig
     DataSyncReferences(const DataSyncConfig& config)
@@ -76,27 +90,46 @@ struct DataSyncReferences {
           running(&config.running), allow_fetch(&config.allow_fetch),
           market_data_timestamp(&config.market_data_timestamp), market_data_fresh(&config.market_data_fresh),
           last_order_timestamp(&config.last_order_timestamp) {
-        // Validate that critical pointers are properly initialized
+        // Validate that all critical pointers are properly initialized
+        if (mtx == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: mtx cannot be null");
+        }
+        if (cv == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: cv cannot be null");
+        }
+        if (market == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: market cannot be null");
+        }
+        if (account == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: account cannot be null");
+        }
+        if (has_market == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: has_market cannot be null");
+        }
+        if (has_account == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: has_account cannot be null");
+        }
+        if (running == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: running cannot be null");
+        }
+        if (allow_fetch == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: allow_fetch cannot be null");
+        }
         if (market_data_timestamp == nullptr) {
             throw std::invalid_argument("DataSyncReferences: market_data_timestamp cannot be null");
         }
+        if (market_data_fresh == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: market_data_fresh cannot be null");
+        }
+        if (last_order_timestamp == nullptr) {
+            throw std::invalid_argument("DataSyncReferences: last_order_timestamp cannot be null");
+        }
     }
     
-    // Safe conversion to MarketDataSyncState (structures have identical layout)
+    // Safe conversion to MarketDataSyncState using member-wise copy
     MarketDataSyncState to_market_data_sync_state() const {
-        MarketDataSyncState sync_state;
-        sync_state.mtx = mtx;
-        sync_state.cv = cv;
-        sync_state.market = market;
-        sync_state.account = account;
-        sync_state.has_market = has_market;
-        sync_state.has_account = has_account;
-        sync_state.running = running;
-        sync_state.allow_fetch = allow_fetch;
-        sync_state.market_data_timestamp = market_data_timestamp;
-        sync_state.market_data_fresh = market_data_fresh;
-        sync_state.last_order_timestamp = last_order_timestamp;
-        return sync_state;
+        return MarketDataSyncState(mtx, cv, market, account, has_market, has_account, running, allow_fetch,
+                                  market_data_timestamp, market_data_fresh, last_order_timestamp);
     }
 };
 

@@ -2,6 +2,7 @@
 #include "platform/thread_control.hpp"
 #include "core/logging/logs/startup_logs.hpp"
 #include "core/logging/logs/thread_logs.hpp"
+#include "core/logging/logger/async_logger.hpp"
 #include "core/system/system_threads.hpp"
 #include "core/system/system_modules.hpp"
 #include "thread_registry.hpp"
@@ -11,13 +12,15 @@ using ThreadSystem::Platform::ThreadControl;
 namespace AlpacaTrader {
 namespace Core {
 
-void Manager::start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules) 
+void Manager::start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules, AlpacaTrader::Logging::LoggingContext& logging_context) 
 {
     manager_state.clear_all_data();
    
     for (const auto& thread_definition : thread_definitions) {
         // Capture thread_definition by value to avoid dangling reference
-        manager_state.add_active_thread(std::thread([thread_definition, &modules]() {
+        // Capture logging_context reference to initialize thread-local storage
+        manager_state.add_active_thread(std::thread([thread_definition, &modules, &logging_context]() {
+            AlpacaTrader::Logging::set_logging_context(logging_context);
             thread_definition.get_function(modules);
         }));
     }

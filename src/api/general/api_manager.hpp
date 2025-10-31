@@ -36,8 +36,8 @@ public:
     double get_current_price(const std::string& symbol) const;
     Core::QuoteData get_realtime_quotes(const std::string& symbol) const;
     
-    bool is_market_open(const std::string& symbol = "") const;
-    bool is_within_trading_hours(const std::string& symbol = "") const;
+    bool is_market_open(const std::string& symbol) const;
+    bool is_within_trading_hours(const std::string& symbol) const;
     
     std::string get_account_info() const;
     std::string get_positions() const;

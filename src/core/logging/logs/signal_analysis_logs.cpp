@@ -55,8 +55,8 @@ void SignalAnalysisLogs::log_signal_analysis_csv_data(const AlpacaTrader::Core::
             );
         }
 
-    } catch (const std::exception& e) {
-        TradingLogs::log_market_data_result_table("CSV logging error in signal analysis: " + std::string(e.what()), false, 0);
+    } catch (const std::exception& signal_analysis_exception_error) {
+        TradingLogs::log_market_data_result_table("CSV logging error in signal analysis: " + std::string(signal_analysis_exception_error.what()), false, 0);
     } catch (...) {
         TradingLogs::log_market_data_result_table("Unknown CSV logging error in signal analysis", false, 0);
     }

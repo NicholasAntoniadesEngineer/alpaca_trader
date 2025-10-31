@@ -35,7 +35,10 @@ double TradingOrchestrator::initialize_trading_session() {
 
 void TradingOrchestrator::execute_trading_loop() {
     try {
-        while (data_sync.running && data_sync.running->load()) {
+        if (!data_sync.has_value()) {
+            throw std::runtime_error("Data synchronization not initialized - must call setup_data_synchronization first");
+        }
+        while (data_sync->running && data_sync->running->load()) {
             try {
                 // Check connectivity status
                 if (!connectivity_manager.check_connectivity_status()) {
@@ -47,9 +50,9 @@ void TradingOrchestrator::execute_trading_loop() {
                 }
 
                 // Wait for fresh market data to be available and check if we should continue running
-                MarketDataSyncState sync_state = data_sync.to_market_data_sync_state();
+                MarketDataSyncState sync_state = data_sync->to_market_data_sync_state();
                 data_fetcher.wait_for_fresh_data(sync_state);
-                if (!data_sync.running->load()) break;
+                if (!data_sync->running->load()) break;
 
                 // Fetch current market and account data
                 auto market_and_account_snapshots = data_fetcher.fetch_current_snapshots();
@@ -103,19 +106,19 @@ void TradingOrchestrator::execute_trading_loop() {
                 countdown_to_next_cycle();
 
             } catch (const std::exception& exception_error) {
-                TradingLogs::log_market_data_result_table("Exception in trading cycle: " + std::string(exception_error.what()), false, 0);
-                int recovery_sleep_secs = config.timing.exception_recovery_sleep_seconds;
-                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_secs));
+                TradingLogs::log_market_data_result_table("Exception in trading cycle (execute_trading_loop): " + std::string(exception_error.what()), false, 0);
+                int recovery_sleep_seconds = config.timing.exception_recovery_sleep_seconds;
+                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_seconds));
             } catch (...) {
-                TradingLogs::log_market_data_result_table("Unknown exception in trading cycle", false, 0);
-                int recovery_sleep_secs = config.timing.exception_recovery_sleep_seconds;
-                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_secs));
+                TradingLogs::log_market_data_result_table("Unknown exception in trading cycle (execute_trading_loop)", false, 0);
+                int recovery_sleep_seconds = config.timing.exception_recovery_sleep_seconds;
+                std::this_thread::sleep_for(std::chrono::seconds(recovery_sleep_seconds));
             }
         }
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_data_result_table("Critical exception in trading loop: " + std::string(exception_error.what()), false, 0);
+        TradingLogs::log_market_data_result_table("Critical exception in trading loop (execute_trading_loop outer): " + std::string(exception_error.what()), false, 0);
     } catch (...) {
-        TradingLogs::log_market_data_result_table("Critical unknown exception in trading loop", false, 0);
+        TradingLogs::log_market_data_result_table("Critical unknown exception in trading loop (execute_trading_loop outer)", false, 0);
     }
 }
 
@@ -125,7 +128,7 @@ void TradingOrchestrator::countdown_to_next_cycle() {
 
     // If countdown refresh interval is 0 or greater than sleep_secs, just sleep once
     if (countdown_refresh_interval <= 0 || countdown_refresh_interval >= sleep_secs) {
-        if (data_sync.running->load()) {
+        if (data_sync->running->load()) {
             std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
         }
         return;
@@ -135,18 +138,18 @@ void TradingOrchestrator::countdown_to_next_cycle() {
     int num_updates = sleep_secs / countdown_refresh_interval;
     int remaining_secs = sleep_secs;
 
-    for (int update_index = 0; update_index < num_updates && data_sync.running->load(); ++update_index) {
+    for (int update_index = 0; update_index < num_updates && data_sync->running->load(); ++update_index) {
         int display_secs = std::min(remaining_secs, countdown_refresh_interval);
         TradingLogs::log_inline_next_loop(display_secs);
 
-        if (data_sync.running->load()) {
+        if (data_sync->running->load()) {
             std::this_thread::sleep_for(std::chrono::seconds(countdown_refresh_interval));
             remaining_secs -= countdown_refresh_interval;
         }
     }
 
     // Sleep any remaining time without countdown display
-    if (remaining_secs > 0 && data_sync.running->load()) {
+    if (remaining_secs > 0 && data_sync->running->load()) {
         std::this_thread::sleep_for(std::chrono::seconds(remaining_secs));
     }
 
@@ -159,12 +162,15 @@ void TradingOrchestrator::setup_data_synchronization(const DataSyncConfig& sync_
     data_sync = DataSyncReferences(sync_configuration);
     
     // Set up MarketDataFetcher with sync state using safe conversion into persistent storage
-    fetcher_sync_state = data_sync.to_market_data_sync_state();
-    data_fetcher.set_sync_state_references(fetcher_sync_state);
+    fetcher_sync_state = data_sync->to_market_data_sync_state();
+    data_fetcher.set_sync_state_references(*fetcher_sync_state);
+    
+    // Set up TradingEngine's data synchronization
+    trading_engine.setup_data_synchronization(sync_configuration);
     
     // Validate that all critical synchronization pointers are properly initialized
-    if (!(data_sync.mtx && data_sync.cv && data_sync.market && data_sync.account && 
-          data_sync.has_market && data_sync.has_account && data_sync.running && data_sync.allow_fetch)) {
+    if (!(data_sync->mtx && data_sync->cv && data_sync->market && data_sync->account && 
+          data_sync->has_market && data_sync->has_account && data_sync->running && data_sync->allow_fetch)) {
         throw std::runtime_error("Invalid data sync configuration: one or more required pointers are null");
     }
 }

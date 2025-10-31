@@ -44,14 +44,14 @@ struct OrderExecutionEngineConstructionParams {
     API::ApiManager& api_manager_ref;
     AccountManager& account_manager_ref;
     const SystemConfig& system_config;
-    DataSyncReferences& data_sync_ref;
+    DataSyncReferences* data_sync_ptr;
     Monitoring::SystemMonitor& system_monitor_ref;
     
     OrderExecutionEngineConstructionParams(API::ApiManager& api_manager, AccountManager& account_manager,
-                                          const SystemConfig& config, DataSyncReferences& data_sync,
+                                          const SystemConfig& config, DataSyncReferences* data_sync_pointer,
                                           Monitoring::SystemMonitor& system_monitor)
         : api_manager_ref(api_manager), account_manager_ref(account_manager), system_config(config),
-          data_sync_ref(data_sync), system_monitor_ref(system_monitor) {}
+          data_sync_ptr(data_sync_pointer), system_monitor_ref(system_monitor) {}
 };
 
 struct TradeExecutionRequest {

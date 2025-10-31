@@ -31,8 +31,8 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
     if (csv_path.find("api_endpoints_config.csv") != std::string::npos) {
         try {
             cfg.multi_api = AlpacaTrader::Core::MultiApiConfigLoader::load_from_csv(csv_path);
-        } catch (const std::exception& e) {
-            log_message("Failed to load multi-API configuration: " + std::string(e.what()), "");
+        } catch (const std::exception& config_exception_error) {
+            log_message("Failed to load multi-API configuration: " + std::string(config_exception_error.what()), "");
             return false;
         }
     }

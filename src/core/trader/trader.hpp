@@ -19,6 +19,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <limits>
+#include <optional>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -39,8 +40,8 @@ private:
     TradingEngine trading_engine;
     RiskManager risk_manager;
     MarketDataFetcher data_fetcher;
-    DataSyncReferences data_sync;
-    MarketDataSyncState fetcher_sync_state;
+    std::optional<DataSyncReferences> data_sync;
+    std::optional<MarketDataSyncState> fetcher_sync_state;
     RuntimeState runtime;
     ConnectivityManager& connectivity_manager;
 

@@ -135,11 +135,11 @@ bool DataValidator::fetch_and_validate_market_bars(ProcessedData& data, API::Api
         }
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception& validation_exception_error) {
         MarketDataLogs::log_market_data_failure_summary(
             symbol,
             "API Exception",
-            e.what(),
+            validation_exception_error.what(),
             0,
             config.logging.log_file
         );

@@ -8,6 +8,7 @@
 #include <atomic>
 #include <thread>
 #include <memory>
+#include <unordered_map>
 #include "configs/system_config.hpp"
 #include "csv_bars_logger.hpp"
 #include "csv_trade_logger.hpp"
@@ -37,7 +38,6 @@ public:
     void stop();
 };
 
-void set_async_logger(AsyncLogger* logger);
 
 struct LoggingContext {
     std::shared_ptr<AsyncLogger> async_logger;
@@ -46,6 +46,29 @@ struct LoggingContext {
     std::mutex console_mutex;
     std::atomic<bool> inline_active{false};
     std::string run_folder;
+    mutable std::mutex thread_tag_mutex;
+    std::unordered_map<std::thread::id, std::string> thread_tags;
+    
+    std::string get_thread_tag() const {
+        std::lock_guard<std::mutex> thread_tag_lock(thread_tag_mutex);
+        std::unordered_map<std::thread::id, std::string>::const_iterator thread_tag_map_iterator = thread_tags.find(std::this_thread::get_id());
+        if (thread_tag_map_iterator != thread_tags.end()) {
+            return thread_tag_map_iterator->second;
+        }
+        return "MAIN  ";
+    }
+    
+    void set_thread_tag(const std::string& tag_value) {
+        std::lock_guard<std::mutex> lock(thread_tag_mutex);
+        std::string tag_string = tag_value;
+        if (tag_string.size() < LOG_TAG_WIDTH) {
+            tag_string.append(LOG_TAG_WIDTH - tag_string.size(), ' ');
+        }
+        if (tag_string.size() > LOG_TAG_WIDTH) {
+            tag_string = tag_string.substr(0, LOG_TAG_WIDTH);
+        }
+        thread_tags[std::this_thread::get_id()] = tag_string;
+    }
 };
 
 // Console inline status (no newline, overwrites same line; not written to file)
@@ -56,7 +79,7 @@ void end_inline_status();
 std::string get_formatted_inline_message(const std::string& content);
 
 // Thread-local log tag (6 characters, padded/truncated) to appear in timestamp
-void set_log_thread_tag(const std::string& tag6);
+void set_log_thread_tag(const std::string& thread_tag_value);
 
 // Main logging function
 void log_message(const std::string& message, const std::string& log_file_path);
