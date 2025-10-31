@@ -18,7 +18,7 @@ int main() {
         // Load system configuration
         AlpacaTrader::Config::SystemConfig initial_config;
         if (int result = load_system_config(initial_config)) {
-            std::cerr << "Config load failed with result: " << result << std::endl;
+            AlpacaTrader::Logging::log_message(std::string("ERROR: Config load failed with result: ") + std::to_string(result), "");
             return result;
         }
         
@@ -46,10 +46,10 @@ int main() {
         SystemManager::shutdown(system_state, logger);
         return 0;
     } catch (const std::exception& e) {
-        std::cerr << "Fatal error: " << e.what() << std::endl;
+        AlpacaTrader::Logging::log_message(std::string("FATAL: ") + e.what(), "");
         return 1;
     } catch (...) {
-        std::cerr << "Unknown fatal error" << std::endl;
+        AlpacaTrader::Logging::log_message("FATAL: Unknown fatal error", "");
         return 1;
     }
 }

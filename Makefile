@@ -2,7 +2,7 @@
 
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -O2
 INCLUDES = -I. -Isrc
 LIBS = -lcurl -pthread
 
@@ -55,6 +55,7 @@ SOURCES = src/main.cpp \
   src/core/logging/logger/csv_trade_logger.cpp \
   src/core/logging/logs/trading_logs.cpp \
   src/core/logging/logs/signal_analysis_logs.cpp \
+  src/core/logging/logs/market_gate_logs.cpp \
   src/core/logging/logs/market_data_thread_logs.cpp \
   src/core/logging/logs/thread_logs.cpp \
   src/core/logging/logs/startup_logs.cpp \
@@ -74,8 +75,8 @@ SOURCES = src/main.cpp \
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
 
-# Default target
-all: build-and-clean
+# Default target builds the binary only (no parallel race with clean)
+all: $(TARGET)
 
 # Create directories if they don't exist
 $(BIN_DIR):

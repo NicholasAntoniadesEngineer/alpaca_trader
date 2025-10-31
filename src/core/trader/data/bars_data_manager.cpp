@@ -88,6 +88,7 @@ bool BarsDataManager::compute_technical_indicators_from_bars(ProcessedData& proc
         return false;
     }
 
+
     // Defensive: need at least 2 bars for prev/curr semantics downstream
     if (bars_data.size() < 2) {
         MarketDataLogs::log_market_data_result_table("Indicator computation failed - insufficient bars for tail access", false, bars_data.size(), config.logging.log_file);

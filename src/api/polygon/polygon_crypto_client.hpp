@@ -1,7 +1,7 @@
 #ifndef POLYGON_CRYPTO_CLIENT_HPP
 #define POLYGON_CRYPTO_CLIENT_HPP
 
-#include "../general/api_provider_interface.hpp"
+#include "api/general/api_provider_interface.hpp"
 #include "configs/multi_api_config.hpp"
 #include "core/trader/data/data_structures.hpp"
 #include "core/utils/http_utils.hpp"

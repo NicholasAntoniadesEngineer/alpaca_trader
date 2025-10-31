@@ -160,16 +160,16 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     try {
         Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules);
     } catch (const std::exception& exception_error) {
-        std::cerr << "Error starting threads: " << exception_error.what() << std::endl;
-        return handles;
+        log_message(std::string("ERROR: Error starting threads: ") + exception_error.what(), "");
+        throw;
     }
     
     // Setup thread priorities after threads are started
     try {
         Manager::setup_thread_priorities(system_state.thread_manager_state, thread_definitions, system_state.config);
     } catch (const std::exception& exception_error) {
-        std::cerr << "Error setting thread priorities: " << exception_error.what() << std::endl;
-        return handles;
+        log_message(std::string("ERROR: Failed to set thread priorities: ") + exception_error.what(), "");
+        throw;
     }
     
     // Note: Main startup logging moved to run_until_shutdown to avoid conflicts with threads
@@ -184,7 +184,7 @@ static void run_until_shutdown(SystemState& state) {
     try {
         // Ensure running flag is properly initialized
         if (!state.running.load()) {
-            std::cerr << "Warning: running flag is false at start" << std::endl;
+            log_message("WARNING: running flag is false at start", "");
             state.running.store(true);
         }
         
@@ -204,24 +204,26 @@ static void run_until_shutdown(SystemState& state) {
                         ThreadLogs::log_thread_monitoring_stats(state.thread_infos, start_time);
                         last_monitor_time = now;
                     } catch (const std::exception& exception_error) {
-                        std::cerr << "Error logging thread monitoring stats: " << exception_error.what() << std::endl;
+                        log_message(std::string("ERROR: Error logging thread monitoring stats: ") + exception_error.what(), "");
                     } catch (...) {
-                        std::cerr << "Unknown error logging thread monitoring stats" << std::endl;
+                        log_message("ERROR: Unknown error logging thread monitoring stats", "");
                     }
                 }
 
                 // Sleep for main loop interval based on configuration
                 std::this_thread::sleep_for(std::chrono::seconds(state.config.timing.thread_market_data_poll_interval_sec));
             } catch (const std::exception& exception_error) {
-                std::cerr << "Error in main loop: " << exception_error.what() << std::endl;
+                log_message(std::string("ERROR: Error in main loop: ") + exception_error.what(), "");
             } catch (...) {
-                std::cerr << "Unknown error in main loop" << std::endl;
+                log_message("ERROR: Unknown error in main loop", "");
             }
         }
     } catch (const std::exception& exception_error) {
-        std::cerr << "Fatal error in run_until_shutdown: " << exception_error.what() << std::endl;
+        log_message(std::string("FATAL: Fatal error in run_until_shutdown: ") + exception_error.what(), "");
+        state.running.store(false);
     } catch (...) {
-        std::cerr << "Unknown fatal error in run_until_shutdown" << std::endl;
+        log_message("FATAL: Unknown fatal error in run_until_shutdown", "");
+        state.running.store(false);
     }
 }
 

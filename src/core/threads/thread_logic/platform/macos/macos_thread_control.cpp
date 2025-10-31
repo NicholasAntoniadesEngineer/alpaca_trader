@@ -65,9 +65,11 @@ bool ThreadControl::set_priority(std::thread::native_handle_type handle, AlpacaT
         }
     }
     
-    // Note: macOS doesn't support CPU affinity in the same way as Linux
-    // CPU affinity requests are ignored but don't cause failure
-    (void)cpu_affinity;
+    // Enforce strict behavior: macOS does not support CPU affinity
+    // If affinity was requested (>= 0), treat as failure to comply with configuration
+    if (cpu_affinity >= 0) {
+        return false;
+    }
     
     return success;
 }
@@ -115,8 +117,10 @@ bool ThreadControl::set_current_priority(AlpacaTrader::Config::Priority priority
         mach_port_deallocate(mach_task_self(), current_thread_port);
     }
     
-    // CPU affinity not supported on macOS
-    (void)cpu_affinity;
+    // Enforce strict behavior: macOS does not support CPU affinity
+    if (cpu_affinity >= 0) {
+        return false;
+    }
     
     return success;
 }

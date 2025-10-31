@@ -84,7 +84,7 @@ struct SystemState {
         : config(initial) {
         // Verify that the symbol was loaded correctly
         if (config.strategy.symbol.empty()) {
-            std::cerr << "WARNING: Target symbol is empty! Config may not be loaded properly." << std::endl;
+            AlpacaTrader::Logging::log_message("WARNING: Target symbol is empty! Config may not be loaded properly.", "");
         }
     }
 };

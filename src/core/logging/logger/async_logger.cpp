@@ -158,7 +158,7 @@ std::string create_unique_run_folder() {
     try {
         std::filesystem::create_directories(run_folder);
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL ERROR: Failed to create run folder: " << e.what() << std::endl;
+        log_message(std::string("CRITICAL ERROR: Failed to create run folder: ") + e.what(), "");
         throw std::runtime_error("Failed to create run folder: " + run_folder);
     }
 
@@ -278,10 +278,10 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
         ctx->csv_bars_logger = bars_logger;
         return bars_logger;
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL ERROR: Failed to initialize CSV bars logger: " << e.what() << std::endl;
+        log_message(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + e.what(), "");
         throw; // Re-throw to ensure system fails - no defaults allowed
     } catch (...) {
-        std::cerr << "CRITICAL ERROR: Unknown error initializing CSV bars logger" << std::endl;
+        log_message("CRITICAL ERROR: Unknown error initializing CSV bars logger", "");
         throw std::runtime_error("Failed to initialize CSV bars logger");
     }
 }
@@ -308,10 +308,10 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
         ctx->csv_trade_logger = trade_logger;
         return trade_logger;
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL ERROR: Failed to initialize CSV trade logger: " << e.what() << std::endl;
+        log_message(std::string("CRITICAL ERROR: Failed to initialize CSV trade logger: ") + e.what(), "");
         throw; // Re-throw to ensure system fails - no defaults allowed
     } catch (...) {
-        std::cerr << "CRITICAL ERROR: Unknown error initializing CSV trade logger" << std::endl;
+        log_message("CRITICAL ERROR: Unknown error initializing CSV trade logger", "");
         throw std::runtime_error("Failed to initialize CSV trade logger");
     }
 }

@@ -1,6 +1,7 @@
 #include "csv_bars_logger.hpp"
 #include "core/utils/time_utils.hpp"
 #include <iostream>
+#include "core/logging/logger/async_logger.hpp"
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -23,10 +24,10 @@ CSVBarsLogger::CSVBarsLogger(const std::string& log_file_path) : file_path(log_f
         initialized = true;
         write_header();
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL ERROR: Failed to initialize CSV bars logger: " << e.what() << std::endl;
+        AlpacaTrader::Logging::log_message(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + e.what(), "");
         throw; // Re-throw to ensure system fails - no defaults allowed
     } catch (...) {
-        std::cerr << "CRITICAL ERROR: Unknown error initializing CSV bars logger" << std::endl;
+        AlpacaTrader::Logging::log_message("CRITICAL ERROR: Unknown error initializing CSV bars logger", "");
         throw std::runtime_error("Failed to initialize CSV bars logger");
     }
 }

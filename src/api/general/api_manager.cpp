@@ -1,7 +1,7 @@
 #include "api_manager.hpp"
-#include "../alpaca/alpaca_trading_client.hpp"
-#include "../alpaca/alpaca_stocks_client.hpp"
-#include "../polygon/polygon_crypto_client.hpp"
+#include "api/alpaca/alpaca_trading_client.hpp"
+#include "api/alpaca/alpaca_stocks_client.hpp"
+#include "api/polygon/polygon_crypto_client.hpp"
 #include <stdexcept>
 #include <algorithm>
 

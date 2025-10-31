@@ -37,7 +37,7 @@ private:
     RiskManager risk_manager;
     MarketDataFetcher data_fetcher;
     DataSyncReferences data_sync;
-    MarketDataSyncState fetcher_sync_state; // persistent sync state for data_fetcher
+    MarketDataSyncState fetcher_sync_state;
     RuntimeState runtime;
     ConnectivityManager& connectivity_manager;
 
