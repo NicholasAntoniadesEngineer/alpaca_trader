@@ -30,12 +30,10 @@ SOURCES = src/main.cpp \
   src/core/trader/trading_logic/order_execution_logic.cpp \
   src/core/trader/strategy_analysis/strategy_logic.cpp \
   src/core/trader/strategy_analysis/indicators.cpp \
-  src/core/trader/market_data/market_processing.cpp \
   src/core/trader/market_data/market_data_fetcher.cpp \
   src/core/trader/market_data/market_data_manager.cpp \
   src/core/trader/market_data/market_data_validator.cpp \
-  src/core/trader/market_data/bars_data_manager.cpp \
-  src/core/trader/market_data/market_session_manager.cpp \
+  src/core/trader/market_data/market_bars_manager.cpp \
   src/core/trader/strategy_analysis/signal_processor.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
@@ -43,7 +41,6 @@ SOURCES = src/main.cpp \
   src/core/system/system_monitor.cpp \
   src/core/trader/config_loader/config_loader.cpp \
   src/core/trader/config_loader/multi_api_config_loader.cpp \
-  src/core/system/trading_system_factory.cpp \
   src/core/trader/account_management/account_manager.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/logs/account_logs.cpp \
