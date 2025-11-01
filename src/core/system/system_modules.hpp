@@ -1,10 +1,11 @@
 #ifndef SYSTEM_MODULES_HPP
 #define SYSTEM_MODULES_HPP
 
-#include "core/trader/data/account_manager.hpp"
-#include "core/trader/trader.hpp"
-#include "core/trader/market_data_coordinator.hpp"
-#include "core/trader/account_data_coordinator.hpp"
+#include "core/trader/account_management/account_manager.hpp"
+#include "core/trader/trading_logic/trading_logic.hpp"
+#include "core/trader/coordinators/trading_coordinator.hpp"
+#include "core/trader/coordinators/market_data_coordinator.hpp"
+#include "core/trader/coordinators/account_data_coordinator.hpp"
 #include "core/logging/logs/account_logs.hpp"
 #include "api/general/api_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
@@ -25,7 +26,8 @@ struct SystemModules {
     // =========================================================================
     std::unique_ptr<AlpacaTrader::API::ApiManager> api_manager;           // Multi-provider API manager
     std::unique_ptr<AlpacaTrader::Core::AccountManager> portfolio_manager; // Account and portfolio management
-    std::unique_ptr<AlpacaTrader::Core::TradingOrchestrator> trading_engine;            // Core trading logic engine
+    std::unique_ptr<AlpacaTrader::Core::TradingLogic> trading_logic;    // Core trading logic engine
+    std::unique_ptr<AlpacaTrader::Core::TradingCoordinator> trading_coordinator; // Trading thread-safe interface
     std::unique_ptr<AlpacaTrader::Core::MarketDataCoordinator> market_data_coordinator; // Market data access coordinator
     std::unique_ptr<AlpacaTrader::Core::AccountDataCoordinator> account_data_coordinator; // Account data access coordinator
     

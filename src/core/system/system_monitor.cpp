@@ -86,8 +86,15 @@ void SystemMonitor::record_data_update() {
 bool SystemMonitor::is_system_healthy() const {
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     
-    double max_failure_rate = config_.max_failure_rate_pct > 0 ? config_.max_failure_rate_pct : DEFAULT_MAX_FAILURE_RATE;
-    double max_drawdown = config_.max_drawdown_pct > 0 ? config_.max_drawdown_pct : DEFAULT_MAX_DRAWDOWN_PCT;
+    if (config_.max_failure_rate_pct <= 0.0) {
+        throw std::runtime_error("System monitoring: max_failure_rate_pct must be configured (no defaults allowed)");
+    }
+    if (config_.max_drawdown_pct <= 0.0) {
+        throw std::runtime_error("System monitoring: max_drawdown_pct must be configured (no defaults allowed)");
+    }
+    
+    double max_failure_rate = config_.max_failure_rate_pct;
+    double max_drawdown = config_.max_drawdown_pct;
     
     // Check failure rate
     if (metrics_.total_orders_placed > 10) {
@@ -121,7 +128,11 @@ bool SystemMonitor::is_data_stale() const {
     auto now = std::chrono::steady_clock::now();
     auto time_since_update = std::chrono::duration_cast<std::chrono::minutes>(now - metrics_.last_data_update);
     
-    int max_stale_minutes = config_.max_data_age_min > 0 ? config_.max_data_age_min : DEFAULT_MAX_STALE_DATA_MINUTES;
+    if (config_.max_data_age_min <= 0) {
+        throw std::runtime_error("System monitoring: max_data_age_min must be configured (no defaults allowed)");
+    }
+    
+    int max_stale_minutes = config_.max_data_age_min;
     
     return time_since_update.count() > max_stale_minutes;
 }
@@ -132,7 +143,11 @@ bool SystemMonitor::has_recent_activity() const {
     auto now = std::chrono::steady_clock::now();
     auto time_since_activity = std::chrono::duration_cast<std::chrono::minutes>(now - metrics_.last_successful_order);
     
-    int max_inactivity_minutes = config_.max_inactivity_min > 0 ? config_.max_inactivity_min : DEFAULT_MAX_INACTIVITY_MINUTES;
+    if (config_.max_inactivity_min <= 0) {
+        throw std::runtime_error("System monitoring: max_inactivity_min must be configured (no defaults allowed)");
+    }
+    
+    int max_inactivity_minutes = config_.max_inactivity_min;
     
     return time_since_activity.count() < max_inactivity_minutes;
 }

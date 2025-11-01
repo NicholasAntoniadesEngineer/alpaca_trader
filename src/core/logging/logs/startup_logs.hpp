@@ -2,8 +2,9 @@
 #define STARTUP_LOGS_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data/account_manager.hpp"
+#include "core/trader/account_management/account_manager.hpp"
 #include "core/logging/logger/async_logger.hpp"
+#include "core/system/system_modules.hpp"
 
 using AlpacaTrader::Config::SystemConfig;
 
@@ -29,6 +30,8 @@ public:
     // Thread system startup
     static void log_thread_system_startup(const SystemConfig& config);
     
+    // Complete startup information logging
+    static void log_startup_information(const SystemModules& modules, const AlpacaTrader::Config::SystemConfig& config);
     
     // System configuration tables
     static void log_runtime_configuration(const AlpacaTrader::Config::SystemConfig& config);

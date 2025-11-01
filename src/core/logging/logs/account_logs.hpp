@@ -2,7 +2,7 @@
 #define ACCOUNT_LOGS_HPP
 
 #include "configs/logging_config.hpp"
-#include "core/trader/data/account_manager.hpp"
+#include "core/trader/account_management/account_manager.hpp"
 
 namespace AlpacaTrader {
 namespace Logging {

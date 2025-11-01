@@ -197,7 +197,7 @@ struct StrategyConfig {
     double max_drawdown_pct;                         // Maximum allowed drawdown percentage
     bool alert_on_data_stale;                        // Enable data staleness alerts
     int max_data_age_min;                            // Maximum data age in minutes
-    int max_inactivity_min;                          // Maximum inactivity in minutes
+    int max_inactivity_min;                          // Maximum inactivity period in minutes
 
     // ========================================================================
     // PRECISION SETTINGS

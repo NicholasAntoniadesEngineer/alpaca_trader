@@ -82,12 +82,6 @@ private:
     mutable std::mutex metrics_mutex_;
     SystemMetrics metrics_;
     StrategyConfig config_;
-    
-    // Default alert thresholds (can be overridden by configuration)
-    static constexpr int DEFAULT_MAX_FAILURE_RATE = 50; // 50% failure rate
-    static constexpr int DEFAULT_MAX_STALE_DATA_MINUTES = 5;
-    static constexpr int DEFAULT_MAX_INACTIVITY_MINUTES = 10;
-    static constexpr double DEFAULT_MAX_DRAWDOWN_PCT = 10.0; // 10% max drawdown
 };
 
 } // namespace Monitoring

@@ -1,7 +1,7 @@
 #ifndef API_PROVIDER_INTERFACE_HPP
 #define API_PROVIDER_INTERFACE_HPP
 
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include "configs/multi_api_config.hpp"
 #include <vector>
 #include <string>

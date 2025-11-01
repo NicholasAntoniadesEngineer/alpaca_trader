@@ -22,21 +22,21 @@ SOURCES = src/main.cpp \
   src/api/alpaca/alpaca_trading_client.cpp \
   src/api/alpaca/alpaca_stocks_client.cpp \
   src/api/polygon/polygon_crypto_client.cpp \
-  src/core/trader/trader.cpp \
-  src/core/trader/market_data_coordinator.cpp \
-  src/core/trader/account_data_coordinator.cpp \
-  src/core/trader/trading_engine/trading_engine.cpp \
-  src/core/trader/analysis/risk_manager.cpp \
-  src/core/trader/trading_engine/order_execution_engine.cpp \
-  src/core/trader/analysis/strategy_logic.cpp \
-  src/core/trader/analysis/indicators.cpp \
-  src/core/trader/data/market_processing.cpp \
-  src/core/trader/data/market_data_fetcher.cpp \
-  src/core/trader/data/market_data_manager.cpp \
-  src/core/trader/data/market_data_validator.cpp \
-  src/core/trader/data/bars_data_manager.cpp \
-  src/core/trader/data/market_session_manager.cpp \
-  src/core/trader/analysis/signal_processor.cpp \
+  src/core/trader/coordinators/trading_coordinator.cpp \
+  src/core/trader/coordinators/market_data_coordinator.cpp \
+  src/core/trader/coordinators/account_data_coordinator.cpp \
+  src/core/trader/trading_logic/trading_logic.cpp \
+  src/core/trader/strategy_analysis/risk_manager.cpp \
+  src/core/trader/trading_logic/order_execution_logic.cpp \
+  src/core/trader/strategy_analysis/strategy_logic.cpp \
+  src/core/trader/strategy_analysis/indicators.cpp \
+  src/core/trader/market_data/market_processing.cpp \
+  src/core/trader/market_data/market_data_fetcher.cpp \
+  src/core/trader/market_data/market_data_manager.cpp \
+  src/core/trader/market_data/market_data_validator.cpp \
+  src/core/trader/market_data/bars_data_manager.cpp \
+  src/core/trader/market_data/market_session_manager.cpp \
+  src/core/trader/strategy_analysis/signal_processor.cpp \
   src/core/utils/connectivity_manager.cpp \
   src/core/system/system_manager.cpp \
   src/core/threads/thread_register.cpp \
@@ -44,7 +44,7 @@ SOURCES = src/main.cpp \
   src/core/trader/config_loader/config_loader.cpp \
   src/core/trader/config_loader/multi_api_config_loader.cpp \
   src/core/system/trading_system_factory.cpp \
-  src/core/trader/data/account_manager.cpp \
+  src/core/trader/account_management/account_manager.cpp \
   src/core/utils/time_utils.cpp \
   src/core/logging/logs/account_logs.cpp \
   src/core/logging/logs/market_data_logs.cpp \
@@ -92,10 +92,13 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/core
 	mkdir -p $(OBJ_DIR)/src/core/system
 	mkdir -p $(OBJ_DIR)/src/core/trader/core
-	mkdir -p $(OBJ_DIR)/src/core/trader/analysis
+	mkdir -p $(OBJ_DIR)/src/core/trader/strategy_analysis
 	mkdir -p $(OBJ_DIR)/src/core/trader/config_loader
-	mkdir -p $(OBJ_DIR)/src/core/trader/data
-	mkdir -p $(OBJ_DIR)/src/core/trader/trading_engine
+	mkdir -p $(OBJ_DIR)/src/core/trader/market_data
+	mkdir -p $(OBJ_DIR)/src/core/trader/account_management
+	mkdir -p $(OBJ_DIR)/src/core/trader/data_structures
+	mkdir -p $(OBJ_DIR)/src/core/trader/trading_logic
+	mkdir -p $(OBJ_DIR)/src/core/trader/coordinators
 	mkdir -p $(OBJ_DIR)/src/core/logging/logger
 	mkdir -p $(OBJ_DIR)/src/core/logging/logs
 	mkdir -p $(OBJ_DIR)/src/core/utils

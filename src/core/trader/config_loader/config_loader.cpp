@@ -123,6 +123,17 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.stop_loss_buffer_amount_dollars") cfg.strategy.stop_loss_buffer_amount_dollars = std::stod(config_value_string);
         else if (config_key_string == "strategy.use_current_market_price_for_order_execution") cfg.strategy.use_current_market_price_for_order_execution = to_bool(config_value_string);
         else if (config_key_string == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(config_value_string);
+        
+        // System monitoring configuration (support both monitoring.* and strategy.* prefixes)
+        else if (config_key_string == "strategy.max_failure_rate_pct" || config_key_string == "monitoring.max_failure_rate_pct") cfg.strategy.max_failure_rate_pct = std::stod(config_value_string);
+        else if (config_key_string == "strategy.max_drawdown_pct" || config_key_string == "monitoring.max_drawdown_pct") cfg.strategy.max_drawdown_pct = std::stod(config_value_string);
+        else if (config_key_string == "strategy.max_data_age_min" || config_key_string == "monitoring.max_data_age_min") cfg.strategy.max_data_age_min = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.max_inactivity_min" || config_key_string == "monitoring.max_inactivity_min") cfg.strategy.max_inactivity_min = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.health_check_interval_sec" || config_key_string == "monitoring.health_check_interval_sec") cfg.strategy.health_check_interval_sec = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.performance_report_interval_min" || config_key_string == "monitoring.performance_report_interval_min") cfg.strategy.performance_report_interval_min = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.alert_on_failure_rate" || config_key_string == "monitoring.alert_on_failure_rate") cfg.strategy.alert_on_failure_rate = to_bool(config_value_string);
+        else if (config_key_string == "strategy.alert_on_drawdown" || config_key_string == "monitoring.alert_on_drawdown") cfg.strategy.alert_on_drawdown = to_bool(config_value_string);
+        else if (config_key_string == "strategy.alert_on_data_stale" || config_key_string == "monitoring.alert_on_data_stale") cfg.strategy.alert_on_data_stale = to_bool(config_value_string);
         else if (config_key_string == "strategy.take_profit_percentage") cfg.strategy.take_profit_percentage = std::stod(config_value_string);
         else if (config_key_string == "strategy.use_take_profit_percentage") cfg.strategy.use_take_profit_percentage = to_bool(config_value_string);
         else if (config_key_string == "strategy.enable_fixed_share_quantity_per_trade") cfg.strategy.enable_fixed_share_quantity_per_trade = to_bool(config_value_string);
@@ -268,7 +279,7 @@ bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::str
         else if (priority_value_string == "NORMAL") return AlpacaTrader::Config::Priority::NORMAL;
         else if (priority_value_string == "LOW") return AlpacaTrader::Config::Priority::LOW;
         else if (priority_value_string == "LOWEST") return AlpacaTrader::Config::Priority::LOWEST;
-        else return AlpacaTrader::Config::Priority::NORMAL; // Default fallback
+        else throw std::runtime_error("Invalid thread priority: '" + priority_value_string + "' (must be REALTIME, HIGHEST, HIGH, NORMAL, LOW, or LOWEST - no defaults allowed)");
     };
 
     // Helper function to get thread settings for loading (creates entry if needed)
@@ -519,6 +530,24 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     }
     if (config.timing.connectivity_disconnected_threshold <= config.timing.connectivity_degraded_threshold) {
         error_message = "timing.connectivity_disconnected_threshold must be greater than connectivity_degraded_threshold";
+        return false;
+    }
+
+    // Validate system monitoring configuration (no defaults allowed)
+    if (config.strategy.max_failure_rate_pct <= 0.0) {
+        error_message = "strategy.max_failure_rate_pct must be configured and > 0.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.max_drawdown_pct <= 0.0) {
+        error_message = "strategy.max_drawdown_pct must be configured and > 0.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.max_data_age_min <= 0) {
+        error_message = "strategy.max_data_age_min must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.max_inactivity_min <= 0) {
+        error_message = "strategy.max_inactivity_min must be configured and > 0 (no defaults allowed)";
         return false;
     }
 

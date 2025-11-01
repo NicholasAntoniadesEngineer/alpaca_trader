@@ -2,7 +2,7 @@
 #define SYSTEM_STATE_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include "configs/system_config.hpp"
 #include "core/logging/logs/thread_logs.hpp"
 #include "core/logging/logger/async_logger.hpp"

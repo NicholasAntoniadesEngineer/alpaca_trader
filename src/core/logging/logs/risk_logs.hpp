@@ -2,7 +2,7 @@
 #define RISK_LOGS_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include <string>
 
 using AlpacaTrader::Config::SystemConfig;

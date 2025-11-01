@@ -2,7 +2,6 @@
 #include "system_state.hpp"
 #include "system_modules.hpp"
 #include "system_threads.hpp"
-#include "trading_system_factory.hpp"
 #include "core/threads/thread_logic/thread_registry.hpp"
 #include "core/threads/thread_logic/thread_manager.hpp"
 #include "core/logging/logs/startup_logs.hpp"
@@ -10,55 +9,33 @@
 #include "core/logging/logs/account_logs.hpp"
 #include "configs/system_config.hpp"
 #include "core/system/system_configurations.hpp"
-#include "core/trader/trader.hpp"
-#include "core/trader/data/account_manager.hpp"
-#include "core/trader/data/market_data_fetcher.hpp"
+#include "core/trader/coordinators/trading_coordinator.hpp"
+#include "core/trader/account_management/account_manager.hpp"
+#include "core/trader/market_data/market_data_fetcher.hpp"
+#include "core/trader/trading_logic/trading_logic.hpp"
+#include "core/trader/trading_logic/trading_logic_structures.hpp"
+#include "core/trader/strategy_analysis/risk_manager.hpp"
 #include "api/general/api_manager.hpp"
 #include "core/threads/system_threads/logging_thread.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/system_threads/market_gate_thread.hpp"
 #include "core/threads/system_threads/trader_thread.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include "core/threads/thread_register.hpp"
-#include <iostream>
-#include <csignal>
+#include "core/logging/logs/thread_logs.hpp"
 #include <memory>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include <chrono>
+#include <thread>
 
 using namespace AlpacaTrader::Core;
 using namespace AlpacaTrader::Logging;
 using namespace AlpacaTrader::Threads;
 
 
-void log_startup_information(const SystemModules& modules, const AlpacaTrader::Config::SystemConfig& config) {
-    // Log application header
-    StartupLogs::log_application_header();
-    
-    // Log API endpoints table
-    StartupLogs::log_api_endpoints_table(config);
-    
-    // Log account information if available
-    if (modules.portfolio_manager) {
-        StartupLogs::log_account_overview(*modules.portfolio_manager);
-        StartupLogs::log_financial_summary(*modules.portfolio_manager);
-        StartupLogs::log_current_positions(*modules.portfolio_manager, config);
-    }
-    
-    // Log data source configuration
-    StartupLogs::log_data_source_configuration(config);
-    
-    // Log runtime configuration
-    StartupLogs::log_runtime_configuration(config);
-    
-    // Log strategy configuration
-    StartupLogs::log_strategy_configuration(config);
-    
-    // Log thread system startup
-    StartupLogs::log_thread_system_startup(config);
-}
 
 SystemConfigurations create_trading_configurations(const SystemState& state) {
     return SystemConfigurations{
@@ -72,12 +49,28 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     SystemConfigurations configs = create_trading_configurations(state);
     SystemModules modules;
 
-    // Create core trading modules using the factory
-    auto trading_components = TradingSystemFactory::create_trading_system(state.config, state.system_monitor, state.connectivity_manager);
+    // Create API manager 
+    modules.api_manager = std::make_unique<AlpacaTrader::API::ApiManager>(state.config.multi_api, state.connectivity_manager);
     
-    modules.api_manager = std::move(trading_components.api_manager);
-    modules.portfolio_manager = std::move(trading_components.account_manager);
-    modules.trading_engine = std::move(trading_components.trading_orchestrator);
+    // Create account manager
+    AlpacaTrader::Config::AccountManagerConfig account_config{
+        state.config.logging, state.config.timing, state.config.strategy
+    };
+    modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(account_config, *modules.api_manager);
+    
+    // Create trading logic (creates its own MarketDataFetcher internally)
+    TradingLogicConstructionParams trading_logic_params(state.config, *modules.api_manager, *modules.portfolio_manager, state.system_monitor, state.connectivity_manager);
+    modules.trading_logic = std::make_unique<AlpacaTrader::Core::TradingLogic>(trading_logic_params);
+    
+    // Create trading coordinator - uses MarketDataFetcher from TradingLogic
+    modules.trading_coordinator = std::make_unique<AlpacaTrader::Core::TradingCoordinator>(
+        *modules.trading_logic,
+        modules.trading_logic->get_market_data_fetcher_reference(),
+        state.connectivity_manager,
+        *modules.portfolio_manager,
+        state.config
+    );
+    
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager, state.config.strategy.position_long_string, state.config.strategy.position_short_string);
     
     // Create coordinator interfaces for thread access to trader components
@@ -94,7 +87,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     
     // Create ACCOUNT_DATA thread
     modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.account_data_coordinator, 
-                                                                     state.mtx, state.cv, state.account, 
+                                                                     state.mtx, state.cv, state.account,
                                                                      state.has_account, state.running);
     
     // Create MARKET_GATE thread
@@ -104,8 +97,23 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     // Create LOGGING thread
     modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, thread_handles.logger_iterations, state.config);
     
+    // Get initial equity for trader thread
+    double initial_equity = modules.portfolio_manager->fetch_account_equity();
+    if (initial_equity <= 0.0 || !std::isfinite(initial_equity)) {
+        throw std::runtime_error("Failed to get initial equity for trader thread");
+    }
+    
     // Create TRADER_DECISION thread
-    modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(*modules.trading_engine, thread_handles.trader_iterations, state.config.timing);
+    modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(
+        state.config.timing,
+        *modules.trading_coordinator,
+        state.mtx, state.cv,
+        state.market, state.account,
+        state.has_market, state.has_account, state.running,
+        state.market_data_timestamp, state.market_data_fresh,
+        state.last_order_timestamp,
+        initial_equity
+    );
     
     return modules;
 }
@@ -121,6 +129,9 @@ void configure_trading_modules(SystemThreads& handles, SystemModules& modules, S
     if (modules.account_data_thread) {
         modules.account_data_thread->set_allow_fetch_flag(state.allow_fetch);
     }
+    if (modules.trading_thread) {
+        modules.trading_thread->set_allow_fetch_flag(state.allow_fetch);
+    }
 }
 
 SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
@@ -135,14 +146,18 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     // Create all trading system modules and store them in system_state for lifetime management
     system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger, handles));
     
-        // Set up data synchronization for trading orchestrator
-        DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
+        // Set up data synchronization for trading engine
+        DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account,
                                    system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
                                    system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
-        system_state.trading_modules->trading_engine->setup_data_synchronization(sync_config);
+        system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
+        
+        // Set up market data fetcher sync state
+        AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
+        system_state.trading_modules->trading_coordinator->get_market_data_fetcher_reference().set_sync_state_references(fetcher_sync_state);
     
     // Log startup information
-    log_startup_information(*system_state.trading_modules, system_state.config);
+    StartupLogs::log_startup_information(*system_state.trading_modules, system_state.config);
     
     // Configure trading modules
     configure_trading_modules(handles, *system_state.trading_modules, system_state);

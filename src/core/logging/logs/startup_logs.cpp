@@ -180,10 +180,18 @@ void StartupLogs::log_data_source_configuration(const AlpacaTrader::Config::Syst
 }
 
 void StartupLogs::log_thread_system_startup(const SystemConfig& config) {
+    // The "main" thread is configured but not launched separately, so it's excluded from the count
+    size_t launched_threads_count = 0;
+    for (const auto& thread_setting : config.thread_registry.thread_settings) {
+        if (thread_setting.first != "main") {
+            launched_threads_count++;
+        }
+    }
+    
     log_message("┌───────────────────┬──────────────────────────────────────────────────┐", "");
     log_message("│ Thread System     │ Performance Settings                             │", "");
     log_message("├───────────────────┼──────────────────────────────────────────────────┤", "");
-    log_message("│ Total Threads     │ " + std::to_string(config.thread_registry.thread_settings.size()) + " configured" + std::string(38 - std::to_string(config.thread_registry.thread_settings.size()).length(), ' ') + "│", "");
+    log_message("│ Total Threads     │ " + std::to_string(launched_threads_count) + " configured" + std::string(38 - std::to_string(launched_threads_count).length(), ' ') + "│", "");
     log_message("│ Thread Priorities │ ENABLED" + std::string(42, ' ') + "│", "");
     log_message("│ CPU Affinity      │ ENABLED" + std::string(42, ' ') + "│", "");
     log_message("└───────────────────┴──────────────────────────────────────────────────┘", "");
@@ -293,4 +301,31 @@ std::string StartupLogs::format_currency(double amount) {
     std::stringstream ss;
     ss << "$" << std::fixed << std::setprecision(2) << amount;
     return ss.str();
+}
+
+void StartupLogs::log_startup_information(const SystemModules& modules, const AlpacaTrader::Config::SystemConfig& config) {
+    // Log application header
+    StartupLogs::log_application_header();
+    
+    // Log API endpoints table
+    StartupLogs::log_api_endpoints_table(config);
+    
+    // Log account information if available
+    if (modules.portfolio_manager) {
+        StartupLogs::log_account_overview(*modules.portfolio_manager);
+        StartupLogs::log_financial_summary(*modules.portfolio_manager);
+        StartupLogs::log_current_positions(*modules.portfolio_manager, config);
+    }
+    
+    // Log data source configuration
+    StartupLogs::log_data_source_configuration(config);
+    
+    // Log runtime configuration
+    StartupLogs::log_runtime_configuration(config);
+    
+    // Log strategy configuration
+    StartupLogs::log_strategy_configuration(config);
+    
+    // Log thread system startup
+    StartupLogs::log_thread_system_startup(config);
 }

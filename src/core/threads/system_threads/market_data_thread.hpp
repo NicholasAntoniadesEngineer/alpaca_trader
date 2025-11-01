@@ -4,8 +4,8 @@
 #include "configs/strategy_config.hpp"
 #include "configs/timing_config.hpp"
 #include "core/threads/thread_register.hpp"
-#include "core/trader/market_data_coordinator.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/coordinators/market_data_coordinator.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include "core/logging/logger/async_logger.hpp"
 #include <atomic>
 #include <mutex>

@@ -2,7 +2,7 @@
 #define CSV_TRADE_LOGGER_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include <fstream>
 #include <string>
 #include <mutex>

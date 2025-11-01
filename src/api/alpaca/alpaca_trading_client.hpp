@@ -3,7 +3,7 @@
 
 #include "api/general/api_provider_interface.hpp"
 #include "configs/multi_api_config.hpp"
-#include "core/trader/data/data_structures.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
 #include "core/utils/http_utils.hpp"
 #include "core/utils/connectivity_manager.hpp"
 #include <string>

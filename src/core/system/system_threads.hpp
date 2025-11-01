@@ -14,11 +14,11 @@ struct SystemThreads {
     // =========================================================================
     // THREAD HANDLES
     // =========================================================================
-    std::thread market;    // Market data processing thread
-    std::thread account;   // Account data processing thread
-    std::thread gate;      // Market gate control thread
-    std::thread trader;    // Main trading logic thread
-    std::thread logger;    // Logging system thread
+    std::thread market_thread;    // Market data processing thread
+    std::thread account_thread;   // Account data processing thread
+    std::thread gate_thread;      // Market gate control thread
+    std::thread trader_thread;    // Main trading logic thread
+    std::thread logger_thread;    // Logging system thread
     
     // =========================================================================
     // PERFORMANCE MONITORING
@@ -50,11 +50,11 @@ struct SystemThreads {
      * @param other Source object
      */
     SystemThreads(SystemThreads&& other) noexcept
-        : market(std::move(other.market)),
-          account(std::move(other.account)),
-          gate(std::move(other.gate)),
-          trader(std::move(other.trader)),
-          logger(std::move(other.logger)),
+        : market_thread(std::move(other.market_thread)),
+          account_thread(std::move(other.account_thread)),
+          gate_thread(std::move(other.gate_thread)),
+          trader_thread(std::move(other.trader_thread)),
+          logger_thread(std::move(other.logger_thread)),
           start_time(other.start_time),
           market_iterations(other.market_iterations.load()),
           account_iterations(other.account_iterations.load()),
@@ -69,11 +69,11 @@ struct SystemThreads {
      */
     SystemThreads& operator=(SystemThreads&& other) noexcept {
         if (this != &other) {
-            market = std::move(other.market);
-            account = std::move(other.account);
-            gate = std::move(other.gate);
-            trader = std::move(other.trader);
-            logger = std::move(other.logger);
+            market_thread = std::move(other.market_thread);
+            account_thread = std::move(other.account_thread);
+            gate_thread = std::move(other.gate_thread);
+            trader_thread = std::move(other.trader_thread);
+            logger_thread = std::move(other.logger_thread);
             start_time = other.start_time;
             market_iterations.store(other.market_iterations.load());
             account_iterations.store(other.account_iterations.load());

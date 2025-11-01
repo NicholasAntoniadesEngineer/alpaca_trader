@@ -1,7 +1,7 @@
 #ifndef TRADING_SYSTEM_CONFIGURATIONS_HPP
 #define TRADING_SYSTEM_CONFIGURATIONS_HPP
 
-#include "core/trader/data/account_manager.hpp"
+#include "core/trader/account_management/account_manager.hpp"
 #include "core/threads/system_threads/market_data_thread.hpp"
 #include "core/threads/system_threads/account_data_thread.hpp"
 #include "core/threads/thread_register.hpp"

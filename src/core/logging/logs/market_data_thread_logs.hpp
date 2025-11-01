@@ -2,8 +2,8 @@
 #define MARKET_DATA_THREAD_LOGS_HPP
 
 #include "configs/system_config.hpp"
-#include "core/trader/data/data_structures.hpp"
-#include "core/trader/data/market_data_validator.hpp"
+#include "core/trader/data_structures/data_structures.hpp"
+#include "core/trader/market_data/market_data_validator.hpp"
 #include "api/general/api_manager.hpp"
 #include <string>
 #include <atomic>
