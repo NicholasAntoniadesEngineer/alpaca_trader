@@ -81,3 +81,74 @@ void SystemLogs::log_system_alert(const std::string& alert_message) {
     log_message("SYSTEM ALERT: " + alert_message, "system_logs");
 }
 
+void SystemLogs::log_health_report_table(bool overall_health, bool startup_complete, bool configuration_valid,
+                                         bool all_threads_started, int active_thread_count, int connectivity_issues_count,
+                                         int critical_errors_count, int uptime_seconds) {
+    // Log table-formatted health report to system_logs file
+    log_message("┌───────────────────┬──────────────────────────────────────────────────┐", "system_logs");
+    log_message("│ System Health     │ Startup & Runtime Status                         │", "system_logs");
+    log_message("├───────────────────┼──────────────────────────────────────────────────┤", "system_logs");
+    
+    // Overall Health
+    std::string health_status = overall_health ? "HEALTHY" : "UNHEALTHY";
+    log_message("│ Overall Health    │ " + health_status + std::string(49 - health_status.length(), ' ') + "│", "system_logs");
+    
+    // Startup Complete
+    std::string startup_status = startup_complete ? "YES" : "NO";
+    log_message("│ Startup Complete  │ " + startup_status + std::string(49 - startup_status.length(), ' ') + "│", "system_logs");
+    
+    // Configuration Valid
+    std::string config_status = configuration_valid ? "YES" : "NO";
+    log_message("│ Configuration     │ " + config_status + std::string(49 - config_status.length(), ' ') + "│", "system_logs");
+    
+    // All Threads Started
+    std::string threads_status = all_threads_started ? "YES" : "NO";
+    log_message("│ All Threads Start │ " + threads_status + std::string(49 - threads_status.length(), ' ') + "│", "system_logs");
+    
+    log_message("├───────────────────┼──────────────────────────────────────────────────┤", "system_logs");
+    
+    // Active Threads
+    std::string active_threads_str = std::to_string(active_thread_count);
+    log_message("│ Active Threads    │ " + active_threads_str + std::string(49 - active_threads_str.length(), ' ') + "│", "system_logs");
+    
+    // Connectivity Issues
+    std::string connectivity_issues_str = std::to_string(connectivity_issues_count);
+    log_message("│ Connectivity Issu │ " + connectivity_issues_str + std::string(49 - connectivity_issues_str.length(), ' ') + "│", "system_logs");
+    
+    // Critical Errors
+    std::string critical_errors_str = std::to_string(critical_errors_count);
+    log_message("│ Critical Errors   │ " + critical_errors_str + std::string(49 - critical_errors_str.length(), ' ') + "│", "system_logs");
+    
+    log_message("├───────────────────┼──────────────────────────────────────────────────┤", "system_logs");
+    
+    // System Uptime
+    std::string uptime_str = std::to_string(uptime_seconds) + " seconds";
+    log_message("│ System Uptime     │ " + uptime_str + std::string(49 - uptime_str.length(), ' ') + "│", "system_logs");
+    
+    log_message("└───────────────────┴──────────────────────────────────────────────────┘", "system_logs");
+}
+
+std::string SystemLogs::format_health_report_string(bool overall_health, bool startup_complete, bool configuration_valid,
+                                                   bool all_threads_started, int active_thread_count, int connectivity_issues_count,
+                                                   int critical_errors_count, int uptime_seconds) {
+    std::ostringstream health_report_stream;
+    health_report_stream << "=== SYSTEM HEALTH REPORT ===\n";
+    health_report_stream << "Overall Health: " << (overall_health ? "HEALTHY" : "UNHEALTHY") << "\n";
+    health_report_stream << "Startup Complete: " << (startup_complete ? "YES" : "NO") << "\n";
+    health_report_stream << "Configuration Valid: " << (configuration_valid ? "YES" : "NO") << "\n";
+    health_report_stream << "All Threads Started: " << (all_threads_started ? "YES" : "NO") << "\n";
+    health_report_stream << "Active Threads: " << active_thread_count << "\n";
+    health_report_stream << "Connectivity Issues: " << connectivity_issues_count << "\n";
+    health_report_stream << "Critical Errors: " << critical_errors_count << "\n";
+    health_report_stream << "System Uptime: " << uptime_seconds << " seconds\n";
+    return health_report_stream.str();
+}
+
+std::string SystemLogs::format_health_report_error_string() {
+    return "=== SYSTEM HEALTH REPORT ===\nError generating report\n";
+}
+
+void SystemLogs::log_health_report_generation_error(const std::string& error_description) {
+    log_critical_error(std::string("Error generating health report: ") + error_description);
+}
+

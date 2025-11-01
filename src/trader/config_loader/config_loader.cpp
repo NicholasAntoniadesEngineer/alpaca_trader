@@ -219,6 +219,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         // System Health Monitoring
         else if (config_key_string == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(config_value_string);
         else if (config_key_string == "timing.system_health_logging_interval_seconds") cfg.timing.system_health_logging_interval_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.max_health_check_interval_minutes") cfg.timing.max_health_check_interval_minutes = std::stoi(config_value_string);
 
         // Error Recovery Timing
         else if (config_key_string == "timing.emergency_trading_halt_duration_minutes") cfg.timing.emergency_trading_halt_duration_minutes = std::stoi(config_value_string);

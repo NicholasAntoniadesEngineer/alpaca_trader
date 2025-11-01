@@ -1,19 +1,19 @@
 #ifndef SYSTEM_MODULES_HPP
 #define SYSTEM_MODULES_HPP
 
-#include "trader/account_management/account_manager.hpp"
-#include "trader/trading_logic/trading_logic.hpp"
-#include "trader/coordinators/trading_coordinator.hpp"
-#include "trader/coordinators/market_data_coordinator.hpp"
-#include "trader/coordinators/account_data_coordinator.hpp"
-#include "logging/logs/account_logs.hpp"
+#include <memory>
 #include "api/general/api_manager.hpp"
-#include "threads/system_threads/market_data_thread.hpp"
-#include "threads/system_threads/market_gate_thread.hpp"
 #include "threads/system_threads/account_data_thread.hpp"
 #include "threads/system_threads/logging_thread.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
+#include "threads/system_threads/market_gate_thread.hpp"
 #include "threads/system_threads/trader_thread.hpp"
-#include <memory>
+#include "logging/logs/account_logs.hpp"
+#include "trader/account_management/account_manager.hpp"
+#include "trader/coordinators/account_data_coordinator.hpp"
+#include "trader/coordinators/market_data_coordinator.hpp"
+#include "trader/coordinators/trading_coordinator.hpp"
+#include "trader/trading_logic/trading_logic.hpp"
 
 /**
  * @brief Runtime module container

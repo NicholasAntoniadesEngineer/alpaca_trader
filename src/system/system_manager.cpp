@@ -1,41 +1,84 @@
 #include "system_manager.hpp"
-#include "system_state.hpp"
-#include "system_modules.hpp"
-#include "system_threads.hpp"
-#include "threads/thread_logic/thread_registry.hpp"
-#include "threads/thread_logic/thread_manager.hpp"
-#include "logging/logs/startup_logs.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "logging/logs/account_logs.hpp"
-#include "logging/logs/system_logs.hpp"
-#include "configs/system_config.hpp"
-#include "system/system_configurations.hpp"
-#include "trader/coordinators/trading_coordinator.hpp"
-#include "trader/account_management/account_manager.hpp"
-#include "trader/market_data/market_data_fetcher.hpp"
-#include "trader/trading_logic/trading_logic.hpp"
-#include "trader/trading_logic/trading_logic_structures.hpp"
-#include "trader/strategy_analysis/risk_manager.hpp"
-#include "api/general/api_manager.hpp"
-#include "threads/system_threads/logging_thread.hpp"
-#include "threads/system_threads/market_data_thread.hpp"
-#include "threads/system_threads/account_data_thread.hpp"
-#include "threads/system_threads/market_gate_thread.hpp"
-#include "threads/system_threads/trader_thread.hpp"
-#include "trader/data_structures/data_structures.hpp"
-#include "threads/thread_register.hpp"
-#include "logging/logs/thread_logs.hpp"
-#include <memory>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 #include <thread>
+#include "system/system_configurations.hpp"
+#include "system/system_modules.hpp"
+#include "system/system_monitor.hpp"
+#include "system/system_state.hpp"
+#include "system/system_threads.hpp"
+#include "configs/system_config.hpp"
+#include "api/general/api_manager.hpp"
+#include "threads/system_threads/account_data_thread.hpp"
+#include "threads/system_threads/logging_thread.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
+#include "threads/system_threads/market_gate_thread.hpp"
+#include "threads/system_threads/trader_thread.hpp"
+#include "threads/thread_logic/thread_manager.hpp"
+#include "threads/thread_logic/thread_registry.hpp"
+#include "threads/thread_register.hpp"
+#include "logging/logs/account_logs.hpp"
+#include "logging/logs/startup_logs.hpp"
+#include "logging/logs/system_logs.hpp"
+#include "logging/logs/thread_logs.hpp"
+#include "logging/logger/async_logger.hpp"
+#include "trader/account_management/account_manager.hpp"
+#include "trader/coordinators/trading_coordinator.hpp"
+#include "trader/config_loader/config_loader.hpp"
+#include "trader/data_structures/data_structures.hpp"
+#include "trader/market_data/market_data_fetcher.hpp"
+#include "trader/strategy_analysis/risk_manager.hpp"
+#include "trader/trading_logic/trading_logic.hpp"
+#include "trader/trading_logic/trading_logic_structures.hpp"
 
-using namespace AlpacaTrader::Core;
 using namespace AlpacaTrader::Logging;
 using namespace AlpacaTrader::Threads;
 
+namespace AlpacaTrader {
+namespace System {
+
+SystemInitializationResult initialize() {
+    SystemInitializationResult initialization_result;
+    
+    try {
+        // Initialize minimal logging context early - required before any logging calls
+        auto early_logging_context = std::make_shared<AlpacaTrader::Logging::LoggingContext>();
+        AlpacaTrader::Logging::set_logging_context(*early_logging_context);
+        
+        // Load system configuration (may call log_message during loading)
+        AlpacaTrader::Config::SystemConfig initial_config;
+        int config_load_result = load_system_config(initial_config);
+        if (config_load_result != 0) {
+            SystemLogs::log_fatal_error(std::string("Config load failed with result: ") + std::to_string(config_load_result));
+            throw std::runtime_error("System initialization failed: configuration loading failed");
+        }
+        
+        // Create system state
+        initialization_result.system_state = std::make_unique<SystemState>(initial_config);
+        
+        // Transfer logging context to system state
+        initialization_result.system_state->logging_context = early_logging_context;
+        
+        // Initialize application foundation (logging, validation)
+        initialization_result.logger = AlpacaTrader::Logging::initialize_application_foundation(initialization_result.system_state->config);
+        
+        // Initialize CSV logging for bars and trades (stored in logging context)
+        (void)AlpacaTrader::Logging::initialize_csv_bars_logger("bars_logs");
+        (void)AlpacaTrader::Logging::initialize_csv_trade_logger("trade_logs");
+        
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_fatal_error(std::string("System initialization exception: ") + exception_error.what());
+        throw;
+    } catch (...) {
+        SystemLogs::log_fatal_error("System initialization unknown exception");
+        throw std::runtime_error("System initialization failed: unknown error");
+    }
+    
+    return initialization_result;
+}
 
 SystemConfigurations create_trading_configurations(const SystemState& state) {
     return SystemConfigurations{
@@ -136,7 +179,7 @@ void configure_trading_modules(SystemThreads& handles, SystemModules& modules, S
     }
 }
 
-SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Configure system monitor
     system_state.system_monitor.set_configuration(system_state.config);
     system_state.system_monitor.record_configuration_validated(true);
@@ -144,24 +187,25 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     // Create handles for the threads
     SystemThreads handles;
     
-    // Initialize the global logging system FIRST
-    if (logger) {
-        AlpacaTrader::Logging::initialize_global_logger(*logger);
+    // Initialize the global logging system first
+    if (!logger) {
+        throw std::runtime_error("System startup failed: Logger is required but not provided");
     }
+    AlpacaTrader::Logging::initialize_global_logger(*logger);
     
     // Create all trading system modules and store them in system_state for lifetime management
     system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger, handles));
     
-        // Set up data synchronization for trading engine
-        DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
-                                   system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
-                                   system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
-        system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
-        
-        // Set up market data fetcher sync state
-        AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
-        system_state.trading_modules->trading_coordinator->get_market_data_fetcher_reference().set_sync_state_references(fetcher_sync_state);
+    // Set up data synchronization for trading engine
+    DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
+                                system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
+                                system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
+    system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
     
+    // Set up market data fetcher sync state
+    AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
+    system_state.trading_modules->trading_coordinator->get_market_data_fetcher_reference().set_sync_state_references(fetcher_sync_state);
+
     // Log startup information
     StartupLogs::log_startup_information(*system_state.trading_modules, system_state.config);
     
@@ -204,11 +248,14 @@ SystemThreads SystemManager::startup(SystemState& system_state, std::shared_ptr<
     
     // Record thread startup in system monitor
     int expected_thread_count = static_cast<int>(thread_definitions.size());
-    int actual_thread_count = static_cast<int>(thread_definitions.size());
+    int actual_thread_count = static_cast<int>(system_state.thread_infos.size());
     system_state.system_monitor.record_threads_started(expected_thread_count, actual_thread_count);
     
     // Record system startup complete
     system_state.system_monitor.record_startup_complete();
+    
+    // Log initial health report after all threads have started
+    system_state.system_monitor.log_health_report();
     
     return handles;
 }
@@ -270,7 +317,7 @@ static void run_until_shutdown(SystemState& state) {
     }
 }
 
-void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+void shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Signal all threads to stop
     system_state.cv.notify_all();
 
@@ -286,9 +333,9 @@ void SystemManager::shutdown(SystemState& system_state, std::shared_ptr<AlpacaTr
     AlpacaTrader::Logging::shutdown_global_logger(*logger);
 }
 
-// Thread management functions moved to thread_registry.hpp/.cpp
-// This provides a single source of truth for all thread definitions
-
-void SystemManager::run(SystemState& system_state) {
+void run(SystemState& system_state) {
     run_until_shutdown(system_state);
 }
+
+} // namespace System
+} // namespace AlpacaTrader

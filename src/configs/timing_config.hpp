@@ -39,6 +39,7 @@ struct TimingConfig {
 
     bool enable_system_health_monitoring;            // Enable system health monitoring
     int system_health_logging_interval_seconds;      // System health logging interval in seconds
+    int max_health_check_interval_minutes;           // Maximum health check interval before alerting in minutes
 
     // ========================================================================
     // ERROR RECOVERY TIMING

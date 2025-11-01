@@ -35,6 +35,14 @@ public:
     static void log_connectivity_issue();
     static void log_critical_error(const std::string& error_description);
     static void log_system_alert(const std::string& alert_message);
+    static void log_health_report_table(bool overall_health, bool startup_complete, bool configuration_valid, 
+                                       bool all_threads_started, int active_thread_count, int connectivity_issues_count,
+                                       int critical_errors_count, int uptime_seconds);
+    static std::string format_health_report_string(bool overall_health, bool startup_complete, bool configuration_valid,
+                                                   bool all_threads_started, int active_thread_count, int connectivity_issues_count,
+                                                   int critical_errors_count, int uptime_seconds);
+    static std::string format_health_report_error_string();
+    static void log_health_report_generation_error(const std::string& error_description);
 };
 
 #endif // SYSTEM_LOGS_HPP

@@ -1,10 +1,7 @@
 #include "system_monitor.hpp"
 #include "logging/logs/system_logs.hpp"
-#include <sstream>
-#include <iomanip>
 
 namespace AlpacaTrader {
-namespace Core {
 namespace Monitoring {
 
 void SystemMonitor::set_configuration(const AlpacaTrader::Config::SystemConfig& config) {
@@ -66,9 +63,8 @@ void SystemMonitor::record_critical_error(const std::string& error_description) 
     SystemLogs::log_critical_error(error_description);
 }
 
-bool SystemMonitor::is_system_healthy() const {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
-    
+bool SystemMonitor::calculate_system_health_status() const {
+    try {
     if (!metrics_.startup_complete) {
             return false;
     }
@@ -85,13 +81,25 @@ bool SystemMonitor::is_system_healthy() const {
     auto time_since_health_check = std::chrono::duration_cast<std::chrono::minutes>(now - metrics_.last_health_check_time);
     
     if (metrics_.last_health_check_time.time_since_epoch().count() > 0) {
-        int max_health_check_interval_minutes = 10;
-        if (time_since_health_check.count() > max_health_check_interval_minutes) {
+            int max_health_check_interval_minutes_value = config_.timing.max_health_check_interval_minutes;
+            if (time_since_health_check.count() > max_health_check_interval_minutes_value) {
         return false;
         }
     }
     
     return true;
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_critical_error(std::string("Error calculating system health status: ") + exception_error.what());
+        return false;
+    } catch (...) {
+        SystemLogs::log_critical_error("Unknown error calculating system health status");
+        return false;
+    }
+}
+
+bool SystemMonitor::is_system_healthy() const {
+    std::lock_guard<std::mutex> lock(metrics_mutex_);
+    return calculate_system_health_status();
 }
 
 bool SystemMonitor::are_threads_healthy(int expected_thread_count) const {
@@ -110,23 +118,31 @@ bool SystemMonitor::has_startup_completed() const {
 }
 
 std::string SystemMonitor::get_health_report() const {
+    try {
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     
-    std::ostringstream oss;
-    oss << "=== SYSTEM HEALTH REPORT ===\n";
-    oss << "Overall Health: " << (is_system_healthy() ? "HEALTHY" : "UNHEALTHY") << "\n";
-    oss << "Startup Complete: " << (metrics_.startup_complete ? "YES" : "NO") << "\n";
-    oss << "Configuration Valid: " << (metrics_.configuration_valid ? "YES" : "NO") << "\n";
-    oss << "All Threads Started: " << (metrics_.all_threads_started ? "YES" : "NO") << "\n";
-    oss << "Active Threads: " << metrics_.active_thread_count.load() << "\n";
-    oss << "Connectivity Issues: " << metrics_.connectivity_issues_count.load() << "\n";
-    oss << "Critical Errors: " << metrics_.critical_errors_count.load() << "\n";
-    
+        bool system_healthy_value = calculate_system_health_status();
     auto now = std::chrono::steady_clock::now();
     auto uptime = std::chrono::duration_cast<std::chrono::seconds>(now - metrics_.startup_time);
-    oss << "System Uptime: " << uptime.count() << " seconds\n";
-    
-    return oss.str();
+        int uptime_seconds = static_cast<int>(uptime.count());
+        
+        return SystemLogs::format_health_report_string(
+            system_healthy_value,
+            metrics_.startup_complete,
+            metrics_.configuration_valid,
+            metrics_.all_threads_started,
+            metrics_.active_thread_count.load(),
+            metrics_.connectivity_issues_count.load(),
+            metrics_.critical_errors_count.load(),
+            uptime_seconds
+        );
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_health_report_generation_error(exception_error.what());
+        return SystemLogs::format_health_report_error_string();
+    } catch (...) {
+        SystemLogs::log_health_report_generation_error("Unknown error");
+        return SystemLogs::format_health_report_error_string();
+    }
 }
 
 SystemHealthSnapshot SystemMonitor::get_health_snapshot() const {
@@ -144,17 +160,42 @@ SystemHealthSnapshot SystemMonitor::get_health_snapshot() const {
     return result;
 }
 
+void SystemMonitor::log_health_report() const {
+    try {
+    std::lock_guard<std::mutex> lock(metrics_mutex_);
+    
+        // Calculate overall health status using shared helper
+        bool system_healthy_value = calculate_system_health_status();
+    
+    // Calculate uptime
+    auto now = std::chrono::steady_clock::now();
+    auto uptime = std::chrono::duration_cast<std::chrono::seconds>(now - metrics_.startup_time);
+    int uptime_seconds = static_cast<int>(uptime.count());
+    
+    // Use SystemLogs to format and log the table
+    SystemLogs::log_health_report_table(
+        system_healthy_value,
+        metrics_.startup_complete,
+        metrics_.configuration_valid,
+        metrics_.all_threads_started,
+        metrics_.active_thread_count.load(),
+        metrics_.connectivity_issues_count.load(),
+        metrics_.critical_errors_count.load(),
+        uptime_seconds
+    );
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_critical_error(std::string("Error logging health report: ") + exception_error.what());
+    } catch (...) {
+        SystemLogs::log_critical_error("Unknown error logging health report");
+    }
+}
+
 void SystemMonitor::check_and_alert() {
     if (!is_system_healthy()) {
         SystemLogs::log_system_alert(get_health_report());
     }
 }
 
-bool SystemMonitor::validate_config_loaded() const {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
-    return !config_.trading_mode.primary_symbol.empty();
-}
 
 } // namespace Monitoring
-} // namespace Core
 } // namespace AlpacaTrader

@@ -1,21 +1,20 @@
 #ifndef SYSTEM_STATE_HPP
 #define SYSTEM_STATE_HPP
 
-#include "configs/system_config.hpp"
-#include "trader/data_structures/data_structures.hpp"
-#include "configs/system_config.hpp"
-#include "logging/logs/thread_logs.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "system/system_modules.hpp"
-#include "threads/thread_logic/thread_manager.hpp"
-#include "system/system_monitor.hpp"
-#include "utils/connectivity_manager.hpp"
 #include <atomic>
-#include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <vector>
-#include <iostream>
+#include "system/system_modules.hpp"
+#include "system/system_monitor.hpp"
+#include "configs/system_config.hpp"
+#include "threads/thread_logic/thread_manager.hpp"
+#include "logging/logs/thread_logs.hpp"
+#include "logging/logger/async_logger.hpp"
+#include "trader/data_structures/data_structures.hpp"
+#include "utils/connectivity_manager.hpp"
 
 /**
  * @brief Central system state container
@@ -59,11 +58,11 @@ struct SystemState {
     // CONFIGURATION AND MODULES
     // =========================================================================
     AlpacaTrader::Config::SystemConfig config;                    // Complete system configuration
-    const SystemConfig& trader_view = config;  // Trader-specific configuration view
+    const AlpacaTrader::Config::SystemConfig& trader_view = config;  // Trader-specific configuration view
     std::unique_ptr<SystemModules> trading_modules;  // All system modules
     std::vector<ThreadLogs::ThreadInfo> thread_infos;  // Thread monitoring information
     AlpacaTrader::Core::ThreadManagerState thread_manager_state;  // Thread management state
-    AlpacaTrader::Core::Monitoring::SystemMonitor system_monitor;  // System monitoring state
+    AlpacaTrader::Monitoring::SystemMonitor system_monitor;  // System monitoring state
     ConnectivityManager connectivity_manager;  // System connectivity state
     std::shared_ptr<AlpacaTrader::Logging::LoggingContext> logging_context;  // Logging context
 

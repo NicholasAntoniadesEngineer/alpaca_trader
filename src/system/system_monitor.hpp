@@ -1,15 +1,13 @@
 #ifndef SYSTEM_MONITOR_HPP
 #define SYSTEM_MONITOR_HPP
 
-#include <string>
-#include <chrono>
 #include <atomic>
+#include <chrono>
 #include <mutex>
-#include <vector>
+#include <string>
 #include "configs/system_config.hpp"
 
 namespace AlpacaTrader {
-namespace Core {
 namespace Monitoring {
 
 struct SystemHealthMetrics {
@@ -66,6 +64,7 @@ public:
     // Reporting
     std::string get_health_report() const;
     SystemHealthSnapshot get_health_snapshot() const;
+    void log_health_report() const;
     
     // Alerting
     void check_and_alert();
@@ -75,11 +74,10 @@ private:
     SystemHealthMetrics metrics_;
     AlpacaTrader::Config::SystemConfig config_;
     
-    bool validate_config_loaded() const;
+    bool calculate_system_health_status() const;
 };
 
 } // namespace Monitoring
-} // namespace Core
 } // namespace AlpacaTrader
 
 #endif // SYSTEM_MONITOR_HPP

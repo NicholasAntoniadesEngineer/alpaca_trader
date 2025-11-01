@@ -175,7 +175,7 @@ void StartupLogs::log_data_source_configuration(const AlpacaTrader::Config::Syst
     }
     
     log_message("├───────────────────┼──────────────────────────────────────────────────┤", "");
-    log_message("│ Total Configured  │ " + std::to_string(config.multi_api.providers.size()) + " API providers available" + std::string(27 - std::to_string(config.multi_api.providers.size()).length(), ' ') + "│", "");
+    log_message("│ Total Configured  │ " + std::to_string(config.multi_api.providers.size()) + " API providers available" + std::string(25 - std::to_string(config.multi_api.providers.size()).length(), ' ') + "│", "");
     log_message("└───────────────────┴──────────────────────────────────────────────────┘", "");
 }
 
