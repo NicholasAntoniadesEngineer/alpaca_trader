@@ -6,7 +6,7 @@
 #include "logging_config.hpp"
 #include "multi_api_config.hpp"
 #include "trading_mode_config.hpp"
-#include "core/threads/thread_register.hpp"
+#include "threads/thread_register.hpp"
 
 namespace AlpacaTrader {
 namespace Config {

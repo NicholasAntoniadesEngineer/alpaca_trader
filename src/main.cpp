@@ -1,10 +1,10 @@
 // main.cpp
-#include "core/trader/config_loader/config_loader.hpp"
+#include "trader/config_loader/config_loader.hpp"
 #include "configs/system_config.hpp"
-#include "core/system/system_state.hpp"
-#include "core/system/system_threads.hpp"
-#include "core/system/system_manager.hpp"
-#include "core/logging/logger/async_logger.hpp"
+#include "system/system_state.hpp"
+#include "system/system_threads.hpp"
+#include "system/system_manager.hpp"
+#include "logging/logger/async_logger.hpp"
 
 
 // =============================================================================

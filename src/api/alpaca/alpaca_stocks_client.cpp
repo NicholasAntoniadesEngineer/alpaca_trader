@@ -1,7 +1,7 @@
 #include "alpaca_stocks_client.hpp"
-#include "core/logging/logger/async_logger.hpp"
-#include "core/logging/logger/logging_macros.hpp"
-#include "core/utils/http_utils.hpp"
+#include "logging/logger/async_logger.hpp"
+#include "logging/logger/logging_macros.hpp"
+#include "utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
 

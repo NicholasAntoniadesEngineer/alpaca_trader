@@ -22,52 +22,53 @@ SOURCES = src/main.cpp \
   src/api/alpaca/alpaca_trading_client.cpp \
   src/api/alpaca/alpaca_stocks_client.cpp \
   src/api/polygon/polygon_crypto_client.cpp \
-  src/core/trader/coordinators/trading_coordinator.cpp \
-  src/core/trader/coordinators/market_data_coordinator.cpp \
-  src/core/trader/coordinators/account_data_coordinator.cpp \
-  src/core/trader/trading_logic/trading_logic.cpp \
-  src/core/trader/strategy_analysis/risk_manager.cpp \
-  src/core/trader/trading_logic/order_execution_logic.cpp \
-  src/core/trader/strategy_analysis/strategy_logic.cpp \
-  src/core/trader/strategy_analysis/indicators.cpp \
-  src/core/trader/market_data/market_data_fetcher.cpp \
-  src/core/trader/market_data/market_data_manager.cpp \
-  src/core/trader/market_data/market_data_validator.cpp \
-  src/core/trader/market_data/market_bars_manager.cpp \
-  src/core/trader/strategy_analysis/signal_processor.cpp \
-  src/core/utils/connectivity_manager.cpp \
-  src/core/system/system_manager.cpp \
-  src/core/threads/thread_register.cpp \
-  src/core/system/system_monitor.cpp \
-  src/core/trader/config_loader/config_loader.cpp \
-  src/core/trader/config_loader/multi_api_config_loader.cpp \
-  src/core/trader/account_management/account_manager.cpp \
-  src/core/utils/time_utils.cpp \
-  src/core/logging/logs/account_logs.cpp \
-  src/core/logging/logs/market_data_logs.cpp \
-  src/core/logging/logs/risk_logs.cpp \
-  src/core/utils/http_utils.cpp \
-  src/core/logging/logger/async_logger.cpp \
-  src/core/logging/logger/csv_bars_logger.cpp \
-  src/core/logging/logger/csv_trade_logger.cpp \
-  src/core/logging/logs/trading_logs.cpp \
-  src/core/logging/logs/signal_analysis_logs.cpp \
-  src/core/logging/logs/market_gate_logs.cpp \
-  src/core/logging/logs/market_data_thread_logs.cpp \
-  src/core/logging/logs/thread_logs.cpp \
-  src/core/logging/logs/startup_logs.cpp \
+  src/trader/coordinators/trading_coordinator.cpp \
+  src/trader/coordinators/market_data_coordinator.cpp \
+  src/trader/coordinators/account_data_coordinator.cpp \
+  src/trader/trading_logic/trading_logic.cpp \
+  src/trader/strategy_analysis/risk_manager.cpp \
+  src/trader/trading_logic/order_execution_logic.cpp \
+  src/trader/strategy_analysis/strategy_logic.cpp \
+  src/trader/strategy_analysis/indicators.cpp \
+  src/trader/market_data/market_data_fetcher.cpp \
+  src/trader/market_data/market_data_manager.cpp \
+  src/trader/market_data/market_data_validator.cpp \
+  src/trader/market_data/market_bars_manager.cpp \
+  src/trader/strategy_analysis/signal_processor.cpp \
+  src/utils/connectivity_manager.cpp \
+  src/system/system_manager.cpp \
+  src/threads/thread_register.cpp \
+  src/system/system_monitor.cpp \
+  src/trader/config_loader/config_loader.cpp \
+  src/trader/config_loader/multi_api_config_loader.cpp \
+  src/trader/account_management/account_manager.cpp \
+  src/utils/time_utils.cpp \
+  src/logging/logs/account_logs.cpp \
+  src/logging/logs/market_data_logs.cpp \
+  src/logging/logs/risk_logs.cpp \
+  src/utils/http_utils.cpp \
+  src/logging/logger/async_logger.cpp \
+  src/logging/logger/csv_bars_logger.cpp \
+  src/logging/logger/csv_trade_logger.cpp \
+  src/logging/logs/trading_logs.cpp \
+  src/logging/logs/signal_analysis_logs.cpp \
+  src/logging/logs/market_gate_logs.cpp \
+  src/logging/logs/market_data_thread_logs.cpp \
+  src/logging/logs/thread_logs.cpp \
+  src/logging/logs/startup_logs.cpp \
+  src/logging/logs/system_logs.cpp \
   src/configs/thread_config.cpp \
-  src/core/threads/thread_logic/platform/thread_control.cpp \
-  src/core/threads/thread_logic/platform/linux/linux_thread_control.cpp \
-  src/core/threads/thread_logic/platform/macos/macos_thread_control.cpp \
-  src/core/threads/thread_logic/platform/windows/windows_thread_control.cpp \
-  src/core/threads/thread_logic/thread_manager.cpp \
-  src/core/threads/thread_logic/thread_registry.cpp \
-  src/core/threads/system_threads/account_data_thread.cpp \
-  src/core/threads/system_threads/market_data_thread.cpp \
-  src/core/threads/system_threads/market_gate_thread.cpp \
-  src/core/threads/system_threads/logging_thread.cpp \
-  src/core/threads/system_threads/trader_thread.cpp
+  src/threads/thread_logic/platform/thread_control.cpp \
+  src/threads/thread_logic/platform/linux/linux_thread_control.cpp \
+  src/threads/thread_logic/platform/macos/macos_thread_control.cpp \
+  src/threads/thread_logic/platform/windows/windows_thread_control.cpp \
+  src/threads/thread_logic/thread_manager.cpp \
+  src/threads/thread_logic/thread_registry.cpp \
+  src/threads/system_threads/account_data_thread.cpp \
+  src/threads/system_threads/market_data_thread.cpp \
+  src/threads/system_threads/market_gate_thread.cpp \
+  src/threads/system_threads/logging_thread.cpp \
+  src/threads/system_threads/trader_thread.cpp
 
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
@@ -86,26 +87,24 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/api/general
 	mkdir -p $(OBJ_DIR)/src/api/alpaca
 	mkdir -p $(OBJ_DIR)/src/api/polygon
-	mkdir -p $(OBJ_DIR)/src/core
-	mkdir -p $(OBJ_DIR)/src/core/system
-	mkdir -p $(OBJ_DIR)/src/core/trader/core
-	mkdir -p $(OBJ_DIR)/src/core/trader/strategy_analysis
-	mkdir -p $(OBJ_DIR)/src/core/trader/config_loader
-	mkdir -p $(OBJ_DIR)/src/core/trader/market_data
-	mkdir -p $(OBJ_DIR)/src/core/trader/account_management
-	mkdir -p $(OBJ_DIR)/src/core/trader/data_structures
-	mkdir -p $(OBJ_DIR)/src/core/trader/trading_logic
-	mkdir -p $(OBJ_DIR)/src/core/trader/coordinators
-	mkdir -p $(OBJ_DIR)/src/core/logging/logger
-	mkdir -p $(OBJ_DIR)/src/core/logging/logs
-	mkdir -p $(OBJ_DIR)/src/core/utils
-	mkdir -p $(OBJ_DIR)/src/core/threads
-	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic
-	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform
-	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/linux
-	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/macos
-	mkdir -p $(OBJ_DIR)/src/core/threads/thread_logic/platform/windows
-	mkdir -p $(OBJ_DIR)/src/core/threads/system_threads
+	mkdir -p $(OBJ_DIR)/src/system
+	mkdir -p $(OBJ_DIR)/src/trader/strategy_analysis
+	mkdir -p $(OBJ_DIR)/src/trader/config_loader
+	mkdir -p $(OBJ_DIR)/src/trader/market_data
+	mkdir -p $(OBJ_DIR)/src/trader/account_management
+	mkdir -p $(OBJ_DIR)/src/trader/data_structures
+	mkdir -p $(OBJ_DIR)/src/trader/trading_logic
+	mkdir -p $(OBJ_DIR)/src/trader/coordinators
+	mkdir -p $(OBJ_DIR)/src/logging/logger
+	mkdir -p $(OBJ_DIR)/src/logging/logs
+	mkdir -p $(OBJ_DIR)/src/utils
+	mkdir -p $(OBJ_DIR)/src/threads
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/linux
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/macos
+	mkdir -p $(OBJ_DIR)/src/threads/thread_logic/platform/windows
+	mkdir -p $(OBJ_DIR)/src/threads/system_threads
 	mkdir -p $(OBJ_DIR)/src/configs
 	mkdir -p $(OBJ_DIR)/src/json
 

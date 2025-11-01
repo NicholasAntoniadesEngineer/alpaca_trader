@@ -3,8 +3,8 @@
 
 #include "api_provider_interface.hpp"
 #include "configs/multi_api_config.hpp"
-#include "core/trader/data_structures/data_structures.hpp"
-#include "core/utils/connectivity_manager.hpp"
+#include "trader/data_structures/data_structures.hpp"
+#include "utils/connectivity_manager.hpp"
 #include <memory>
 #include <unordered_map>
 #include <string>
