@@ -2,10 +2,10 @@
 #include "logging/logs/trading_logs.hpp"
 #include "logging/logs/signal_analysis_logs.hpp"
 #include "logging/logs/logger_structures.hpp"
-#include "utils/time_utils.hpp"
 #include "api/general/api_manager.hpp"
 #include <chrono>
 #include <cmath>
+#include <memory>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -147,11 +147,137 @@ void TradingLogic::execute_trade_if_valid(const TradeExecutionRequest& trade_req
     
     double buying_power_amount = account_manager.fetch_buying_power();
     if (!order_engine.validate_trade_feasibility(trade_request.position_sizing, buying_power_amount, trade_request.processed_data.curr.close_price)) {
+        double position_value_amount = trade_request.position_sizing.quantity * trade_request.processed_data.curr.close_price;
+        double required_buying_power_amount = position_value_amount * config.strategy.buying_power_validation_safety_margin;
+        TradingLogs::log_insufficient_buying_power(required_buying_power_amount, buying_power_amount, trade_request.position_sizing.quantity, trade_request.processed_data.curr.close_price);
         TradingLogs::log_trade_validation_failed("insufficient buying power");
         return;
     }
     
+    TradingLogs::log_order_execution_header();
+    
+    bool is_long_position = trade_request.current_position_quantity > 0;
+    bool is_short_position = trade_request.current_position_quantity < 0;
+    TradingLogs::log_debug_position_data(trade_request.current_position_quantity, trade_request.processed_data.pos_details.current_value, trade_request.processed_data.pos_details.position_quantity, is_long_position, is_short_position);
+    
+    try {
+        if (trade_request.signal_decision.buy) {
+            TradingLogs::log_signal_triggered(config.strategy.signal_buy_string, true);
+            
+            if (trade_request.current_position_quantity == 0) {
+                // Opening new position with bracket order - log exit targets before execution
+                // Check if real-time price will be used
+                double original_price = trade_request.processed_data.curr.close_price;
+                ExitTargets exit_targets_result = order_engine.calculate_exit_targets(
+                    OrderExecutionLogic::OrderSide::Buy, 
+                    trade_request.processed_data, 
+                    trade_request.position_sizing
+                );
+                
+                // Log real-time price usage if configured
+                if (config.strategy.use_current_market_price_for_order_execution) {
+                    double realtime_price_amount = api_manager.get_current_price(config.trading_mode.primary_symbol);
+                    if (realtime_price_amount > 0.0) {
+                        TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
+                    } else {
+                        TradingLogs::log_realtime_price_fallback(original_price);
+                    }
+                }
+                
+                std::string order_side_string = config.strategy.signal_buy_string;
+                Logging::ComprehensiveOrderExecutionRequest order_request_object("Bracket Order", order_side_string, trade_request.position_sizing.quantity, 
+                                                                trade_request.processed_data.curr.close_price, trade_request.processed_data.atr, trade_request.processed_data.pos_details.position_quantity, 
+                                                                trade_request.position_sizing.risk_amount, exit_targets_result.stop_loss, exit_targets_result.take_profit,
+                                                                config.trading_mode.primary_symbol, "execute_bracket_order");
+                TradingLogs::log_comprehensive_order_execution(order_request_object);
+                
+                Logging::ExitTargetsTableRequest exit_targets_request_object(order_side_string, trade_request.processed_data.curr.close_price, trade_request.position_sizing.risk_amount, config.strategy.rr_ratio, exit_targets_result.stop_loss, exit_targets_result.take_profit);
+                TradingLogs::log_exit_targets_table(exit_targets_request_object);
+    }
+    
     order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
+            TradingLogs::log_market_status(true, "BUY order executed successfully");
+        } else if (trade_request.signal_decision.sell) {
+            TradingLogs::log_signal_triggered(config.strategy.signal_sell_string, true);
+            
+            if (trade_request.current_position_quantity == 0) {
+                if (!api_manager.get_account_info().empty()) {
+                    TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
+                    return;
+                } else {
+                    TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
+                    double original_price = trade_request.processed_data.curr.close_price;
+                    ExitTargets exit_targets_result = order_engine.calculate_exit_targets(
+                        OrderExecutionLogic::OrderSide::Sell, 
+                        trade_request.processed_data, 
+                        trade_request.position_sizing
+                    );
+                    
+                    // Log real-time price usage if configured
+                    if (config.strategy.use_current_market_price_for_order_execution) {
+                        double realtime_price_amount = api_manager.get_current_price(config.trading_mode.primary_symbol);
+                        if (realtime_price_amount > 0.0) {
+                            TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
+                        } else {
+                            TradingLogs::log_realtime_price_fallback(original_price);
+                        }
+                    }
+                    
+                    std::string order_side_string = config.strategy.signal_sell_string;
+                    Logging::ComprehensiveOrderExecutionRequest order_request_object("Bracket Order", order_side_string, trade_request.position_sizing.quantity, 
+                                                                    trade_request.processed_data.curr.close_price, trade_request.processed_data.atr, trade_request.processed_data.pos_details.position_quantity, 
+                                                                    trade_request.position_sizing.risk_amount, exit_targets_result.stop_loss, exit_targets_result.take_profit,
+                                                                    config.trading_mode.primary_symbol, "execute_bracket_order");
+                    TradingLogs::log_comprehensive_order_execution(order_request_object);
+                    
+                    Logging::ExitTargetsTableRequest exit_targets_request_object(order_side_string, trade_request.processed_data.curr.close_price, trade_request.position_sizing.risk_amount, config.strategy.rr_ratio, exit_targets_result.stop_loss, exit_targets_result.take_profit);
+                    TradingLogs::log_exit_targets_table(exit_targets_request_object);
+                }
+            } else if (trade_request.current_position_quantity > 0) {
+                TradingLogs::log_market_status(true, "SELL signal - closing long position with market order");
+                std::string order_side_string = config.strategy.signal_sell_string;
+                Logging::ComprehensiveOrderExecutionRequest order_request_object("Market Order", order_side_string, trade_request.position_sizing.quantity,
+                                                                    trade_request.processed_data.curr.close_price, trade_request.processed_data.atr, trade_request.processed_data.pos_details.position_quantity,
+                                                                    trade_request.position_sizing.risk_amount, 0.0, 0.0,
+                                                                    config.trading_mode.primary_symbol, "execute_market_order");
+                TradingLogs::log_comprehensive_order_execution(order_request_object);
+            } else {
+                TradingLogs::log_market_status(true, "SELL signal - closing short position with market order");
+                std::string order_side_string = config.strategy.signal_buy_string;
+                Logging::ComprehensiveOrderExecutionRequest order_request_object("Market Order", order_side_string, trade_request.position_sizing.quantity,
+                                                                    trade_request.processed_data.curr.close_price, trade_request.processed_data.atr, trade_request.processed_data.pos_details.position_quantity,
+                                                                    trade_request.position_sizing.risk_amount, 0.0, 0.0,
+                                                                    config.trading_mode.primary_symbol, "execute_market_order");
+                TradingLogs::log_comprehensive_order_execution(order_request_object);
+            }
+            
+            order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
+            TradingLogs::log_market_status(true, "SELL order executed successfully");
+        } else {
+            TradingLogs::log_no_trading_pattern();
+        }
+    } catch (const std::runtime_error& runtime_error) {
+        std::string error_message = runtime_error.what();
+        if (error_message == "Order validation failed - aborting trade execution") {
+            TradingLogs::log_trade_validation_failed("Order validation failed");
+        } else if (error_message.find("Insufficient buying power") != std::string::npos) {
+            double position_value_amount = trade_request.position_sizing.quantity * trade_request.processed_data.curr.close_price;
+            double required_buying_power_amount = position_value_amount * config.strategy.buying_power_validation_safety_margin;
+            TradingLogs::log_insufficient_buying_power(required_buying_power_amount, buying_power_amount, trade_request.position_sizing.quantity, trade_request.processed_data.curr.close_price);
+        } else if (error_message.find("Position limits reached") != std::string::npos) {
+            TradingLogs::log_position_limits_reached(trade_request.signal_decision.buy ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
+        } else if (error_message.find("Wash trade prevention") != std::string::npos) {
+            TradingLogs::log_market_status(false, error_message);
+        } else if (error_message.find("Position closure failed") != std::string::npos) {
+            TradingLogs::log_market_status(false, error_message);
+        } else {
+            TradingLogs::log_market_status(false, "Order execution error: " + error_message);
+        }
+    } catch (const std::exception& exception_error) {
+        TradingLogs::log_market_status(false, "Order execution exception: " + std::string(exception_error.what()));
+    } catch (...) {
+        TradingLogs::log_market_status(false, "Unknown exception in order execution");
+    }
 }
 
 void TradingLogic::perform_halt_countdown(int halt_duration_seconds) const {
@@ -175,23 +301,49 @@ void TradingLogic::check_and_execute_profit_taking(const ProfitTakingRequest& pr
     TradingLogs::log_exit_targets_table(exit_targets_request_object);
 
     if (unrealized_profit_loss > profit_threshold_dollars) {
-        TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", abs(current_position_quantity));
-        Logging::ComprehensiveOrderExecutionRequest order_request_object("MARKET", "SELL", abs(current_position_quantity),
+        TradingLogs::log_position_closure("PROFIT TAKING THRESHOLD EXCEEDED", std::abs(current_position_quantity));
+        Logging::ComprehensiveOrderExecutionRequest order_request_object("MARKET", "SELL", std::abs(current_position_quantity),
                                                        current_market_price, 0.0, current_position_quantity,
                                                        profit_threshold_dollars, 0.0, 0.0, "", "");
         TradingLogs::log_comprehensive_order_execution(order_request_object);
         
-        PositionSizing profit_taking_position_sizing{abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
+        PositionSizing profit_taking_position_sizing{std::abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
+        try {
         if (current_position_quantity > 0) {
             order_engine.execute_market_order(OrderExecutionLogic::OrderSide::Sell, processed_data_for_profit_taking, profit_taking_position_sizing);
         } else {
             order_engine.execute_market_order(OrderExecutionLogic::OrderSide::Buy, processed_data_for_profit_taking, profit_taking_position_sizing);
+            }
+            TradingLogs::log_market_status(true, "Profit taking order executed successfully");
+        } catch (const std::exception& exception_error) {
+            TradingLogs::log_market_status(false, "Profit taking order execution failed: " + std::string(exception_error.what()));
         }
     }
 }
 
 void TradingLogic::handle_market_close_positions(const ProcessedData& processed_data_for_close) {
+    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
+        return;
+    }
+    
+    int current_position_quantity = processed_data_for_close.pos_details.position_quantity;
+    if (current_position_quantity == 0) {
+        return;
+    }
+    
+    int market_close_grace_period_minutes = config.timing.market_close_grace_period_minutes;
+    TradingLogs::log_market_close_warning(market_close_grace_period_minutes);
+    
+    std::string order_side_string = (current_position_quantity > 0) ? config.strategy.signal_sell_string : config.strategy.signal_buy_string;
+    TradingLogs::log_market_close_position_closure(current_position_quantity, config.trading_mode.primary_symbol, order_side_string);
+    
+    try {
     order_engine.handle_market_close_positions(processed_data_for_close);
+        TradingLogs::log_market_status(true, "Market close position closure executed successfully");
+        TradingLogs::log_market_close_complete();
+    } catch (const std::exception& exception_error) {
+        TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(exception_error.what()));
+    }
 }
 
 MarketDataFetcher& TradingLogic::get_market_data_fetcher_reference() {

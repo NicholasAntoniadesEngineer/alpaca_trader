@@ -7,10 +7,7 @@
 #include "trader/strategy_analysis/strategy_logic.hpp"
 #include "api/general/api_manager.hpp"
 #include "trader/account_management/account_manager.hpp"
-#include "logging/logs/trading_logs.hpp"
 #include "trading_logic_structures.hpp"
-#include <string>
-#include <chrono>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -18,22 +15,15 @@ namespace Core {
 class OrderExecutionLogic {
 public:
     OrderExecutionLogic(const OrderExecutionLogicConstructionParams& construction_params);
-    
     void execute_trade(const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input, const SignalDecision& signal_decision_input);
     
-    // Order side enumeration
     enum class OrderSide { Buy, Sell };
     
-        // Public method for profit taking
-        void execute_market_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input);
+    void execute_market_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input);
+    bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
 
-        // Public validation method
-        bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
-
-    // Market close position management
+    ExitTargets calculate_exit_targets(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
     void handle_market_close_positions(const ProcessedData& processed_data_input);
-    
-    // Data synchronization setup
     void set_data_sync_reference(DataSyncReferences* data_sync_reference);
     
 private:
@@ -58,7 +48,6 @@ private:
     
     // Order validation and preparation
     bool validate_order_parameters(const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
-    ExitTargets calculate_exit_targets(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
     
     // Utility methods
     bool is_flat_position(int position_quantity) const;

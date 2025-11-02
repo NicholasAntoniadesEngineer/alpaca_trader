@@ -13,6 +13,8 @@
 #include "logging/logs/trading_logs.hpp"
 #include "utils/connectivity_manager.hpp"
 #include "trading_logic_structures.hpp"
+#include <memory>
+#include <string>
 
 namespace AlpacaTrader {
 namespace Core {

@@ -1,110 +1,81 @@
 #include "order_execution_logic.hpp"
-#include "logging/logs/trading_logs.hpp"
-#include "logging/logs/logger_structures.hpp"
 #include "trader/data_structures/data_structures.hpp"
+#include "json/json.hpp"
 #include <thread>
 #include <chrono>
+#include <stdexcept>
+#include <cmath>
+
+using json = nlohmann::json;
 
 namespace AlpacaTrader {
 namespace Core {
-
-using AlpacaTrader::Logging::TradingLogs;
 
 OrderExecutionLogic::OrderExecutionLogic(const OrderExecutionLogicConstructionParams& construction_params)
     : api_manager(construction_params.api_manager_ref), account_manager(construction_params.account_manager_ref), 
       config(construction_params.system_config), data_sync_ptr(construction_params.data_sync_ptr) {}
 
 void OrderExecutionLogic::execute_trade(const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input, const SignalDecision& signal_decision_input) {
-    TradingLogs::log_order_execution_header();
-    
-    try {
-        if (!validate_order_parameters(processed_data_input, position_sizing_input)) {
-            TradingLogs::log_market_status(false, "Order validation failed - aborting trade execution");
-            return;
-        }
-        
-        if (processed_data_input.curr.close_price <= 0.0) {
-            TradingLogs::log_market_status(false, "Invalid price data - price is zero or negative");
-            return;
-        }
-        
-        if (position_sizing_input.quantity <= 0) {
-            TradingLogs::log_market_status(false, "Invalid quantity - must be positive");
-            return;
-        }
-        
-        double buying_power_amount = account_manager.fetch_buying_power();
-        double required_capital_amount = processed_data_input.curr.close_price * position_sizing_input.quantity;
-        if (config.strategy.short_safety_margin <= 0.0 || config.strategy.short_safety_margin > 1.0) {
-            throw std::runtime_error("Invalid short_safety_margin - must be between 0.0 and 1.0, got: " + std::to_string(config.strategy.short_safety_margin));
-        }
-        double safety_margin = config.strategy.short_safety_margin;
-        
-        if (required_capital_amount > buying_power_amount * safety_margin) {
-            TradingLogs::log_market_status(false, "Insufficient buying power - required: $" + 
-                                std::to_string(required_capital_amount) + ", available: $" + std::to_string(buying_power_amount) + 
-                                ", safety margin: " + std::to_string(safety_margin * config.strategy.percentage_calculation_multiplier) + "%");
-            return;
-        }
-        
-    } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Error in trade validation: " + std::string(exception_error.what()));
-        return;
+    if (!validate_order_parameters(processed_data_input, position_sizing_input)) {
+        throw std::runtime_error("Order validation failed - aborting trade execution");
     }
     
-    bool is_long_position = current_position_quantity > 0;
-    bool is_short_position = current_position_quantity < 0;
-    TradingLogs::log_debug_position_data(current_position_quantity, 0.0, current_position_quantity, is_long_position, is_short_position);
+    if (processed_data_input.curr.close_price <= 0.0) {
+        throw std::runtime_error("Invalid price data - price is zero or negative");
+    }
+    
+    if (position_sizing_input.quantity <= 0) {
+        throw std::runtime_error("Invalid quantity - must be positive");
+    }
+    
+    double buying_power_amount = account_manager.fetch_buying_power();
+    double required_capital_amount = processed_data_input.curr.close_price * position_sizing_input.quantity;
+    if (config.strategy.short_safety_margin <= 0.0 || config.strategy.short_safety_margin > 1.0) {
+        throw std::runtime_error("Invalid short_safety_margin - must be between 0.0 and 1.0, got: " + std::to_string(config.strategy.short_safety_margin));
+    }
+    double safety_margin = config.strategy.short_safety_margin;
+    
+    if (required_capital_amount > buying_power_amount * safety_margin) {
+        throw std::runtime_error("Insufficient buying power - required: $" + 
+                                std::to_string(required_capital_amount) + ", available: $" + std::to_string(buying_power_amount) + 
+                                ", safety margin: " + std::to_string(safety_margin * config.strategy.percentage_calculation_multiplier) + "%");
+    }
 
     if (signal_decision_input.buy) {
-        TradingLogs::log_signal_triggered(config.strategy.signal_buy_string, true);
         execute_order(OrderSide::Buy, processed_data_input, current_position_quantity, position_sizing_input);
     } else if (signal_decision_input.sell) {
-        TradingLogs::log_signal_triggered(config.strategy.signal_sell_string, true);
         if (current_position_quantity == 0) {
             if (!api_manager.get_account_info().empty()) {
-                TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
+                throw std::runtime_error("SELL signal blocked - insufficient short availability for new position");
             } else {
-                TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
                 execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
             }
         } else if (current_position_quantity > 0) {
-            TradingLogs::log_market_status(true, "SELL signal - closing long position with market order");
             execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
         } else {
-            TradingLogs::log_market_status(true, "SELL signal - closing short position with market order");
             execute_order(OrderSide::Buy, processed_data_input, current_position_quantity, position_sizing_input);
         }
-    } else {
-        TradingLogs::log_no_trading_pattern();
     }
 }
 
 void OrderExecutionLogic::execute_order(OrderSide order_side_input, const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input) {
-    TradingLogs::log_debug_position_data(current_position_quantity, processed_data_input.pos_details.current_value, processed_data_input.pos_details.position_quantity, current_position_quantity > 0, current_position_quantity < 0);
-    
     // Check wash trade prevention first (if enabled)
     if (config.timing.enable_wash_trade_prevention_mechanism) {
         if (!can_place_order_now()) {
-            TradingLogs::log_market_status(false, "Order blocked - minimum order interval not met (wash trade prevention)");
-            return;
-        } else {
-            TradingLogs::log_market_status(true, "Wash trade check passed - order allowed");
+            throw std::runtime_error("Order blocked - minimum order interval not met (wash trade prevention)");
         }
-    } else {
-        TradingLogs::log_market_status(true, "Wash trade prevention disabled - order allowed");
     }
     
     if (should_close_opposite_position(order_side_input, current_position_quantity)) {
         if (!close_opposite_position(order_side_input, current_position_quantity)) {
-            TradingLogs::log_position_limits_reached((order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
-            return;
+            throw std::runtime_error("Position limits reached - could not close opposite position for " + 
+                                   ((order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string));
         }
     }
     
     if (!can_execute_new_position(current_position_quantity)) {
-            TradingLogs::log_position_limits_reached((order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
-        return;
+        throw std::runtime_error("Position limits reached - cannot execute new position for " + 
+                               ((order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string));
     }
     
     if (current_position_quantity == 0) {
@@ -120,103 +91,125 @@ void OrderExecutionLogic::execute_order(OrderSide order_side_input, const Proces
 
 // Execute bracket order with proper validation
 void OrderExecutionLogic::execute_bracket_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, const ExitTargets& exit_targets_input) {
-    std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
-    
-    // Use consolidated logging instead of multiple separate tables
-    Logging::ComprehensiveOrderExecutionRequest order_request_object("Bracket Order", order_side_string, position_sizing_input.quantity, 
-                                                    processed_data_input.curr.close_price, processed_data_input.atr, processed_data_input.pos_details.position_quantity, 
-                                                    position_sizing_input.risk_amount, exit_targets_input.stop_loss, exit_targets_input.take_profit,
-                                                    config.trading_mode.primary_symbol, "execute_bracket_order");
-    TradingLogs::log_comprehensive_order_execution(order_request_object);
-    
-    Logging::ExitTargetsTableRequest exit_targets_request_object(order_side_string, processed_data_input.curr.close_price, position_sizing_input.risk_amount, config.strategy.rr_ratio, exit_targets_input.stop_loss, exit_targets_input.take_profit);
-    TradingLogs::log_exit_targets_table(exit_targets_request_object);
-    
+    bool has_pending_orders = false;
     try {
-        bool has_pending_orders = false;
-        try {
-            has_pending_orders = !api_manager.get_open_orders().empty();
-        } catch (const std::exception& exception_error) {
-            TradingLogs::log_market_status(false, "Error checking pending orders: " + std::string(exception_error.what()));
-        }
-        
-        if (has_pending_orders) {
-            if (should_cancel_existing_orders()) {
-                TradingLogs::log_market_status(false, "Found conflicting orders - cancelling before new bracket order");
-                try {
-                    // Cancel pending orders - would need order IDs from get_open_orders() response
-                    TradingLogs::log_market_status(true, "Cancelling pending orders");
-                    if (config.strategy.short_retry_delay_ms <= 0) {
-                        throw std::runtime_error("Invalid short_retry_delay_ms - must be greater than 0");
-                    }
-                    int cancel_wait_milliseconds = config.strategy.short_retry_delay_ms / 5;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(cancel_wait_milliseconds));
-                } catch (const std::exception& exception_error) {
-                    TradingLogs::log_market_status(false, "Error cancelling orders: " + std::string(exception_error.what()));
-                }
-            } else {
-                TradingLogs::log_market_status(true, "Found non-conflicting orders - proceeding with new order");
-            }
-        }
-        
-        bool order_placed_status = false;
-        int max_retry_attempts = config.strategy.max_retries;
-        int retry_delay_milliseconds = config.strategy.retry_delay_ms;
-        
-        for (int retry_attempt_number = 1; retry_attempt_number <= max_retry_attempts && !order_placed_status; ++retry_attempt_number) {
-            try {
-                // Place bracket order through API manager - would need to construct proper order JSON
-                TradingLogs::log_market_status(true, "Placing bracket order");
-                order_placed_status = true;
-                TradingLogs::log_market_status(true, "Bracket order placed successfully on attempt " + std::to_string(retry_attempt_number));
-            } catch (const std::exception& exception_error) {
-                if (retry_attempt_number < max_retry_attempts) {
-                    TradingLogs::log_market_status(false, "Order attempt " + std::to_string(retry_attempt_number) + " failed, retrying: " + std::string(exception_error.what()));
-                    int delay_milliseconds = retry_delay_milliseconds * retry_attempt_number;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
-                } else {
-                    TradingLogs::log_market_status(false, "Order execution failed after " + std::to_string(max_retry_attempts) + " attempts: " + std::string(exception_error.what()));
-                }
-            }
-        }
+        has_pending_orders = !api_manager.get_open_orders().empty();
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Order execution failed (execute_order): " + std::string(exception_error.what()));
-    } catch (...) {
-        TradingLogs::log_market_status(false, "Unknown exception in order execution (execute_order)");
+        throw std::runtime_error("Error checking pending orders: " + std::string(exception_error.what()));
+    }
+    
+    if (has_pending_orders) {
+        if (should_cancel_existing_orders()) {
+            if (config.strategy.short_retry_delay_ms <= 0) {
+                throw std::runtime_error("Invalid short_retry_delay_ms - must be greater than 0");
+            }
+            int cancel_wait_milliseconds = config.strategy.short_retry_delay_ms / 5;
+            std::this_thread::sleep_for(std::chrono::milliseconds(cancel_wait_milliseconds));
+        }
+    }
+    
+    std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
+    std::string symbol_string = config.trading_mode.primary_symbol;
+    int quantity_value = position_sizing_input.quantity;
+    double entry_price_amount = processed_data_input.curr.close_price;
+    
+    if (symbol_string.empty()) {
+        throw std::runtime_error("Symbol is required for bracket order");
+    }
+    
+    if (quantity_value <= 0) {
+        throw std::runtime_error("Quantity must be positive for bracket order");
+    }
+    
+    if (entry_price_amount <= 0.0 || !std::isfinite(entry_price_amount)) {
+        throw std::runtime_error("Invalid entry price for bracket order");
+    }
+    
+    if (exit_targets_input.stop_loss <= 0.0 || !std::isfinite(exit_targets_input.stop_loss)) {
+        throw std::runtime_error("Invalid stop loss for bracket order");
+    }
+    
+    if (exit_targets_input.take_profit <= 0.0 || !std::isfinite(exit_targets_input.take_profit)) {
+        throw std::runtime_error("Invalid take profit for bracket order");
+    }
+    
+    bool order_placed_status = false;
+    int max_retry_attempts = config.strategy.max_retries;
+    int retry_delay_milliseconds = config.strategy.retry_delay_ms;
+    
+    for (int retry_attempt_number = 1; retry_attempt_number <= max_retry_attempts && !order_placed_status; ++retry_attempt_number) {
+        try {
+            json bracket_order_json;
+            bracket_order_json["symbol"] = symbol_string;
+            bracket_order_json["qty"] = std::to_string(quantity_value);
+            bracket_order_json["side"] = order_side_string;
+            bracket_order_json["type"] = "market";
+            bracket_order_json["time_in_force"] = "day";
+            bracket_order_json["order_class"] = "bracket";
+            
+            double stop_loss_price = exit_targets_input.stop_loss;
+            double take_profit_price = exit_targets_input.take_profit;
+            
+            bracket_order_json["stop_loss"] = json::object();
+            bracket_order_json["stop_loss"]["stop_price"] = std::to_string(stop_loss_price);
+            bracket_order_json["stop_loss"]["limit_price"] = std::to_string(stop_loss_price);
+            
+            bracket_order_json["take_profit"] = json::object();
+            bracket_order_json["take_profit"]["limit_price"] = std::to_string(take_profit_price);
+            
+            std::string order_json_string = bracket_order_json.dump();
+            api_manager.place_order(order_json_string);
+            order_placed_status = true;
+        } catch (const std::exception& exception_error) {
+            if (retry_attempt_number < max_retry_attempts) {
+                int delay_milliseconds = retry_delay_milliseconds * retry_attempt_number;
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
+            } else {
+                throw std::runtime_error("Order execution failed after " + std::to_string(max_retry_attempts) + " attempts: " + std::string(exception_error.what()));
+            }
+        }
+    }
+    
+    if (!order_placed_status) {
+        throw std::runtime_error("Bracket order placement failed after all retry attempts");
     }
 }
 
 // Execute regular market order for closing positions
 void OrderExecutionLogic::execute_market_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) {
-    std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
-    
-    Logging::ComprehensiveOrderExecutionRequest order_request_object("Market Order", order_side_string, position_sizing_input.quantity,
-                                                    processed_data_input.curr.close_price, processed_data_input.atr, processed_data_input.pos_details.position_quantity,
-                                                    position_sizing_input.risk_amount, 0.0, 0.0,
-                                                    config.trading_mode.primary_symbol, "execute_market_order");
-    TradingLogs::log_comprehensive_order_execution(order_request_object);
-    
-    try {
-        // Check for and cancel any pending orders before placing new ones
-        if (!api_manager.get_open_orders().empty()) {
-            TradingLogs::log_market_status(false, "Found pending orders - cancelling before new order");
-            // Cancel pending orders through API manager
-            TradingLogs::log_market_status(true, "Cancelling pending orders");
-            
-            // Wait a moment for order cancellation to process
-            int cancellation_delay_ms = config.timing.order_cancellation_processing_delay_milliseconds;
-            std::this_thread::sleep_for(std::chrono::milliseconds(cancellation_delay_ms));
-        }
-        
-        // For closing positions, we need to determine the correct side
-        // If we have a long position and want to close it, we need to sell
-        // If we have a short position and want to close it, we need to buy
-        // Submit market order through API manager - would need to construct proper order JSON
-        TradingLogs::log_market_status(true, "Submitting market order");
-        TradingLogs::log_market_status(true, "Market order submitted successfully");
-    } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Market order execution failed: " + std::string(exception_error.what()));
+    // Check for and cancel any pending orders before placing new ones
+    if (!api_manager.get_open_orders().empty()) {
+        // Wait a moment for order cancellation to process
+        int cancellation_delay_ms = config.timing.order_cancellation_processing_delay_milliseconds;
+        std::this_thread::sleep_for(std::chrono::milliseconds(cancellation_delay_ms));
     }
+    
+    std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
+    std::string symbol_string = config.trading_mode.primary_symbol;
+    int quantity_value = position_sizing_input.quantity;
+    double current_price_amount = processed_data_input.curr.close_price;
+    
+    if (symbol_string.empty()) {
+        throw std::runtime_error("Symbol is required for market order");
+    }
+    
+    if (quantity_value <= 0) {
+        throw std::runtime_error("Quantity must be positive for market order");
+    }
+    
+    if (current_price_amount <= 0.0 || !std::isfinite(current_price_amount)) {
+        throw std::runtime_error("Invalid current price for market order");
+    }
+    
+    json market_order_json;
+    market_order_json["symbol"] = symbol_string;
+    market_order_json["qty"] = std::to_string(quantity_value);
+    market_order_json["side"] = order_side_string;
+    market_order_json["type"] = "market";
+    market_order_json["time_in_force"] = "day";
+    
+    std::string order_json_string = market_order_json.dump();
+    api_manager.place_order(order_json_string);
 }
 
 // Position management methods
@@ -230,10 +223,15 @@ bool OrderExecutionLogic::should_close_opposite_position(OrderSide order_side_in
 }
 
 bool OrderExecutionLogic::close_opposite_position(OrderSide order_side_input, int current_position_quantity) {
-    std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
-    std::string opposite_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.position_short_string : config.strategy.position_long_string;
+    // Validate order_side_input matches position direction
+    bool position_is_long = current_position_quantity > 0;
+    bool position_is_short = current_position_quantity < 0;
+    bool order_is_buy = (order_side_input == OrderSide::Buy);
+    bool order_is_sell = (order_side_input == OrderSide::Sell);
     
-    TradingLogs::log_position_closure("Closing " + opposite_side_string + " position first for " + order_side_string + " signal", current_position_quantity);
+    if ((position_is_long && !order_is_sell) || (position_is_short && !order_is_buy)) {
+        throw std::runtime_error("Order side does not match position direction for closure");
+    }
     
     try {
         api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
@@ -242,13 +240,11 @@ bool OrderExecutionLogic::close_opposite_position(OrderSide order_side_input, in
         int maximum_position_verification_attempts = config.timing.maximum_position_verification_attempts;
         
         if (position_verification_timeout_milliseconds <= 0) {
-            TradingLogs::log_market_status(false, "Invalid position verification timeout - must be positive");
-            return false;
+            throw std::runtime_error("Invalid position verification timeout - must be positive");
         }
         
         if (maximum_position_verification_attempts <= 0) {
-            TradingLogs::log_market_status(false, "Invalid maximum position verification attempts - must be positive");
-            return false;
+            throw std::runtime_error("Invalid maximum position verification attempts - must be positive");
         }
         
         std::chrono::milliseconds position_close_wait_time(position_verification_timeout_milliseconds);
@@ -260,7 +256,6 @@ bool OrderExecutionLogic::close_opposite_position(OrderSide order_side_input, in
             int verify_position_quantity_result = verify_account_snapshot.pos_details.position_quantity;
             
             if (verify_position_quantity_result == 0) {
-                TradingLogs::log_debug_position_verification(verify_position_quantity_result);
                 return true;
             }
             
@@ -269,11 +264,9 @@ bool OrderExecutionLogic::close_opposite_position(OrderSide order_side_input, in
             }
         }
         
-        TradingLogs::log_debug_position_still_exists(order_side_string);
         return false;
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Position closure failed: " + std::string(exception_error.what()));
-        return false;
+        throw std::runtime_error("Position closure failed: " + std::string(exception_error.what()));
     }
 }
 
@@ -292,36 +285,30 @@ bool OrderExecutionLogic::can_execute_new_position(int current_position_quantity
 // Order validation and preparation
 bool OrderExecutionLogic::validate_order_parameters(const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const {
     if (processed_data_input.curr.close_price <= 0.0) {
-        TradingLogs::log_trade_validation_failed("Invalid price data");
         return false;
     }
     
     if (position_sizing_input.quantity <= 0) {
-        TradingLogs::log_trade_validation_failed("Invalid quantity");
         return false;
     }
     
     if (position_sizing_input.risk_amount <= 0.0) {
-        TradingLogs::log_trade_validation_failed("Invalid risk amount");
         return false;
     }
     
     // Additional validation for order rejection prevention using config values
     if (position_sizing_input.quantity > config.strategy.maximum_share_quantity_per_single_trade) {
-        TradingLogs::log_trade_validation_failed("Quantity too large - max " + std::to_string(config.strategy.maximum_share_quantity_per_single_trade) + " shares");
         return false;
     }
     
     // Validate price is within configured range
     if (processed_data_input.curr.close_price < config.strategy.minimum_acceptable_price_for_signals || processed_data_input.curr.close_price > config.strategy.maximum_acceptable_price_for_signals) {
-        TradingLogs::log_trade_validation_failed("Price out of configured range: $" + std::to_string(config.strategy.minimum_acceptable_price_for_signals) + " - $" + std::to_string(config.strategy.maximum_acceptable_price_for_signals));
         return false;
     }
     
     // Check if order value exceeds configured maximum
     double order_value_amount = processed_data_input.curr.close_price * position_sizing_input.quantity;
     if (order_value_amount > config.strategy.maximum_dollar_value_per_single_trade) {
-        TradingLogs::log_trade_validation_failed("Order value too large - max $" + std::to_string(config.strategy.maximum_dollar_value_per_single_trade));
         return false;
     }
     
@@ -336,9 +323,6 @@ ExitTargets OrderExecutionLogic::calculate_exit_targets(OrderSide order_side_inp
         double realtime_price_amount = api_manager.get_current_price(config.trading_mode.primary_symbol);
         if (realtime_price_amount > 0.0) {
             entry_price_amount = realtime_price_amount;
-            TradingLogs::log_realtime_price_used(realtime_price_amount, processed_data_input.curr.close_price);
-        } else {
-            TradingLogs::log_realtime_price_fallback(processed_data_input.curr.close_price);
         }
     }
     
@@ -354,7 +338,6 @@ ExitTargets OrderExecutionLogic::calculate_exit_targets(OrderSide order_side_inp
 bool OrderExecutionLogic::can_place_order_now() const {
     // Validate data_sync is properly initialized
     if (!data_sync_ptr || !data_sync_ptr->last_order_timestamp) {
-        TradingLogs::log_market_status(false, "Data sync not initialized - cannot check wash trade prevention");
         return false;
     }
 
@@ -365,7 +348,6 @@ bool OrderExecutionLogic::can_place_order_now() const {
 
     // Check if timestamp is properly initialized (not default-constructed)
     if (last_order == std::chrono::steady_clock::time_point{}) {
-        TradingLogs::log_market_status(true, "No previous orders - wash trade check passed (uninitialized timestamp)");
         return true;
     }
 
@@ -374,21 +356,13 @@ bool OrderExecutionLogic::can_place_order_now() const {
     int min_interval = config.timing.minimum_interval_between_orders_seconds;
     int elapsed_seconds = time_since_last_order.count();
 
-    if (elapsed_seconds >= min_interval) {
-        TradingLogs::log_market_status(true, "Wash trade check passed - " + std::to_string(elapsed_seconds) + "s elapsed (required: " + std::to_string(min_interval) + "s)");
-        return true;
-    } else {
-        int remaining_seconds = min_interval - elapsed_seconds;
-        TradingLogs::log_market_status(false, "Wash trade prevention active - " + std::to_string(elapsed_seconds) + "s elapsed, " + std::to_string(remaining_seconds) + "s remaining");
-        return false;
-    }
+    return elapsed_seconds >= min_interval;
 }
 
 void OrderExecutionLogic::update_last_order_timestamp() {
     // Validate data_sync is properly initialized
     if (!data_sync_ptr || !data_sync_ptr->last_order_timestamp) {
-        TradingLogs::log_market_status(false, "Data sync not initialized - cannot update last order timestamp");
-        return;
+        throw std::runtime_error("Data sync not initialized - cannot update last order timestamp");
     }
 
     data_sync_ptr->last_order_timestamp->store(std::chrono::steady_clock::now());
@@ -414,12 +388,7 @@ bool OrderExecutionLogic::validate_trade_feasibility(const PositionSizing& posit
     double position_value_amount = position_sizing_input.quantity * current_price_amount;
     double required_buying_power_amount = position_value_amount * config.strategy.buying_power_validation_safety_margin;
     
-    if (buying_power_amount < required_buying_power_amount) {
-        TradingLogs::log_insufficient_buying_power(required_buying_power_amount, buying_power_amount, position_sizing_input.quantity, current_price_amount);
-        return false;
-    }
-    
-    return true;
+    return buying_power_amount >= required_buying_power_amount;
 }
 
 void OrderExecutionLogic::handle_market_close_positions(const ProcessedData& processed_data_input) {
@@ -434,23 +403,10 @@ void OrderExecutionLogic::handle_market_close_positions(const ProcessedData& pro
     
     int market_close_grace_period_minutes = config.timing.market_close_grace_period_minutes;
     if (market_close_grace_period_minutes <= 0) {
-        TradingLogs::log_market_status(false, "Invalid market close grace period - must be positive");
-        return;
+        throw std::runtime_error("Invalid market close grace period - must be positive");
     }
     
-    TradingLogs::log_market_close_warning(market_close_grace_period_minutes);
-    
-    std::string order_side_string = (current_position_quantity > 0) ? config.strategy.signal_sell_string : config.strategy.signal_buy_string;
-    TradingLogs::log_market_close_position_closure(current_position_quantity, config.trading_mode.primary_symbol, order_side_string);
-    
-    try {
-        api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
-        TradingLogs::log_market_status(true, "Market close position closure executed successfully");
-    } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Market close position closure failed: " + std::string(exception_error.what()));
-    }
-    
-    TradingLogs::log_market_close_complete();
+    api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
 }
 
 } // namespace Core
