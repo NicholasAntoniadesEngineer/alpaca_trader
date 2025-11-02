@@ -35,7 +35,6 @@ SOURCES = src/main.cpp \
   src/trader/market_data/market_data_manager.cpp \
   src/trader/market_data/market_data_validator.cpp \
   src/trader/market_data/market_bars_manager.cpp \
-  src/trader/strategy_analysis/signal_processor.cpp \
   src/utils/connectivity_manager.cpp \
   src/system/system_manager.cpp \
   src/threads/thread_register.cpp \
