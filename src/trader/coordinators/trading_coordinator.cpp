@@ -12,11 +12,11 @@ namespace Core {
 
 using AlpacaTrader::Logging::TradingLogs;
 
-TradingCoordinator::TradingCoordinator(TradingLogic& trading_logic_ref, MarketDataFetcher& data_fetcher_ref,
+TradingCoordinator::TradingCoordinator(TradingLogic& trading_logic_ref, MarketDataManager& market_data_manager_ref,
                                        ConnectivityManager& connectivity_manager_ref,
                                        AccountManager& account_manager_ref,
                                        const SystemConfig& system_config_param)
-    : trading_logic(trading_logic_ref), data_fetcher(data_fetcher_ref), 
+    : trading_logic(trading_logic_ref), market_data_manager(market_data_manager_ref), 
       connectivity_manager(connectivity_manager_ref), account_manager(account_manager_ref),
       config(system_config_param) {}
 
@@ -33,7 +33,11 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     }
 
     // Wait for fresh market data
-    data_fetcher.wait_for_fresh_data(market_data_sync_state);
+    bool data_wait_result = market_data_manager.wait_for_fresh_data(market_data_sync_state);
+    if (!data_wait_result) {
+        TradingLogs::log_market_status(false, "Failed to wait for fresh market data");
+        return;
+    }
     
     if (!snapshot_state.running_flag.load()) {
         return;
@@ -82,8 +86,8 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     trading_logic.execute_trading_cycle(current_market_snapshot, current_account_snapshot, initial_equity);
 }
 
-MarketDataFetcher& TradingCoordinator::get_market_data_fetcher_reference() {
-    return data_fetcher;
+MarketDataManager& TradingCoordinator::get_market_data_manager_reference() {
+    return market_data_manager;
 }
 
 void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_snapshot,

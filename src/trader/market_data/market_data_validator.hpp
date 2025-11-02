@@ -3,7 +3,6 @@
 
 #include "configs/system_config.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "logging/logs/market_data_logs.hpp"
 
 using AlpacaTrader::Config::SystemConfig;
 

@@ -3,9 +3,16 @@
 
 #include "configs/system_config.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "api/general/api_manager.hpp"
+#include "trader/data_structures/data_sync_structures.hpp"
 #include "trader/account_management/account_manager.hpp"
-#include "logging/logs/market_data_logs.hpp"
+#include "api/general/api_manager.hpp"
+#include "market_data_fetcher.hpp"
+#include "market_data_validator.hpp"
+#include "market_bars_manager.hpp"
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
 
 using AlpacaTrader::Config::SystemConfig;
 
@@ -21,17 +28,28 @@ public:
     std::pair<MarketSnapshot, AccountSnapshot> fetch_current_snapshots();
     QuoteData fetch_real_time_quote_data(const std::string& symbol) const;
     
-    // Market data processing methods
-    void process_account_and_position_data(ProcessedData& processed_data) const;
+    // Data synchronization methods (delegated to MarketDataFetcher)
+    bool wait_for_fresh_data(MarketDataSyncState& sync_state);
+    bool set_sync_state_references(MarketDataSyncState& sync_state);
+    bool is_data_fresh() const;
+    
+    // Access to sub-components
+    MarketDataValidator& get_market_data_validator() { return market_data_validator; }
+    MarketBarsManager& get_market_bars_manager() { return market_bars_manager; }
 
 private:
     const SystemConfig& config;
     API::ApiManager& api_manager;
     AccountManager& account_manager;
     
+    // Sub-components
+    MarketDataFetcher market_data_fetcher;
+    MarketDataValidator market_data_validator;
+    MarketBarsManager market_bars_manager;
+    
     // Market data processing helper methods
-    MarketSnapshot create_market_snapshot_from_bars(const std::vector<Bar>& bars_data) const;
     AccountSnapshot create_account_snapshot() const;
+    bool process_account_and_position_data(ProcessedData& processed_data) const;
 };
 
 } // namespace Core

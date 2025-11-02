@@ -1,78 +1,40 @@
 #include "market_bars_manager.hpp"
-#include "logging/logs/market_data_logs.hpp"
 #include "trader/strategy_analysis/indicators.hpp"
 #include <stdexcept>
 
 namespace AlpacaTrader {
 namespace Core {
 
-using AlpacaTrader::Logging::MarketDataLogs;
-
 MarketBarsManager::MarketBarsManager(const SystemConfig& cfg, API::ApiManager& api_mgr)
     : config(cfg), api_manager(api_mgr) {}
 
 std::vector<Bar> MarketBarsManager::fetch_bars_data(const std::string& symbol) const {
-    try {
-        BarRequest bar_request(symbol, config.strategy.bars_to_fetch_for_calculations);
-        return api_manager.get_recent_bars(bar_request);
-    } catch (const std::exception& bars_fetch_exception_error) {
-        MarketDataLogs::log_market_data_failure_summary(
-            symbol,
-            "API Exception",
-            bars_fetch_exception_error.what(),
-            0,
-            config.logging.log_file
-        );
-        return {};
+    if (symbol.empty()) {
+        throw std::runtime_error("Cannot fetch bars data: symbol is empty");
     }
+    
+    BarRequest bar_request(symbol, config.strategy.bars_to_fetch_for_calculations);
+    return api_manager.get_recent_bars(bar_request);
 }
 
 bool MarketBarsManager::fetch_and_validate_bars(const std::string& symbol, std::vector<Bar>& bars_data) const {
     bars_data = fetch_bars_data(symbol);
     
     if (bars_data.empty()) {
-        MarketDataLogs::log_market_data_failure_summary(
-            symbol,
-            "No Bars Received",
-            "API returned empty bar data",
-            0,
-            config.logging.log_file
-        );
         return false;
     }
 
     if (static_cast<int>(bars_data.size()) < config.strategy.bars_to_fetch_for_calculations) {
-        MarketDataLogs::log_market_data_failure_summary(
-            symbol,
-            "Insufficient Bars",
-            "Received " + std::to_string(bars_data.size()) + " bars, need " + std::to_string(config.strategy.bars_to_fetch_for_calculations),
-            bars_data.size(),
-            config.logging.log_file
-        );
         return false;
     }
 
     // Validate individual bars
     for (const auto& bar : bars_data) {
         if (bar.close_price <= 0.0 || bar.high_price <= 0.0 || bar.low_price <= 0.0 || bar.open_price <= 0.0) {
-            MarketDataLogs::log_market_data_failure_summary(
-                symbol,
-                "Invalid Bar Data",
-                "Bar contains zero or negative prices",
-                bars_data.size(),
-                config.logging.log_file
-            );
             return false;
         }
         
         if (bar.high_price < bar.low_price || bar.high_price < bar.close_price || bar.low_price > bar.close_price) {
-            MarketDataLogs::log_market_data_failure_summary(
-                symbol,
-                "Invalid Bar Data",
-                "Bar OHLC relationship violation",
-                bars_data.size(),
-                config.logging.log_file
-            );
             return false;
         }
     }
@@ -81,17 +43,12 @@ bool MarketBarsManager::fetch_and_validate_bars(const std::string& symbol, std::
 }
 
 bool MarketBarsManager::compute_technical_indicators_from_bars(ProcessedData& processed_data, const std::vector<Bar>& bars_data) const {
-    MarketDataLogs::log_market_data_attempt_table("Computing indicators", config.logging.log_file);
-
     if (bars_data.empty()) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed - no bars", false, 0, config.logging.log_file);
         return false;
     }
 
-
     // Defensive: need at least 2 bars for prev/curr semantics downstream
     if (bars_data.size() < 2) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed - insufficient bars for tail access", false, bars_data.size(), config.logging.log_file);
         return false;
     }
 
@@ -114,11 +71,9 @@ bool MarketBarsManager::compute_technical_indicators_from_bars(ProcessedData& pr
     processed_data.is_doji = AlpacaTrader::Core::detect_doji_pattern(current_bar.open_price, current_bar.high_price, current_bar.low_price, current_bar.close_price);
 
     if (processed_data.atr == 0.0) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed - ATR is zero", false, 0, config.logging.log_file);
         return false;
     }
 
-    MarketDataLogs::log_market_data_result_table("Indicator computation successful", true, processed_data.atr, config.logging.log_file);
     return true;
 }
 
@@ -156,28 +111,29 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
 }
 
 std::vector<Bar> MarketBarsManager::fetch_historical_market_data(const MarketDataFetchRequest& fetch_request) const {
-    MarketDataLogs::log_market_data_fetch_table(fetch_request.symbol, config.logging.log_file);
-    
-    try {
-        BarRequest bar_request{fetch_request.symbol, fetch_request.bars_to_fetch};
-        auto historical_bars = api_manager.get_recent_bars(bar_request);
-        MarketDataLogs::log_market_data_result_table("Bars fetched", true, historical_bars.size(), config.logging.log_file);
-        return historical_bars;
-    } catch (const std::exception& historical_bars_exception_error) {
-        MarketDataLogs::log_market_data_failure_summary(fetch_request.symbol, "API Exception", historical_bars_exception_error.what(), 0, config.logging.log_file);
-        return {};
+    if (fetch_request.symbol.empty()) {
+        throw std::runtime_error("Cannot fetch historical market data: symbol is empty");
     }
+    
+    if (fetch_request.bars_to_fetch <= 0) {
+        throw std::runtime_error("Cannot fetch historical market data: bars_to_fetch must be greater than 0");
+    }
+    
+    BarRequest bar_request{fetch_request.symbol, fetch_request.bars_to_fetch};
+    return api_manager.get_recent_bars(bar_request);
 }
 
 bool MarketBarsManager::has_sufficient_bars_for_calculations(const std::vector<Bar>& historical_bars, int required_bars) const {
-    int minimum_required_bars = required_bars + 2;
-    
-    if (static_cast<int>(historical_bars.size()) < minimum_required_bars) {
-        MarketDataLogs::log_market_data_result_table("Insufficient bars for calculations", false, historical_bars.size(), config.logging.log_file);
+    if (required_bars <= 0) {
         return false;
     }
     
-    MarketDataLogs::log_market_data_result_table("Sufficient bars for calculations", true, historical_bars.size(), config.logging.log_file);
+    int minimum_required_bars = required_bars + 2;
+    
+    if (static_cast<int>(historical_bars.size()) < minimum_required_bars) {
+        return false;
+    }
+    
     return true;
 }
 

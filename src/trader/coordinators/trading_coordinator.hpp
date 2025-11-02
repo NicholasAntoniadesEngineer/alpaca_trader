@@ -5,7 +5,7 @@
 #include "trader/trading_logic/trading_logic.hpp"
 #include "trader/data_structures/data_structures.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
-#include "trader/market_data/market_data_fetcher.hpp"
+#include "trader/market_data/market_data_manager.hpp"
 #include "trader/account_management/account_manager.hpp"
 #include "utils/connectivity_manager.hpp"
 #include <mutex>
@@ -28,7 +28,7 @@ public:
         std::atomic<bool>& running_flag;
     };
 
-    TradingCoordinator(TradingLogic& trading_logic_ref, MarketDataFetcher& data_fetcher_ref, 
+    TradingCoordinator(TradingLogic& trading_logic_ref, MarketDataManager& market_data_manager_ref, 
                       ConnectivityManager& connectivity_manager_ref,
                       AccountManager& account_manager_ref,
                       const SystemConfig& system_config_param);
@@ -56,11 +56,11 @@ public:
     // Countdown and sleep between cycles
     void countdown_to_next_cycle(std::atomic<bool>& running, int poll_interval_sec, int countdown_refresh_interval_sec);
     
-    MarketDataFetcher& get_market_data_fetcher_reference();
+    MarketDataManager& get_market_data_manager_reference();
 
 private:
     TradingLogic& trading_logic;
-    MarketDataFetcher& data_fetcher;
+    MarketDataManager& market_data_manager;
     ConnectivityManager& connectivity_manager;
     AccountManager& account_manager;
     const SystemConfig& config;

@@ -8,7 +8,7 @@
 #include "trader/strategy_analysis/strategy_logic.hpp"
 #include "trader/strategy_analysis/risk_manager.hpp"
 #include "order_execution_logic.hpp"
-#include "trader/market_data/market_data_fetcher.hpp"
+#include "trader/market_data/market_data_manager.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
 #include "logging/logs/trading_logs.hpp"
 #include "utils/connectivity_manager.hpp"
@@ -29,7 +29,7 @@ public:
     void handle_trading_halt(const std::string& reason);
     void handle_market_close_positions(const ProcessedData& processed_data_for_close);
     void setup_data_synchronization(const DataSyncConfig& sync_configuration);
-    MarketDataFetcher& get_market_data_fetcher_reference();
+    MarketDataManager& get_market_data_manager_reference();
 
 private:
     // Core dependencies
@@ -38,7 +38,7 @@ private:
     API::ApiManager& api_manager;
     RiskManager risk_manager;
     OrderExecutionLogic order_engine;
-    MarketDataFetcher data_fetcher;
+    MarketDataManager market_data_manager;
     ConnectivityManager& connectivity_manager;
     
     // Data synchronization references - initialized via setup_data_synchronization

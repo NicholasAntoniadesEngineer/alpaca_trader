@@ -109,14 +109,14 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     };
     modules.portfolio_manager = std::make_unique<AlpacaTrader::Core::AccountManager>(account_config, *modules.api_manager);
     
-    // Create trading logic (creates its own MarketDataFetcher internally)
+    // Create trading logic (creates its own MarketDataManager internally)
     TradingLogicConstructionParams trading_logic_params(state.config, *modules.api_manager, *modules.portfolio_manager, state.connectivity_manager);
     modules.trading_logic = std::make_unique<AlpacaTrader::Core::TradingLogic>(trading_logic_params);
     
-    // Create trading coordinator - uses MarketDataFetcher from TradingLogic
+    // Create trading coordinator - uses MarketDataManager from TradingLogic
     modules.trading_coordinator = std::make_unique<AlpacaTrader::Core::TradingCoordinator>(
         *modules.trading_logic,
-        modules.trading_logic->get_market_data_fetcher_reference(),
+        modules.trading_logic->get_market_data_manager_reference(),
         state.connectivity_manager,
         *modules.portfolio_manager,
         state.config
@@ -209,9 +209,13 @@ SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::L
                                 system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
     system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
     
-    // Set up market data fetcher sync state
+    // Set up market data manager sync state
     AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
-    system_state.trading_modules->trading_coordinator->get_market_data_fetcher_reference().set_sync_state_references(fetcher_sync_state);
+    bool sync_state_set_result = system_state.trading_modules->trading_coordinator->get_market_data_manager_reference().set_sync_state_references(fetcher_sync_state);
+    if (!sync_state_set_result) {
+        SystemLogs::log_fatal_error("Failed to set market data manager sync state references");
+        throw std::runtime_error("Failed to set market data manager sync state references");
+    }
 
     // Log startup information
     StartupLogs::log_startup_information(*system_state.trading_modules, system_state.config);

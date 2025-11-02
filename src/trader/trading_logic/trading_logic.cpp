@@ -17,13 +17,13 @@ TradingLogic::TradingLogic(const TradingLogicConstructionParams& construction_pa
       api_manager(construction_params.api_manager_ref),
       risk_manager(construction_params.system_config),
       order_engine(OrderExecutionLogicConstructionParams(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config, nullptr)),
-      data_fetcher(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config),
+      market_data_manager(construction_params.system_config, construction_params.api_manager_ref, construction_params.account_manager_ref),
       connectivity_manager(construction_params.connectivity_manager_ref),
       data_sync_ptr(nullptr) {}
 
 void TradingLogic::execute_trading_cycle(const MarketSnapshot& market_snapshot, const AccountSnapshot& account_snapshot, double initial_equity) {
     // Validate market snapshot
-    if (!data_fetcher.get_market_data_validator().validate_market_snapshot(market_snapshot)) {
+    if (!market_data_manager.get_market_data_validator().validate_market_snapshot(market_snapshot)) {
         return;
     }
     
@@ -66,7 +66,7 @@ void TradingLogic::execute_trading_decision(const ProcessedData& processed_data_
     TradingLogs::log_market_status(true, "Market is open - trading allowed");
     
     // Check if market data is fresh enough for trading decisions
-    if (!data_fetcher.is_data_fresh()) {
+    if (!market_data_manager.is_data_fresh()) {
         TradingLogs::log_market_status(false, "Market data is stale - no trading decisions");
         TradingLogs::log_signal_analysis_complete();
         return;
@@ -346,8 +346,8 @@ void TradingLogic::handle_market_close_positions(const ProcessedData& processed_
     }
 }
 
-MarketDataFetcher& TradingLogic::get_market_data_fetcher_reference() {
-    return data_fetcher;
+MarketDataManager& TradingLogic::get_market_data_manager_reference() {
+    return market_data_manager;
 }
 
 void TradingLogic::setup_data_synchronization(const DataSyncConfig& sync_configuration) {
