@@ -1,12 +1,9 @@
 #include "risk_manager.hpp"
-#include "logging/logger/async_logger.hpp"
 #include <cmath>
 #include <stdexcept>
 
 namespace AlpacaTrader {
-namespace Core {
-
-using AlpacaTrader::Logging::RiskLogs;
+    namespace Core {
 
 RiskManager::RiskManager(const SystemConfig& system_config) : config(system_config) {}
 

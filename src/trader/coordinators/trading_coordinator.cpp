@@ -66,7 +66,7 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     try {
         std::string timestamp = TimeUtils::get_current_human_readable_time();
         double buying_power = account_manager.fetch_buying_power();
-        if (auto csv_trade_logger = AlpacaTrader::Logging::get_csv_trade_logger()) {
+        if (auto csv_trade_logger = AlpacaTrader::Logging::get_logging_context()->csv_trade_logger) {
             csv_trade_logger->log_account_update(
                 timestamp, current_account_snapshot.equity, 
                 buying_power, current_account_snapshot.exposure_pct

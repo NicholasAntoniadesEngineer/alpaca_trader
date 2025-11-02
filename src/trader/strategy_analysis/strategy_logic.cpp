@@ -1,23 +1,11 @@
 #include "strategy_logic.hpp"
 #include "indicators.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "logging/logs/trading_logs.hpp"
-#include "logging/logs/signal_analysis_logs.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "utils/time_utils.hpp"
-#include "configs/timing_config.hpp"
-#include "configs/logging_config.hpp"
-#include "configs/multi_api_config.hpp"
-#include "threads/thread_register.hpp"
 #include <cmath>
 #include <climits>
 
-using namespace AlpacaTrader::Logging;
-
 namespace AlpacaTrader {
 namespace Core {
-
-using AlpacaTrader::Logging::TradingLogs;
 
 // Helper function to detect doji pattern
 bool detect_doji_pattern(double open, double high, double low, double close, double doji_threshold) {
@@ -382,15 +370,6 @@ ExitTargets compute_exit_targets(const ExitTargetsRequest& request) {
     return targets;
 }
 
-void process_signal_analysis(const ProcessedData& processed_data_input, const SystemConfig& system_config) {
-    SignalDecision signal_decision_result = detect_trading_signals(processed_data_input, system_config);
-    FilterResult filter_result_output = evaluate_trading_filters(processed_data_input, system_config);
-    
-    // Delegate all logging to dedicated logging service
-    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_complete(processed_data_input, signal_decision_result, filter_result_output, system_config);
-    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(processed_data_input, signal_decision_result, filter_result_output, system_config);
-}
-
 std::pair<PositionSizing, SignalDecision> process_position_sizing(const PositionSizingProcessRequest& request) {
     PositionSizing sizing = calculate_position_sizing(PositionSizingRequest(
         request.processed_data, request.account_equity, request.current_position_quantity, 
@@ -402,56 +381,10 @@ std::pair<PositionSizing, SignalDecision> process_position_sizing(const Position
     temp_system_config.trading_mode = request.trading_mode_configuration;
     
     if (!evaluate_trading_filters(request.processed_data, temp_system_config).all_pass) {
-        TradingLogs::log_filters_not_met_preview(sizing.risk_amount, sizing.quantity);
-
-        // CSV logging for position sizing when filters not met
-        try {
-            std::string timestamp = TimeUtils::get_current_human_readable_time();
-            if (request.trading_mode_configuration.primary_symbol.empty()) {
-                throw std::runtime_error("Primary symbol is required but not configured");
-            }
-            std::string symbol = request.trading_mode_configuration.primary_symbol;
-
-            if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
-                csv->log_position_sizing(
-                    timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                    sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
-                );
-            }
-        } catch (const std::exception& exception_error) {
-            TradingLogs::log_market_data_result_table("CSV logging error in position sizing (calculate_position_sizing): " + std::string(exception_error.what()), false, 0);
-        } catch (...) {
-            TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing (calculate_position_sizing)", false, 0);
-        }
         return {sizing, SignalDecision{}};
     }
-    
-    TradingLogs::log_filters_passed();
-    TradingLogs::log_current_position(request.current_position_quantity, request.strategy_configuration.symbol);
-    TradingLogs::log_position_size_with_buying_power(sizing.risk_amount, sizing.quantity, request.available_buying_power, request.processed_data.curr.close_price);
-    TradingLogs::log_position_sizing_debug(sizing.risk_based_qty, sizing.exposure_based_qty, sizing.max_value_qty, sizing.buying_power_qty, sizing.quantity);
 
     SignalDecision signal_decision_result = detect_trading_signals(request.processed_data, temp_system_config);
-
-    // CSV logging for successful position sizing
-    try {
-        std::string timestamp = TimeUtils::get_current_human_readable_time();
-        if (request.trading_mode_configuration.primary_symbol.empty()) {
-            throw std::runtime_error("Primary symbol is required but not configured");
-        }
-        std::string symbol = request.trading_mode_configuration.primary_symbol;
-
-        if (auto csv = AlpacaTrader::Logging::get_csv_trade_logger()) {
-            csv->log_position_sizing(
-                timestamp, symbol, sizing.quantity, sizing.risk_amount,
-                sizing.quantity * request.processed_data.curr.close_price, request.available_buying_power
-            );
-        }
-    } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_data_result_table("CSV logging error in successful position sizing (process_position_sizing): " + std::string(exception_error.what()), false, 0);
-    } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in successful position sizing (process_position_sizing)", false, 0);
-    }
 
     return {sizing, signal_decision_result};
 }

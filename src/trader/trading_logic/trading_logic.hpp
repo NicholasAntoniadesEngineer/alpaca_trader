@@ -7,7 +7,6 @@
 #include "trader/data_structures/data_structures.hpp"
 #include "trader/strategy_analysis/strategy_logic.hpp"
 #include "trader/strategy_analysis/risk_manager.hpp"
-#include "trader/strategy_analysis/signal_processor.hpp"
 #include "order_execution_logic.hpp"
 #include "trader/market_data/market_data_fetcher.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
@@ -36,7 +35,6 @@ private:
     AccountManager& account_manager;
     API::ApiManager& api_manager;
     RiskManager risk_manager;
-    SignalProcessor signal_processor;
     OrderExecutionLogic order_engine;
     MarketDataFetcher data_fetcher;
     ConnectivityManager& connectivity_manager;
@@ -45,8 +43,6 @@ private:
     std::unique_ptr<DataSyncReferences> data_sync_ptr;
     
     // Trading decision methods
-    void process_signal_analysis(const ProcessedData& processed_data_input);
-    void process_position_sizing(const ProcessedData& processed_data_input, double account_equity_amount, int current_position_quantity);
     void execute_trade_if_valid(const TradeExecutionRequest& trade_request);
     void check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request);
     

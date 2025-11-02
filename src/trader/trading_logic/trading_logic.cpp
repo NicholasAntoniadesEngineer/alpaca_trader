@@ -1,5 +1,6 @@
 #include "trading_logic.hpp"
 #include "logging/logs/trading_logs.hpp"
+#include "logging/logs/signal_analysis_logs.hpp"
 #include "logging/logs/logger_structures.hpp"
 #include "utils/time_utils.hpp"
 #include "api/general/api_manager.hpp"
@@ -15,7 +16,6 @@ TradingLogic::TradingLogic(const TradingLogicConstructionParams& construction_pa
     : config(construction_params.system_config), account_manager(construction_params.account_manager_ref), 
       api_manager(construction_params.api_manager_ref),
       risk_manager(construction_params.system_config),
-      signal_processor(construction_params.system_config),
       order_engine(OrderExecutionLogicConstructionParams(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config, nullptr)),
       data_fetcher(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config),
       connectivity_manager(construction_params.connectivity_manager_ref),
@@ -79,10 +79,32 @@ void TradingLogic::execute_trading_decision(const ProcessedData& processed_data_
         check_and_execute_profit_taking(profit_taking_request);
     }
 
-    signal_processor.process_signal_analysis(processed_data_input);
+    SignalDecision signal_decision_result = detect_trading_signals(processed_data_input, config);
+    FilterResult filter_result_output = evaluate_trading_filters(processed_data_input, config);
+
+    TradingLogs::log_candle_data_table(processed_data_input.curr.open_price, processed_data_input.curr.high_price, processed_data_input.curr.low_price, processed_data_input.curr.close_price);
+    TradingLogs::log_signals_table_enhanced(signal_decision_result);
+    TradingLogs::log_signal_analysis_detailed(processed_data_input, signal_decision_result, config);
+    TradingLogs::log_filters(filter_result_output, config, processed_data_input);
+    TradingLogs::log_summary(processed_data_input, signal_decision_result, filter_result_output, config.strategy.symbol);
+    AlpacaTrader::Logging::SignalAnalysisLogs::log_signal_analysis_csv_data(processed_data_input, signal_decision_result, filter_result_output, config);
 
     double buying_power_amount = account_manager.fetch_buying_power();
-    auto [position_sizing_result, signal_decision_result] = signal_processor.process_position_sizing(processed_data_input, account_equity, current_position_quantity, buying_power_amount);
+    auto [position_sizing_result, position_sizing_signal_decision] = AlpacaTrader::Core::process_position_sizing(PositionSizingProcessRequest(
+        processed_data_input, account_equity, current_position_quantity, buying_power_amount, config.strategy, config.trading_mode
+    ));
+    
+    if (filter_result_output.all_pass) {
+        TradingLogs::log_filters_passed();
+        TradingLogs::log_current_position(current_position_quantity, config.strategy.symbol);
+        TradingLogs::log_position_size_with_buying_power(position_sizing_result.risk_amount, position_sizing_result.quantity, buying_power_amount, processed_data_input.curr.close_price);
+        TradingLogs::log_position_sizing_debug(position_sizing_result.risk_based_qty, position_sizing_result.exposure_based_qty, position_sizing_result.max_value_qty, position_sizing_result.buying_power_qty, position_sizing_result.quantity);
+    } else {
+        TradingLogs::log_filters_not_met_preview(position_sizing_result.risk_amount, position_sizing_result.quantity);
+    }
+    
+    TradingLogs::log_position_sizing_csv(position_sizing_result, processed_data_input, config, buying_power_amount);
+    
     TradeExecutionRequest trade_request(processed_data_input, current_position_quantity, position_sizing_result, signal_decision_result);
     execute_trade_if_valid(trade_request);
     

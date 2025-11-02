@@ -2,6 +2,7 @@
 #include "startup_logs.hpp"
 #include "logging/logger/async_logger.hpp"
 #include "logging/logger/logging_macros.hpp"
+#include "utils/time_utils.hpp"
 #include <iomanip>
 #include <sstream>
 #include <climits>
@@ -1086,6 +1087,27 @@ void TradingLogs::log_signal_strength_breakdown(const SignalDecision& signals, c
     TABLE_ROW_48("Reason", signals.signal_reason.empty() ? "No analysis" : signals.signal_reason);
     
     TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_position_sizing_csv(const AlpacaTrader::Core::PositionSizing& position_sizing_result, const AlpacaTrader::Core::ProcessedData& processed_data_input, const SystemConfig& system_config, double available_buying_power) {
+    try {
+        std::string timestamp = TimeUtils::get_current_human_readable_time();
+        if (system_config.trading_mode.primary_symbol.empty()) {
+            throw std::runtime_error("Primary symbol is required but not configured");
+        }
+        std::string symbol = system_config.trading_mode.primary_symbol;
+
+        if (auto csv = AlpacaTrader::Logging::get_logging_context()->csv_trade_logger) {
+            csv->log_position_sizing(
+                timestamp, symbol, position_sizing_result.quantity, position_sizing_result.risk_amount,
+                position_sizing_result.quantity * processed_data_input.curr.close_price, available_buying_power
+            );
+        }
+    } catch (const std::exception& exception_error) {
+        TradingLogs::log_market_data_result_table("CSV logging error in position sizing: " + std::string(exception_error.what()), false, 0);
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown CSV logging error in position sizing", false, 0);
+    }
 }
 
 } // namespace Logging

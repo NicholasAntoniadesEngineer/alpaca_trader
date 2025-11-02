@@ -24,22 +24,22 @@ thread_local LoggingContext* thread_local_logging_context_pointer = nullptr;
 void log_message_to_stderr(const std::string& error_message);
 
 LoggingContext* get_logging_context() {
-    LoggingContext* context_pointer = thread_local_logging_context_pointer;
-    if (!context_pointer) {
+    LoggingContext* thread_logging_context_ptr = thread_local_logging_context_pointer;
+    if (!thread_logging_context_ptr) {
         throw std::runtime_error("Logging context not initialized for current thread - system must fail without context");
     }
-    return context_pointer;
+    return thread_logging_context_ptr;
 }
 
 void set_log_thread_tag(const std::string& thread_tag_value) {
-    LoggingContext* context_pointer = get_logging_context();
-    context_pointer->set_thread_tag(thread_tag_value);
+    LoggingContext* thread_logging_context_ptr = get_logging_context();
+    thread_logging_context_ptr->set_thread_tag(thread_tag_value);
 }
 
 
 void log_message(const std::string& message, const std::string& log_file_path) {
     try {
-        LoggingContext* context_pointer = get_logging_context();
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
         
         std::string timestamp_string;
         try {
@@ -52,14 +52,14 @@ void log_message(const std::string& message, const std::string& log_file_path) {
             timestamp_string = "ERROR-TIME";
         }
         
-        std::string thread_tag_string = context_pointer->get_thread_tag();
+        std::string thread_tag_string = thread_logging_context_ptr->get_thread_tag();
         std::stringstream log_stream;
         log_stream << timestamp_string << " [" << thread_tag_string << "]   " << message << std::endl;
         std::string log_formatted_string = log_stream.str();
 
-        if (context_pointer->async_logger) {
+        if (thread_logging_context_ptr->async_logger) {
             try {
-                context_pointer->async_logger->enqueue(log_formatted_string);
+                thread_logging_context_ptr->async_logger->enqueue(log_formatted_string);
                 return;
             } catch (const std::exception& logger_exception_error) {
                 log_message_to_stderr("ERROR: Async logger enqueue failed: " + std::string(logger_exception_error.what()));
@@ -69,10 +69,10 @@ void log_message(const std::string& message, const std::string& log_file_path) {
         }
 
         try {
-            std::lock_guard<std::mutex> console_guard(context_pointer->console_mutex);
-            if (context_pointer->inline_active.load()) {
+            std::lock_guard<std::mutex> console_guard(thread_logging_context_ptr->console_mutex);
+            if (thread_logging_context_ptr->inline_active.load()) {
                 std::cout << std::endl;
-                context_pointer->inline_active.store(false);
+                thread_logging_context_ptr->inline_active.store(false);
             }
             std::cout << log_formatted_string << std::flush;
         } catch (const std::exception& console_exception_error) {
@@ -112,10 +112,10 @@ void log_message_to_stderr(const std::string& error_message) {
 
 void log_inline_status(const std::string& message) {
     try {
-        LoggingContext* context_pointer = get_logging_context();
-        std::lock_guard<std::mutex> console_guard(context_pointer->console_mutex);
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
+        std::lock_guard<std::mutex> console_guard(thread_logging_context_ptr->console_mutex);
         std::cout << "\r" << message << std::flush;
-        context_pointer->inline_active.store(true);
+        thread_logging_context_ptr->inline_active.store(true);
     } catch (const std::exception& exception_error) {
         log_message_to_stderr("ERROR: Failed to log inline status: " + std::string(exception_error.what()));
     } catch (...) {
@@ -125,11 +125,11 @@ void log_inline_status(const std::string& message) {
 
 void end_inline_status() {
     try {
-        LoggingContext* context_pointer = get_logging_context();
-        std::lock_guard<std::mutex> console_guard(context_pointer->console_mutex);
-        if (context_pointer->inline_active.load()) {
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
+        std::lock_guard<std::mutex> console_guard(thread_logging_context_ptr->console_mutex);
+        if (thread_logging_context_ptr->inline_active.load()) {
             std::cout << std::endl;
-            context_pointer->inline_active.store(false);
+            thread_logging_context_ptr->inline_active.store(false);
         }
     } catch (const std::exception& exception_error) {
         log_message_to_stderr("ERROR: Failed to end inline status: " + std::string(exception_error.what()));
@@ -140,9 +140,9 @@ void end_inline_status() {
 
 std::string get_formatted_inline_message(const std::string& content) {
     try {
-        LoggingContext* context_pointer = get_logging_context();
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
         std::string timestamp_string = TimeUtils::get_current_human_readable_time();
-        std::string thread_tag_string = context_pointer->get_thread_tag();
+        std::string thread_tag_string = thread_logging_context_ptr->get_thread_tag();
         std::stringstream formatted_stream;
         formatted_stream << timestamp_string << " [" << thread_tag_string << "]   " << content;
         return formatted_stream.str();
@@ -234,11 +234,11 @@ std::string generate_timestamped_log_filename(const std::string& base_filename) 
 }
 
 void initialize_global_logger(AsyncLogger& logger_instance) {
-    LoggingContext* context_pointer = get_logging_context();
-    if (!context_pointer->async_logger) {
+    LoggingContext* thread_logging_context_ptr = get_logging_context();
+    if (!thread_logging_context_ptr->async_logger) {
         throw std::runtime_error("Async logger not set in context before initialization");
     }
-    if (context_pointer->async_logger.get() != &logger_instance) {
+    if (thread_logging_context_ptr->async_logger.get() != &logger_instance) {
         throw std::runtime_error("Async logger mismatch in context");
     }
 }
@@ -280,10 +280,11 @@ void AsyncLogger::collect_all_available_messages(std::vector<std::string>& messa
 
 void AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofstream& log_file) {
     {
-        std::lock_guard<std::mutex> cguard(get_console_mutex());
-        if (get_inline_active_flag().load()) {
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
+        std::lock_guard<std::mutex> cguard(thread_logging_context_ptr->console_mutex);
+        if (thread_logging_context_ptr->inline_active.load()) {
             std::cout << std::endl;
-            get_inline_active_flag().store(false);
+            thread_logging_context_ptr->inline_active.store(false);
         }
         std::cout << log_line << std::flush;
     }
@@ -294,13 +295,16 @@ void AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofs
     }
 }
 
-void AsyncLogger::flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file) {
-    // Output all buffered messages
+void AsyncLogger::write_buffered_messages_to_log(const std::vector<std::string>& message_buffer, std::ofstream& log_file) {
+    // Write all buffered messages to console and log file
     for (const auto& log_line : message_buffer) {
         output_log_line_internal(log_line, log_file);
     }
-    
-    // Clear the buffer
+}
+
+void AsyncLogger::flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file) {
+    // Write messages to log and clear buffer
+    write_buffered_messages_to_log(message_buffer, log_file);
     message_buffer.clear();
 }
 
@@ -339,11 +343,11 @@ void AsyncLogger::process_logging_queue(std::ofstream& log_file) {
 }
 
 std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config) {
-    LoggingContext* context_pointer = get_logging_context();
+    LoggingContext* thread_logging_context_ptr = get_logging_context();
 
-    context_pointer->run_folder = create_unique_run_folder();
+    thread_logging_context_ptr->run_folder = create_unique_run_folder();
 
-    std::string base_filename_string = context_pointer->run_folder + "/" + extract_base_filename(config.logging.log_file);
+    std::string base_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(config.logging.log_file);
     std::string timestamped_log_filename = generate_timestamped_log_filename(base_filename_string);
 
     auto logger_instance = std::make_shared<AsyncLogger>(timestamped_log_filename);
@@ -354,7 +358,7 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
         throw std::runtime_error("Configuration validation failed: " + configuration_error_message);
     }
 
-    context_pointer->async_logger = logger_instance;
+    thread_logging_context_ptr->async_logger = logger_instance;
     initialize_global_logger(*logger_instance);
     set_log_thread_tag("MAIN  ");
 
@@ -363,13 +367,13 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
 
 std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename) {
     try {
-        LoggingContext* context_pointer = get_logging_context();
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
         
-        if (context_pointer->run_folder.empty()) {
+        if (thread_logging_context_ptr->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string bars_filename_string = context_pointer->run_folder + "/" + extract_base_filename(base_filename) + "_bars";
+        std::string bars_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(base_filename) + "_bars";
         std::string timestamped_bars_filename_string = generate_timestamped_log_filename(bars_filename_string);
         auto bars_logger_instance = std::make_shared<CSVBarsLogger>(timestamped_bars_filename_string);
 
@@ -377,7 +381,7 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
             throw std::runtime_error("Failed to initialize CSV bars logger");
         }
 
-        context_pointer->csv_bars_logger = bars_logger_instance;
+        thread_logging_context_ptr->csv_bars_logger = bars_logger_instance;
         return bars_logger_instance;
     } catch (const std::exception& exception_error) {
         log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + exception_error.what());
@@ -390,13 +394,13 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
 
 std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename) {
     try {
-        LoggingContext* context_pointer = get_logging_context();
+        LoggingContext* thread_logging_context_ptr = get_logging_context();
         
-        if (context_pointer->run_folder.empty()) {
+        if (thread_logging_context_ptr->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string trade_filename_string = context_pointer->run_folder + "/" + extract_base_filename(base_filename) + "_trades";
+        std::string trade_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(base_filename) + "_trades";
         std::string timestamped_trade_filename_string = generate_timestamped_log_filename(trade_filename_string);
         auto trade_logger_instance = std::make_shared<CSVTradeLogger>(timestamped_trade_filename_string);
 
@@ -404,7 +408,7 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
             throw std::runtime_error("Failed to initialize CSV trade logger");
         }
 
-        context_pointer->csv_trade_logger = trade_logger_instance;
+        thread_logging_context_ptr->csv_trade_logger = trade_logger_instance;
         return trade_logger_instance;
     } catch (const std::exception& exception_error) {
         log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV trade logger: ") + exception_error.what());
@@ -413,31 +417,6 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
         log_message_to_stderr("CRITICAL ERROR: Unknown error initializing CSV trade logger");
         throw std::runtime_error("Failed to initialize CSV trade logger");
     }
-}
-
-std::shared_ptr<CSVBarsLogger> get_csv_bars_logger() {
-    LoggingContext* context_pointer = get_logging_context();
-    return context_pointer->csv_bars_logger;
-}
-
-std::shared_ptr<CSVTradeLogger> get_csv_trade_logger() {
-    LoggingContext* context_pointer = get_logging_context();
-    return context_pointer->csv_trade_logger;
-}
-
-std::mutex& get_console_mutex() {
-    LoggingContext* context_pointer = get_logging_context();
-    return context_pointer->console_mutex;
-}
-
-std::atomic<bool>& get_inline_active_flag() {
-    LoggingContext* context_pointer = get_logging_context();
-    return context_pointer->inline_active;
-}
-
-const std::string& get_run_folder() {
-    LoggingContext* context_pointer = get_logging_context();
-    return context_pointer->run_folder;
 }
 
 void set_logging_context(LoggingContext& context) {

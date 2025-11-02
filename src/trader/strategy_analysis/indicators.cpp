@@ -1,9 +1,6 @@
 #include "indicators.hpp"
-#include "logging/logs/market_data_logs.hpp"
 #include <algorithm>
 #include <cmath>
-
-using AlpacaTrader::Logging::MarketDataLogs;
 
 namespace AlpacaTrader {
 namespace Core {
@@ -50,10 +47,7 @@ bool detect_doji_pattern(double open, double high, double low, double close) {
 }
 
 bool compute_technical_indicators(ProcessedData& processed_data, const std::vector<Bar>& bars, const SystemConfig& config) {
-    MarketDataLogs::log_market_data_attempt_table("Computing indicators", config.logging.log_file);
-    
     if (bars.empty()) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed - no bars", false, 0, config.logging.log_file);
         return false;
     }
     
@@ -76,11 +70,9 @@ bool compute_technical_indicators(ProcessedData& processed_data, const std::vect
     processed_data.avg_vol = compute_average_volume(volumes, config.strategy.atr_calculation_period, config.strategy.minimum_volume_threshold);
     
     if (processed_data.atr == 0.0) {
-        MarketDataLogs::log_market_data_result_table("Indicator computation failed - ATR is zero", false, 0, config.logging.log_file);
         return false;
     }
     
-    MarketDataLogs::log_market_data_result_table("Indicator computation successful", true, processed_data.atr, config.logging.log_file);
     return true;
 }
 

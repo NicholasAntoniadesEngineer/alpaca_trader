@@ -117,6 +117,9 @@ public:
     static void log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
     static void log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
     static void log_exit_targets_table(const ExitTargetsTableRequest& exit_targets_request);
+    
+    // CSV logging for trading operations
+    static void log_position_sizing_csv(const AlpacaTrader::Core::PositionSizing& position_sizing_result, const AlpacaTrader::Core::ProcessedData& processed_data, const SystemConfig& system_config, double available_buying_power);
     static void log_order_result_table(const std::string& operation, const std::string& response);
     
     // Trading decision tables

@@ -15,7 +15,6 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request);
 ExitTargets compute_exit_targets(const ExitTargetsRequest& request);
 
 // Strategy processing methods
-void process_signal_analysis(const ProcessedData& processed_data_input, const SystemConfig& system_config);
 std::pair<PositionSizing, SignalDecision> process_position_sizing(const PositionSizingProcessRequest& request);
 
 } // namespace Core

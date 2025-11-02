@@ -61,7 +61,7 @@ void MarketDataThreadLogs::log_stale_quote_warning(const std::string& symbol, in
 }
 
 void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log) {
-    auto csv_logger = get_csv_bars_logger();
+    auto csv_logger = get_logging_context()->csv_bars_logger;
     log_message("CSV Logger available: " + std::string(csv_logger ? "YES" : "NO"), "trading_system.log");
     log_message("Should log " + symbol + ": " + std::string(should_log ? "YES" : "NO") + " (time since last: " + std::to_string(time_since_last_log) + "s)", "trading_system.log");
 }
@@ -88,7 +88,7 @@ void MarketDataThreadLogs::log_duplicate_bar_skipped(const std::string& symbol, 
 }
 
 void MarketDataThreadLogs::log_fresh_quote_data_to_csv(const QuoteData& quote_data, const ProcessedData& processed_data, const std::string& timestamp) {
-    auto csv_logger = get_csv_bars_logger();
+    auto csv_logger = get_logging_context()->csv_bars_logger;
     if (csv_logger) {
         csv_logger->log_market_data(
             timestamp, processed_data.curr.timestamp, quote_data.bid_price, quote_data.ask_price, 
@@ -100,7 +100,7 @@ void MarketDataThreadLogs::log_fresh_quote_data_to_csv(const QuoteData& quote_da
 }
 
 void MarketDataThreadLogs::log_historical_bars_to_csv(const std::vector<Bar>& historical_bars, const ProcessedData& processed_data, const std::string& timestamp) {
-    auto csv_logger2 = get_csv_bars_logger();
+    auto csv_logger2 = get_logging_context()->csv_bars_logger;
     if (csv_logger2) {
         // Log ALL bars that were fetched, not just the last one
         // Use individual bar timestamps instead of current system time
@@ -119,7 +119,7 @@ bool MarketDataThreadLogs::is_fetch_allowed(const std::atomic<bool>* allow_fetch
 }
 
 void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, MarketDataValidator& validator, const std::string& symbol, const TimingConfig& timing, ApiManager& api_manager, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
-    auto csv_logger = get_csv_bars_logger();
+    auto csv_logger = get_logging_context()->csv_bars_logger;
     if (!csv_logger) {
         return;
     }

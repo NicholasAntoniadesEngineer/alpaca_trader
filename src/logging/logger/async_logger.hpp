@@ -45,7 +45,13 @@ public:
     
     // Message processing methods (called by logging thread)
     void collect_all_available_messages(std::vector<std::string>& message_buffer);
+    
+    // Logging intent: Write buffered messages to console and log file
+    void write_buffered_messages_to_log(const std::vector<std::string>& message_buffer, std::ofstream& log_file);
+    
+    // Write messages to log and clear buffer
     void flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file);
+    
     void process_logging_queue_with_timeout(std::ofstream& log_file, int poll_interval_seconds);
     void process_logging_queue(std::ofstream& log_file);
 };
@@ -111,12 +117,8 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
 std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename);
 std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename);
 
-// Context-backed accessors (no externs)
-std::shared_ptr<CSVBarsLogger> get_csv_bars_logger();
-std::shared_ptr<CSVTradeLogger> get_csv_trade_logger();
-std::mutex& get_console_mutex();
-std::atomic<bool>& get_inline_active_flag();
-const std::string& get_run_folder();
+// Context access (validates context exists before returning)
+LoggingContext* get_logging_context();
 void set_logging_context(LoggingContext& context);
 
 } // namespace Logging
