@@ -66,8 +66,14 @@ SystemInitializationResult initialize() {
         initialization_result.logger = AlpacaTrader::Logging::initialize_application_foundation(initialization_result.system_state->config);
         
         // Initialize CSV logging for bars and trades (stored in logging context)
-        (void)AlpacaTrader::Logging::initialize_csv_bars_logger("bars_logs");
-        (void)AlpacaTrader::Logging::initialize_csv_trade_logger("trade_logs");
+        auto bars_logger_instance = AlpacaTrader::Logging::initialize_csv_bars_logger("bars_logs");
+        auto trade_logger_instance = AlpacaTrader::Logging::initialize_csv_trade_logger("trade_logs");
+        
+        // Verify initialization succeeded - fail hard if either logger is invalid
+        if (!bars_logger_instance || !trade_logger_instance) {
+            SystemLogs::log_fatal_error("CSV logger initialization failed: bars or trade logger returned null pointer");
+            throw std::runtime_error("System initialization failed: CSV logger initialization failed");
+        }
         
     } catch (const std::exception& exception_error) {
         SystemLogs::log_fatal_error(std::string("System initialization exception: ") + exception_error.what());
@@ -121,6 +127,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     // Create coordinator interfaces for thread access to trader components
     modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(*modules.api_manager, state.config);
     modules.account_data_coordinator = std::make_unique<AlpacaTrader::Core::AccountDataCoordinator>(*modules.portfolio_manager);
+    modules.market_gate_coordinator = std::make_unique<AlpacaTrader::Core::MarketGateCoordinator>(*modules.api_manager, state.connectivity_manager);
     
     // Create thread modules
     
@@ -137,7 +144,7 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     
     // Create MARKET_GATE thread
     modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
-                                                                   state.allow_fetch, state.running, *modules.api_manager, state.connectivity_manager, state.config.trading_mode.primary_symbol);
+                                                                   state.allow_fetch, state.running, *modules.market_gate_coordinator, state.config.trading_mode.primary_symbol);
     
     // Create LOGGING thread (uses LoggingThreadConfig from SystemConfigurations)
     modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, thread_handles.logger_iterations, state.config);

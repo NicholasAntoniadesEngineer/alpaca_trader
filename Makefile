@@ -25,6 +25,7 @@ SOURCES = src/main.cpp \
   src/trader/coordinators/trading_coordinator.cpp \
   src/trader/coordinators/market_data_coordinator.cpp \
   src/trader/coordinators/account_data_coordinator.cpp \
+  src/trader/coordinators/market_gate_coordinator.cpp \
   src/trader/trading_logic/trading_logic.cpp \
   src/trader/strategy_analysis/risk_manager.cpp \
   src/trader/trading_logic/order_execution_logic.cpp \
@@ -54,6 +55,8 @@ SOURCES = src/main.cpp \
   src/logging/logs/signal_analysis_logs.cpp \
   src/logging/logs/market_gate_logs.cpp \
   src/logging/logs/market_data_thread_logs.cpp \
+  src/logging/logs/account_data_thread_logs.cpp \
+  src/logging/logs/logging_thread_logs.cpp \
   src/logging/logs/thread_logs.cpp \
   src/logging/logs/startup_logs.cpp \
   src/logging/logs/system_logs.cpp \

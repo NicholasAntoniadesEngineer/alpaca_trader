@@ -9,6 +9,8 @@
 #include <thread>
 #include <memory>
 #include <unordered_map>
+#include <vector>
+#include <fstream>
 #include "configs/system_config.hpp"
 #include "csv_bars_logger.hpp"
 #include "csv_trade_logger.hpp"
@@ -24,6 +26,10 @@ static_assert(LOG_TAG_WIDTH > 0, "LOG_TAG_WIDTH must be positive");
 class AsyncLogger {
 private:
     std::string file_path;
+    
+    void collect_all_available_messages_internal(std::vector<std::string>& message_buffer);
+    void collect_messages_for_batch_internal(std::vector<std::string>& message_buffer, int poll_interval_seconds);
+    void output_log_line_internal(const std::string& log_line, std::ofstream& log_file);
 
 public:
     std::mutex mtx;
@@ -36,6 +42,12 @@ public:
     const std::string& get_file_path() const { return file_path; }
     void enqueue(const std::string& formatted_line);
     void stop();
+    
+    // Message processing methods (called by logging thread)
+    void collect_all_available_messages(std::vector<std::string>& message_buffer);
+    void flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file);
+    void process_logging_queue_with_timeout(std::ofstream& log_file, int poll_interval_seconds);
+    void process_logging_queue(std::ofstream& log_file);
 };
 
 

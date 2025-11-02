@@ -66,8 +66,6 @@ struct TraderThread {
 private:
     // Thread lifecycle management
     void execute_trading_decision_loop();
-    void process_trading_cycle_iteration();
-    void countdown_to_next_cycle();
 };
 
 } // namespace Threads

@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <cmath>
+#include <algorithm>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -24,7 +25,7 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
                                                           double initial_equity,
                                                           unsigned long loop_counter_value) {
     // Check connectivity status
-    if (!validate_connectivity_status()) {
+    if (!connectivity_manager.check_connectivity_status()) {
         std::string connectivity_msg = "Connectivity outage - status: " + connectivity_manager.get_status_string();
         TradingLogs::log_market_status(false, connectivity_msg);
         trading_logic.handle_trading_halt("Connectivity issues detected");
@@ -81,18 +82,96 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     trading_logic.execute_trading_cycle(current_market_snapshot, current_account_snapshot, initial_equity);
 }
 
-TradingLogic& TradingCoordinator::get_trading_logic_reference() {
-    return trading_logic;
-}
-
 MarketDataFetcher& TradingCoordinator::get_market_data_fetcher_reference() {
     return data_fetcher;
 }
 
-bool TradingCoordinator::validate_connectivity_status() const {
-    return connectivity_manager.check_connectivity_status();
+void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_snapshot,
+                                                         AccountSnapshot& account_snapshot,
+                                                         std::mutex& state_mtx,
+                                                         std::condition_variable& data_cv,
+                                                         std::atomic<bool>& has_market,
+                                                         std::atomic<bool>& has_account,
+                                                         std::atomic<bool>& running,
+                                                         std::atomic<std::chrono::steady_clock::time_point>& market_data_timestamp,
+                                                         std::atomic<bool>& market_data_fresh,
+                                                         std::atomic<std::chrono::steady_clock::time_point>& last_order_timestamp,
+                                                         std::atomic<bool>* allow_fetch_ptr,
+                                                         double initial_equity,
+                                                         std::atomic<unsigned long>& loop_counter) {
+    try {
+        // Increment loop counter
+        unsigned long current_loop_counter = loop_counter.fetch_add(1) + 1;
+        
+        // Create snapshot state structure
+        TradingSnapshotState snapshot_state{
+            market_snapshot,
+            account_snapshot,
+            state_mtx,
+            data_cv,
+            has_market,
+            has_account,
+            running
+        };
+        
+        // Create market data sync state structure
+        MarketDataSyncState market_data_sync_state(
+            &state_mtx,
+            &data_cv,
+            &market_snapshot,
+            &account_snapshot,
+            &has_market,
+            &has_account,
+            &running,
+            allow_fetch_ptr ? allow_fetch_ptr : &running,  // Use allow_fetch if available, otherwise running
+            &market_data_timestamp,
+            &market_data_fresh,
+            &last_order_timestamp
+        );
+        
+        // Execute trading cycle iteration through coordinator
+        execute_trading_cycle_iteration(snapshot_state, market_data_sync_state, initial_equity, current_loop_counter);
+        
+    } catch (const std::exception& exception_error) {
+        TradingLogs::log_market_data_result_table("Exception in process_trading_cycle_iteration: " + std::string(exception_error.what()), false, 0);
+    } catch (...) {
+        TradingLogs::log_market_data_result_table("Unknown exception in process_trading_cycle_iteration", false, 0);
+    }
 }
 
+void TradingCoordinator::countdown_to_next_cycle(std::atomic<bool>& running, int poll_interval_sec, int countdown_refresh_interval_sec) {
+    int sleep_secs = poll_interval_sec;
+    int countdown_refresh_interval = countdown_refresh_interval_sec;
+    
+    // If countdown refresh interval is 0 or greater than sleep_secs, just sleep once
+    if (countdown_refresh_interval <= 0 || countdown_refresh_interval >= sleep_secs) {
+        if (running.load()) {
+            std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
+        }
+        return;
+    }
+    
+    // Calculate how many countdown updates we should show
+    int num_updates = sleep_secs / countdown_refresh_interval;
+    int remaining_secs = sleep_secs;
+    
+    for (int update_index = 0; update_index < num_updates && running.load(); ++update_index) {
+        int display_secs = std::min(remaining_secs, countdown_refresh_interval);
+        TradingLogs::log_inline_next_loop(display_secs);
+        
+        if (running.load()) {
+            std::this_thread::sleep_for(std::chrono::seconds(countdown_refresh_interval));
+            remaining_secs -= countdown_refresh_interval;
+        }
+    }
+    
+    // Sleep any remaining time without countdown display
+    if (remaining_secs > 0 && running.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(remaining_secs));
+    }
+    
+    TradingLogs::end_inline_status();
+}
 
 } // namespace Core
 } // namespace AlpacaTrader

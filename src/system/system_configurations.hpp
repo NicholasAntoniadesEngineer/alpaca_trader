@@ -1,15 +1,12 @@
 #ifndef SYSTEM_CONFIGURATIONS_HPP
 #define SYSTEM_CONFIGURATIONS_HPP
 
-// Threading includes
+#include "trader/account_management/account_manager.hpp"
+#include "threads/system_threads/market_data_thread.hpp"
 #include "threads/system_threads/account_data_thread.hpp"
 #include "threads/system_threads/logging_thread.hpp"
-#include "threads/system_threads/market_data_thread.hpp"
 #include "threads/system_threads/trader_thread.hpp"
 #include "threads/thread_register.hpp"
-
-// Trader includes
-#include "trader/account_management/account_manager.hpp"
 
 using AccountDataThreadConfig = AlpacaTrader::Config::AccountDataThreadConfig;
 using MarketDataThreadConfig = AlpacaTrader::Config::MarketDataThreadConfig;

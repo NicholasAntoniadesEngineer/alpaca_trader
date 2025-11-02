@@ -30,16 +30,13 @@ public:
     
     ProcessedData fetch_and_process_market_data(const std::string& trading_symbol, std::vector<Bar>& historical_bars_output);
     void update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state);
-    bool has_sufficient_data_for_analysis(const std::vector<Bar>& historical_bars_data, int required_bars_count) const;
-    API::ApiManager& get_api_manager_reference();
+    
+    // Process a complete market data iteration (fetch, process, update snapshot, CSV logging)
+    void process_market_data_iteration(const std::string& symbol, MarketDataSnapshotState& snapshot_state, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
 
 private:
     API::ApiManager& api_manager;
     const SystemConfig& config;
-    
-    ProcessedData compute_technical_indicators(const std::vector<Bar>& historical_bars_data);
-    std::vector<Bar> fetch_historical_bars_data(const std::string& trading_symbol, int bars_to_fetch_count, int atr_calculation_period);
-    bool validate_market_data_sufficiency(const std::vector<Bar>& historical_bars_data, int minimum_required_bars) const;
 };
 
 } // namespace Core

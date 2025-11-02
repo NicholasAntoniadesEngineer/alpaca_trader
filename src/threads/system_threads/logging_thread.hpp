@@ -29,12 +29,6 @@ private:
 
     void setup_logging_thread();
     void execute_logging_processing_loop();
-    void collect_all_available_messages(std::vector<std::string>& message_buffer);
-    void collect_messages_for_batch(std::vector<std::string>& message_buffer);
-    void flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file);
-    void process_logging_queue_with_timeout(std::ofstream& log_file);
-    void process_logging_queue(std::ofstream& log_file);
-    void output_log_line(const std::string& log_line, std::ofstream& log_file);
 };
 
 } // namespace Threads

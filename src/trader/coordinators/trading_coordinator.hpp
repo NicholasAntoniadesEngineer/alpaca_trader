@@ -37,7 +37,25 @@ public:
                                          MarketDataSyncState& market_data_sync_state,
                                          double initial_equity,
                                          unsigned long loop_counter_value);
-    TradingLogic& get_trading_logic_reference();
+    
+    // Process a complete trading cycle iteration (creates state structures and executes)
+    void process_trading_cycle_iteration(MarketSnapshot& market_snapshot,
+                                         AccountSnapshot& account_snapshot,
+                                         std::mutex& state_mtx,
+                                         std::condition_variable& data_cv,
+                                         std::atomic<bool>& has_market,
+                                         std::atomic<bool>& has_account,
+                                         std::atomic<bool>& running,
+                                         std::atomic<std::chrono::steady_clock::time_point>& market_data_timestamp,
+                                         std::atomic<bool>& market_data_fresh,
+                                         std::atomic<std::chrono::steady_clock::time_point>& last_order_timestamp,
+                                         std::atomic<bool>* allow_fetch_ptr,
+                                         double initial_equity,
+                                         std::atomic<unsigned long>& loop_counter);
+    
+    // Countdown and sleep between cycles
+    void countdown_to_next_cycle(std::atomic<bool>& running, int poll_interval_sec, int countdown_refresh_interval_sec);
+    
     MarketDataFetcher& get_market_data_fetcher_reference();
 
 private:
@@ -46,8 +64,6 @@ private:
     ConnectivityManager& connectivity_manager;
     AccountManager& account_manager;
     const SystemConfig& config;
-    
-    bool validate_connectivity_status() const;
 };
 
 } // namespace Core

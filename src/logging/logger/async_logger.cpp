@@ -264,6 +264,80 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
     cv.notify_one();
 }
 
+// Message processing implementations
+void AsyncLogger::collect_all_available_messages_internal(std::vector<std::string>& message_buffer) {
+    // Collect all available messages immediately (no waiting)
+    while (!queue.empty()) {
+        message_buffer.push_back(std::move(queue.front()));
+        queue.pop();
+    }
+}
+
+void AsyncLogger::collect_all_available_messages(std::vector<std::string>& message_buffer) {
+    std::unique_lock<std::mutex> lock(mtx);
+    collect_all_available_messages_internal(message_buffer);
+}
+
+void AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofstream& log_file) {
+    {
+        std::lock_guard<std::mutex> cguard(get_console_mutex());
+        if (get_inline_active_flag().load()) {
+            std::cout << std::endl;
+            get_inline_active_flag().store(false);
+        }
+        std::cout << log_line << std::flush;
+    }
+    
+    if (log_file.is_open()) {
+        log_file << log_line;
+        log_file.flush();
+    }
+}
+
+void AsyncLogger::flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file) {
+    // Output all buffered messages
+    for (const auto& log_line : message_buffer) {
+        output_log_line_internal(log_line, log_file);
+    }
+    
+    // Clear the buffer
+    message_buffer.clear();
+}
+
+void AsyncLogger::process_logging_queue_with_timeout(std::ofstream& log_file, int poll_interval_seconds) {
+    std::unique_lock<std::mutex> lock(mtx);
+    
+    // Wait for messages with configurable timeout to allow periodic checks for thread shutdown
+    auto timeout_duration = std::chrono::milliseconds(poll_interval_seconds * 100); // 10% of logging interval
+    cv.wait_for(lock, timeout_duration, [&]{ return !queue.empty() || !running.load(); });
+    
+    // Process all available messages
+    while (!queue.empty()) {
+        std::string line = std::move(queue.front());
+        queue.pop();
+        lock.unlock();
+        
+        output_log_line_internal(line, log_file);
+        
+        lock.lock();
+    }
+}
+
+void AsyncLogger::process_logging_queue(std::ofstream& log_file) {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [&]{ return !queue.empty() || !running.load(); });
+    
+    while (!queue.empty()) {
+        std::string line = std::move(queue.front());
+        queue.pop();
+        lock.unlock();
+        
+        output_log_line_internal(line, log_file);
+        
+        lock.lock();
+    }
+}
+
 std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config) {
     LoggingContext* context_pointer = get_logging_context();
 

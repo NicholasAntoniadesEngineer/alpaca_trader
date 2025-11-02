@@ -26,6 +26,20 @@ AccountSnapshot AccountDataCoordinator::retrieve_account_data_from_manager() {
     return account_manager.fetch_account_snapshot();
 }
 
+void AccountDataCoordinator::fetch_and_update_account_data(AccountSnapshot& account_snapshot_ref,
+                                                           std::mutex& state_mutex_ref,
+                                                           std::condition_variable& data_condition_variable_ref,
+                                                           std::atomic<bool>& has_account_flag_ref) {
+    AccountDataSnapshotState snapshot_state{
+        account_snapshot_ref,
+        state_mutex_ref,
+        data_condition_variable_ref,
+        has_account_flag_ref
+    };
+    
+    update_shared_account_snapshot(snapshot_state);
+}
+
 } // namespace Core
 } // namespace AlpacaTrader
 

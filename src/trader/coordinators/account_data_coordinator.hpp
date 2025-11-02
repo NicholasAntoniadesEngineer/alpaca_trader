@@ -24,6 +24,10 @@ public:
     
     AccountSnapshot fetch_current_account_snapshot();
     void update_shared_account_snapshot(AccountDataSnapshotState& snapshot_state);
+    void fetch_and_update_account_data(AccountSnapshot& account_snapshot_ref, 
+                                       std::mutex& state_mutex_ref,
+                                       std::condition_variable& data_condition_variable_ref,
+                                       std::atomic<bool>& has_account_flag_ref);
 
 private:
     AccountManager& account_manager;

@@ -1,10 +1,9 @@
 #ifndef SYSTEM_THREADS_HPP
 #define SYSTEM_THREADS_HPP
 
-// Standard library includes
+#include <thread>
 #include <atomic>
 #include <chrono>
-#include <thread>
 
 /**
  * @brief System thread handles and performance monitoring

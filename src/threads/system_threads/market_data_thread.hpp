@@ -61,7 +61,6 @@ struct MarketDataThread {
 private:
     // Thread lifecycle management
     void execute_market_data_collection_loop();
-    void process_market_data_iteration();
 };
 
 } // namespace Threads

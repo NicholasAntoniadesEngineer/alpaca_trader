@@ -43,12 +43,7 @@ struct AccountDataThread {
     void operator()();
 
 private:
-    // Main business logic methods
     void execute_account_data_collection_loop();
-    void fetch_and_update_account_data();
-    
-    // Utility functions
-    bool is_fetch_allowed() const;
 };
 
 } // namespace Threads
