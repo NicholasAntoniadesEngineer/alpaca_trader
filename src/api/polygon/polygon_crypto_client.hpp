@@ -32,7 +32,7 @@ private:
     mutable std::unordered_map<std::string, double> latest_prices;
     
     void websocket_worker();
-    void process_websocket_message(const std::string& message);
+    bool process_websocket_message(const std::string& message);
     std::string build_rest_url(const std::string& endpoint, const std::string& symbol) const;
     std::string make_authenticated_request(const std::string& url) const;
     

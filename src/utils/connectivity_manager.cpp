@@ -74,16 +74,6 @@ bool ConnectivityManager::should_attempt_connection() const {
     return now >= state_.next_retry_time;
 }
 
-ConnectivityManager::ConnectionStatus ConnectivityManager::get_status() const {
-    std::lock_guard<std::mutex> lock(state_mutex_);
-    return state_.status;
-}
-
-ConnectivityManager::ConnectivityState ConnectivityManager::get_state() const {
-    std::lock_guard<std::mutex> lock(state_mutex_);
-    return state_;
-}
-
 int ConnectivityManager::get_seconds_until_retry() const {
     std::lock_guard<std::mutex> lock(state_mutex_);
     auto now = std::chrono::steady_clock::now();
@@ -126,17 +116,4 @@ void ConnectivityManager::reset_connectivity_state() {
     state_.retry_delay_seconds = 1;
     state_.next_retry_time = now;
     state_.last_error_message.clear();
-}
-
-bool ConnectivityManager::check_connectivity() const {
-    return !is_connectivity_outage();
-}
-
-bool ConnectivityManager::check_connectivity_status() const {
-    if (is_connectivity_outage()) {
-        std::string connectivity_msg = "Connectivity outage - status: " + get_status_string();
-        // Note: This method doesn't have access to TradingLogs, so we'll let the caller handle logging
-        return false;
-    }
-    return true;
 }

@@ -30,7 +30,7 @@ public:
         bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
 
     // Market close position management
-    void handle_market_close_positions(const ProcessedData& processed_data_input);
+    bool handle_market_close_positions(const ProcessedData& processed_data_input);
     
     // Data synchronization setup
     void set_data_sync_reference(DataSyncReferences* data_sync_reference);

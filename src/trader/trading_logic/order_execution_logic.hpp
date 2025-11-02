@@ -23,7 +23,7 @@ public:
     bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
 
     ExitTargets calculate_exit_targets(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const;
-    void handle_market_close_positions(const ProcessedData& processed_data_input);
+    bool handle_market_close_positions(const ProcessedData& processed_data_input);
     void set_data_sync_reference(DataSyncReferences* data_sync_reference);
     
 private:

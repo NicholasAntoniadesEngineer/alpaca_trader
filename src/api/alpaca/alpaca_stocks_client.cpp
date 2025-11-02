@@ -1,6 +1,4 @@
 #include "alpaca_stocks_client.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "logging/logger/logging_macros.hpp"
 #include "utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
@@ -193,7 +191,7 @@ std::string AlpacaStocksClient::make_authenticated_request(const std::string& re
     }
     
     try {
-        HttpRequest http_request(request_url, config.api_key, config.api_secret, "", config.retry_count, 
+        HttpRequest http_request(request_url, config.api_key, config.api_secret, config.retry_count, 
                            config.timeout_seconds, config.enable_ssl_verification, 
                            config.rate_limit_delay_ms, "");
         
@@ -205,8 +203,7 @@ std::string AlpacaStocksClient::make_authenticated_request(const std::string& re
         
         return response;
     } catch (const std::exception& exception_error) {
-        AlpacaTrader::Logging::log_message("Alpaca stocks API request failed: " + std::string(exception_error.what()) + " for URL: " + request_url, "");
-        throw;
+        throw std::runtime_error("Alpaca stocks API request failed: " + std::string(exception_error.what()) + " for URL: " + request_url);
     }
 }
 

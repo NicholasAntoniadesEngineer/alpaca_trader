@@ -11,7 +11,6 @@ struct HttpRequest {
     std::string url;
     const std::string* api_key;
     const std::string* api_secret;
-    const std::string* log_file;
     int retries;
     int timeout_seconds;
     bool enable_ssl_verification;
@@ -21,13 +20,12 @@ struct HttpRequest {
     HttpRequest(const std::string& request_url,
                 const std::string& api_key_string,
                 const std::string& api_secret_string,
-                const std::string& log_file_path,
                 int retry_count,
                 int timeout_seconds_param,
                 bool enable_ssl_verification_param,
                 int rate_limit_delay_milliseconds,
                 const std::string& request_body)
-        : url(request_url), api_key(&api_key_string), api_secret(&api_secret_string), log_file(&log_file_path), 
+        : url(request_url), api_key(&api_key_string), api_secret(&api_secret_string), 
           retries(retry_count), timeout_seconds(timeout_seconds_param), enable_ssl_verification(enable_ssl_verification_param),
           rate_limit_delay_ms(rate_limit_delay_milliseconds), body(request_body) {}
 };

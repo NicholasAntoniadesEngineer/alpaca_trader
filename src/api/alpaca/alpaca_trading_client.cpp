@@ -1,6 +1,4 @@
 #include "alpaca_trading_client.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "logging/logger/logging_macros.hpp"
 #include "utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <stdexcept>
@@ -182,13 +180,16 @@ bool AlpacaTradingClient::is_market_open() const {
     std::string request_url = build_url(config.endpoints.clock);
     std::string response = make_authenticated_request(request_url, "GET", "");
     
-    try {
-        json response_json = json::parse(response);
-        return response_json.value("is_open", false);
-    } catch (const std::exception& exception_error) {
-        AlpacaTrader::Logging::log_message("Error checking market open status: " + std::string(exception_error.what()), "");
-        return false;
+    if (response.empty()) {
+        throw std::runtime_error("Empty response from market open check API");
     }
+    
+    json response_json = json::parse(response);
+    if (!response_json.contains("is_open")) {
+        throw std::runtime_error("Invalid response format from market open check API - missing is_open field");
+    }
+    
+    return response_json.value("is_open", false);
 }
 
 bool AlpacaTradingClient::is_within_trading_hours() const {
@@ -296,7 +297,7 @@ std::string AlpacaTradingClient::make_authenticated_request(const std::string& r
         throw std::runtime_error("Alpaca base URL is not configured");
     }
     
-    HttpRequest http_request(request_url, config.api_key, config.api_secret, "", config.retry_count, 
+    HttpRequest http_request(request_url, config.api_key, config.api_secret, config.retry_count, 
                        config.timeout_seconds, config.enable_ssl_verification, 
                        config.rate_limit_delay_ms, body);
     

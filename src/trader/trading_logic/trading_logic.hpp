@@ -26,7 +26,7 @@ public:
     TradingDecisionResult execute_trading_decision(const ProcessedData& processed_data_input, double account_equity);
     TradingDecisionResult execute_trading_cycle(const MarketSnapshot& market_snapshot, const AccountSnapshot& account_snapshot, double initial_equity);
     void handle_trading_halt();
-    void handle_market_close_positions(const ProcessedData& processed_data_for_close);
+    bool handle_market_close_positions(const ProcessedData& processed_data_for_close);
     void setup_data_synchronization(const DataSyncConfig& sync_configuration);
     MarketDataManager& get_market_data_manager_reference();
     void execute_trade_if_valid(const TradeExecutionRequest& trade_request);

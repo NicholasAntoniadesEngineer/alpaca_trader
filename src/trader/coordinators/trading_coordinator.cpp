@@ -31,7 +31,7 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
                                                           double initial_equity,
                                                           unsigned long loop_counter_value) {
     // Check connectivity status
-    if (!connectivity_manager.check_connectivity_status()) {
+    if (connectivity_manager.is_connectivity_outage()) {
         std::string connectivity_msg = "Connectivity outage - status: " + connectivity_manager.get_status_string();
         TradingLogs::log_market_status(false, connectivity_msg);
         try {
@@ -147,7 +147,16 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     // Handle market close positions with logging
     try {
         API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
-        bool market_open_result = api_manager_ref.is_market_open(config.trading_mode.primary_symbol);
+        bool market_open_result = false;
+        try {
+            market_open_result = api_manager_ref.is_market_open(config.trading_mode.primary_symbol);
+        } catch (const std::exception& market_open_api_exception_error) {
+            TradingLogs::log_market_status(false, "API error checking market open status: " + std::string(market_open_api_exception_error.what()));
+            market_open_result = false;
+        } catch (...) {
+            TradingLogs::log_market_status(false, "Unknown API error checking market open status");
+            market_open_result = false;
+        }
         
         if (!market_open_result) {
             int position_quantity = processed_data_for_market_close.pos_details.position_quantity;
@@ -161,7 +170,10 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
                 TradingLogs::log_market_close_position_closure(position_quantity, config.trading_mode.primary_symbol, position_side);
                 
                 // Handle market close positions
-                trading_logic.handle_market_close_positions(processed_data_for_market_close);
+                bool market_close_position_result = trading_logic.handle_market_close_positions(processed_data_for_market_close);
+                if (!market_close_position_result) {
+                    TradingLogs::log_market_status(false, "Failed to close positions at market close");
+                }
                 
                 TradingLogs::log_market_close_complete();
             }
@@ -377,19 +389,37 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
             
             if (trade_request.current_position_quantity == 0) {
                 double original_price = trade_request.processed_data.curr.close_price;
-                ExitTargets exit_targets_result = order_engine.calculate_exit_targets(
-                    OrderExecutionLogic::OrderSide::Buy, 
-                    trade_request.processed_data, 
-                    trade_request.position_sizing
-                );
+                ExitTargets exit_targets_result;
+                try {
+                    exit_targets_result = order_engine.calculate_exit_targets(
+                        OrderExecutionLogic::OrderSide::Buy, 
+                        trade_request.processed_data, 
+                        trade_request.position_sizing
+                    );
+                } catch (const std::exception& exit_targets_api_exception_error) {
+                    TradingLogs::log_market_status(false, "API error calculating exit targets: " + std::string(exit_targets_api_exception_error.what()));
+                    return;
+                } catch (...) {
+                    TradingLogs::log_market_status(false, "Unknown API error calculating exit targets");
+                    return;
+                }
                 
                 if (config.strategy.use_current_market_price_for_order_execution) {
                     API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
-                    double realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
-                    if (realtime_price_amount > 0.0) {
-                        TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
-                    } else {
+                    double realtime_price_amount = 0.0;
+                    try {
+                        realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
+                        if (realtime_price_amount > 0.0) {
+                            TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
+                        } else {
+                            TradingLogs::log_realtime_price_fallback(original_price);
+                        }
+                    } catch (const std::exception& realtime_price_api_exception_error) {
                         TradingLogs::log_realtime_price_fallback(original_price);
+                        TradingLogs::log_market_status(false, "API error fetching realtime price: " + std::string(realtime_price_api_exception_error.what()));
+                    } catch (...) {
+                        TradingLogs::log_realtime_price_fallback(original_price);
+                        TradingLogs::log_market_status(false, "Unknown API error fetching realtime price");
                     }
                 }
                 
@@ -414,24 +444,53 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
             
             if (trade_request.current_position_quantity == 0) {
                 API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
-                if (!api_manager_ref.get_account_info().empty()) {
+                std::string account_info_response;
+                try {
+                    account_info_response = api_manager_ref.get_account_info();
+                } catch (const std::exception& account_info_api_exception_error) {
+                    TradingLogs::log_market_status(false, "API error fetching account info: " + std::string(account_info_api_exception_error.what()));
+                    return;
+                } catch (...) {
+                    TradingLogs::log_market_status(false, "Unknown API error fetching account info");
+                    return;
+                }
+                
+                if (!account_info_response.empty()) {
                     TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
                     return;
                 } else {
                     TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
                     double original_price = trade_request.processed_data.curr.close_price;
-                    ExitTargets exit_targets_result = order_engine.calculate_exit_targets(
-                        OrderExecutionLogic::OrderSide::Sell, 
-                        trade_request.processed_data, 
-                        trade_request.position_sizing
-                    );
+                    ExitTargets exit_targets_result;
+                    try {
+                        exit_targets_result = order_engine.calculate_exit_targets(
+                            OrderExecutionLogic::OrderSide::Sell, 
+                            trade_request.processed_data, 
+                            trade_request.position_sizing
+                        );
+                    } catch (const std::exception& exit_targets_api_exception_error) {
+                        TradingLogs::log_market_status(false, "API error calculating exit targets: " + std::string(exit_targets_api_exception_error.what()));
+                        return;
+                    } catch (...) {
+                        TradingLogs::log_market_status(false, "Unknown API error calculating exit targets");
+                        return;
+                    }
                     
                     if (config.strategy.use_current_market_price_for_order_execution) {
-                        double realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
-                        if (realtime_price_amount > 0.0) {
-                            TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
-                        } else {
+                        double realtime_price_amount = 0.0;
+                        try {
+                            realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
+                            if (realtime_price_amount > 0.0) {
+                                TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
+                            } else {
+                                TradingLogs::log_realtime_price_fallback(original_price);
+                            }
+                        } catch (const std::exception& realtime_price_api_exception_error) {
                             TradingLogs::log_realtime_price_fallback(original_price);
+                            TradingLogs::log_market_status(false, "API error fetching realtime price: " + std::string(realtime_price_api_exception_error.what()));
+                        } catch (...) {
+                            TradingLogs::log_realtime_price_fallback(original_price);
+                            TradingLogs::log_market_status(false, "Unknown API error fetching realtime price");
                         }
                     }
                     

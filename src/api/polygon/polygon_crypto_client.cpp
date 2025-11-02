@@ -1,6 +1,4 @@
 #include "polygon_crypto_client.hpp"
-#include "logging/logger/async_logger.hpp"
-#include "logging/logger/logging_macros.hpp"
 #include "utils/http_utils.hpp"
 #include "json/json.hpp"
 #include <curl/curl.h>
@@ -248,7 +246,7 @@ void PolygonCryptoClient::websocket_worker() {
     }
 }
 
-void PolygonCryptoClient::process_websocket_message(const std::string& message) {
+bool PolygonCryptoClient::process_websocket_message(const std::string& message) {
     try {
         json msg_json = json::parse(message);
         
@@ -266,11 +264,15 @@ void PolygonCryptoClient::process_websocket_message(const std::string& message) 
                 std::lock_guard<std::mutex> lock(data_mutex);
                 latest_quotes[symbol] = quote;
                 latest_prices[symbol] = quote.mid_price;
+                return true;
             }
         }
         
-    } catch (const std::exception& exception_error) {
-        AlpacaTrader::Logging::log_message("Error processing websocket message: " + std::string(exception_error.what()), "");
+        return false;
+    } catch (const std::exception&) {
+        // Silently skip malformed websocket messages to maintain connection
+        // Exceptions are caught but not logged to avoid disrupting websocket connection
+        return false;
     }
 }
 
@@ -330,7 +332,7 @@ std::string PolygonCryptoClient::make_authenticated_request(const std::string& r
     }
     
     try {
-        HttpRequest http_request(request_url, "", "", "", config.retry_count, config.timeout_seconds, 
+        HttpRequest http_request(request_url, "", "", config.retry_count, config.timeout_seconds, 
                            config.enable_ssl_verification, config.rate_limit_delay_ms, "");
         
         std::string response = http_get(http_request, connectivity_manager);
@@ -345,8 +347,7 @@ std::string PolygonCryptoClient::make_authenticated_request(const std::string& r
         
         return response;
     } catch (const std::exception& exception_error) {
-        AlpacaTrader::Logging::log_message("Polygon API request failed: " + std::string(exception_error.what()) + " for URL: " + request_url, "");
-        throw;
+        throw std::runtime_error("Polygon API request failed: " + std::string(exception_error.what()) + " for URL: " + request_url);
     }
 }
 

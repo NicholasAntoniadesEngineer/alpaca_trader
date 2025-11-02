@@ -320,9 +320,17 @@ ExitTargets OrderExecutionLogic::calculate_exit_targets(OrderSide order_side_inp
     
     // Use real-time price if configured and available
     if (config.strategy.use_current_market_price_for_order_execution) {
-        double realtime_price_amount = api_manager.get_current_price(config.trading_mode.primary_symbol);
-        if (realtime_price_amount > 0.0) {
-            entry_price_amount = realtime_price_amount;
+        try {
+            double realtime_price_amount = api_manager.get_current_price(config.trading_mode.primary_symbol);
+            if (realtime_price_amount > 0.0) {
+                entry_price_amount = realtime_price_amount;
+            }
+        } catch (const std::exception& realtime_price_api_exception_error) {
+            // Fall back to using processed data price, error will be logged by coordinator
+            // Let exception propagate if caller needs to handle it differently
+            throw std::runtime_error("API error fetching realtime price in calculate_exit_targets: " + std::string(realtime_price_api_exception_error.what()));
+        } catch (...) {
+            throw std::runtime_error("Unknown API error fetching realtime price in calculate_exit_targets");
         }
     }
     
@@ -391,14 +399,21 @@ bool OrderExecutionLogic::validate_trade_feasibility(const PositionSizing& posit
     return buying_power_amount >= required_buying_power_amount;
 }
 
-void OrderExecutionLogic::handle_market_close_positions(const ProcessedData& processed_data_input) {
-    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
-        return;
+bool OrderExecutionLogic::handle_market_close_positions(const ProcessedData& processed_data_input) {
+    try {
+        if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
+            return false;
+        }
+    } catch (const std::exception& market_open_api_exception_error) {
+        // If API check fails, assume market is closed and proceed with position closure
+        // Error will be logged by coordinator
+    } catch (...) {
+        // If unknown error, assume market is closed and proceed with position closure
     }
     
     int current_position_quantity = processed_data_input.pos_details.position_quantity;
     if (current_position_quantity == 0) {
-        return;
+        return false;
     }
     
     int market_close_grace_period_minutes = config.timing.market_close_grace_period_minutes;
@@ -406,7 +421,14 @@ void OrderExecutionLogic::handle_market_close_positions(const ProcessedData& pro
         throw std::runtime_error("Invalid market close grace period - must be positive");
     }
     
-    api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
+    try {
+        api_manager.close_position(config.trading_mode.primary_symbol, current_position_quantity);
+        return true;
+    } catch (const std::exception& close_position_api_exception_error) {
+        throw std::runtime_error("API error closing position: " + std::string(close_position_api_exception_error.what()));
+    } catch (...) {
+        throw std::runtime_error("Unknown API error closing position");
+    }
 }
 
 } // namespace Core

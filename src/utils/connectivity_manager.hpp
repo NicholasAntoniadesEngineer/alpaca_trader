@@ -52,12 +52,16 @@ public:
     void report_success();
     void report_failure(const std::string& error_message);
     bool should_attempt_connection() const;
-    ConnectionStatus get_status() const;
-    ConnectivityState get_state() const;
     int get_seconds_until_retry() const;
     bool is_connectivity_outage() const;
-    bool check_connectivity() const;
-    bool check_connectivity_status() const;
+    inline ConnectionStatus get_status() const {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        return state_.status;
+    }
+    inline ConnectivityState get_state() const {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        return state_;
+    }
     std::string get_status_string() const;
     void reset_connectivity_state();
 };

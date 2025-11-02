@@ -57,8 +57,18 @@ TradingDecisionResult TradingLogic::execute_trading_decision(const ProcessedData
     }
 
     // Check if market is open before making any trading decisions
-    if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
-        result.market_closed = true;
+    try {
+        if (!api_manager.is_within_trading_hours(config.trading_mode.primary_symbol)) {
+            result.market_closed = true;
+            return result;
+        }
+    } catch (const std::exception& trading_hours_api_exception_error) {
+        result.validation_failed = true;
+        result.validation_error_message = "API error checking trading hours: " + std::string(trading_hours_api_exception_error.what());
+        return result;
+    } catch (...) {
+        result.validation_failed = true;
+        result.validation_error_message = "Unknown API error checking trading hours";
         return result;
     }
     
@@ -129,8 +139,19 @@ void TradingLogic::execute_trade_if_valid(const TradeExecutionRequest& trade_req
     
     if (trade_request.signal_decision.buy) {
         if (trade_request.current_position_quantity == 0) {
-            if (!api_manager.get_account_info().empty()) {
-                throw std::runtime_error("SELL signal blocked - insufficient short availability for new position");
+            try {
+                std::string account_info_response = api_manager.get_account_info();
+                if (!account_info_response.empty()) {
+                    throw std::runtime_error("SELL signal blocked - insufficient short availability for new position");
+                }
+            } catch (const std::runtime_error& runtime_error) {
+                // Re-throw runtime errors as-is (e.g., the signal blocking error)
+                throw;
+            } catch (const std::exception& account_info_api_exception_error) {
+                // API errors should propagate to coordinator for logging
+                throw std::runtime_error("API error fetching account info in execute_trade_if_valid: " + std::string(account_info_api_exception_error.what()));
+            } catch (...) {
+                throw std::runtime_error("Unknown API error fetching account info in execute_trade_if_valid");
             }
         }
         order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
@@ -162,17 +183,24 @@ void TradingLogic::check_and_execute_profit_taking(const ProfitTakingRequest& pr
     }
 }
 
-void TradingLogic::handle_market_close_positions(const ProcessedData& processed_data_for_close) {
-    if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
-        return;
+bool TradingLogic::handle_market_close_positions(const ProcessedData& processed_data_for_close) {
+    try {
+        if (api_manager.is_market_open(config.trading_mode.primary_symbol)) {
+            return false;
+        }
+    } catch (const std::exception& market_open_api_exception_error) {
+        // If API check fails, assume market is closed and proceed with position closure
+        // Error will be logged by coordinator
+    } catch (...) {
+        // If unknown error, assume market is closed and proceed with position closure
     }
     
     int current_position_quantity = processed_data_for_close.pos_details.position_quantity;
     if (current_position_quantity == 0) {
-        return;
+        return false;
     }
     
-    order_engine.handle_market_close_positions(processed_data_for_close);
+    return order_engine.handle_market_close_positions(processed_data_for_close);
 }
 
 MarketDataManager& TradingLogic::get_market_data_manager_reference() {
