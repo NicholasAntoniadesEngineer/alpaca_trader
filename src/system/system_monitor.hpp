@@ -38,22 +38,33 @@ struct SystemHealthSnapshot {
     std::chrono::steady_clock::time_point last_connectivity_issue_time;
 };
 
+struct SystemHealthReport {
+    bool system_healthy_value{false};
+    bool startup_complete_value{false};
+    bool configuration_valid_value{false};
+    bool all_threads_started_value{false};
+    int active_thread_count_value{0};
+    int connectivity_issues_count_value{0};
+    int critical_errors_count_value{0};
+    int uptime_seconds_value{0};
+};
+
 class SystemMonitor {
 public:
     SystemMonitor() = default;
     
     // Configuration
-    void set_configuration(const AlpacaTrader::Config::SystemConfig& config);
+    bool set_configuration(const AlpacaTrader::Config::SystemConfig& config);
     
     // Startup validation
-    void record_startup_complete();
-    void record_configuration_validated(bool valid);
-    void record_threads_started(int expected_thread_count, int actual_started_count);
+    bool record_startup_complete();
+    bool record_configuration_validated(bool valid);
+    bool record_threads_started(int expected_thread_count, int actual_started_count);
     
     // Runtime health monitoring
-    void record_thread_health_check(int active_thread_count);
-    void record_connectivity_issue();
-    void record_critical_error(const std::string& error_description);
+    bool record_thread_health_check(int active_thread_count);
+    bool record_connectivity_issue();
+    bool record_critical_error(const std::string&);
     
     // Health checks
     bool is_system_healthy() const;
@@ -64,10 +75,10 @@ public:
     // Reporting
     std::string get_health_report() const;
     SystemHealthSnapshot get_health_snapshot() const;
-    void log_health_report() const;
+    SystemHealthReport get_health_report_data() const;
     
     // Alerting
-    void check_and_alert();
+    bool should_alert() const;
     
 private:
     mutable std::mutex metrics_mutex_;

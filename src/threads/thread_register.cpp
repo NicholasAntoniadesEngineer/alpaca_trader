@@ -5,8 +5,6 @@
 #include "system_threads/market_gate_thread.hpp"
 #include "system_threads/trader_thread.hpp"
 #include "system_threads/logging_thread.hpp"
-#include "logging/logs/thread_logs.hpp"
-#include "logging/logger/logging_macros.hpp"
 #include <iostream>
 #include <map>
 #include <set>

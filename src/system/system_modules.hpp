@@ -8,7 +8,6 @@
 #include "threads/system_threads/market_data_thread.hpp"
 #include "threads/system_threads/market_gate_thread.hpp"
 #include "threads/system_threads/trader_thread.hpp"
-#include "logging/logs/account_logs.hpp"
 #include "trader/account_management/account_manager.hpp"
 #include "trader/coordinators/account_data_coordinator.hpp"
 #include "trader/coordinators/market_data_coordinator.hpp"
@@ -32,11 +31,6 @@ struct SystemModules {
     std::unique_ptr<AlpacaTrader::Core::MarketDataCoordinator> market_data_coordinator; // Market data access coordinator
     std::unique_ptr<AlpacaTrader::Core::AccountDataCoordinator> account_data_coordinator; // Account data access coordinator
     std::unique_ptr<AlpacaTrader::Core::MarketGateCoordinator> market_gate_coordinator; // Market gate control coordinator
-    
-    // =========================================================================
-    // LOGGING AND MONITORING
-    // =========================================================================
-    std::unique_ptr<AlpacaTrader::Logging::AccountLogs> account_dashboard;  // Account status logging
     
     // =========================================================================
     // THREADING COMPONENTS

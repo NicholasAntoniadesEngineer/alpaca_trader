@@ -6,8 +6,6 @@
 #include "system/system_modules.hpp"
 #include "system/system_state.hpp"
 #include "system/system_threads.hpp"
-
-// Logging includes
 #include "logging/logger/async_logger.hpp"
 
 namespace AlpacaTrader {

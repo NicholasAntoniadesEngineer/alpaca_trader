@@ -122,8 +122,6 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
         state.config
     );
     
-    modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager, state.config.strategy.position_long_string, state.config.strategy.position_short_string);
-    
     // Create coordinator interfaces for thread access to trader components
     // MarketDataCoordinator uses MarketDataManager from TradingLogic for detailed logging
     modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(
@@ -206,8 +204,18 @@ void configure_trading_modules(SystemThreads& handles, SystemModules& modules, S
 
 SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
     // Configure system monitor
-    system_state.system_monitor.set_configuration(system_state.config);
-    system_state.system_monitor.record_configuration_validated(true);
+    bool config_set_result = system_state.system_monitor.set_configuration(system_state.config);
+    if (!config_set_result) {
+        SystemLogs::log_system_startup_error("Failed to set system monitor configuration");
+        throw std::runtime_error("Failed to set system monitor configuration");
+    }
+    
+    bool config_validated_result = system_state.system_monitor.record_configuration_validated(true);
+    if (!config_validated_result) {
+        SystemLogs::log_system_startup_error("Failed to record configuration validation");
+        throw std::runtime_error("Failed to record configuration validation");
+    }
+    SystemLogs::log_configuration_validated(true);
     
     // Create handles for the threads
     SystemThreads handles;
@@ -286,13 +294,39 @@ SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::L
     // Record thread startup in system monitor
     int expected_thread_count = static_cast<int>(thread_definitions.size());
     int actual_thread_count = static_cast<int>(system_state.thread_infos.size());
-    system_state.system_monitor.record_threads_started(expected_thread_count, actual_thread_count);
+    bool threads_recorded_result = system_state.system_monitor.record_threads_started(expected_thread_count, actual_thread_count);
+    if (!threads_recorded_result) {
+        SystemLogs::log_system_startup_error("Failed to record threads started in system monitor");
+    } else {
+        SystemLogs::log_threads_started(expected_thread_count, actual_thread_count);
+    }
     
     // Record system startup complete
-    system_state.system_monitor.record_startup_complete();
+    bool startup_recorded_result = system_state.system_monitor.record_startup_complete();
+    if (!startup_recorded_result) {
+        SystemLogs::log_system_startup_error("Failed to record startup complete in system monitor");
+    } else {
+        SystemLogs::log_startup_complete();
+    }
     
     // Log initial health report after all threads have started
-    system_state.system_monitor.log_health_report();
+    try {
+        AlpacaTrader::Monitoring::SystemHealthReport health_report_data = system_state.system_monitor.get_health_report_data();
+        SystemLogs::log_health_report_table(
+            health_report_data.system_healthy_value,
+            health_report_data.startup_complete_value,
+            health_report_data.configuration_valid_value,
+            health_report_data.all_threads_started_value,
+            health_report_data.active_thread_count_value,
+            health_report_data.connectivity_issues_count_value,
+            health_report_data.critical_errors_count_value,
+            health_report_data.uptime_seconds_value
+        );
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_critical_error(std::string("Error logging initial health report: ") + exception_error.what());
+    } catch (...) {
+        SystemLogs::log_critical_error("Unknown error logging initial health report");
+    }
     
     return handles;
 }
@@ -322,18 +356,44 @@ static void run_until_shutdown(SystemState& state) {
                         
                         // Update system monitor with current thread health
                         int active_thread_count = static_cast<int>(state.thread_infos.size());
-                        state.system_monitor.record_thread_health_check(active_thread_count);
+                        bool health_check_recorded = state.system_monitor.record_thread_health_check(active_thread_count);
+                        if (!health_check_recorded) {
+                            SystemLogs::log_thread_monitoring_error("Failed to record thread health check");
+                        }
                         
                         // Check system health and alert if needed
-                        state.system_monitor.check_and_alert();
+                        if (state.system_monitor.should_alert()) {
+                            AlpacaTrader::Monitoring::SystemHealthReport health_report_data = state.system_monitor.get_health_report_data();
+                            std::string health_report_formatted_string = SystemLogs::format_health_report_string(
+                                health_report_data.system_healthy_value,
+                                health_report_data.startup_complete_value,
+                                health_report_data.configuration_valid_value,
+                                health_report_data.all_threads_started_value,
+                                health_report_data.active_thread_count_value,
+                                health_report_data.connectivity_issues_count_value,
+                                health_report_data.critical_errors_count_value,
+                                health_report_data.uptime_seconds_value
+                            );
+                            SystemLogs::log_system_alert(health_report_formatted_string);
+                        }
                         
                         last_monitor_time = now;
                     } catch (const std::exception& exception_error) {
                         SystemLogs::log_thread_monitoring_error(exception_error.what());
-                        state.system_monitor.record_critical_error(std::string("Error in thread monitoring: ") + exception_error.what());
+                        std::string error_description_string = std::string("Error in thread monitoring: ") + exception_error.what();
+                        bool critical_error_recorded = state.system_monitor.record_critical_error(error_description_string);
+                        SystemLogs::log_critical_error(error_description_string);
+                        if (!critical_error_recorded) {
+                            SystemLogs::log_system_warning("Failed to record critical error in system monitor");
+                        }
                     } catch (...) {
                         SystemLogs::log_thread_monitoring_error("Unknown error logging thread monitoring stats");
-                        state.system_monitor.record_critical_error("Unknown error in thread monitoring");
+                        std::string unknown_error_description_string = "Unknown error in thread monitoring";
+                        bool critical_error_recorded = state.system_monitor.record_critical_error(unknown_error_description_string);
+                        SystemLogs::log_critical_error(unknown_error_description_string);
+                        if (!critical_error_recorded) {
+                            SystemLogs::log_system_warning("Failed to record critical error in system monitor");
+                        }
                     }
                 }
 
