@@ -6,6 +6,9 @@
 #include "trader/data_structures/data_structures.hpp"
 #include "utils/http_utils.hpp"
 #include "utils/connectivity_manager.hpp"
+#include "api/polygon/websocket_client.hpp"
+#include "api/polygon/bar_accumulator.hpp"
+#include "json/json.hpp"
 #include <string>
 #include <vector>
 #include <atomic>
@@ -13,6 +16,10 @@
 #include <mutex>
 #include <condition_variable>
 #include <unordered_map>
+#include <memory>
+#include <chrono>
+
+using json = nlohmann::json;
 
 namespace AlpacaTrader {
 namespace API {
@@ -24,17 +31,28 @@ private:
     std::atomic<bool> websocket_active{false};
     ConnectivityManager& connectivity_manager;
     
-    std::thread websocket_thread;
+    std::unique_ptr<Polygon::WebSocketClient> websocketClientPointer;
     mutable std::mutex data_mutex;
     std::condition_variable data_condition;
     
     mutable std::unordered_map<std::string, Core::QuoteData> latest_quotes;
     mutable std::unordered_map<std::string, double> latest_prices;
+    mutable std::unordered_map<std::string, Core::Bar> latest_bars;
+    mutable std::unordered_map<std::string, std::unique_ptr<Polygon::BarAccumulator>> barAccumulatorMap;
     
-    void websocket_worker();
+    std::vector<std::string> subscribed_symbols;
+    
+    mutable std::chrono::steady_clock::time_point lastStaleDataLogTime;
+    mutable std::string lastStaleDataTimestamp;
+    mutable std::unordered_map<std::string, std::vector<Core::Bar>> lastLoggedBarsMap;
+    mutable std::chrono::steady_clock::time_point lastBarsLogTime;
+    
     bool process_websocket_message(const std::string& message);
+    bool process_single_message(const json& msg_json);
+    std::string convert_symbol_for_websocket(const std::string& symbol) const;  
     std::string build_rest_url(const std::string& endpoint, const std::string& symbol) const;
     std::string make_authenticated_request(const std::string& url) const;
+    std::string convert_symbol_to_polygon_format(const std::string& symbol) const;
     
     bool validate_config() const;
     void cleanup_resources();
@@ -59,6 +77,7 @@ public:
     
     bool start_realtime_feed(const std::vector<std::string>& symbols);
     void stop_realtime_feed();
+    bool is_websocket_active() const { return websocket_active.load(); }
 };
 
 } // namespace API

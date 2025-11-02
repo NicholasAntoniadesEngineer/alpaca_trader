@@ -48,16 +48,12 @@ void MarketDataThread::operator()() {
 
 void MarketDataThread::execute_market_data_collection_loop() {
     try {
-        MarketDataThreadLogs::log_thread_loop_exception("Entered execute_market_data_collection_loop");
         while (running.load()) {
             try {
-                MarketDataThreadLogs::log_thread_loop_exception("Before fetch gate check");
                 if (!MarketDataThreadLogs::is_fetch_allowed(allow_fetch_ptr)) {
-                    MarketDataThreadLogs::log_thread_loop_exception("Fetch not allowed - sleeping");
                     std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
                     continue;
                 }
-                MarketDataThreadLogs::log_thread_loop_exception("After fetch gate check - starting iteration");
 
                 MarketDataCoordinator::MarketDataSnapshotState snapshot_state{
                     market_snapshot,
@@ -74,7 +70,6 @@ void MarketDataThread::execute_market_data_collection_loop() {
                     iteration_counter->fetch_add(1);
                 }
 
-                MarketDataThreadLogs::log_thread_loop_exception("Iteration complete - sleeping");
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_market_data_poll_interval_sec));
             } catch (const std::exception& exception_error) {
                 MarketDataThreadLogs::log_thread_loop_exception(exception_error.what());

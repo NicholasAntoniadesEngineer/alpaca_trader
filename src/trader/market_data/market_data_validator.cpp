@@ -89,10 +89,8 @@ bool MarketDataValidator::validate_price_data(const Bar& bar_data) const {
 }
 
 bool MarketDataValidator::validate_technical_indicators(const MarketSnapshot& market_snapshot) const {
-    if (market_snapshot.atr <= 0.0) {
-        return false;
-    }
-
+    // ATR can be 0.0 when there are insufficient bars - allow it (ATR calculates continuously)
+    // Only reject if ATR is invalid (NaN or infinite)
     if (std::isnan(market_snapshot.atr) || !std::isfinite(market_snapshot.atr)) {
         return false;
     }

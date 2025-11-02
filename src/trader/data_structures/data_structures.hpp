@@ -40,6 +40,7 @@ struct MarketSnapshot {
     double avg_vol;
     Bar curr;
     Bar prev;
+    std::string oldest_bar_timestamp;
 };
 
 struct AccountSnapshot {

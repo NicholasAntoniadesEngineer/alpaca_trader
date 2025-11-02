@@ -124,6 +124,18 @@ void MultiApiConfigLoader::parse_provider_config(const std::string& key, const s
             throw std::runtime_error("bars_range_minutes is required for provider: " + provider_str);
         }
         provider_config.bars_range_minutes = std::stoi(value);
+    } else if (field == "websocket_bar_accumulation_seconds") {
+        if (!value.empty()) {
+            provider_config.websocket_bar_accumulation_seconds = std::stoi(value);
+        }
+    } else if (field == "websocket_second_level_accumulation_seconds") {
+        if (!value.empty()) {
+            provider_config.websocket_second_level_accumulation_seconds = std::stoi(value);
+        }
+    } else if (field == "websocket_max_bar_history_size") {
+        if (!value.empty()) {
+            provider_config.websocket_max_bar_history_size = std::stoi(value);
+        }
     } else if (field.find("endpoints.") == 0) {
         std::string endpoint_name = field.substr(10);
         
@@ -260,6 +272,21 @@ void MultiApiConfigLoader::validate_provider_config(Config::ApiProvider provider
         }
         if (config.bars_range_minutes <= 0) {
             throw std::runtime_error("bars_range_minutes must be > 0 for market data provider: " + provider_name);
+        }
+        
+        if (provider == Config::ApiProvider::POLYGON_CRYPTO) {
+            if (config.websocket_bar_accumulation_seconds <= 0) {
+                throw std::runtime_error("websocket_bar_accumulation_seconds must be configured and > 0 for polygon_crypto provider");
+            }
+            if (config.websocket_second_level_accumulation_seconds <= 0) {
+                throw std::runtime_error("websocket_second_level_accumulation_seconds must be configured and > 0 for polygon_crypto provider");
+            }
+            if (config.websocket_max_bar_history_size <= 0) {
+                throw std::runtime_error("websocket_max_bar_history_size must be configured and > 0 for polygon_crypto provider");
+            }
+            if (config.websocket_second_level_accumulation_seconds % config.websocket_bar_accumulation_seconds != 0) {
+                throw std::runtime_error("websocket_second_level_accumulation_seconds must be a multiple of websocket_bar_accumulation_seconds for polygon_crypto provider");
+            }
         }
     }
 }

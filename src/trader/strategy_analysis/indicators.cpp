@@ -5,17 +5,44 @@
 namespace AlpacaTrader {
 namespace Core {
 
-double compute_atr(const std::vector<double>& highs, const std::vector<double>& lows, const std::vector<double>& closes, int period) {
-    if (highs.size() < static_cast<size_t>(period + 1)) return 0.0;
+double compute_atr(const std::vector<double>& highs, const std::vector<double>& lows, const std::vector<double>& closes, int period, int minimum_bars_required) {
+    if (static_cast<int>(highs.size()) < minimum_bars_required) {
+        return 0.0;
+    }
+    
+    int effectivePeriodValue = period;
+    if (static_cast<int>(highs.size()) < period + 1) {
+        effectivePeriodValue = static_cast<int>(highs.size()) - 1;
+        if (effectivePeriodValue < 1) {
+            effectivePeriodValue = 1;
+        }
+    }
+    
     std::vector<double> true_range_values;
     for (size_t current_bar_index = 1; current_bar_index < highs.size(); ++current_bar_index) {
         double true_range_value = std::max({highs[current_bar_index] - lows[current_bar_index], std::abs(highs[current_bar_index] - closes[current_bar_index-1]), std::abs(lows[current_bar_index] - closes[current_bar_index-1])});
         true_range_values.push_back(true_range_value);
     }
+    
+    if (true_range_values.empty()) {
+        return 0.0;
+    }
+    
     double true_range_sum = 0.0;
-    int true_range_start_index = static_cast<int>(true_range_values.size()) - period;
-    for (int true_range_index = true_range_start_index; true_range_index < static_cast<int>(true_range_values.size()); ++true_range_index) true_range_sum += true_range_values[true_range_index];
-    return true_range_sum / period;
+    int period_to_use_value = std::min(effectivePeriodValue, static_cast<int>(true_range_values.size()));
+    int true_range_start_index = static_cast<int>(true_range_values.size()) - period_to_use_value;
+    if (true_range_start_index < 0) {
+        true_range_start_index = 0;
+    }
+    for (int true_range_index = true_range_start_index; true_range_index < static_cast<int>(true_range_values.size()); ++true_range_index) {
+        true_range_sum += true_range_values[true_range_index];
+    }
+    
+    if (period_to_use_value <= 0) {
+        return 0.0;
+    }
+    
+    return true_range_sum / period_to_use_value;
 }
 
 double compute_average_volume(const std::vector<double>& volumes, int period, double minimum_threshold) {
@@ -64,7 +91,7 @@ bool compute_technical_indicators(ProcessedData& processed_data, const std::vect
     }
     
     // Compute ATR
-    processed_data.atr = compute_atr(highs, lows, closes, config.strategy.atr_calculation_period);
+    processed_data.atr = compute_atr(highs, lows, closes, config.strategy.atr_calculation_period, config.strategy.minimum_bars_for_atr_calculation);
     
     // Compute average volume
     processed_data.avg_vol = compute_average_volume(volumes, config.strategy.atr_calculation_period, config.strategy.minimum_volume_threshold);

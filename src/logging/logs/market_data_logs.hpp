@@ -2,7 +2,9 @@
 #define MARKET_DATA_LOGS_HPP
 
 #include "configs/logging_config.hpp"
+#include "trader/data_structures/data_structures.hpp"
 #include <string>
+#include <vector>
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -28,6 +30,12 @@ public:
     static void log_market_data_failure_summary(const std::string& symbol, const std::string& error_type, 
                                                const std::string& error_details, size_t bars_received, 
                                                const std::string& log_file);
+    static void log_market_data_failure_table(const std::string& symbol, const std::string& error_type, 
+                                               const std::string& error_details, size_t bars_received, 
+                                               bool isWebSocketActiveFlag, const std::string& log_file);
+    
+    // Detailed bar logging
+    static void log_all_bars_received(const std::string& symbol, const std::vector<Core::Bar>& bars, const std::string& log_file);
 };
 
 } // namespace Logging

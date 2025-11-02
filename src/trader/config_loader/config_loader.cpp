@@ -42,6 +42,8 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
     std::string config_line_string;
     while (std::getline(config_file_stream, config_line_string)) {
         if (config_line_string.empty()) continue;
+        config_line_string = trim(config_line_string);
+        if (config_line_string.empty() || config_line_string[0] == '#') continue;
         std::stringstream config_line_stream(config_line_string);
         std::string config_key_string, config_value_string;
         if (!std::getline(config_line_stream, config_key_string, ',')) continue;
@@ -82,8 +84,10 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(config_value_string);
         else if (config_key_string == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(config_value_string);
         else if (config_key_string == "strategy.atr_calculation_bars") cfg.strategy.atr_calculation_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.minimum_bars_for_atr_calculation") cfg.strategy.minimum_bars_for_atr_calculation = std::stoi(config_value_string);
         else if (config_key_string == "strategy.daily_bars_timeframe") cfg.strategy.daily_bars_timeframe = config_value_string;
         else if (config_key_string == "strategy.daily_bars_count") cfg.strategy.daily_bars_count = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.minimum_data_accumulation_seconds_before_trading") cfg.strategy.minimum_data_accumulation_seconds_before_trading = std::stoi(config_value_string);
         else if (config_key_string == "strategy.entry_signal_atr_multiplier") cfg.strategy.entry_signal_atr_multiplier = std::stod(config_value_string);
         else if (config_key_string == "strategy.entry_signal_volume_multiplier") cfg.strategy.entry_signal_volume_multiplier = std::stod(config_value_string);
         else if (config_key_string == "strategy.crypto_volume_multiplier") cfg.strategy.crypto_volume_multiplier = std::stod(config_value_string);
@@ -471,6 +475,16 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     // Validate new ATR calculation bars
     if (config.strategy.atr_calculation_bars < 2 || config.strategy.atr_calculation_bars > 100) {
         error_message = "strategy.atr_calculation_bars must be between 2 and 100";
+        return false;
+    }
+    
+    if (config.strategy.minimum_bars_for_atr_calculation < 1) {
+        error_message = "strategy.minimum_bars_for_atr_calculation must be >= 1";
+        return false;
+    }
+    
+    if (config.strategy.minimum_data_accumulation_seconds_before_trading < 0) {
+        error_message = "strategy.minimum_data_accumulation_seconds_before_trading must be >= 0";
         return false;
     }
 

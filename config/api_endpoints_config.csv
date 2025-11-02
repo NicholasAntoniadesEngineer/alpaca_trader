@@ -60,21 +60,25 @@ alpaca_stocks.endpoints.assets,/v2/assets
 # ========================================================================
 
 # Polygon.io Crypto API credentials (REQUIRED FOR CRYPTO MODE)
-polygon_crypto.api_key,DEMO_API_KEY_POLYGON
-polygon_crypto.api_secret,
-polygon_crypto.base_url,https://api.polygon.io
-polygon_crypto.websocket_url,wss://socket.polygon.io/crypto
+polygon_crypto.api_key,gBrcJ2r2fzrW3yLC7aIJoTKOrm4gu6sU	
+polygon_crypto.api_secret,gBrcJ2r2fzrW3yLC7aIJoTKOrm4gu6sU
+polygon_crypto.base_url,https://api.massive.com
+polygon_crypto.websocket_url,wss://socket.massive.com/crypto
 polygon_crypto.retry_count,3
 polygon_crypto.timeout_seconds,30
 polygon_crypto.enable_ssl_verification,true
 polygon_crypto.rate_limit_delay_ms,100
 polygon_crypto.api_version,v1
-polygon_crypto.bar_timespan,minute
+polygon_crypto.bar_timespan,day
 polygon_crypto.bar_multiplier,1
-polygon_crypto.bars_range_minutes,120
+polygon_crypto.bars_range_minutes,129600
+polygon_crypto.websocket_bar_accumulation_seconds,5
+polygon_crypto.websocket_second_level_accumulation_seconds,30
+polygon_crypto.websocket_max_bar_history_size,1000
 
 # Polygon Crypto API Endpoints
-polygon_crypto.endpoints.bars,/v2/aggs/ticker/{symbol}/range/1/minute/{from}/{to}
+# Using placeholders for multiplier and timespan to support different bar intervals
+polygon_crypto.endpoints.bars,/v2/aggs/ticker/{symbol}/range/{multiplier}/{timespan}/{from}/{to}
 polygon_crypto.endpoints.quotes_latest,/v1/last_quote/currencies/{symbol}
 polygon_crypto.endpoints.trades,/v1/last/crypto/{symbol}
 polygon_crypto.endpoints.assets,/v3/reference/tickers?market=crypto

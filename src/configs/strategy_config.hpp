@@ -43,9 +43,11 @@ struct StrategyConfig {
     // Volatility calculation configuration
     int bars_to_fetch_for_calculations;              // Number of bars to fetch for ATR and other calculations
     int minutes_per_bar;                             // Minutes per bar (timeframe for market data)
-    int atr_calculation_bars;                        // ATR calculation period in bars
+    int atr_calculation_bars;                        // ATR calculation period in bars (preferred, but ATR adapts to available bars)
+    int minimum_bars_for_atr_calculation;            // Minimum number of bars required for ATR calculation (ATR returns 0.0 if fewer bars available)
     std::string daily_bars_timeframe;                // Timeframe for daily bars (e.g., "1Day")
     int daily_bars_count;                            // Number of daily bars to fetch for historical comparison
+    int minimum_data_accumulation_seconds_before_trading;  // Minimum seconds of data accumulation required before allowing trades
 
     // ATR-based signal validation
     double atr_absolute_minimum_threshold;           // Absolute ATR minimum threshold

@@ -58,11 +58,13 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,14
+strategy.bars_to_fetch_for_calculations,16
 strategy.minutes_per_bar,1
 strategy.atr_calculation_bars,14
+strategy.minimum_bars_for_atr_calculation,2
 strategy.daily_bars_timeframe,1Day
 strategy.daily_bars_count,10
+strategy.minimum_data_accumulation_seconds_before_trading,30
 
 # Momentum Signal Requirements (for Signal Strength)
 strategy.minimum_price_change_percentage_for_momentum,0.01

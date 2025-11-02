@@ -6,6 +6,7 @@
 #include "logging/logs/market_data_thread_logs.hpp"
 #include "logging/logs/market_data_logs.hpp"
 #include "logging/logger/logging_macros.hpp"
+#include "api/polygon/polygon_crypto_client.hpp"
 #include <chrono>
 
 using namespace AlpacaTrader::Logging;
@@ -48,29 +49,87 @@ ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::st
         return processed_data;
         
     } catch (const std::runtime_error& runtime_error) {
-        MarketDataLogs::log_market_data_failure_summary(
+        // Try to extract bars count from error message if available
+        size_t bars_count = 0;
+        std::string error_msg = runtime_error.what();
+        size_t bars_pos = error_msg.find("Bars fetched: ");
+        if (bars_pos != std::string::npos) {
+            size_t num_start = bars_pos + 14;
+            size_t num_end = error_msg.find(".", num_start);
+            if (num_end != std::string::npos) {
+                try {
+                    bars_count = std::stoul(error_msg.substr(num_start, num_end - num_start));
+                } catch (...) {
+                    // Ignore parse errors
+                }
+            }
+        }
+        
+        bool isWebSocketActiveFlagValue = false;
+        try {
+            API::ApiManager& apiManagerReference = market_data_manager.get_api_manager();
+            if (apiManagerReference.is_crypto_symbol(trading_symbol)) {
+                API::PolygonCryptoClient* polygonClientPointer = apiManagerReference.get_polygon_crypto_client();
+                if (polygonClientPointer) {
+                    isWebSocketActiveFlagValue = polygonClientPointer->is_websocket_active();
+                }
+            }
+        } catch (...) {
+            // Could not determine WebSocket status, default to false
+        }
+        
+        MarketDataLogs::log_market_data_failure_table(
             trading_symbol,
             "Runtime Error",
-            runtime_error.what(),
-            0,
+            error_msg,
+            bars_count,
+            isWebSocketActiveFlagValue,
             manager_config.logging.log_file
         );
         return ProcessedData{};
     } catch (const std::exception& exception_error) {
-        MarketDataLogs::log_market_data_failure_summary(
+        bool isWebSocketActiveFlagValue = false;
+        try {
+            API::ApiManager& apiManagerReference = market_data_manager.get_api_manager();
+            if (apiManagerReference.is_crypto_symbol(trading_symbol)) {
+                API::PolygonCryptoClient* polygonClientPointer = apiManagerReference.get_polygon_crypto_client();
+                if (polygonClientPointer) {
+                    isWebSocketActiveFlagValue = polygonClientPointer->is_websocket_active();
+                }
+            }
+        } catch (...) {
+            // Could not determine WebSocket status, default to false
+        }
+        
+        MarketDataLogs::log_market_data_failure_table(
             trading_symbol,
             "Exception",
             std::string("Exception in fetch_and_process_market_data: ") + exception_error.what(),
             0,
+            isWebSocketActiveFlagValue,
             manager_config.logging.log_file
         );
         return ProcessedData{};
     } catch (...) {
-        MarketDataLogs::log_market_data_failure_summary(
+        bool isWebSocketActiveFlagValue = false;
+        try {
+            API::ApiManager& apiManagerReference = market_data_manager.get_api_manager();
+            if (apiManagerReference.is_crypto_symbol(trading_symbol)) {
+                API::PolygonCryptoClient* polygonClientPointer = apiManagerReference.get_polygon_crypto_client();
+                if (polygonClientPointer) {
+                    isWebSocketActiveFlagValue = polygonClientPointer->is_websocket_active();
+                }
+            }
+        } catch (...) {
+            // Could not determine WebSocket status, default to false
+        }
+        
+        MarketDataLogs::log_market_data_failure_table(
             trading_symbol,
             "Unknown Error",
             "Unknown exception in fetch_and_process_market_data",
             0,
+            isWebSocketActiveFlagValue,
             manager_config.logging.log_file
         );
         return ProcessedData{};

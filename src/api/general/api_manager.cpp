@@ -181,6 +181,14 @@ std::vector<Config::ApiProvider> ApiManager::get_active_providers() const {
     return active_providers;
 }
 
+PolygonCryptoClient* ApiManager::get_polygon_crypto_client() const {
+    if (!has_provider(Config::ApiProvider::POLYGON_CRYPTO)) {
+        return nullptr;
+    }
+    ApiProviderInterface* providerPointer = get_provider(Config::ApiProvider::POLYGON_CRYPTO);
+    return dynamic_cast<PolygonCryptoClient*>(providerPointer);
+}
+
 bool ApiManager::is_crypto_symbol(const std::string& symbol) const {
     if (symbol.empty()) {
         return false;

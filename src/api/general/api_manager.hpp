@@ -13,6 +13,8 @@
 namespace AlpacaTrader {
 namespace API {
 
+class PolygonCryptoClient;
+
 class ApiManager {
 private:
     std::unordered_map<Config::ApiProvider, std::unique_ptr<ApiProviderInterface>> providers;
@@ -48,6 +50,7 @@ public:
     
     std::vector<Config::ApiProvider> get_active_providers() const;
     bool is_crypto_symbol(const std::string& symbol) const;
+    PolygonCryptoClient* get_polygon_crypto_client() const;
     bool is_stock_symbol(const std::string& symbol) const;
 };
 

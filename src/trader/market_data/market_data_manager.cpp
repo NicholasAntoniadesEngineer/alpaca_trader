@@ -22,7 +22,12 @@ std::pair<ProcessedData, std::vector<Bar>> MarketDataManager::fetch_and_process_
 
     // Validate market snapshot
     if (!market_data_validator.validate_market_snapshot(market_snapshot)) {
-        throw std::runtime_error("Market snapshot validation failed");
+        std::string validation_error = "Market snapshot validation failed. ";
+        validation_error += "Bars fetched: " + std::to_string(fetched_bars_data.size()) + ". ";
+        validation_error += "ATR: " + std::to_string(market_snapshot.atr) + ", ";
+        validation_error += "Current price: " + std::to_string(market_snapshot.curr.close_price) + ". ";
+        validation_error += "This may indicate: insufficient bars, invalid price data, or missing technical indicators.";
+        throw std::runtime_error(validation_error);
     }
 
     // Create processed data from snapshots

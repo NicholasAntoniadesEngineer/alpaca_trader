@@ -25,7 +25,7 @@ timing.market_close_grace_period_minutes,15
 
 # System Health Monitoring
 timing.enable_system_health_monitoring,true
-timing.system_health_logging_interval_seconds,5
+timing.system_health_logging_interval_seconds,60
 timing.max_health_check_interval_minutes,1
 
 # Error Recovery Timing

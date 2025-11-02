@@ -25,6 +25,31 @@ TradingDecisionResult TradingLogic::execute_trading_cycle(const MarketSnapshot& 
         return empty_result;
     }
     
+    // Check if sufficient data accumulation time has elapsed before allowing trades
+    if (!market_snapshot.oldest_bar_timestamp.empty()) {
+        try {
+            long long oldest_bar_timestamp_millis_value = std::stoll(market_snapshot.oldest_bar_timestamp);
+            if (oldest_bar_timestamp_millis_value > 0) {
+                auto current_time_millis_value = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+                
+                long long data_accumulation_time_seconds_value = (current_time_millis_value - oldest_bar_timestamp_millis_value) / 1000LL;
+                int minimum_accumulation_seconds_value = config.strategy.minimum_data_accumulation_seconds_before_trading;
+                
+                if (data_accumulation_time_seconds_value < minimum_accumulation_seconds_value) {
+                    empty_result.validation_failed = true;
+                    empty_result.validation_error_message = "Insufficient data accumulation time. Accumulated: " + std::to_string(data_accumulation_time_seconds_value) + " seconds. Required: " + std::to_string(minimum_accumulation_seconds_value) + " seconds.";
+                    return empty_result;
+                }
+            }
+        } catch (const std::exception& accumulation_check_exception_error) {
+            // If accumulation check fails, allow trading (don't block on check errors)
+        } catch (...) {
+            // Unknown exception in accumulation check - allow trading
+        }
+    }
+    
     // Create processed data from snapshots
     ProcessedData processed_data_for_trading(market_snapshot, account_snapshot);
     

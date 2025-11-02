@@ -62,7 +62,7 @@ bool MarketBarsManager::compute_technical_indicators_from_bars(ProcessedData& pr
     std::vector<double> volumes = extract_volumes_from_bars(bars_data);
 
     // Compute ATR
-    processed_data.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, config.strategy.atr_calculation_period);
+    processed_data.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, config.strategy.atr_calculation_period, config.strategy.minimum_bars_for_atr_calculation);
 
     // Compute average volume
     processed_data.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, config.strategy.atr_calculation_period, config.strategy.minimum_volume_threshold);
@@ -84,27 +84,31 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
         return market_snapshot;
     }
 
-    // Use configurable ATR calculation bars
-    const int atr_calculation_bars = config.strategy.atr_calculation_bars;
-    if (static_cast<int>(bars_data.size()) < atr_calculation_bars + 2) {
-        return market_snapshot;
-    }
-
     // Extract inputs for technical indicators
     std::vector<double> highs = extract_highs_from_bars(bars_data);
     std::vector<double> lows = extract_lows_from_bars(bars_data);
     std::vector<double> closes = extract_closes_from_bars(bars_data);
     std::vector<double> volumes = extract_volumes_from_bars(bars_data);
 
-    // Compute technical indicators
-    market_snapshot.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars);
-    market_snapshot.avg_atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars * config.strategy.average_atr_comparison_multiplier);
+    // Use configurable ATR calculation bars, but ATR will adapt to available bars
+    const int atr_calculation_bars = config.strategy.atr_calculation_bars;
+    const int minimum_bars_for_atr_value = config.strategy.minimum_bars_for_atr_calculation;
+    market_snapshot.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars, minimum_bars_for_atr_value);
+    
+    int average_atr_period_value = atr_calculation_bars * config.strategy.average_atr_comparison_multiplier;
+    market_snapshot.avg_atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, average_atr_period_value, minimum_bars_for_atr_value);
+    
     market_snapshot.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, atr_calculation_bars, config.strategy.minimum_volume_threshold);
 
     // Set current and previous bars
     market_snapshot.curr = bars_data.back();
     if (bars_data.size() > 1) {
         market_snapshot.prev = bars_data[bars_data.size() - 2];
+    }
+    
+    // Store oldest bar timestamp for data accumulation time checking
+    if (!bars_data.empty()) {
+        market_snapshot.oldest_bar_timestamp = bars_data.front().timestamp;
     }
 
     return market_snapshot;
@@ -156,12 +160,13 @@ ProcessedData MarketBarsManager::compute_processed_data_from_bars(const std::vec
     std::vector<double> volumes = extract_volumes_from_bars(bars_data);
 
     // Compute technical indicators
-    processed_data_result.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_period);
+    int minimum_bars_for_atr_value = config.strategy.minimum_bars_for_atr_calculation;
+    processed_data_result.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_period, minimum_bars_for_atr_value);
     if (processed_data_result.atr == 0.0) {
         return processed_data_result;
     }
     
-    processed_data_result.avg_atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_period * config.strategy.average_atr_comparison_multiplier);
+    processed_data_result.avg_atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_period * config.strategy.average_atr_comparison_multiplier, minimum_bars_for_atr_value);
     processed_data_result.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, atr_calculation_period, config.strategy.minimum_volume_threshold);
     
     // Defensive checks before accessing tail elements

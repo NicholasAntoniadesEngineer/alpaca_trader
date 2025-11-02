@@ -3,8 +3,9 @@
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -O2
-INCLUDES = -I. -Isrc
-LIBS = -lcurl -pthread
+OPENSSL_PREFIX := $(shell brew --prefix openssl@3 2>/dev/null || brew --prefix openssl 2>/dev/null || echo "/usr/local/opt/openssl")
+INCLUDES = -I. -Isrc -I$(OPENSSL_PREFIX)/include
+LIBS = -lcurl -pthread -L$(OPENSSL_PREFIX)/lib -lssl -lcrypto
 
 # Sanitized build flags
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -g -O0
@@ -22,6 +23,8 @@ SOURCES = src/main.cpp \
   src/api/alpaca/alpaca_trading_client.cpp \
   src/api/alpaca/alpaca_stocks_client.cpp \
   src/api/polygon/polygon_crypto_client.cpp \
+  src/api/polygon/websocket_client.cpp \
+  src/api/polygon/bar_accumulator.cpp \
   src/trader/coordinators/trading_coordinator.cpp \
   src/trader/coordinators/market_data_coordinator.cpp \
   src/trader/coordinators/account_data_coordinator.cpp \
@@ -46,6 +49,7 @@ SOURCES = src/main.cpp \
   src/logging/logs/account_logs.cpp \
   src/logging/logs/market_data_logs.cpp \
   src/logging/logs/risk_logs.cpp \
+  src/logging/logs/websocket_logs.cpp \
   src/utils/http_utils.cpp \
   src/logging/logger/async_logger.cpp \
   src/logging/logger/csv_bars_logger.cpp \

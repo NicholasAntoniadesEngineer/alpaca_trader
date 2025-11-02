@@ -28,6 +28,9 @@ struct ApiProviderConfig {
     std::string bar_timespan;
     int bar_multiplier;
     int bars_range_minutes;
+    int websocket_bar_accumulation_seconds;
+    int websocket_second_level_accumulation_seconds;
+    int websocket_max_bar_history_size;
     
     struct EndpointConfig {
         std::string bars;
