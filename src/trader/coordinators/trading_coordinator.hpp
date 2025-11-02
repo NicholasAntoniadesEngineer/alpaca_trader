@@ -64,6 +64,9 @@ private:
     ConnectivityManager& connectivity_manager;
     AccountManager& account_manager;
     const SystemConfig& config;
+    
+    void log_and_execute_trade_with_comprehensive_logging(const TradeExecutionRequest& trade_request, const TradingDecisionResult& decision_result);
+    void log_trade_execution_error(const std::string& error_message, const TradeExecutionRequest& trade_request, double buying_power_amount);
 };
 
 } // namespace Core

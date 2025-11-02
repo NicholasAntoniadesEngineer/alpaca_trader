@@ -24,8 +24,9 @@ public:
     MarketDataManager(const SystemConfig& config, API::ApiManager& api_manager, AccountManager& account_manager);
 
     // Market data fetching methods
-    ProcessedData fetch_and_process_market_data();
+    std::pair<ProcessedData, std::vector<Bar>> fetch_and_process_market_data();
     std::pair<MarketSnapshot, AccountSnapshot> fetch_current_snapshots();
+    std::pair<MarketSnapshot, AccountSnapshot> fetch_current_snapshots_from_bars(const std::vector<Bar>& bars_data);
     QuoteData fetch_real_time_quote_data(const std::string& symbol) const;
     
     // Data synchronization methods (delegated to MarketDataFetcher)
@@ -36,6 +37,10 @@ public:
     // Access to sub-components
     MarketDataValidator& get_market_data_validator() { return market_data_validator; }
     MarketBarsManager& get_market_bars_manager() { return market_bars_manager; }
+    
+    // Accessors for coordinator CSV logging needs
+    const SystemConfig& get_config() const { return config; }
+    API::ApiManager& get_api_manager() { return api_manager; }
 
 private:
     const SystemConfig& config;

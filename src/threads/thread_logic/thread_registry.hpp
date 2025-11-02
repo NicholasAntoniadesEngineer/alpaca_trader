@@ -7,7 +7,6 @@
 #include "system/system_threads.hpp"
 #include "configs/system_config.hpp"
 #include "logging/logs/thread_logs.hpp"
-#include "logging/logger/logging_macros.hpp"
 #include "thread_definition.hpp"
 #include <vector>
 #include <memory>
@@ -38,7 +37,7 @@ public:
     static std::vector<Type> create_thread_types();
     static std::vector<ThreadLogs::ThreadInfo> create_thread_infos(const std::vector<ThreadDefinition>& definitions);
     static AlpacaTrader::Config::ThreadSettings get_config_for_type(Type type, const AlpacaTrader::Config::SystemConfig& system_config);
-    static void configure_thread_iteration_counters(SystemThreads& handles, SystemModules& modules);
+    static bool configure_thread_iteration_counters(SystemThreads& handles, SystemModules& modules);
 
 private:
     static const std::vector<ThreadEntry> THREAD_REGISTRY;

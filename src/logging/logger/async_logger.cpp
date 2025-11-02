@@ -1,6 +1,3 @@
-/**
- * Asynchronous logging system for high-performance trading operations.
- */
 #include "async_logger.hpp"
 #include "configs/system_config.hpp"
 #include "trader/config_loader/config_loader.hpp"

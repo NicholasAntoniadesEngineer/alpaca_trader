@@ -4,6 +4,7 @@
 #include "configs/system_config.hpp"
 #include "api/general/api_manager.hpp"
 #include "trader/data_structures/data_structures.hpp"
+#include "trader/market_data/market_data_manager.hpp"
 #include <vector>
 #include <mutex>
 #include <atomic>
@@ -26,7 +27,7 @@ public:
         std::atomic<bool>& market_data_fresh_flag;
     };
 
-    MarketDataCoordinator(API::ApiManager& api_manager_ref, const SystemConfig& system_config_param);
+    MarketDataCoordinator(MarketDataManager& market_data_manager_ref);
     
     ProcessedData fetch_and_process_market_data(const std::string& trading_symbol, std::vector<Bar>& historical_bars_output);
     void update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state);
@@ -35,8 +36,7 @@ public:
     void process_market_data_iteration(const std::string& symbol, MarketDataSnapshotState& snapshot_state, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
 
 private:
-    API::ApiManager& api_manager;
-    const SystemConfig& config;
+    MarketDataManager& market_data_manager;
 };
 
 } // namespace Core

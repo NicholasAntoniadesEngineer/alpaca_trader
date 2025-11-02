@@ -5,9 +5,8 @@
 #include "trader/data_structures/data_structures.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
 #include "trader/strategy_analysis/strategy_logic.hpp"
-#include "api/general/api_manager.hpp"
 #include "trader/account_management/account_manager.hpp"
-#include "logging/logs/trading_logs.hpp"
+#include "api/general/api_manager.hpp"
 #include "trading_logic_structures.hpp"
 #include <string>
 #include <chrono>

@@ -7,12 +7,11 @@
 #include "trader/data_structures/data_structures.hpp"
 #include "trader/strategy_analysis/strategy_logic.hpp"
 #include "trader/strategy_analysis/risk_manager.hpp"
-#include "order_execution_logic.hpp"
 #include "trader/market_data/market_data_manager.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
-#include "logging/logs/trading_logs.hpp"
-#include "utils/connectivity_manager.hpp"
 #include "trading_logic_structures.hpp"
+#include "order_execution_logic.hpp"
+#include "utils/connectivity_manager.hpp"
 #include <memory>
 #include <string>
 
@@ -24,12 +23,14 @@ public:
     TradingLogic(const TradingLogicConstructionParams& construction_params);
     
     bool check_trading_permissions(const ProcessedData& processed_data_input, double account_equity);
-    void execute_trading_decision(const ProcessedData& processed_data_input, double account_equity);
-    void execute_trading_cycle(const MarketSnapshot& market_snapshot, const AccountSnapshot& account_snapshot, double initial_equity);
-    void handle_trading_halt(const std::string& reason);
+    TradingDecisionResult execute_trading_decision(const ProcessedData& processed_data_input, double account_equity);
+    TradingDecisionResult execute_trading_cycle(const MarketSnapshot& market_snapshot, const AccountSnapshot& account_snapshot, double initial_equity);
+    void handle_trading_halt();
     void handle_market_close_positions(const ProcessedData& processed_data_for_close);
     void setup_data_synchronization(const DataSyncConfig& sync_configuration);
     MarketDataManager& get_market_data_manager_reference();
+    void execute_trade_if_valid(const TradeExecutionRequest& trade_request);
+    OrderExecutionLogic& get_order_engine() { return order_engine; }
 
 private:
     // Core dependencies
@@ -45,7 +46,6 @@ private:
     std::unique_ptr<DataSyncReferences> data_sync_ptr;
     
     // Trading decision methods
-    void execute_trade_if_valid(const TradeExecutionRequest& trade_request);
     void check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request);
     
     // Utility methods

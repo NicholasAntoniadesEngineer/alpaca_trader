@@ -53,11 +53,11 @@ struct ThreadManagerState {
 class Manager {
 public:
     // Thread lifecycle management
-    static void start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules, AlpacaTrader::Logging::LoggingContext& logging_context);
-    static void shutdown_threads(ThreadManagerState& manager_state);
+    static bool start_threads(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, SystemModules& modules, AlpacaTrader::Logging::LoggingContext& logging_context);
+    static bool shutdown_threads(ThreadManagerState& manager_state);
     
     // Thread priority management
-    static void setup_thread_priorities(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config);
+    static bool setup_thread_priorities(ThreadManagerState& manager_state, const std::vector<AlpacaTrader::Core::ThreadSystem::ThreadDefinition>& thread_definitions, const AlpacaTrader::Config::SystemConfig& config);
     
     
     // Exception-safe thread execution
@@ -74,7 +74,7 @@ public:
     
 private:
     // Thread setup utilities
-    static void configure_single_thread(ThreadManagerState& manager_state, const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config);
+    static bool configure_single_thread(ThreadManagerState& manager_state, const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config);
     static AlpacaTrader::Config::ThreadSettings create_platform_config(const AlpacaTrader::Core::ThreadSystem::ThreadDefinition& thread_def, AlpacaTrader::Core::ThreadRegistry::Type thread_type, const AlpacaTrader::Config::SystemConfig& config);
     static bool apply_thread_configuration(ThreadManagerState& manager_state, const AlpacaTrader::Config::ThreadSettings& platform_config);
 };

@@ -1,8 +1,5 @@
 #include "thread_registry.hpp"
 #include "thread_manager.hpp"
-#include "logging/logs/thread_logs.hpp"
-#include "logging/logger/logging_macros.hpp"
-#include <iostream>
 
 namespace AlpacaTrader {
 namespace Core {
@@ -22,7 +19,6 @@ AlpacaTrader::Config::ThreadSettings ThreadRegistry::get_thread_config(Type type
 
     std::string type_name = "UNKNOWN_TYPE_" + std::to_string(static_cast<int>(type));
     std::string error_msg = ThreadLogs::build_unknown_thread_type_error(type_name, static_cast<int>(type));
-    ThreadLogs::log_thread_registry_error(error_msg);
     throw std::runtime_error("ThreadRegistry::get_thread_config - " + error_msg);
 }
 
@@ -77,11 +73,18 @@ AlpacaTrader::Config::ThreadSettings ThreadRegistry::get_config_for_type(Type ty
     return get_thread_config(type, system_config);
 }
 
-void ThreadRegistry::configure_thread_iteration_counters(SystemThreads& handles, SystemModules& modules) {
-    for (const auto& entry : THREAD_REGISTRY) {
-        if (entry.set_iteration_counter) {
-            entry.set_iteration_counter(modules, entry.get_counter(handles));
+bool ThreadRegistry::configure_thread_iteration_counters(SystemThreads& handles, SystemModules& modules) {
+    try {
+        for (const auto& entry : THREAD_REGISTRY) {
+            if (entry.set_iteration_counter) {
+                entry.set_iteration_counter(modules, entry.get_counter(handles));
+            }
         }
+        return true;
+    } catch (const std::exception& exception_error) {
+        throw std::runtime_error("ThreadRegistry::configure_thread_iteration_counters - Exception: " + std::string(exception_error.what()));
+    } catch (...) {
+        throw std::runtime_error("ThreadRegistry::configure_thread_iteration_counters - Unknown exception");
     }
 }
 

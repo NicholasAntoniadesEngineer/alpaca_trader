@@ -1,7 +1,6 @@
 #ifndef ACCOUNT_MANAGER_HPP
 #define ACCOUNT_MANAGER_HPP
 
-#include "configs/logging_config.hpp"
 #include "configs/strategy_config.hpp"
 #include "threads/thread_register.hpp"
 #include "trader/data_structures/data_structures.hpp"
@@ -54,7 +53,6 @@ public:
     void fetch_account_and_position_data(ProcessedData& data) const;
 
 private:
-    const LoggingConfig& logging;
     const StrategyConfig& strategy;
     API::ApiManager& api_manager;
 

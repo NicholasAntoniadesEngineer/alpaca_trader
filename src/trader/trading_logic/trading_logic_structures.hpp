@@ -5,8 +5,8 @@
 #include "api/general/api_manager.hpp"
 #include "trader/account_management/account_manager.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "utils/connectivity_manager.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"
+#include "utils/connectivity_manager.hpp"
 
 namespace AlpacaTrader {
 namespace Core {
@@ -69,6 +69,25 @@ struct ProfitTakingRequest {
     ProfitTakingRequest(const ProcessedData& data, int current_position_qty, double threshold)
         : processed_data(data), current_position_quantity(current_position_qty),
           profit_taking_threshold_dollars(threshold) {}
+};
+
+struct TradingDecisionResult {
+    bool validation_failed;
+    std::string validation_error_message;
+    bool market_closed;
+    bool market_data_stale;
+    SignalDecision signal_decision;
+    FilterResult filter_result;
+    PositionSizing position_sizing_result;
+    double buying_power_amount;
+    bool should_execute_trade;
+    const ProcessedData* processed_data_ptr;
+    int current_position_quantity;
+    
+    TradingDecisionResult()
+        : validation_failed(false), market_closed(false), market_data_stale(false),
+          buying_power_amount(0.0), should_execute_trade(false),
+          processed_data_ptr(nullptr), current_position_quantity(0) {}
 };
 
 } // namespace Core

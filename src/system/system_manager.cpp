@@ -125,7 +125,10 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     modules.account_dashboard = std::make_unique<AlpacaTrader::Logging::AccountLogs>(state.config.logging, *modules.portfolio_manager, state.config.strategy.position_long_string, state.config.strategy.position_short_string);
     
     // Create coordinator interfaces for thread access to trader components
-    modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(*modules.api_manager, state.config);
+    // MarketDataCoordinator uses MarketDataManager from TradingLogic for detailed logging
+    modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(
+        modules.trading_logic->get_market_data_manager_reference()
+    );
     modules.account_data_coordinator = std::make_unique<AlpacaTrader::Core::AccountDataCoordinator>(*modules.portfolio_manager);
     modules.market_gate_coordinator = std::make_unique<AlpacaTrader::Core::MarketGateCoordinator>(*modules.api_manager, state.connectivity_manager);
     
@@ -172,7 +175,22 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
 
 void configure_trading_modules(SystemThreads& handles, SystemModules& modules, SystemState& state) {
     // Configure thread iteration counters using the generic registry approach
-    AlpacaTrader::Core::ThreadRegistry::configure_thread_iteration_counters(handles, modules);
+    try {
+        bool counters_configured = AlpacaTrader::Core::ThreadRegistry::configure_thread_iteration_counters(handles, modules);
+        if (!counters_configured) {
+            SystemLogs::log_system_startup_error("Failed to configure thread iteration counters");
+            throw std::runtime_error("Thread iteration counter configuration failed");
+        }
+    } catch (const std::runtime_error& runtime_error) {
+        SystemLogs::log_system_startup_error(std::string("Exception configuring thread iteration counters: ") + runtime_error.what());
+        throw;
+    } catch (const std::exception& exception_error) {
+        SystemLogs::log_system_startup_error(std::string("Exception configuring thread iteration counters: ") + exception_error.what());
+        throw;
+    } catch (...) {
+        SystemLogs::log_system_startup_error("Unknown exception configuring thread iteration counters");
+        throw;
+    }
     
     // Configure allow_fetch_ptr for threads that need it
     if (modules.market_data_thread) {
@@ -234,7 +252,11 @@ SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::L
             SystemLogs::log_logging_context_error();
             throw std::runtime_error("Logging context not initialized - system must fail without context");
         }
-        Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules, *system_state.logging_context);
+        bool threads_started = Manager::start_threads(system_state.thread_manager_state, thread_definitions, modules, *system_state.logging_context);
+        if (!threads_started) {
+            SystemLogs::log_thread_startup_error("Failed to start threads");
+            throw std::runtime_error("Thread startup failed");
+        }
     } catch (const std::exception& exception_error) {
         SystemLogs::log_thread_startup_error(exception_error.what());
         throw;
@@ -245,7 +267,11 @@ SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::L
     
     // Setup thread priorities after threads are started
     try {
-        Manager::setup_thread_priorities(system_state.thread_manager_state, thread_definitions, system_state.config);
+        bool priorities_setup = Manager::setup_thread_priorities(system_state.thread_manager_state, thread_definitions, system_state.config);
+        if (!priorities_setup) {
+            SystemLogs::log_thread_priority_error("Failed to setup thread priorities");
+            throw std::runtime_error("Thread priority setup failed");
+        }
     } catch (const std::exception& exception_error) {
         SystemLogs::log_thread_priority_error(exception_error.what());
         throw;
@@ -333,7 +359,10 @@ void shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::
     system_state.cv.notify_all();
 
     // Wait for all threads to complete
-    Manager::shutdown_threads(system_state.thread_manager_state);
+    bool threads_shutdown = Manager::shutdown_threads(system_state.thread_manager_state);
+    if (!threads_shutdown) {
+        SystemLogs::log_system_shutdown_error("Failed to shutdown threads");
+    }
 
     // Cleanup API manager - handled automatically by unique_ptr
     if (system_state.trading_modules->api_manager) {

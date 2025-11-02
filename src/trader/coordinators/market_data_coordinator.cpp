@@ -4,6 +4,7 @@
 #include "trader/data_structures/data_structures.hpp"
 #include "configs/system_config.hpp"
 #include "logging/logs/market_data_thread_logs.hpp"
+#include "logging/logs/market_data_logs.hpp"
 #include "logging/logger/logging_macros.hpp"
 #include <chrono>
 
@@ -12,36 +13,68 @@ using namespace AlpacaTrader::Logging;
 namespace AlpacaTrader {
 namespace Core {
 
-MarketDataCoordinator::MarketDataCoordinator(API::ApiManager& api_manager_ref, const SystemConfig& system_config_param)
-    : api_manager(api_manager_ref), config(system_config_param) {}
+MarketDataCoordinator::MarketDataCoordinator(MarketDataManager& market_data_manager_ref)
+    : market_data_manager(market_data_manager_ref) {}
 
 ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::string& trading_symbol, std::vector<Bar>& historical_bars_output) {
-    if (trading_symbol.empty()) {
-        return ProcessedData{};
+    // Validate symbol matches MarketDataManager's configured symbol
+    const SystemConfig& manager_config = market_data_manager.get_config();
+    if (!trading_symbol.empty() && trading_symbol != manager_config.strategy.symbol) {
+        MarketDataThreadLogs::log_thread_loop_exception("Symbol mismatch: requested " + trading_symbol + " but manager configured for " + manager_config.strategy.symbol);
     }
     
-    int bars_to_fetch_count = config.strategy.bars_to_fetch_for_calculations + config.timing.historical_data_buffer_size;
-    int atr_calculation_period = config.strategy.atr_calculation_bars;
-    
-    if (bars_to_fetch_count <= 0 || atr_calculation_period <= 0) {
+    try {
+        // Log market data fetch start
+        MarketDataLogs::log_market_data_fetch_table(trading_symbol, manager_config.logging.log_file);
+        
+        // MarketDataManager fetches bars internally and returns them to avoid duplicate fetching
+        auto fetch_result = market_data_manager.fetch_and_process_market_data();
+        
+        ProcessedData processed_data = fetch_result.first;
+        historical_bars_output = fetch_result.second;
+        
+        // Log position data and warnings
+        MarketDataLogs::log_position_data_and_warnings(
+            processed_data.pos_details.position_quantity,
+            processed_data.pos_details.current_value,
+            processed_data.pos_details.unrealized_pl,
+            processed_data.exposure_pct,
+            processed_data.open_orders,
+            manager_config.logging.log_file,
+            manager_config.strategy.position_long_string,
+            manager_config.strategy.position_short_string
+        );
+        
+        return processed_data;
+        
+    } catch (const std::runtime_error& runtime_error) {
+        MarketDataLogs::log_market_data_failure_summary(
+            trading_symbol,
+            "Runtime Error",
+            runtime_error.what(),
+            0,
+            manager_config.logging.log_file
+        );
+        return ProcessedData{};
+    } catch (const std::exception& exception_error) {
+        MarketDataLogs::log_market_data_failure_summary(
+            trading_symbol,
+            "Exception",
+            std::string("Exception in fetch_and_process_market_data: ") + exception_error.what(),
+            0,
+            manager_config.logging.log_file
+        );
+        return ProcessedData{};
+    } catch (...) {
+        MarketDataLogs::log_market_data_failure_summary(
+            trading_symbol,
+            "Unknown Error",
+            "Unknown exception in fetch_and_process_market_data",
+            0,
+            manager_config.logging.log_file
+        );
         return ProcessedData{};
     }
-    
-    MarketDataFetchRequest fetch_request(trading_symbol, bars_to_fetch_count, atr_calculation_period);
-    
-    MarketBarsManager bars_manager_instance(config, api_manager);
-    std::vector<Bar> historical_bars_data = bars_manager_instance.fetch_historical_market_data(fetch_request);
-    historical_bars_output = historical_bars_data;
-    
-    if (historical_bars_data.empty()) {
-        return ProcessedData{};
-    }
-    
-    if (!bars_manager_instance.has_sufficient_bars_for_calculations(historical_bars_data, fetch_request.atr_calculation_bars)) {
-        return ProcessedData{};
-    }
-    
-    return bars_manager_instance.compute_processed_data_from_bars(historical_bars_data);
 }
 
 void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state) {
@@ -67,23 +100,22 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
 
 void MarketDataCoordinator::process_market_data_iteration(const std::string& symbol, MarketDataSnapshotState& snapshot_state, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
     try {
-        LOG_THREAD_SECTION_HEADER("MARKET DATA FETCH - " + symbol);
-        
+
         std::vector<Bar> historical_bars_for_logging;
         ProcessedData computed_data = fetch_and_process_market_data(symbol, historical_bars_for_logging);
         
         if (computed_data.atr == 0.0) {
             MarketDataThreadLogs::log_zero_atr_warning(symbol);
-            LOG_THREAD_SECTION_FOOTER();
             return;
         }
         
         update_shared_market_snapshot(computed_data, snapshot_state);
         
-        MarketDataValidator validator_instance(config);
-        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, validator_instance, symbol, config.timing, api_manager, last_bar_log_time, previous_bar);
+        MarketDataValidator& validator = market_data_manager.get_market_data_validator();
+        const SystemConfig& config = market_data_manager.get_config();
+        API::ApiManager& api_manager = market_data_manager.get_api_manager();
+        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, validator, symbol, config.timing, api_manager, last_bar_log_time, previous_bar);
         
-        LOG_THREAD_SECTION_FOOTER();
     } catch (const std::exception& exception_error) {
         MarketDataThreadLogs::log_thread_loop_exception("Error in process_market_data_iteration: " + std::string(exception_error.what()));
     } catch (...) {
