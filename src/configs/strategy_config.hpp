@@ -37,15 +37,16 @@ struct StrategyConfig {
     double crypto_volume_change_amplification_factor; // Amplification factor for crypto volume change percentages
     double percentage_calculation_multiplier;        // Multiplier for percentage calculations (default 100.0)
     double minimum_volume_threshold;                 // Minimum volume threshold to avoid division by zero
-    int atr_calculation_period;                      // ATR calculation period in bars (deprecated - use atr_calculation_bars)
     int average_atr_comparison_multiplier;           // Average ATR comparison multiplier
 
     // Volatility calculation configuration
     int bars_to_fetch_for_calculations;              // Number of bars to fetch for ATR and other calculations
     int minutes_per_bar;                             // Minutes per bar (timeframe for market data)
-    int atr_calculation_bars;                        // ATR calculation period in bars
+    int atr_calculation_bars;                        // ATR calculation period in bars (preferred, but ATR adapts to available bars)
+    int minimum_bars_for_atr_calculation;            // Minimum number of bars required for ATR calculation (ATR returns 0.0 if fewer bars available)
     std::string daily_bars_timeframe;                // Timeframe for daily bars (e.g., "1Day")
     int daily_bars_count;                            // Number of daily bars to fetch for historical comparison
+    int minimum_data_accumulation_seconds_before_trading;  // Minimum seconds of data accumulation required before allowing trades
 
     // ATR-based signal validation
     double atr_absolute_minimum_threshold;           // Absolute ATR minimum threshold
@@ -197,7 +198,7 @@ struct StrategyConfig {
     double max_drawdown_pct;                         // Maximum allowed drawdown percentage
     bool alert_on_data_stale;                        // Enable data staleness alerts
     int max_data_age_min;                            // Maximum data age in minutes
-    int max_inactivity_min;                          // Maximum inactivity in minutes
+    int max_inactivity_min;                          // Maximum inactivity period in minutes
 
     // ========================================================================
     // PRECISION SETTINGS
@@ -207,6 +208,15 @@ struct StrategyConfig {
     int ratio_display_precision;                     // Decimal places for ratios (e.g., rr_ratio)
     int factor_display_precision;                    // Decimal places for factors (e.g., multipliers)
     int atr_volume_display_precision;                // Decimal places for ATR and volume values
+
+    // ========================================================================
+    // SIGNAL AND POSITION LABEL CONFIGURATION
+    // ========================================================================
+
+    std::string signal_buy_string;                   // String label for buy signals
+    std::string signal_sell_string;                  // String label for sell signals
+    std::string position_long_string;                 // String label for long positions
+    std::string position_short_string;                // String label for short positions
 };
 
 #endif // STRATEGY_CONFIG_HPP

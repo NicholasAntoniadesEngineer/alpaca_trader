@@ -1,12 +1,36 @@
 // main.cpp
-#include "core/trader/config_loader/config_loader.hpp"
-#include "configs/system_config.hpp"
-#include "core/system/system_state.hpp"
-#include "core/system/system_threads.hpp"
-#include "core/system/system_manager.hpp"
-#include "core/system/system_modules.hpp"
-#include "core/logging/startup_logs.hpp"
+#include "system/system_manager.hpp"
+#include <iostream>
+#include <csignal>
+#include <atomic>
 
+using namespace AlpacaTrader::System;
+
+// =============================================================================
+// GLOBAL SHUTDOWN FLAG FOR SIGNAL HANDLER
+// =============================================================================
+static std::atomic<bool> shutdown_requested_flag{false};
+static SystemState* global_system_state_pointer = nullptr;
+static std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> global_logger_pointer = nullptr;
+
+// =============================================================================
+// SIGNAL HANDLER FOR GRACEFUL SHUTDOWN
+// =============================================================================
+static void signal_handler(int signal_number) {
+    try {
+        if (signal_number == SIGINT || signal_number == SIGTERM) {
+            shutdown_requested_flag.store(true);
+            if (global_system_state_pointer) {
+                global_system_state_pointer->running.store(false);
+                global_system_state_pointer->shutdown_requested.store(true);
+                global_system_state_pointer->cv.notify_all();
+            }
+        }
+    } catch (...) {
+        // Signal handler must not throw - force exit
+        std::_Exit(1);
+    }
+}
 
 // =============================================================================
 // MAIN APPLICATION ENTRY POINT
@@ -14,33 +38,52 @@
 
 int main() {
     try {
-        // Load system configuration
-        AlpacaTrader::Config::SystemConfig initial_config;
-        if (int result = load_system_config(initial_config)) {
-            std::cerr << "Config load failed with result: " << result << std::endl;
-            return result;
-        }
+        // Register signal handlers for graceful shutdown
+        std::signal(SIGINT, signal_handler);
+        std::signal(SIGTERM, signal_handler);
         
-        // Create system state
-        SystemState system_state(initial_config);
+        // Initialize system - handles all setup (config loading, logging, etc.)
+        SystemInitializationResult initialization_result = initialize();
         
-        // Initialize application foundation (logging, validation)
-        auto logger = AlpacaTrader::Logging::initialize_application_foundation(system_state.config);
-        
+        // Store global pointers for signal handler access
+        global_system_state_pointer = initialization_result.system_state.get();
+        global_logger_pointer = initialization_result.logger;
+
         // Start the complete trading system
-        SystemThreads thread_handles = SystemManager::startup(system_state, logger);
+        SystemThreads thread_handles = startup(*initialization_result.system_state, initialization_result.logger);
         
         // Run until shutdown signal
-        SystemManager::run(system_state);
+        run(*initialization_result.system_state);
         
         // Clean shutdown
-        SystemManager::shutdown(system_state, logger);
+        shutdown(*initialization_result.system_state, initialization_result.logger);
+        
+        // Clear global pointers
+        global_system_state_pointer = nullptr;
+        global_logger_pointer.reset();
+        
         return 0;
-    } catch (const std::exception& e) {
-        std::cerr << "Fatal error: " << e.what() << std::endl;
+    } catch (const std::exception& exception_error) {
+        // Ensure cleanup on exception
+        if (global_system_state_pointer && global_logger_pointer) {
+            try {
+                shutdown(*global_system_state_pointer, global_logger_pointer);
+            } catch (...) {
+                // Ignore cleanup errors during exception handling
+            }
+        }
+        std::cerr << "Fatal error: " << exception_error.what() << std::endl;
         return 1;
     } catch (...) {
-        std::cerr << "Unknown fatal error" << std::endl;
+        // Ensure cleanup on unknown exception
+        if (global_system_state_pointer && global_logger_pointer) {
+            try {
+                shutdown(*global_system_state_pointer, global_logger_pointer);
+            } catch (...) {
+                // Ignore cleanup errors during exception handling
+            }
+        }
+        std::cerr << "Unknown fatal error occurred in main." << std::endl;
         return 1;
     }
 }

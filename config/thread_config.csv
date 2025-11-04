@@ -8,36 +8,36 @@
 
 # Main thread configuration
 thread.main.priority,NORMAL
-thread.main.cpu_affinity,1
+thread.main.cpu_affinity,-1
 thread.main.name,MAIN
-thread.main.use_cpu_affinity,true
+thread.main.use_cpu_affinity,false
 
 # Trader decision thread configuration
 thread.trader_decision.priority,HIGHEST
-thread.trader_decision.cpu_affinity,01
+thread.trader_decision.cpu_affinity,-1
 thread.trader_decision.name,TRADER
-thread.trader_decision.use_cpu_affinity,true
+thread.trader_decision.use_cpu_affinity,false
 
 # Market data thread configuration
 thread.market_data.priority,HIGH
-thread.market_data.cpu_affinity,1
+thread.market_data.cpu_affinity,-1
 thread.market_data.name,MARKET
-thread.market_data.use_cpu_affinity,true
+thread.market_data.use_cpu_affinity,false
 
 # Account data thread configuration
 thread.account_data.priority,NORMAL
-thread.account_data.cpu_affinity,1
+thread.account_data.cpu_affinity,-1
 thread.account_data.name,ACCOUNT
-thread.account_data.use_cpu_affinity,true
+thread.account_data.use_cpu_affinity,false
 
 # Market gate thread configuration
 thread.market_gate.priority,LOW
-thread.market_gate.cpu_affinity,1
+thread.market_gate.cpu_affinity,-1
 thread.market_gate.name,GATE
-thread.market_gate.use_cpu_affinity,true
+thread.market_gate.use_cpu_affinity,false
 
 # Logging thread configuration
 thread.logging.priority,LOWEST
-thread.logging.cpu_affinity,1
+thread.logging.cpu_affinity,-1
 thread.logging.name,LOGGER
-thread.logging.use_cpu_affinity,true
+thread.logging.use_cpu_affinity,false

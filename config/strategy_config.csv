@@ -9,11 +9,9 @@
 # ========================================================================
 # Trading symbol and market session settings
 
-# Target symbol for trading
-target.symbol,BTC/USD
-
-# Asset class configuration
-strategy.is_crypto_asset,true
+# Trading mode configuration 
+trading_mode.mode,crypto
+trading_mode.primary_symbol,BTC/USD
 
 
 # Market session timing (Eastern Time)
@@ -33,26 +31,25 @@ session.market_close_minute,0
 # Characteristics: Fewer trades, higher win rate, proper confirmations
 # Risk Level: LOW-MEDIUM | Signal Frequency: MEDIUM | Hold Time: MEDIUM
 
-# Entry Signal Confirmation Requirements
-strategy.buy_signals_allow_equal_close,false
-strategy.buy_signals_require_higher_high,true
-strategy.buy_signals_require_higher_low,true
-strategy.sell_signals_allow_equal_close,false
-strategy.sell_signals_require_lower_low,true
-strategy.sell_signals_require_lower_high,true
+# Entry Signal Confirmation Requirements (AGGRESSIVE - Relaxed for Testing)
+strategy.buy_signals_allow_equal_close,true
+strategy.buy_signals_require_higher_high,false
+strategy.buy_signals_require_higher_low,false
+strategy.sell_signals_allow_equal_close,true
+strategy.sell_signals_require_lower_low,false
+strategy.sell_signals_require_lower_high,false
 
-# Signal Filter Thresholds (Conservative Settings)
-strategy.entry_signal_atr_multiplier,1.2
-strategy.entry_signal_volume_multiplier,0.3
-strategy.crypto_volume_multiplier,0.1
-strategy.crypto_volume_change_amplification_factor,10.0
+# Signal Filter Thresholds (AGGRESSIVE - Lowered for Easy Trades)
+strategy.entry_signal_atr_multiplier,0.1
+strategy.entry_signal_volume_multiplier,0.01
+strategy.crypto_volume_multiplier,0.001
+strategy.crypto_volume_change_amplification_factor,1.0
 strategy.percentage_calculation_multiplier,100.0
-strategy.minimum_volume_threshold,1e-6
-strategy.atr_calculation_period,14
-strategy.average_atr_comparison_multiplier,1.5
+strategy.minimum_volume_threshold,1e-10
+strategy.average_atr_comparison_multiplier,1.0
 
-# ATR-Based Signal Validation
-strategy.atr_absolute_minimum_threshold,0.5
+# ATR-Based Signal Validation (AGGRESSIVE - Lowered Thresholds)
+strategy.atr_absolute_minimum_threshold,0.01
 strategy.use_absolute_atr_threshold_instead_of_relative,true
 
 # ========================================================================
@@ -60,28 +57,30 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,14
+strategy.bars_to_fetch_for_calculations,6
 strategy.minutes_per_bar,1
-strategy.atr_calculation_bars,14
+strategy.atr_calculation_bars,2
+strategy.minimum_bars_for_atr_calculation,2
 strategy.daily_bars_timeframe,1Day
 strategy.daily_bars_count,10
+strategy.minimum_data_accumulation_seconds_before_trading,1
 
-# Momentum Signal Requirements (for Signal Strength)
-strategy.minimum_price_change_percentage_for_momentum,0.01
-strategy.minimum_volume_increase_percentage_for_buy_signals,5.0
-strategy.minimum_volatility_percentage_for_buy_signals,0.1
-strategy.minimum_volume_increase_percentage_for_sell_signals,2.0
-strategy.minimum_volatility_percentage_for_sell_signals,0.05
-strategy.minimum_signal_strength_threshold,0.6
+# Momentum Signal Requirements (AGGRESSIVE - Lowered for Easy Trades)
+strategy.minimum_price_change_percentage_for_momentum,0.001
+strategy.minimum_volume_increase_percentage_for_buy_signals,0.1
+strategy.minimum_volatility_percentage_for_buy_signals,0.01
+strategy.minimum_volume_increase_percentage_for_sell_signals,0.1
+strategy.minimum_volatility_percentage_for_sell_signals,0.01
+strategy.minimum_signal_strength_threshold,0.1
 
-# Signal Strength Component Weighting
-strategy.basic_price_pattern_weight,0.3
-strategy.momentum_indicator_weight,0.3
-strategy.volume_analysis_weight,0.2
-strategy.volatility_analysis_weight,0.2
+# Signal Strength Component Weighting (AGGRESSIVE - Weighted Toward Easier Signals)
+strategy.basic_price_pattern_weight,0.5
+strategy.momentum_indicator_weight,0.2
+strategy.volume_analysis_weight,0.15
+strategy.volatility_analysis_weight,0.15
 
-# Candlestick Pattern Detection
-strategy.doji_candlestick_body_size_threshold_percentage,0.1
+# Candlestick Pattern Detection (AGGRESSIVE - Relaxed Doji Filter)
+strategy.doji_candlestick_body_size_threshold_percentage,0.5
 
 # ========================================================================
 # RISK MANAGEMENT CONFIGURATION
@@ -95,16 +94,16 @@ risk.daily_profit_target_percentage,1.0
 risk.max_account_exposure_percentage,100.0
 risk.position_scaling_multiplier,1
 
-# Per-Trade Risk Management
-risk.risk_percentage_per_trade,0.01
-risk.maximum_dollar_value_per_trade,5000
-risk.allow_multiple_positions_per_symbol,false
-risk.maximum_position_layers,1
-risk.close_positions_on_signal_reversal,true
+# Per-Trade Risk Management (Conservative - 2% max risk per trade, $100 max per trade)
+risk.risk_percentage_per_trade,0.02
+risk.maximum_dollar_value_per_trade,100
+risk.allow_multiple_positions_per_symbol,true
+risk.maximum_position_layers,5
+risk.close_positions_on_signal_reversal,false
 
-# Buying Power Management
-risk.buying_power_utilization_percentage,0.8
-risk.buying_power_validation_safety_margin,1.25
+# Buying Power Management (100% Utilization - Use all available capital)
+risk.buying_power_utilization_percentage,1.0
+risk.buying_power_validation_safety_margin,1.1
 
 # ========================================================================
 # POSITION MANAGEMENT CONFIGURATION
@@ -116,10 +115,10 @@ risk.buying_power_validation_safety_margin,1.25
 strategy.enable_fixed_share_quantity_per_trade,true
 strategy.enable_risk_based_position_multiplier,false
 
-# Fixed Share Quantity Configuration
+# Fixed Share Quantity Configuration (AGGRESSIVE - Larger Size for Testing)
 # Used when enable_fixed_share_quantity_per_trade is true
 # Overrides all risk-based calculations
-strategy.fixed_share_quantity_per_trade,1
+strategy.fixed_share_quantity_per_trade,10
 
 # Risk-Based Position Multiplier Configuration
 # Used when enable_risk_based_position_multiplier is true
@@ -223,6 +222,16 @@ strategy.maximum_acceptable_price_for_signals,10000.0
 strategy.ratio_display_precision,2
 strategy.factor_display_precision,3
 strategy.atr_volume_display_precision,3
+
+# ========================================================================
+# SIGNAL AND POSITION LABEL CONFIGURATION
+# ========================================================================
+# String labels for trading signals and position sides
+
+strategy.signal_buy_string,buy
+strategy.signal_sell_string,sell
+strategy.position_long_string,LONG
+strategy.position_short_string,SHORT
 
 # Risk precision configuration
 risk.percentage_display_precision,1

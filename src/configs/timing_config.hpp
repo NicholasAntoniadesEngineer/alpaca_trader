@@ -22,6 +22,9 @@ struct TimingConfig {
     int account_data_cache_duration_seconds;         // Account data cache duration in seconds
     int market_data_staleness_threshold_seconds;     // Market data staleness threshold in seconds
     int crypto_data_staleness_threshold_seconds;     // Crypto-specific data staleness threshold in seconds
+    int market_data_logging_interval_seconds;         // Market data CSV logging interval in seconds
+    int quote_data_freshness_threshold_seconds;       // Quote data freshness threshold in seconds
+    int data_availability_wait_timeout_seconds;      // Timeout for waiting for data availability in seconds
 
     // ========================================================================
     // MARKET SESSION BUFFER TIMES
@@ -37,12 +40,23 @@ struct TimingConfig {
 
     bool enable_system_health_monitoring;            // Enable system health monitoring
     int system_health_logging_interval_seconds;      // System health logging interval in seconds
+    int max_health_check_interval_minutes;           // Maximum health check interval before alerting in minutes
 
     // ========================================================================
     // ERROR RECOVERY TIMING
     // ========================================================================
 
     int emergency_trading_halt_duration_minutes;     // Emergency trading halt duration in minutes
+    int exception_recovery_sleep_seconds;             // Sleep time after exceptions in seconds
+
+    // ========================================================================
+    // CONNECTIVITY RETRY CONFIGURATION
+    // ========================================================================
+
+    int connectivity_max_retry_delay_seconds;        // Maximum retry delay in seconds for connectivity
+    int connectivity_degraded_threshold;             // Number of consecutive failures before degraded status
+    int connectivity_disconnected_threshold;         // Number of consecutive failures before disconnected status
+    double connectivity_backoff_multiplier;          // Exponential backoff multiplier for retry delays
 
     // ========================================================================
     // USER INTERFACE UPDATES
@@ -65,6 +79,7 @@ struct TimingConfig {
     int position_verification_timeout_milliseconds;        // Position verification timeout in milliseconds
     int position_settlement_timeout_milliseconds;          // Position settlement timeout in milliseconds
     int maximum_concurrent_order_cancellations;            // Maximum concurrent order cancellations
+    int maximum_position_verification_attempts;            // Maximum number of attempts to verify position closure
 
     // ========================================================================
     // TRADING SAFETY CONSTRAINTS

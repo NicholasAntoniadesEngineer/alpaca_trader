@@ -4,8 +4,9 @@
 #include "strategy_config.hpp"
 #include "timing_config.hpp"
 #include "logging_config.hpp"
-#include "api_config.hpp"
-#include "core/threads/thread_register.hpp"
+#include "multi_api_config.hpp"
+#include "trading_mode_config.hpp"
+#include "threads/thread_register.hpp"
 
 namespace AlpacaTrader {
 namespace Config {
@@ -22,7 +23,8 @@ struct SystemConfig {
     StrategyConfig strategy;           // All strategy-related settings (strategy, risk, position, profit-taking, orders, target, session, monitoring, error handling)
     TimingConfig timing;               // All timing and polling intervals
     LoggingConfig logging;             // Logging configuration
-    ApiConfig api;                     // API credentials and connection settings
+    MultiApiConfig multi_api;          // Multi-provider API configuration
+    TradingModeConfig trading_mode;    // Trading mode configuration (stocks vs crypto)
     ThreadConfigRegistry thread_registry; // Thread priorities and CPU affinity
 };
 

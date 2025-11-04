@@ -15,8 +15,9 @@ timing.logging_thread_polling_interval_seconds,1
 timing.historical_data_fetch_period_minutes,120
 timing.historical_data_buffer_size,20
 timing.account_data_cache_duration_seconds,10
-timing.market_data_staleness_threshold_seconds,5
-timing.crypto_data_staleness_threshold_seconds,10
+timing.market_data_staleness_threshold_seconds,30
+timing.crypto_data_staleness_threshold_seconds,30
+timing.data_availability_wait_timeout_seconds,10
 
 # Market Session Buffer Times (in minutes)
 timing.pre_market_open_buffer_minutes,5
@@ -25,10 +26,12 @@ timing.market_close_grace_period_minutes,15
 
 # System Health Monitoring
 timing.enable_system_health_monitoring,true
-timing.system_health_logging_interval_seconds,5
+timing.system_health_logging_interval_seconds,60
+timing.max_health_check_interval_minutes,1
 
 # Error Recovery Timing
 timing.emergency_trading_halt_duration_minutes,1
+timing.exception_recovery_sleep_seconds,1
 
 # User Interface Updates
 timing.countdown_display_refresh_interval_seconds,5
@@ -44,6 +47,7 @@ timing.position_settlement_timeout_milliseconds,2000
 
 # Order Processing Limits
 timing.maximum_concurrent_order_cancellations,10
+timing.maximum_position_verification_attempts,3
 
 # Trading Safety Constraints
 timing.minimum_interval_between_orders_seconds,30
@@ -52,3 +56,9 @@ timing.enable_wash_trade_prevention_mechanism,true
 # Precision Settings for Metrics
 timing.cpu_usage_display_precision,1
 timing.performance_rate_display_precision,1
+
+# Connectivity Retry Configuration
+timing.connectivity_max_retry_delay_seconds,300
+timing.connectivity_degraded_threshold,3
+timing.connectivity_disconnected_threshold,6
+timing.connectivity_backoff_multiplier,2.0

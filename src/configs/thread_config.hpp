@@ -4,9 +4,9 @@
 #include <string>
 #include <atomic>
 #include <functional>
-#include "core/threads/thread_register.hpp"
-#include "core/system/system_modules.hpp"
-#include "core/system/system_threads.hpp"
+#include "threads/thread_register.hpp"
+#include "system/system_modules.hpp"
+#include "system/system_threads.hpp"
 #include "system_config.hpp"
 
 namespace AlpacaTrader {

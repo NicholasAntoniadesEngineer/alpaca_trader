@@ -68,10 +68,6 @@ tail -f trade_log.txt
 ---
 
 ## TODO:
-
-- Go through all functions and files and limit the scope of each function and file to the minimum necessary to achieve the desired functionality.
-- Replace hardcoded dependencies with proper DI container to improve testability and modularity
-- Add circuit breaker for API calls to prevent cascade failures during outages
 - Replace raw std::thread usage with modern C++20 coroutines for better resource management
 - Implement analysis across multiple timeframes (1m, 5m, 15m, 1h) for better signal confirmation
 - Add RSI, MACD, Bollinger Bands, Stochastic Oscillator, and Fibonacci retracements
