@@ -33,11 +33,8 @@ public:
     static void log_websocket_ssl_read_error(int sslErrorCodeValue, const std::string& logFileString);
     static void log_websocket_frame_parse_error(const std::string& errorMessageString, const std::string& logFileString);
     static void log_websocket_bar_data_received(const std::string& symbolString, double openPriceValue, double highPriceValue, double lowPriceValue, double closePriceValue, double volumeValue, const std::string& timestampString, const std::string& logFileString);
-    static void log_websocket_bar_data_table(const std::string& symbolString, double openPriceValue, double highPriceValue, double lowPriceValue, double closePriceValue, double volumeValue, const std::string& timestampString, const std::string& logFileString);
-    static void log_websocket_accumulator_status(const std::string& symbolString, size_t barsBeforeValue, size_t barsAfterValue, size_t firstLevelCountValue, size_t secondLevelCountValue, const std::string& logFileString);
     static void log_websocket_status_message(const std::string& statusValue, const std::string& messageValue, const std::string& logFileString);
     static void log_websocket_message_details(const std::string& messageTypeString, const std::string& messageContentString, const std::string& logFileString);
-    static void log_websocket_bars_request_table(const std::string& symbolString, int requestedBarsCountValue, size_t availableBarsCountValue, size_t firstLevelBarsCountValue, size_t secondLevelBarsCountValue, const std::string& logFileString);
     static void log_websocket_stale_data_table(const std::string& timestampString, long long ageSecondsValue, int maxAgeSecondsValue, const std::string& logFileString);
     static void log_websocket_connection_table(const std::string& websocketUrlString, bool successFlag, const std::string& errorMessageString, const std::string& logFileString);
     static void log_websocket_handshake_table(const std::string& requestString, const std::string& responseString, int bytesSentValue, int bytesReceivedValue, const std::string& logFileString);

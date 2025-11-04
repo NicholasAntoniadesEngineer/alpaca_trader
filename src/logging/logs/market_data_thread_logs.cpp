@@ -119,6 +119,9 @@ bool MarketDataThreadLogs::is_fetch_allowed(const std::atomic<bool>* allow_fetch
 }
 
 void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, MarketDataValidator& validator, const std::string& symbol, const TimingConfig& timing, ApiManager& api_manager, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
+    (void)validator;  // Not used - we log bars directly without validating quotes
+    (void)api_manager;  // Not used - we don't make API calls for CSV logging
+    
     auto csv_logger = get_logging_context()->csv_bars_logger;
     if (!csv_logger) {
         return;
@@ -139,25 +142,20 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
     try {
         std::string current_timestamp = TimeUtils::get_current_human_readable_time();
         
-        // Try to get fresh quote data first
-        auto quote_data = api_manager.get_realtime_quotes(symbol);
-        
-        if (validator.is_quote_data_fresh_and_valid(quote_data)) {
-            MarketDataThreadLogs::log_fresh_quote_data_to_csv(quote_data, computed_data, current_timestamp);
-        } else {
-            // Only log bars if we haven't logged them before (prevent duplicate historical data)
-            if (!historical_bars.empty()) {
-                const auto& latest_bar = historical_bars.back();
-                if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
-                    MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp);
-                    // Update previous_bar to track the latest bar we logged
-                    previous_bar = latest_bar;
-                } else {
-                    MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
-                }
+        // Log bars directly without making API calls for quotes
+        // Bars are already logged in market_data_coordinator, but this provides additional logging
+        // with duplicate detection to avoid logging the same bar multiple times
+        if (!historical_bars.empty()) {
+            const auto& latest_bar = historical_bars.back();
+            if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
+                MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp);
+                // Update previous_bar to track the latest bar we logged
+                previous_bar = latest_bar;
             } else {
-                log_message("No historical bars available for CSV logging", "trading_system.log");
+                MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
             }
+        } else {
+            log_message("No historical bars available for CSV logging", "trading_system.log");
         }
         
         last_bar_log_time = current_time;

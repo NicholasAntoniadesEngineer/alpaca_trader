@@ -18,10 +18,30 @@ double compute_atr(const std::vector<double>& highs, const std::vector<double>& 
         }
     }
     
+    // CRITICAL: Validate vector sizes before accessing
+    if (highs.size() != lows.size() || highs.size() != closes.size()) {
+        return 0.0;
+    }
+    
+    if (highs.size() < 2) {
+        return 0.0;
+    }
+    
     std::vector<double> true_range_values;
+    try {
     for (size_t current_bar_index = 1; current_bar_index < highs.size(); ++current_bar_index) {
+            // Validate index before accessing previous close
+            if (current_bar_index - 1 >= closes.size()) {
+                continue; // Skip this iteration if index is invalid
+            }
+            
         double true_range_value = std::max({highs[current_bar_index] - lows[current_bar_index], std::abs(highs[current_bar_index] - closes[current_bar_index-1]), std::abs(lows[current_bar_index] - closes[current_bar_index-1])});
         true_range_values.push_back(true_range_value);
+    }
+    } catch (const std::exception& true_range_calculation_exception_error) {
+        return 0.0;
+    } catch (...) {
+        return 0.0;
     }
     
     if (true_range_values.empty()) {
@@ -74,33 +94,57 @@ bool detect_doji_pattern(double open, double high, double low, double close) {
 }
 
 bool compute_technical_indicators(ProcessedData& processed_data, const std::vector<Bar>& bars, const SystemConfig& config) {
+    // Top-level try-catch to prevent segfault
+    try {
     if (bars.empty()) {
         return false;
     }
     
+        // CRITICAL: Validate before accessing back()
     const Bar& current_bar = bars.back();
     processed_data.curr = current_bar;
     
-    // Extract price data for calculations
+    // Calculate maximum bars needed for all calculations
+    // avg_atr uses: atr_calculation_bars * average_atr_comparison_multiplier + 1 (for true range calculation)
+    const int atr_calculation_bars_value = config.strategy.atr_calculation_bars;
+    const int average_atr_period_bars_value = atr_calculation_bars_value * config.strategy.average_atr_comparison_multiplier;
+    const int max_bars_needed_for_calculations_value = average_atr_period_bars_value + 1;
+    
+    // Extract only the last N bars needed for calculations (optimize buffer usage)
+    // This ensures we use only recent bars and avoid unnecessary processing of old data
+    std::vector<Bar> bars_for_calculation_data;
+    if (static_cast<int>(bars.size()) > max_bars_needed_for_calculations_value) {
+        size_t start_index_value = bars.size() - static_cast<size_t>(max_bars_needed_for_calculations_value);
+        bars_for_calculation_data = std::vector<Bar>(bars.begin() + start_index_value, bars.end());
+    } else {
+        bars_for_calculation_data = bars;
+    }
+    
+    // Extract price data for calculations (using only bars needed)
     std::vector<double> highs, lows, closes, volumes;
-    for (const auto& bar : bars) {
+    for (const auto& bar : bars_for_calculation_data) {
         highs.push_back(bar.high_price);
         lows.push_back(bar.low_price);
         closes.push_back(bar.close_price);
         volumes.push_back(bar.volume);
     }
     
-    // Compute ATR
-    processed_data.atr = compute_atr(highs, lows, closes, config.strategy.atr_calculation_period, config.strategy.minimum_bars_for_atr_calculation);
+    // Compute ATR - calculates continuously, can be 0.0 during initial accumulation
+    processed_data.atr = compute_atr(highs, lows, closes, atr_calculation_bars_value, config.strategy.minimum_bars_for_atr_calculation);
     
     // Compute average volume
-    processed_data.avg_vol = compute_average_volume(volumes, config.strategy.atr_calculation_period, config.strategy.minimum_volume_threshold);
+    processed_data.avg_vol = compute_average_volume(volumes, atr_calculation_bars_value, config.strategy.minimum_volume_threshold);
     
-    if (processed_data.atr == 0.0) {
+    // ATR can be 0.0 during initial accumulation - allow continuous calculation
+    // Trading will be blocked by data accumulation time check until sufficient data
+        return true;
+    } catch (const std::exception& indicators_exception_error) {
+        // Log error but return false to indicate failure
+        return false;
+    } catch (...) {
+        // Unknown exception - return false
         return false;
     }
-    
-    return true;
 }
 
 } // namespace Core

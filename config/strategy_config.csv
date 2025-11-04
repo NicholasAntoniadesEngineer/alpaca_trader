@@ -46,7 +46,6 @@ strategy.crypto_volume_multiplier,0.1
 strategy.crypto_volume_change_amplification_factor,10.0
 strategy.percentage_calculation_multiplier,100.0
 strategy.minimum_volume_threshold,1e-6
-strategy.atr_calculation_period,14
 strategy.average_atr_comparison_multiplier,1.5
 
 # ATR-Based Signal Validation
@@ -58,13 +57,13 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,16
+strategy.bars_to_fetch_for_calculations,2
 strategy.minutes_per_bar,1
-strategy.atr_calculation_bars,14
-strategy.minimum_bars_for_atr_calculation,2
+strategy.atr_calculation_bars,1
+strategy.minimum_bars_for_atr_calculation,1
 strategy.daily_bars_timeframe,1Day
 strategy.daily_bars_count,10
-strategy.minimum_data_accumulation_seconds_before_trading,30
+strategy.minimum_data_accumulation_seconds_before_trading,10
 
 # Momentum Signal Requirements (for Signal Strength)
 strategy.minimum_price_change_percentage_for_momentum,0.01

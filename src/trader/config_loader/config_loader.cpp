@@ -27,6 +27,7 @@ namespace {
 }
 
 bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::string& csv_path) {
+    try {
     // Load multi-API configuration only from api_endpoints_config.csv
     if (csv_path.find("api_endpoints_config.csv") != std::string::npos) {
         try {
@@ -38,17 +39,21 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
     }
     
     std::ifstream config_file_stream(csv_path);
-    if (!config_file_stream.is_open()) return false;
+        if (!config_file_stream.is_open()) {
+            return false;
+        }
     std::string config_line_string;
     while (std::getline(config_file_stream, config_line_string)) {
+            try {
         if (config_line_string.empty()) continue;
-        config_line_string = trim(config_line_string);
-        if (config_line_string.empty() || config_line_string[0] == '#') continue;
+                config_line_string = trim(config_line_string);
+                if (config_line_string.empty() || config_line_string[0] == '#') continue;
         std::stringstream config_line_stream(config_line_string);
         std::string config_key_string, config_value_string;
         if (!std::getline(config_line_stream, config_key_string, ',')) continue;
         if (!std::getline(config_line_stream, config_value_string)) continue;
-        config_key_string = trim(config_key_string); config_value_string = trim(config_value_string);
+                config_key_string = trim(config_key_string); 
+                config_value_string = trim(config_value_string);
 
         // Trading Mode Configuration (only from strategy_config.csv)
         if (csv_path.find("strategy_config.csv") != std::string::npos) {
@@ -80,7 +85,6 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "session.market_close_minute") cfg.strategy.market_close_minute = std::stoi(config_value_string);
 
         // Strategy parameters
-        else if (config_key_string == "strategy.atr_calculation_period") cfg.strategy.atr_calculation_period = std::stoi(config_value_string);
         else if (config_key_string == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(config_value_string);
         else if (config_key_string == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(config_value_string);
         else if (config_key_string == "strategy.atr_calculation_bars") cfg.strategy.atr_calculation_bars = std::stoi(config_value_string);
@@ -100,7 +104,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.use_absolute_atr_threshold_instead_of_relative") cfg.strategy.use_absolute_atr_threshold = (config_value_string == "true");
         
         // Momentum signal configuration
-        else if (config_key_string == "strategy.minimum_price_change_percentage_for_momentum") cfg.strategy.minimum_price_change_percentage_for_momentum = std::stod(config_value_string);
+                else if (config_key_string == "strategy.minimum_price_change_percentage_for_momentum") {
+                    cfg.strategy.minimum_price_change_percentage_for_momentum = std::stod(config_value_string);
+                }
         else if (config_key_string == "strategy.minimum_volume_increase_percentage_for_buy_signals") cfg.strategy.minimum_volume_increase_percentage_for_buy_signals = std::stod(config_value_string);
         else if (config_key_string == "strategy.minimum_volatility_percentage_for_buy_signals") cfg.strategy.minimum_volatility_percentage_for_buy_signals = std::stod(config_value_string);
         else if (config_key_string == "strategy.minimum_volume_increase_percentage_for_sell_signals") cfg.strategy.minimum_volume_increase_percentage_for_sell_signals = std::stod(config_value_string);
@@ -265,8 +271,21 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "logging.include_timestamp") cfg.logging.include_timestamp = to_bool(config_value_string);
         else if (config_key_string == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(config_value_string);
         else if (config_key_string == "logging.include_function_name") cfg.logging.include_function_name = to_bool(config_value_string);
-    }
+            } catch (const std::exception& line_exception_error) {
+                // Log and continue parsing other lines
+                log_message("Error parsing config line: " + config_line_string + " - " + std::string(line_exception_error.what()), "");
+            } catch (...) {
+                log_message("Unknown error parsing config line: " + config_line_string, "");
+            }
+        }
     return true;
+    } catch (const std::exception& exception_error) {
+        log_message("Exception in load_config_from_csv: " + std::string(exception_error.what()), "");
+        return false;
+    } catch (...) {
+        log_message("Unknown exception in load_config_from_csv", "");
+        return false;
+    }
 }
 
 bool load_thread_configs(AlpacaTrader::Config::SystemConfig& cfg, const std::string& thread_config_path) {
@@ -413,12 +432,7 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         error_message = "Crypto symbol format detected (" + config.trading_mode.primary_symbol + ") but trading_mode.mode is not crypto - set trading_mode.mode=crypto in strategy_config.csv";
         return false;
     }
-    if (config.strategy.atr_calculation_period < 2) {
-        error_message = "strategy.atr_calculation_period must be >= 2 (ATR calculation period)";
-        return false;
-    }
-
-    // Validate new volatility calculation parameters
+    // Validate volatility calculation parameters
     if (config.strategy.bars_to_fetch_for_calculations < 1) {
         error_message = "strategy.bars_to_fetch_for_calculations must be >= 1";
         return false;
@@ -429,8 +443,18 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    if (config.strategy.atr_calculation_bars < 2) {
-        error_message = "strategy.atr_calculation_bars must be >= 2";
+    if (config.strategy.atr_calculation_bars < 1) {
+        error_message = "strategy.atr_calculation_bars must be >= 1";
+        return false;
+    }
+    
+    // Validate bars_to_fetch_for_calculations is sufficient for all indicator calculations
+    // Maximum needed: avg_atr uses (atr_calculation_bars * average_atr_comparison_multiplier + 1) bars
+    int maximum_bars_needed_for_calculations_value = (config.strategy.atr_calculation_bars * config.strategy.average_atr_comparison_multiplier) + 1;
+    if (config.strategy.bars_to_fetch_for_calculations < maximum_bars_needed_for_calculations_value) {
+        error_message = "strategy.bars_to_fetch_for_calculations (" + std::to_string(config.strategy.bars_to_fetch_for_calculations) + 
+                        ") must be >= " + std::to_string(maximum_bars_needed_for_calculations_value) + 
+                        " (required for avg_atr calculation: atr_calculation_bars * average_atr_comparison_multiplier + 1)";
         return false;
     }
 
@@ -466,15 +490,9 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
-    // Validate ATR calculation period
-    if (config.strategy.atr_calculation_period < 2 || config.strategy.atr_calculation_period > 100) {
-        error_message = "strategy.atr_calculation_period must be between 2 and 100";
-        return false;
-    }
-
-    // Validate new ATR calculation bars
-    if (config.strategy.atr_calculation_bars < 2 || config.strategy.atr_calculation_bars > 100) {
-        error_message = "strategy.atr_calculation_bars must be between 2 and 100";
+    // Validate ATR calculation bars
+    if (config.strategy.atr_calculation_bars < 1 || config.strategy.atr_calculation_bars > 100) {
+        error_message = "strategy.atr_calculation_bars must be between 1 and 100";
         return false;
     }
     

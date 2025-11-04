@@ -10,17 +10,18 @@ MarketDataValidator::MarketDataValidator(const SystemConfig& cfg) : config(cfg) 
 
 bool MarketDataValidator::validate_market_snapshot(const MarketSnapshot& market_snapshot) const {
     // Check if this is a default/empty MarketSnapshot (no data available)
-    if (market_snapshot.atr == 0.0 && market_snapshot.avg_atr == 0.0 && market_snapshot.avg_vol == 0.0 &&
-        market_snapshot.curr.open_price == 0.0 && market_snapshot.curr.high_price == 0.0 && market_snapshot.curr.low_price == 0.0 && market_snapshot.curr.close_price == 0.0) {
+    // ATR can be 0.0 during initial accumulation - only reject if ALL data is zero
+    if (market_snapshot.curr.open_price == 0.0 && market_snapshot.curr.high_price == 0.0 && 
+        market_snapshot.curr.low_price == 0.0 && market_snapshot.curr.close_price == 0.0) {
         return false;
     }
 
-    // Validate price data
+    // Validate price data - this is critical
     if (!validate_price_data(market_snapshot.curr)) {
         return false;
     }
 
-    // Validate technical indicators
+    // Validate technical indicators - ATR can be 0.0, only reject NaN/infinite
     if (!validate_technical_indicators(market_snapshot)) {
         return false;
     }

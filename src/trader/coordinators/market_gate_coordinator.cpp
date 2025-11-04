@@ -8,21 +8,17 @@ MarketGateCoordinator::MarketGateCoordinator(API::ApiManager& api_manager_ref, C
     : api_manager(api_manager_ref), connectivity_manager(connectivity_manager_ref) {}
 
 void MarketGateCoordinator::check_and_update_fetch_window(const std::string& trading_symbol, std::atomic<bool>& allow_fetch, bool& last_within_trading_hours) {
-    MarketGateLogs::log_before_api_check();
     bool currently_within_trading_hours = false;
     try {
         currently_within_trading_hours = api_manager.is_within_trading_hours(trading_symbol);
         connectivity_manager.report_success();
     } catch (const std::exception& trading_hours_status_exception_error) {
-        MarketGateLogs::log_market_gate_loop_exception("API error checking trading hours: " + std::string(trading_hours_status_exception_error.what()));
         connectivity_manager.report_failure(trading_hours_status_exception_error.what());
         currently_within_trading_hours = false;
     } catch (...) {
-        MarketGateLogs::log_market_gate_loop_unknown_exception();
         connectivity_manager.report_failure("Unknown error in trading hours check");
         currently_within_trading_hours = false;
     }
-    MarketGateLogs::log_current_hours_state(currently_within_trading_hours);
     if (currently_within_trading_hours != last_within_trading_hours) {
         allow_fetch.store(currently_within_trading_hours);
         MarketGateLogs::log_fetch_gate_state(currently_within_trading_hours);

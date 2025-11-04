@@ -6,6 +6,8 @@
 #include "logging/logs/market_data_thread_logs.hpp"
 #include "logging/logs/market_data_logs.hpp"
 #include "logging/logger/logging_macros.hpp"
+#include "logging/logger/async_logger.hpp"
+#include "utils/time_utils.hpp"
 #include "api/polygon/polygon_crypto_client.hpp"
 #include <chrono>
 
@@ -143,11 +145,41 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
     
     std::lock_guard<std::mutex> state_lock(snapshot_state.state_mutex);
     
+    // DEBUG: Log bar data before updating snapshot
+    if (processed_data_result.curr.open_price > 0.0 && (processed_data_result.curr.high_price == 0.0 || processed_data_result.curr.low_price == 0.0 || processed_data_result.curr.close_price == 0.0)) {
+        MarketDataThreadLogs::log_thread_loop_exception("WARNING: update_shared_market_snapshot - ProcessedData has incomplete bar data - O:" + 
+            std::to_string(processed_data_result.curr.open_price) + " H:" + std::to_string(processed_data_result.curr.high_price) + 
+            " L:" + std::to_string(processed_data_result.curr.low_price) + " C:" + std::to_string(processed_data_result.curr.close_price));
+    }
+    
     snapshot_state.market_snapshot.atr = processed_data_result.atr;
     snapshot_state.market_snapshot.avg_atr = processed_data_result.avg_atr;
     snapshot_state.market_snapshot.avg_vol = processed_data_result.avg_vol;
-    snapshot_state.market_snapshot.curr = processed_data_result.curr;
-    snapshot_state.market_snapshot.prev = processed_data_result.prev;
+    
+    // CRITICAL: Explicitly copy all Bar fields to avoid struct copy issues
+    snapshot_state.market_snapshot.curr.open_price = processed_data_result.curr.open_price;
+    snapshot_state.market_snapshot.curr.high_price = processed_data_result.curr.high_price;
+    snapshot_state.market_snapshot.curr.low_price = processed_data_result.curr.low_price;
+    snapshot_state.market_snapshot.curr.close_price = processed_data_result.curr.close_price;
+    snapshot_state.market_snapshot.curr.volume = processed_data_result.curr.volume;
+    snapshot_state.market_snapshot.curr.timestamp = processed_data_result.curr.timestamp;
+    
+    snapshot_state.market_snapshot.prev.open_price = processed_data_result.prev.open_price;
+    snapshot_state.market_snapshot.prev.high_price = processed_data_result.prev.high_price;
+    snapshot_state.market_snapshot.prev.low_price = processed_data_result.prev.low_price;
+    snapshot_state.market_snapshot.prev.close_price = processed_data_result.prev.close_price;
+    snapshot_state.market_snapshot.prev.volume = processed_data_result.prev.volume;
+    snapshot_state.market_snapshot.prev.timestamp = processed_data_result.prev.timestamp;
+    
+    snapshot_state.market_snapshot.oldest_bar_timestamp = processed_data_result.oldest_bar_timestamp;
+    
+    // DEBUG: Verify bar data was copied correctly
+    if (snapshot_state.market_snapshot.curr.open_price > 0.0 && (snapshot_state.market_snapshot.curr.high_price == 0.0 || snapshot_state.market_snapshot.curr.low_price == 0.0 || snapshot_state.market_snapshot.curr.close_price == 0.0)) {
+        MarketDataThreadLogs::log_thread_loop_exception("WARNING: update_shared_market_snapshot - Snapshot has incomplete bar data after copy - O:" + 
+            std::to_string(snapshot_state.market_snapshot.curr.open_price) + " H:" + std::to_string(snapshot_state.market_snapshot.curr.high_price) + 
+            " L:" + std::to_string(snapshot_state.market_snapshot.curr.low_price) + " C:" + std::to_string(snapshot_state.market_snapshot.curr.close_price));
+    }
+    
     snapshot_state.has_market_flag.store(true);
     
     auto current_timestamp = std::chrono::steady_clock::now();
@@ -169,6 +201,32 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
         }
         
         update_shared_market_snapshot(computed_data, snapshot_state);
+        
+        // Log bars to CSV immediately after successful processing for validation
+        // This ensures we log the bars we're actually using for trading decisions
+        try {
+            auto* logging_context = AlpacaTrader::Logging::get_logging_context();
+            if (logging_context && logging_context->csv_bars_logger && !historical_bars_for_logging.empty()) {
+                std::string current_timestamp = TimeUtils::get_current_human_readable_time();
+                
+                // Log the latest bar (the one we're using for trading decisions)
+                const auto& latest_bar = historical_bars_for_logging.back();
+                std::string bar_timestamp = latest_bar.timestamp.empty() ? current_timestamp : latest_bar.timestamp;
+                
+                logging_context->csv_bars_logger->log_bar(
+                    current_timestamp,  // System timestamp
+                    symbol,
+                    latest_bar,
+                    computed_data.atr,
+                    computed_data.avg_atr,
+                    computed_data.avg_vol
+                );
+            }
+        } catch (const std::exception& csv_log_exception) {
+            MarketDataThreadLogs::log_csv_logging_error(symbol, "Exception logging bar to CSV: " + std::string(csv_log_exception.what()));
+        } catch (...) {
+            MarketDataThreadLogs::log_csv_logging_error(symbol, "Unknown exception logging bar to CSV");
+        }
         
         MarketDataValidator& validator = market_data_manager.get_market_data_validator();
         const SystemConfig& config = market_data_manager.get_config();

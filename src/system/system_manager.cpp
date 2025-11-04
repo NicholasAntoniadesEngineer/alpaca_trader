@@ -236,8 +236,12 @@ SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::L
     system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
     
     // Set up market data manager sync state
-    AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
-    bool sync_state_set_result = system_state.trading_modules->trading_coordinator->get_market_data_manager_reference().set_sync_state_references(fetcher_sync_state);
+    // CRITICAL: Store MarketDataSyncState in a persistent location to avoid use-after-free
+    // Create a persistent sync state object that lives in SystemState
+    static AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state_persistent = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
+    system_state.fetcher_sync_state_ptr = &fetcher_sync_state_persistent;
+    
+    bool sync_state_set_result = system_state.trading_modules->trading_coordinator->get_market_data_manager_reference().set_sync_state_references(fetcher_sync_state_persistent);
     if (!sync_state_set_result) {
         SystemLogs::log_fatal_error("Failed to set market data manager sync state references");
         throw std::runtime_error("Failed to set market data manager sync state references");
@@ -342,7 +346,7 @@ static void run_until_shutdown(SystemState& state) {
         auto start_time = std::chrono::steady_clock::now();
         auto last_monitor_time = start_time;
         
-        while (state.running.load()) {
+        while (state.running.load() && !state.shutdown_requested.load()) {
             try {
                 auto now = std::chrono::steady_clock::now();
 
@@ -415,7 +419,10 @@ static void run_until_shutdown(SystemState& state) {
 }
 
 void shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+    try {
     // Signal all threads to stop
+        system_state.running.store(false);
+        system_state.shutdown_requested.store(true);
     system_state.cv.notify_all();
 
     // Wait for all threads to complete
@@ -431,6 +438,11 @@ void shutdown(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::
 
     // Shutdown logging system
     AlpacaTrader::Logging::shutdown_global_logger(*logger);
+    } catch (const std::exception& shutdownExceptionError) {
+        SystemLogs::log_system_shutdown_error("Exception in shutdown: " + std::string(shutdownExceptionError.what()));
+    } catch (...) {
+        SystemLogs::log_system_shutdown_error("Unknown exception in shutdown");
+    }
 }
 
 void run(SystemState& system_state) {

@@ -123,21 +123,6 @@ std::vector<Core::Bar> PolygonCryptoClient::get_recent_bars(const Core::BarReque
     }
     
     size_t accumulatorBarCountValue = accumulatorPointer->getAccumulatedBarsCount();
-    size_t firstLevelBarsCountValue = accumulatorPointer->getFirstLevelBarsCount();
-    size_t secondLevelBarsCountValue = accumulatorPointer->getSecondLevelBarsCount();
-    
-    try {
-        AlpacaTrader::Logging::WebSocketLogs::log_websocket_bars_request_table(
-            request.symbol,
-            request.limit,
-            accumulatorBarCountValue,
-            firstLevelBarsCountValue,
-            secondLevelBarsCountValue,
-            "trading_system.log"
-        );
-    } catch (...) {
-        // Logging failed, continue
-    }
     
     std::vector<Core::Bar> accumulatedBarsResult = accumulatorPointer->getAccumulatedBars(request.limit);
     if (accumulatedBarsResult.empty()) {
@@ -650,48 +635,9 @@ bool PolygonCryptoClient::process_single_message(const json& msg_json) {
                     auto accumulatorIterator = barAccumulatorMap.find(internal_symbol);
                     if (accumulatorIterator != barAccumulatorMap.end() && accumulatorIterator->second) {
                         try {
-                            size_t accumulatorBarCountBeforeValue = accumulatorIterator->second->getAccumulatedBarsCount();
                             accumulatorIterator->second->addBar(incomingBarData);
-                            size_t accumulatorBarCountAfterValue = accumulatorIterator->second->getAccumulatedBarsCount();
                             
-                            size_t firstLevelCountValue = accumulatorIterator->second->getFirstLevelBarsCount();
-                            size_t secondLevelCountValue = accumulatorIterator->second->getSecondLevelBarsCount();
-                            
-                            try {
-                                AlpacaTrader::Logging::WebSocketLogs::log_websocket_bar_data_table(
-                                    internal_symbol,
-                                    incomingBarData.open_price,
-                                    incomingBarData.high_price,
-                                    incomingBarData.low_price,
-                                    incomingBarData.close_price,
-                                    incomingBarData.volume,
-                                    incomingBarData.timestamp,
-                                    "trading_system.log"
-                                );
-                                
-                                if (accumulatorBarCountBeforeValue != accumulatorBarCountAfterValue || secondLevelCountValue > 0) {
-                                    AlpacaTrader::Logging::WebSocketLogs::log_websocket_accumulator_status(
-                                        internal_symbol,
-                                        accumulatorBarCountBeforeValue,
-                                        accumulatorBarCountAfterValue,
-                                        firstLevelCountValue,
-                                        secondLevelCountValue,
-                                        "trading_system.log"
-                                    );
-                                }
-                            } catch (const std::exception& loggingExceptionError) {
-                                try {
-                                    AlpacaTrader::Logging::WebSocketLogs::log_websocket_message_details(
-                                        "LOGGING_ERROR",
-                                        "Failed to log bar data: " + std::string(loggingExceptionError.what()),
-                                        "trading_system.log"
-                                    );
-                                } catch (...) {
-                                    // Logging failed, continue
-                                }
-                            } catch (...) {
-                                // Logging failed, continue
-                            }
+                           
                             
                             try {
                                 std::vector<Core::Bar> recentAccumulatedBars = accumulatorIterator->second->getAccumulatedBars(1);

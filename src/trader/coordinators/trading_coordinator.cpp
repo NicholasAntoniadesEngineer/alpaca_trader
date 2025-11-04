@@ -45,12 +45,23 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     }
 
     // Wait for fresh market data
+    
     bool data_wait_result = false;
     try {
+        
         data_wait_result = market_data_manager.wait_for_fresh_data(market_data_sync_state);
+        
+        
         if (data_wait_result) {
-            MarketDataLogs::log_data_available(config.logging.log_file);
+            try {
+                MarketDataLogs::log_data_available(config.logging.log_file);
+            } catch (const std::exception& log_exception_error) {
+                throw;
+            } catch (...) {
+                throw std::runtime_error("Unknown exception in log_data_available");
+            }
         }
+        
     } catch (const std::runtime_error& runtime_error) {
         std::string error_message = runtime_error.what();
         if (error_message.find("Invalid sync state pointers") != std::string::npos) {
@@ -72,58 +83,143 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         return;
     }
     
+    
     if (!data_wait_result) {
         TradingLogs::log_market_status(false, "Timeout waiting for fresh data");
         return;
     }
     
+    
     if (!snapshot_state.running_flag.load()) {
         return;
     }
 
+
     // Lock and read snapshots atomically
     MarketSnapshot current_market_snapshot;
     AccountSnapshot current_account_snapshot;
-    {
+    
+    
+    try {
         std::lock_guard<std::mutex> state_lock(snapshot_state.state_mutex);
-        current_market_snapshot = snapshot_state.market_snapshot;
+        
+        
+        // CRITICAL: Explicitly copy all MarketSnapshot fields to avoid struct copy issues
+        current_market_snapshot.atr = snapshot_state.market_snapshot.atr;
+        current_market_snapshot.avg_atr = snapshot_state.market_snapshot.avg_atr;
+        current_market_snapshot.avg_vol = snapshot_state.market_snapshot.avg_vol;
+        
+        // Explicitly copy curr Bar fields
+        current_market_snapshot.curr.open_price = snapshot_state.market_snapshot.curr.open_price;
+        current_market_snapshot.curr.high_price = snapshot_state.market_snapshot.curr.high_price;
+        current_market_snapshot.curr.low_price = snapshot_state.market_snapshot.curr.low_price;
+        current_market_snapshot.curr.close_price = snapshot_state.market_snapshot.curr.close_price;
+        current_market_snapshot.curr.volume = snapshot_state.market_snapshot.curr.volume;
+        current_market_snapshot.curr.timestamp = snapshot_state.market_snapshot.curr.timestamp;
+        
+        // Explicitly copy prev Bar fields
+        current_market_snapshot.prev.open_price = snapshot_state.market_snapshot.prev.open_price;
+        current_market_snapshot.prev.high_price = snapshot_state.market_snapshot.prev.high_price;
+        current_market_snapshot.prev.low_price = snapshot_state.market_snapshot.prev.low_price;
+        current_market_snapshot.prev.close_price = snapshot_state.market_snapshot.prev.close_price;
+        current_market_snapshot.prev.volume = snapshot_state.market_snapshot.prev.volume;
+        current_market_snapshot.prev.timestamp = snapshot_state.market_snapshot.prev.timestamp;
+        
+        current_market_snapshot.oldest_bar_timestamp = snapshot_state.market_snapshot.oldest_bar_timestamp;
+        
         current_account_snapshot = snapshot_state.account_snapshot;
+        
+        // DEBUG: Log bar data after copying from snapshot
+        if (current_market_snapshot.curr.open_price > 0.0 && (current_market_snapshot.curr.high_price == 0.0 || current_market_snapshot.curr.low_price == 0.0 || current_market_snapshot.curr.close_price == 0.0)) {
+            TradingLogs::log_market_status(false, "WARNING: TradingCoordinator - Snapshot has incomplete bar data - O:" + 
+                std::to_string(current_market_snapshot.curr.open_price) + " H:" + std::to_string(current_market_snapshot.curr.high_price) + 
+                " L:" + std::to_string(current_market_snapshot.curr.low_price) + " C:" + std::to_string(current_market_snapshot.curr.close_price));
+        }
+        
+    } catch (const std::exception& snapshot_copy_exception_error) {
+        std::abort();
+    } catch (...) {
+        std::abort();
     }
 
+    
     // Validate we have required data
-    if (!snapshot_state.has_market_flag.load() || !snapshot_state.has_account_flag.load()) {
+    bool has_market_flag_value = snapshot_state.has_market_flag.load();
+    bool has_account_flag_value = snapshot_state.has_account_flag.load();
+    
+    
+    if (!has_market_flag_value || !has_account_flag_value) {
         TradingLogs::log_market_status(false, "Missing required snapshot data");
         return;
     }
+    
 
+    
     // Log loop header
     if (config.trading_mode.primary_symbol.empty()) {
         TradingLogs::log_market_status(false, "Primary symbol is required but not configured");
         return;
     }
+    
+    
     std::string symbol = config.trading_mode.primary_symbol;
-    TradingLogs::log_loop_header(loop_counter_value, symbol);
+    
+    
+    try {
+        TradingLogs::log_loop_header(loop_counter_value, symbol);
+    } catch (const std::exception& log_header_exception_error) {
+        std::abort();
+    } catch (...) {
+        std::abort();
+    }
 
+    
     // CSV logging for account updates
     try {
+        
         std::string timestamp = TimeUtils::get_current_human_readable_time();
+        
+        
         double buying_power = account_manager.fetch_buying_power();
-        if (auto csv_trade_logger = AlpacaTrader::Logging::get_logging_context()->csv_trade_logger) {
-            csv_trade_logger->log_account_update(
+        
+        
+        auto logging_context = AlpacaTrader::Logging::get_logging_context();
+        
+        
+        if (logging_context && logging_context->csv_trade_logger) {
+            
+            logging_context->csv_trade_logger->log_account_update(
                 timestamp, current_account_snapshot.equity, 
                 buying_power, current_account_snapshot.exposure_pct
             );
+            
+        } else {
         }
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_data_result_table("CSV logging error in account update: " + std::string(exception_error.what()), false, 0);
+        try {
+            TradingLogs::log_market_data_result_table("CSV logging error in account update: " + std::string(exception_error.what()), false, 0);
+        } catch (...) {
+            // Logging failed
+        }
+        std::abort();
     } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in account update", false, 0);
+        try {
+            TradingLogs::log_market_data_result_table("Unknown CSV logging error in account update", false, 0);
+        } catch (...) {
+            // Logging failed
+        }
+        std::abort();
     }
+    
 
     // Check if market data is fresh before executing trading cycle
+    
     bool market_data_fresh_result = false;
     try {
+        
         market_data_fresh_result = market_data_manager.is_data_fresh();
+        
+        
         if (market_data_fresh_result) {
             TradingLogs::log_market_status(true, "Market data is fresh");
         } else {
@@ -136,6 +232,7 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         TradingLogs::log_market_status(false, "Unknown error checking market data freshness");
         return;
     }
+    
     
     if (!market_data_fresh_result) {
         return;
@@ -187,9 +284,12 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     }
     
     // Execute trading cycle and get decision result for logging
+    
     TradingDecisionResult decision_result;
     try {
+        
         decision_result = trading_logic.execute_trading_cycle(current_market_snapshot, current_account_snapshot, initial_equity);
+        
     } catch (const std::exception& exception_error) {
         TradingLogs::log_market_status(false, "Error executing trading cycle: " + std::string(exception_error.what()));
         return;
@@ -197,6 +297,7 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         TradingLogs::log_market_status(false, "Unknown error executing trading cycle");
         return;
     }
+    
     
     // Log decision result based on outcome
     if (decision_result.validation_failed) {
@@ -210,7 +311,9 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         return;
     }
     
+    
     TradingLogs::log_market_status(true, "Market is open - trading allowed");
+    
     
     if (decision_result.market_data_stale) {
         TradingLogs::log_market_status(false, "Market data is stale - no trading decisions");
@@ -218,16 +321,13 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         return;
     }
     
+    
     // Log signal analysis start
     TradingLogs::log_signal_analysis_start(symbol);
     
-    // Extract processed data for logging
-    if (!decision_result.processed_data_ptr) {
-        TradingLogs::log_market_status(false, "Invalid processed data pointer in decision result");
-        return;
-    }
     
-    const ProcessedData& processed_data_for_logging = *decision_result.processed_data_ptr;
+    // Use processed data directly from result (no longer a pointer)
+    const ProcessedData& processed_data_for_logging = decision_result.processed_data;
     
     // Log all signal analysis details
     TradingLogs::log_candle_data_table(processed_data_for_logging.curr.open_price, processed_data_for_logging.curr.high_price, 
@@ -254,8 +354,8 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     TradingLogs::log_position_sizing_csv(decision_result.position_sizing_result, processed_data_for_logging, config, decision_result.buying_power_amount);
     
     // Execute trade if decision indicates we should
-    if (decision_result.should_execute_trade && decision_result.processed_data_ptr) {
-        TradeExecutionRequest trade_request(*decision_result.processed_data_ptr, decision_result.current_position_quantity, 
+    if (decision_result.should_execute_trade) {
+        TradeExecutionRequest trade_request(decision_result.processed_data, decision_result.current_position_quantity, 
                                           decision_result.position_sizing_result, decision_result.signal_decision);
         
         // Execute trade with comprehensive logging
@@ -284,9 +384,12 @@ void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_
                                                          std::atomic<bool>* allow_fetch_ptr,
                                                          double initial_equity,
                                                          std::atomic<unsigned long>& loop_counter) {
+    
     try {
+        
         // Increment loop counter
         unsigned long current_loop_counter = loop_counter.fetch_add(1) + 1;
+        
         
         // Create snapshot state structure
         TradingSnapshotState snapshot_state{
@@ -298,6 +401,7 @@ void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_
             has_account,
             running
         };
+        
         
         // Create market data sync state structure
         MarketDataSyncState market_data_sync_state(
@@ -314,13 +418,25 @@ void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_
             &last_order_timestamp
         );
         
+        
         // Execute trading cycle iteration through coordinator
         execute_trading_cycle_iteration(snapshot_state, market_data_sync_state, initial_equity, current_loop_counter);
         
+        
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_data_result_table("Exception in process_trading_cycle_iteration: " + std::string(exception_error.what()), false, 0);
+        try {
+            TradingLogs::log_market_data_result_table("Exception in process_trading_cycle_iteration: " + std::string(exception_error.what()), false, 0);
+        } catch (...) {
+            // Logging failed
+        }
+        std::abort();
     } catch (...) {
-        TradingLogs::log_market_data_result_table("Unknown exception in process_trading_cycle_iteration", false, 0);
+        try {
+            TradingLogs::log_market_data_result_table("Unknown exception in process_trading_cycle_iteration", false, 0);
+        } catch (...) {
+            // Logging failed
+        }
+        std::abort();
     }
 }
 

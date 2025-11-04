@@ -60,14 +60,31 @@ struct ProcessedData {
     int open_orders;
     double exposure_pct;
     bool is_doji;
+    std::string oldest_bar_timestamp;
     
     ProcessedData()
-        : atr(0.0), avg_atr(0.0), avg_vol(0.0), curr(), prev(), pos_details(), open_orders(0), exposure_pct(0.0), is_doji(false) {}
+        : atr(0.0), avg_atr(0.0), avg_vol(0.0), curr(), prev(), pos_details(), open_orders(0), exposure_pct(0.0), is_doji(false), oldest_bar_timestamp() {}
     
     ProcessedData(const MarketSnapshot& market, const AccountSnapshot& account)
         : atr(market.atr), avg_atr(market.avg_atr), avg_vol(market.avg_vol),
-          curr(market.curr), prev(market.prev), pos_details(account.pos_details),
-          open_orders(account.open_orders), exposure_pct(account.exposure_pct), is_doji(false) {}
+          pos_details(account.pos_details),
+          open_orders(account.open_orders), exposure_pct(account.exposure_pct), is_doji(false),
+          oldest_bar_timestamp(market.oldest_bar_timestamp) {
+        // CRITICAL: Explicitly copy all Bar fields to avoid struct copy issues
+        curr.open_price = market.curr.open_price;
+        curr.high_price = market.curr.high_price;
+        curr.low_price = market.curr.low_price;
+        curr.close_price = market.curr.close_price;
+        curr.volume = market.curr.volume;
+        curr.timestamp = market.curr.timestamp;
+        
+        prev.open_price = market.prev.open_price;
+        prev.high_price = market.prev.high_price;
+        prev.low_price = market.prev.low_price;
+        prev.close_price = market.prev.close_price;
+        prev.volume = market.prev.volume;
+        prev.timestamp = market.prev.timestamp;
+    }
 };
 
 // Request objects (to avoid multi-parameter functions).
@@ -79,7 +96,9 @@ struct SymbolRequest {
 struct BarRequest {
     std::string symbol;
     int limit;
-    BarRequest(const std::string& input_symbol, int bar_limit) : symbol(input_symbol), limit(bar_limit) {}
+    int minimum_bars_required;
+    BarRequest(const std::string& input_symbol, int bar_limit, int minimum_bars_required_param) 
+        : symbol(input_symbol), limit(bar_limit), minimum_bars_required(minimum_bars_required_param) {}
 };
 
 struct OrderRequest {

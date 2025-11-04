@@ -676,7 +676,6 @@ void TradingLogs::log_strategy_config_table(const AlpacaTrader::Config::SystemCo
     // Filter Thresholds
     TABLE_ROW_48("ATR Multiplier", std::to_string(config.strategy.entry_signal_atr_multiplier).substr(0,4));
     TABLE_ROW_48("Volume Multiplier", std::to_string(config.strategy.entry_signal_volume_multiplier).substr(0,4));
-    TABLE_ROW_48("ATR Period", std::to_string(config.strategy.atr_calculation_period));
     TABLE_ROW_48("ATR Calc Bars", std::to_string(config.strategy.atr_calculation_bars));
     TABLE_ROW_48("Bars to Fetch", std::to_string(config.strategy.bars_to_fetch_for_calculations));
     TABLE_ROW_48("Minutes/Bar", std::to_string(config.strategy.minutes_per_bar));

@@ -81,13 +81,13 @@ struct TradingDecisionResult {
     PositionSizing position_sizing_result;
     double buying_power_amount;
     bool should_execute_trade;
-    const ProcessedData* processed_data_ptr;
+    ProcessedData processed_data;  // Store copy instead of pointer to avoid use-after-free
     int current_position_quantity;
     
     TradingDecisionResult()
         : validation_failed(false), market_closed(false), market_data_stale(false),
           buying_power_amount(0.0), should_execute_trade(false),
-          processed_data_ptr(nullptr), current_position_quantity(0) {}
+          processed_data(), current_position_quantity(0) {}
 };
 
 } // namespace Core

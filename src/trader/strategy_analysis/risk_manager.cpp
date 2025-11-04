@@ -8,36 +8,53 @@ namespace AlpacaTrader {
 RiskManager::RiskManager(const SystemConfig& system_config) : config(system_config) {}
 
 bool RiskManager::validate_trading_permissions(const ProcessedData& data, double current_equity, double initial_equity) {
+    
     if (initial_equity <= 0.0 || !std::isfinite(initial_equity)) {
         throw std::runtime_error("Invalid initial equity for trading permissions validation: " + std::to_string(initial_equity));
     }
     
-    if (!check_daily_limits(current_equity, initial_equity)) {
+    
+    bool daily_limits_ok = check_daily_limits(current_equity, initial_equity);
+    
+    
+    if (!daily_limits_ok) {
         return false;
     }
     
-    if (!check_exposure_limits(data, current_equity)) {
+    
+    bool exposure_limits_ok = check_exposure_limits(data, current_equity);
+    
+    
+    if (!exposure_limits_ok) {
         return false;
     }
+    
     
     return true;
 }
 
 bool RiskManager::check_exposure_limits(const ProcessedData& data, double equity) {
+    
     // Check percentage-based exposure limit
     if (data.exposure_pct > config.strategy.max_account_exposure_percentage) {
         return false;
     }
     
+    
     // Check absolute exposure amount limit (if configured)
     double max_exposure_amount = equity * config.strategy.max_account_exposure_percentage / config.strategy.percentage_calculation_multiplier;
     double current_exposure_amount = equity * data.exposure_pct / config.strategy.percentage_calculation_multiplier;
     
+    
     // Additional validation: ensure we don't exceed maximum exposure amount
-    return current_exposure_amount <= max_exposure_amount;
+    bool result = current_exposure_amount <= max_exposure_amount;
+    
+    
+    return result;
 }
 
 bool RiskManager::check_daily_limits(double current_equity, double initial_equity) {
+    
     if (initial_equity <= 0.0 || !std::isfinite(initial_equity)) {
         throw std::runtime_error("Invalid initial equity for daily limits check: " + std::to_string(initial_equity));
     }
@@ -47,7 +64,12 @@ bool RiskManager::check_daily_limits(double current_equity, double initial_equit
     }
     
     double daily_pnl = (current_equity - initial_equity) / initial_equity;
-    return daily_pnl > config.strategy.max_daily_loss_percentage && daily_pnl < config.strategy.daily_profit_target_percentage;
+    
+    
+    bool result = daily_pnl > config.strategy.max_daily_loss_percentage && daily_pnl < config.strategy.daily_profit_target_percentage;
+    
+    
+    return result;
 }
 
 

@@ -65,6 +65,11 @@ struct SystemState {
     AlpacaTrader::Monitoring::SystemMonitor system_monitor;  // System monitoring state
     ConnectivityManager connectivity_manager;  // System connectivity state
     std::shared_ptr<AlpacaTrader::Logging::LoggingContext> logging_context;  // Logging context
+    
+    // =========================================================================
+    // DATA SYNCHRONIZATION STATE (for MarketDataFetcher)
+    // =========================================================================
+    AlpacaTrader::Core::MarketDataSyncState* fetcher_sync_state_ptr = nullptr;  // Stored sync state for MarketDataFetcher (must be initialized during startup)
 
     // =========================================================================
     // CONSTRUCTORS

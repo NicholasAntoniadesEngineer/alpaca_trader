@@ -54,6 +54,17 @@ bool WebSocketClient::connect(const std::string& websocketUrlString) {
     std::lock_guard<std::mutex> stateGuard(clientStateMutex);
     
     try {
+        // Always cleanup any existing connection before creating new one
+        // This prevents connection limit issues from accumulating connections
+        if (connectedFlag.load() || socketFileDescriptor >= 0 || sslConnectionPointer || sslContextPointer) {
+            try {
+                cleanupConnection();
+            } catch (...) {
+                // Ignore cleanup errors, continue with new connection
+            }
+            connectedFlag.store(false);
+        }
+        
         if (!validateUrl(websocketUrlString)) {
             lastErrorStringValue = "Invalid WebSocket URL format";
             return false;
@@ -99,10 +110,17 @@ void WebSocketClient::disconnect() {
     std::lock_guard<std::mutex> stateGuard(clientStateMutex);
     
     try {
-        stopReceiveLoop();
-        cleanupConnection();
-        connectedFlag.store(false);
-        WebSocketLogs::log_websocket_disconnection("trading_system.log");
+        // Only cleanup if not already disconnected to prevent double-free
+        if (connectedFlag.load() || socketFileDescriptor >= 0 || sslConnectionPointer || sslContextPointer) {
+            stopReceiveLoop();
+            cleanupConnection();
+            connectedFlag.store(false);
+            try {
+                WebSocketLogs::log_websocket_disconnection("trading_system.log");
+            } catch (...) {
+                // Logging failed, continue
+            }
+        }
     } catch (const std::exception& disconnectExceptionError) {
         lastErrorStringValue = std::string("Disconnect error: ") + disconnectExceptionError.what();
     } catch (...) {
@@ -359,9 +377,7 @@ bool WebSocketClient::sendMessageInternal(const std::string& messageContent) {
             return false;
         }
         
-        WebSocketLogs::log_websocket_message_details("SEND_MESSAGE_SUCCESS", 
-            "Message sent successfully: " + std::to_string(totalBytesSent) + " bytes in " + std::to_string(sendAttemptsCount) + " attempts",
-            "trading_system.log");
+        // SEND_MESSAGE_SUCCESS log removed to reduce log noise
         
         return true;
         
@@ -405,28 +421,9 @@ void WebSocketClient::startReceiveLoop() {
         parentLoggingContextPointer = nullptr;
     }
     
-    try {
-        WebSocketLogs::log_websocket_receive_loop_table(
-            "RECEIVE_LOOP",
-            "Starting receive loop thread. Connected: " + std::string(connectedFlag.load() ? "true" : "false"),
-            "trading_system.log"
-        );
-    } catch (...) {
-        // Logging failed, continue
-    }
-    
+    // Receive loop startup logs removed to reduce log noise
     shouldReceiveLoopContinue.store(true);
     receiveLoopThread = std::thread(&WebSocketClient::receiveLoopWorker, this);
-    
-    try {
-        WebSocketLogs::log_websocket_receive_loop_table(
-            "RECEIVE_LOOP",
-            "Receive loop thread created successfully",
-            "trading_system.log"
-        );
-    } catch (...) {
-        // Logging failed, continue
-    }
 }
 
 void WebSocketClient::stopReceiveLoop() {
@@ -435,6 +432,13 @@ void WebSocketClient::stopReceiveLoop() {
     if (receiveLoopThread.joinable()) {
         receiveLoopThread.join();
     }
+    
+    // Don't call cleanupConnection here - let disconnect() handle it
+    // This prevents double-free when stopReceiveLoop() is called before disconnect()
+    // The connection will be cleaned up when disconnect() is called explicitly
+    // or when the destructor calls disconnect()
+    std::lock_guard<std::mutex> stateGuard(clientStateMutex);
+    connectedFlag.store(false);
 }
 
 std::string WebSocketClient::getLastError() const {
@@ -837,11 +841,7 @@ void WebSocketClient::receiveLoopWorker() {
             try {
                 AlpacaTrader::Logging::set_logging_context(*parentLoggingContextValue);
                 AlpacaTrader::Logging::set_log_thread_tag("WS    ");
-                try {
-                    WebSocketLogs::log_websocket_receive_loop_table("RECEIVE_LOOP", "WebSocket receive loop started", "trading_system.log");
-                } catch (...) {
-                    // Logging failed, continue
-                }
+                // Receive loop started log removed to reduce log noise
             } catch (const std::exception& setContextExceptionError) {
                 std::cerr << "WARNING: WebSocket receive loop could not set logging context: " << setContextExceptionError.what() << " - continuing without logging context" << std::endl;
             } catch (...) {
@@ -858,6 +858,21 @@ void WebSocketClient::receiveLoopWorker() {
         try {
             if (!connectedFlag.load()) {
                 if (shouldReceiveLoopContinue.load()) {
+                    // Cleanup old connection before reconnecting to prevent connection limit issues
+                    {
+                        std::lock_guard<std::mutex> cleanupGuard(clientStateMutex);
+                        try {
+                            cleanupConnection();
+                        } catch (...) {
+                            // Ignore cleanup errors, continue with reconnection
+                        }
+                        connectedFlag.store(false);
+                    }
+                    
+                    // Wait longer before reconnection to allow server-side cleanup
+                    // This prevents hitting max_connections limit
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    
                     try {
                         WebSocketLogs::log_websocket_reconnection_attempt("trading_system.log");
                     } catch (...) {
@@ -883,7 +898,8 @@ void WebSocketClient::receiveLoopWorker() {
                         } catch (...) {
                             std::cerr << "WebSocket reconnection failed: " << lastErrorStringValue << std::endl;
                         }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+                        // Longer delay on failure to prevent rapid retry loops
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
                         continue;
                     }
                 } else {
@@ -902,32 +918,12 @@ void WebSocketClient::receiveLoopWorker() {
             auto currentTime = std::chrono::steady_clock::now();
             auto timeSinceLastLog = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastHeartbeatLogTime).count();
             
-            if (loopIterationCount % 100 == 0) {
-                try {
-                    WebSocketLogs::log_websocket_receive_loop_table("RECEIVE_LOOP_ITERATION", 
-                        "Iteration: " + std::to_string(loopIterationCount) + 
-                        ", Last message processed: " + (messageProcessed ? "yes" : "no") +
-                        ", connected: " + (connectedFlag.load() ? "true" : "false") +
-                        ", shouldContinue: " + (shouldReceiveLoopContinue.load() ? "true" : "false"),
-                        "trading_system.log");
-                } catch (...) {
-                    // Logging failed, continue
-                }
-            }
-            
-            if (timeSinceLastLog >= 10) {
-                try {
-                    WebSocketLogs::log_websocket_receive_loop_table("RECEIVE_LOOP_HEARTBEAT", 
-                        "Receive loop active - iterations: " + std::to_string(loopIterationCount) + 
-                        ", connected: " + (connectedFlag.load() ? "true" : "false") +
-                        ", shouldContinue: " + (shouldReceiveLoopContinue.load() ? "true" : "false") +
-                        ", messagesProcessed: " + std::to_string(loopIterationCount),
-                        "trading_system.log");
-                } catch (...) {
-                    // Logging failed, continue
-                }
-                lastHeartbeatLogTime = currentTime;
-            }
+            // Receive loop status logs removed to reduce log noise
+            (void)loopIterationCount;
+            (void)messageProcessed;
+            (void)timeSinceLastLog;
+            (void)lastHeartbeatLogTime;
+            (void)currentTime;
             
         } catch (const std::exception& receiveLoopExceptionError) {
             try {
@@ -938,15 +934,34 @@ void WebSocketClient::receiveLoopWorker() {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             
             if (shouldReceiveLoopContinue.load()) {
+                // Cleanup old connection before reconnecting to prevent connection limit issues
+                {
+                    std::lock_guard<std::mutex> cleanupGuard(clientStateMutex);
+                    try {
+                        cleanupConnection();
+                    } catch (...) {
+                        // Ignore cleanup errors, continue with reconnection
+                    }
+                    connectedFlag.store(false);
+                }
+                
+                // Wait longer before reconnection to allow server-side cleanup
+                // This prevents hitting max_connections limit
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                
                 try {
                     WebSocketLogs::log_websocket_reconnection_attempt("trading_system.log");
                 } catch (...) {
                     std::cerr << "WebSocket attempting reconnection..." << std::endl;
                 }
-                connectedFlag.store(false);
+                
                 if (connect(websocketUrlStringValue)) {
                     if (!apiKeyStringValue.empty()) {
                         authenticate(apiKeyStringValue);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                        if (!subscriptionParamsStringValue.empty()) {
+                            subscribe(subscriptionParamsStringValue);
+                        }
                     }
                     try {
                         WebSocketLogs::log_websocket_reconnection_success("trading_system.log");
@@ -959,6 +974,8 @@ void WebSocketClient::receiveLoopWorker() {
                     } catch (...) {
                         std::cerr << "WebSocket reconnection failed: " << lastErrorStringValue << std::endl;
                     }
+                    // Longer delay on failure to prevent rapid retry loops
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
                 }
             }
         } catch (...) {
@@ -1099,6 +1116,16 @@ bool WebSocketClient::receiveAndProcessMessage() {
                     // Logging failed, continue
                 }
             }
+            // Cleanup connection resources before marking as disconnected
+            // This prevents connection accumulation when server closes connection
+            {
+                std::lock_guard<std::mutex> cleanupGuard(clientStateMutex);
+                try {
+                    cleanupConnection();
+                } catch (...) {
+                    // Ignore cleanup errors, continue
+                }
+            }
             connectedFlag.store(false);
             return false;
         }
@@ -1235,7 +1262,7 @@ bool WebSocketClient::receiveAndProcessMessage() {
                     }
                 } else {
                     try {
-                        WebSocketLogs::log_websocket_message_received("trading_system.log");
+                        // "Message received" log removed to reduce log noise
                     } catch (...) {
                         // Logging failed, continue
                     }
@@ -1344,20 +1371,42 @@ std::vector<unsigned char> WebSocketClient::generateRandomBytes(size_t byteCount
 
 void WebSocketClient::cleanupConnection() {
     try {
-        if (sslConnectionPointer) {
-            SSL_shutdown(static_cast<SSL*>(sslConnectionPointer));
-            SSL_free(static_cast<SSL*>(sslConnectionPointer));
-            sslConnectionPointer = nullptr;
+        // Cleanup SSL connection - check if pointer is valid before freeing
+        void* sslConnectionToFree = sslConnectionPointer;
+        if (sslConnectionToFree) {
+            sslConnectionPointer = nullptr; // Clear pointer first to prevent double-free
+            try {
+                SSL_shutdown(static_cast<SSL*>(sslConnectionToFree));
+            } catch (...) {
+                // Ignore shutdown errors, continue with free
+            }
+            try {
+                SSL_free(static_cast<SSL*>(sslConnectionToFree));
+            } catch (...) {
+                // Ignore free errors
+            }
         }
         
-        if (sslContextPointer) {
-            SSL_CTX_free(static_cast<SSL_CTX*>(sslContextPointer));
-            sslContextPointer = nullptr;
+        // Cleanup SSL context - check if pointer is valid before freeing
+        void* sslContextToFree = sslContextPointer;
+        if (sslContextToFree) {
+            sslContextPointer = nullptr; // Clear pointer first to prevent double-free
+            try {
+                SSL_CTX_free(static_cast<SSL_CTX*>(sslContextToFree));
+            } catch (...) {
+                // Ignore free errors
+            }
         }
         
-        if (socketFileDescriptor >= 0) {
-            ::close(socketFileDescriptor);
-            socketFileDescriptor = -1;
+        // Cleanup socket - check if file descriptor is valid before closing
+        int socketFileDescriptorToClose = socketFileDescriptor;
+        if (socketFileDescriptorToClose >= 0) {
+            socketFileDescriptor = -1; // Clear descriptor first to prevent double-close
+            try {
+                ::close(socketFileDescriptorToClose);
+            } catch (...) {
+                // Ignore close errors
+            }
         }
     } catch (const std::exception& cleanupExceptionError) {
         lastErrorStringValue = std::string("Cleanup error: ") + cleanupExceptionError.what();
