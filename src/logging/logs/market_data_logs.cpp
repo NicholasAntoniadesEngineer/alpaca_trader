@@ -248,9 +248,9 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
     log_message("", log_file);
     
     // Condensed table header
-    log_message("┌────┬───────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐", log_file);
-    log_message("│Bar#│ Time               │ Open     │ High     │ Low      │ Close    │ Volume   │", log_file);
-    log_message("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤", log_file);
+    log_message("┌─────┬─────────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐", log_file);
+    log_message("│Bar# │ Time                │ Open       │ High       │ Low        │ Close      │ Volume     │", log_file);
+    log_message("├─────┼─────────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤", log_file);
     
     // Process each bar and add to table
     for (size_t barIndexValue = 0; barIndexValue < bars.size(); ++barIndexValue) {
@@ -304,19 +304,19 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
         std::string formattedClosePriceStringValue = closePriceStream.str().substr(0, 10);
         std::string formattedVolumeStringValue = volumeStream.str().substr(0, 10);
         
-        std::string tableRowStringValue = "│" + barNumberStringValue + std::string(4 - barNumberStringValue.length(), ' ') +
-                                     "│ " + formattedTimeStringValue + std::string(19 - formattedTimeStringValue.length(), ' ') +
-                                     "│ " + formattedOpenPriceStringValue + std::string(10 - formattedOpenPriceStringValue.length(), ' ') +
-                                     "│ " + formattedHighPriceStringValue + std::string(10 - formattedHighPriceStringValue.length(), ' ') +
-                                     "│ " + formattedLowPriceStringValue + std::string(10 - formattedLowPriceStringValue.length(), ' ') +
-                                     "│ " + formattedClosePriceStringValue + std::string(10 - formattedClosePriceStringValue.length(), ' ') +
-                                     "│ " + formattedVolumeStringValue + std::string(10 - formattedVolumeStringValue.length(), ' ') + "│";
+        std::string tableRowStringValue = "│" + barNumberStringValue + std::string(5 - barNumberStringValue.length(), ' ') +
+                                     "│ " + formattedTimeStringValue + std::string(20 - formattedTimeStringValue.length(), ' ') +
+                                     "│ " + formattedOpenPriceStringValue + std::string(11 - formattedOpenPriceStringValue.length(), ' ') +
+                                     "│ " + formattedHighPriceStringValue + std::string(11 - formattedHighPriceStringValue.length(), ' ') +
+                                     "│ " + formattedLowPriceStringValue + std::string(11 - formattedLowPriceStringValue.length(), ' ') +
+                                     "│ " + formattedClosePriceStringValue + std::string(11 - formattedClosePriceStringValue.length(), ' ') +
+                                     "│ " + formattedVolumeStringValue + std::string(11 - formattedVolumeStringValue.length(), ' ') + "│";
         
         log_message(tableRowStringValue, log_file);
     }
     
     // Table footer
-    log_message("└────┴───────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘", log_file);
+    log_message("└─────┴─────────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘", log_file);
     
     log_message("", log_file);
     log_message("================================================================================", log_file);

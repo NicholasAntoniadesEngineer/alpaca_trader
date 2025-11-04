@@ -122,9 +122,9 @@
 // Condensed multi-column table macros for dynamic bar data
 // Column widths: Bar# (4), Time (19), Open/High/Low/Close/Volume (10 each)
 #define CONDENSED_BAR_TABLE_HEADER() do { \
-    LOG_THREAD_CONTENT("┌────┬───────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐"); \
+    LOG_THREAD_CONTENT("┌────┬────────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐"); \
     LOG_THREAD_CONTENT("│Bar#│ Time               │ Open     │ High     │ Low      │ Close    │ Volume   │"); \
-    LOG_THREAD_CONTENT("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤"); \
+    LOG_THREAD_CONTENT("├────┼────────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤"); \
 } while(0)
 
 #define CONDENSED_BAR_TABLE_ROW(bar_num, time_str, open_str, high_str, low_str, close_str, volume_str) do { \
@@ -145,11 +145,11 @@
 } while(0)
 
 #define CONDENSED_BAR_TABLE_SEPARATOR() do { \
-    LOG_THREAD_CONTENT("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤"); \
+    LOG_THREAD_CONTENT("├────┼────────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤"); \
 } while(0)
 
 #define CONDENSED_BAR_TABLE_FOOTER() do { \
-    LOG_THREAD_CONTENT("└────┴───────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘"); \
+    LOG_THREAD_CONTENT("└────┴────────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘"); \
 } while(0)
 
 #endif // LOGGING_MACROS_HPP
