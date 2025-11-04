@@ -90,4 +90,21 @@ std::tm parse_iso_time_with_z(const std::string& timestamp) {
     return t;
 }
 
+std::string convert_milliseconds_to_human_readable(const std::string& milliseconds_timestamp) {
+    try {
+        long long timestamp_millis = std::stoll(milliseconds_timestamp);
+        time_t timestamp_seconds = timestamp_millis / 1000;
+        
+        struct tm timeinfo;
+        localtime_r(&timestamp_seconds, &timeinfo);
+        
+        std::stringstream ss;
+        ss << std::put_time(&timeinfo, HUMAN_READABLE);
+        return ss.str();
+    } catch (const std::exception&) {
+        // If conversion fails, return original timestamp
+        return milliseconds_timestamp;
+    }
+}
+
 } // namespace TimeUtils

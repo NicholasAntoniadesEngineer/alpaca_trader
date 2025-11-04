@@ -24,6 +24,7 @@ struct TimingConfig {
     int crypto_data_staleness_threshold_seconds;     // Crypto-specific data staleness threshold in seconds
     int market_data_logging_interval_seconds;         // Market data CSV logging interval in seconds
     int quote_data_freshness_threshold_seconds;       // Quote data freshness threshold in seconds
+    int data_availability_wait_timeout_seconds;      // Timeout for waiting for data availability in seconds
 
     // ========================================================================
     // MARKET SESSION BUFFER TIMES

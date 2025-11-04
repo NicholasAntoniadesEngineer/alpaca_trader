@@ -10,11 +10,9 @@ namespace AlpacaTrader {
 namespace Logging {
 
 void MarketDataLogs::log_market_data_fetch_table(const std::string& symbol, const std::string& log_file) {
-    log_message("", log_file);
     log_message("================================================================================", log_file);
     log_message("                              MARKET DATA FETCH - " + symbol, log_file);
     log_message("================================================================================", log_file);
-    log_message("", log_file);
 }
 
 void MarketDataLogs::log_market_data_attempt_table(const std::string& description, const std::string& log_file) {

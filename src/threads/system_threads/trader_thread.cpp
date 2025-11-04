@@ -20,7 +20,7 @@ using namespace AlpacaTrader::Logging;
 // ========================================================================
 
 void TraderThread::operator()() {
-    
+
     try {
         
         set_log_thread_tag("DECIDE");

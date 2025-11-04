@@ -225,21 +225,20 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
     // Set risk_amount to risk per share (ATR), not total budget
     sizing.risk_amount = risk_per_share;
     
-    // Check for fixed shares per trade first (if enabled)
-    if (request.strategy_configuration.enable_fixed_share_quantity_per_trade && request.strategy_configuration.fixed_share_quantity_per_trade > 0) {
-        sizing.quantity = request.strategy_configuration.fixed_share_quantity_per_trade;
-        sizing.risk_based_qty = 0;
-        sizing.exposure_based_qty = 0;
-        sizing.max_value_qty = 0;
-        sizing.buying_power_qty = 0;
+    bool is_crypto_mode = request.trading_mode_configuration.mode == Config::TradingMode::CRYPTO;
+    
+    if (request.strategy_configuration.enable_fixed_share_quantity_per_trade && request.strategy_configuration.fixed_share_quantity_per_trade > 0 && !is_crypto_mode) {
+        sizing.quantity = static_cast<double>(request.strategy_configuration.fixed_share_quantity_per_trade);
+        sizing.risk_based_qty = 0.0;
+        sizing.exposure_based_qty = 0.0;
+        sizing.max_value_qty = 0.0;
+        sizing.buying_power_qty = 0.0;
         
-        // Apply position size multiplier to fixed shares if enabled
         if (request.strategy_configuration.enable_risk_based_position_multiplier) {
-            sizing.quantity = static_cast<int>(sizing.quantity * request.strategy_configuration.risk_based_position_size_multiplier);
+            sizing.quantity *= request.strategy_configuration.risk_based_position_size_multiplier;
         }
         
-        // Ensure minimum quantity of 1
-        sizing.quantity = std::max(1, sizing.quantity);
+        sizing.quantity = std::max(1.0, sizing.quantity);
         return sizing;
     }
     
@@ -253,12 +252,13 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
         sizing.size_multiplier *= request.strategy_configuration.risk_based_position_size_multiplier;
     }
     
-    // Calculate equity-based quantity with safety checks
-    int equity_based_qty = 0;
+    double equity_based_qty = 0.0;
     if (risk_per_share > 0.0 && total_risk_budget > 0.0 && sizing.size_multiplier > 0.0) {
-        equity_based_qty = static_cast<int>(std::floor(
-            (total_risk_budget * sizing.size_multiplier) / risk_per_share
-        ));
+        if (is_crypto_mode) {
+            equity_based_qty = (total_risk_budget * sizing.size_multiplier) / risk_per_share;
+        } else {
+            equity_based_qty = std::floor((total_risk_budget * sizing.size_multiplier) / risk_per_share);
+        }
     }
 
     double max_total_exposure_value = request.account_equity * (request.strategy_configuration.max_account_exposure_percentage / request.strategy_configuration.percentage_calculation_multiplier);
@@ -267,24 +267,35 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
 
     available_exposure_value = std::max(0.0, available_exposure_value);
 
-    // Calculate exposure-based quantity with safety checks
-    int exposure_based_qty = 0;
+    double exposure_based_qty = 0.0;
     if (request.processed_data.curr.close_price > 0.0 && available_exposure_value > 0.0) {
-        exposure_based_qty = static_cast<int>(std::floor(available_exposure_value / request.processed_data.curr.close_price));
+        if (is_crypto_mode) {
+            exposure_based_qty = available_exposure_value / request.processed_data.curr.close_price;
+        } else {
+            exposure_based_qty = std::floor(available_exposure_value / request.processed_data.curr.close_price);
+        }
     }
     
     sizing.quantity = std::min(equity_based_qty, exposure_based_qty);
     
-    int max_value_qty = INT_MAX;
+    double max_value_qty = std::numeric_limits<double>::max();
     if (request.strategy_configuration.maximum_dollar_value_per_trade > 0.0) {
-        max_value_qty = static_cast<int>(std::floor(request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.close_price));
+        if (is_crypto_mode) {
+            max_value_qty = request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.close_price;
+        } else {
+            max_value_qty = std::floor(request.strategy_configuration.maximum_dollar_value_per_trade / request.processed_data.curr.close_price);
+        }
         sizing.quantity = std::min(sizing.quantity, max_value_qty);
     }
     
-    int buying_power_qty = INT_MAX;
+    double buying_power_qty = std::numeric_limits<double>::max();
     if (request.available_buying_power > 0.0) {
         double usable_buying_power = request.available_buying_power * request.strategy_configuration.buying_power_utilization_percentage;
-        buying_power_qty = static_cast<int>(std::floor(usable_buying_power / request.processed_data.curr.close_price));
+        if (is_crypto_mode) {
+            buying_power_qty = usable_buying_power / request.processed_data.curr.close_price;
+        } else {
+            buying_power_qty = std::floor(usable_buying_power / request.processed_data.curr.close_price);
+        }
         sizing.quantity = std::min(sizing.quantity, buying_power_qty);
     }
     
@@ -293,8 +304,16 @@ PositionSizing calculate_position_sizing(const PositionSizingRequest& request) {
     sizing.max_value_qty = max_value_qty;
     sizing.buying_power_qty = buying_power_qty;
     
-    if (sizing.quantity < 1 && equity_based_qty > 0) {
-        sizing.quantity = 0;
+    if (is_crypto_mode) {
+        // For crypto, allow very small fractions (minimum 0.00001 BTC ~ $1)
+        // This allows trades as small as $100 position value
+        if (sizing.quantity < 0.00001 && equity_based_qty > 0.0) {
+            sizing.quantity = 0.0;
+        }
+    } else {
+        if (sizing.quantity < 1.0 && equity_based_qty > 0.0) {
+            sizing.quantity = 0.0;
+        }
     }
     
     return sizing;
@@ -373,7 +392,7 @@ ExitTargets compute_exit_targets(const ExitTargetsRequest& request) {
 std::pair<PositionSizing, SignalDecision> process_position_sizing(const PositionSizingProcessRequest& request) {
     PositionSizing sizing = calculate_position_sizing(PositionSizingRequest(
         request.processed_data, request.account_equity, request.current_position_quantity, 
-        request.strategy_configuration, request.available_buying_power
+        request.strategy_configuration, request.available_buying_power, request.trading_mode_configuration
     ));
 
     SystemConfig temp_system_config;

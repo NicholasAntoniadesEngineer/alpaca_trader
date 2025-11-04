@@ -45,7 +45,7 @@ public:
     static void log_csv_bar_logging(const std::string& symbol, size_t bars_count);
     static void log_csv_logging_error(const std::string& symbol, const std::string& error_message);
     static void log_fresh_quote_data_to_csv(const QuoteData& quote_data, const ProcessedData& processed_data, const std::string& timestamp);
-    static void log_historical_bars_to_csv(const std::vector<Bar>& historical_bars, const ProcessedData& processed_data, const std::string& timestamp);
+    static void log_historical_bars_to_csv(const std::vector<Bar>& historical_bars, const ProcessedData& processed_data, const std::string& timestamp, const std::string& symbol);
     
     // Data validation logging
     static void log_zero_atr_warning(const std::string& symbol);

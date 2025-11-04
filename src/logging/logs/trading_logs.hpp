@@ -41,7 +41,7 @@ public:
     static void log_filters_not_met_preview(double risk_amount, int quantity);
     static void log_filters_not_met_table(double risk_amount, int quantity);
     static void log_position_size(double risk_amount, int quantity);
-    static void log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price);
+    static void log_position_size_with_buying_power(double risk_amount, double quantity, double buying_power, double current_price);
     static void log_current_position(int quantity, const std::string& symbol);
     static void log_signal_analysis_start(const std::string& symbol);
     static void log_signal_analysis_complete();
@@ -113,9 +113,9 @@ public:
     static void log_market_close_complete();
     
     // Enhanced tabulated logging functions
-    static void log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price);
-    static void log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
-    static void log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty);
+    static void log_position_sizing_table(double risk_amount, double quantity, double buying_power, double current_price);
+    static void log_sizing_analysis_table(double risk_based_qty, double exposure_based_qty, double max_value_qty, double buying_power_qty, double final_qty, bool is_crypto_mode);
+    static void log_position_sizing_debug(double risk_based_qty, double exposure_based_qty, double max_value_qty, double buying_power_qty, double final_qty, bool is_crypto_mode);
     static void log_exit_targets_table(const ExitTargetsTableRequest& exit_targets_request);
     
     // CSV logging for trading operations

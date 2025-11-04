@@ -102,7 +102,7 @@ bool MarketDataFetcher::wait_for_data_availability(MarketDataSyncState& sync_sta
         std::unique_lock<std::mutex> lock(*sync_state.mtx);
         
         
-        bool data_ready = sync_state.cv->wait_for(lock, std::chrono::seconds(1), [&]{
+        bool data_ready = sync_state.cv->wait_for(lock, std::chrono::seconds(config.timing.data_availability_wait_timeout_seconds), [&]{
             if (!sync_state.has_market || !sync_state.has_account) {
                 return false;
             }

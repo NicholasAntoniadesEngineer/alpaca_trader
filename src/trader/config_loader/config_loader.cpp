@@ -225,6 +225,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(config_value_string);
         else if (config_key_string == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(config_value_string);
         else if (config_key_string == "timing.crypto_data_staleness_threshold_seconds") cfg.timing.crypto_data_staleness_threshold_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.data_availability_wait_timeout_seconds") cfg.timing.data_availability_wait_timeout_seconds = std::stoi(config_value_string);
 
         // System Health Monitoring
         else if (config_key_string == "timing.enable_system_health_monitoring") cfg.timing.enable_system_health_monitoring = to_bool(config_value_string);

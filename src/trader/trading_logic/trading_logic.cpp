@@ -455,7 +455,7 @@ TradingDecisionResult TradingLogic::execute_trading_decision(const ProcessedData
         
         result.current_position_quantity = current_position_quantity;
         
-        if (position_sizing_result.quantity >= 1) {
+        if (position_sizing_result.quantity > 0.0) {
             result.should_execute_trade = true;
         } else {
         }
@@ -506,7 +506,7 @@ void TradingLogic::handle_trading_halt() {
 }
 
 void TradingLogic::execute_trade_if_valid(const TradeExecutionRequest& trade_request) {
-    if (trade_request.position_sizing.quantity < 1) {
+    if (trade_request.position_sizing.quantity <= 0.0) {
         return;
     }
     
@@ -515,27 +515,9 @@ void TradingLogic::execute_trade_if_valid(const TradeExecutionRequest& trade_req
         throw std::runtime_error("Insufficient buying power for trade");
     }
     
-    if (trade_request.signal_decision.buy) {
-        if (trade_request.current_position_quantity == 0) {
-            try {
-                std::string account_info_response = api_manager.get_account_info();
-                if (!account_info_response.empty()) {
-                    throw std::runtime_error("SELL signal blocked - insufficient short availability for new position");
-                }
-            } catch (const std::runtime_error& runtime_error) {
-                // Re-throw runtime errors as-is (e.g., the signal blocking error)
-                throw;
-            } catch (const std::exception& account_info_api_exception_error) {
-                // API errors should propagate to coordinator for logging
-                throw std::runtime_error("API error fetching account info in execute_trade_if_valid: " + std::string(account_info_api_exception_error.what()));
-            } catch (...) {
-                throw std::runtime_error("Unknown API error fetching account info in execute_trade_if_valid");
-            }
-        }
-        order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
-    } else if (trade_request.signal_decision.sell) {
-        order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
-    }
+    // For crypto (BTC/USD), shorts are always available - no availability check needed
+    // Execute trade directly for both buy and sell signals
+    order_engine.execute_trade(trade_request.processed_data, trade_request.current_position_quantity, trade_request.position_sizing, trade_request.signal_decision);
 }
 
 void TradingLogic::perform_halt_countdown(int halt_duration_seconds) const {
@@ -552,7 +534,7 @@ void TradingLogic::check_and_execute_profit_taking(const ProfitTakingRequest& pr
     double unrealized_profit_loss = processed_data_for_profit_taking.pos_details.unrealized_pl;
 
     if (unrealized_profit_loss > profit_threshold_dollars) {
-        PositionSizing profit_taking_position_sizing{std::abs(current_position_quantity), 0.0, 0.0, 0, 0, 0, 0};
+        PositionSizing profit_taking_position_sizing{static_cast<double>(std::abs(current_position_quantity)), 0.0, 0.0, 0, 0, 0, 0};
         if (current_position_quantity > 0) {
             order_engine.execute_market_order(OrderExecutionLogic::OrderSide::Sell, processed_data_for_profit_taking, profit_taking_position_sizing);
         } else {

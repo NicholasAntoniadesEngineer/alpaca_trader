@@ -85,10 +85,10 @@ void CSVBarsLogger::log_bar(const std::string& timestamp, const std::string& sym
                 << std::fixed << std::setprecision(2) << bar.high_price << ","
                 << std::fixed << std::setprecision(2) << bar.low_price << ","
                 << std::fixed << std::setprecision(2) << bar.close_price << ","
-                << std::fixed << std::setprecision(0) << bar.volume << ","
+                << std::fixed << std::setprecision(6) << bar.volume << ","
                 << std::fixed << std::setprecision(4) << atr << ","
                 << std::fixed << std::setprecision(4) << avg_atr << ","
-                << std::fixed << std::setprecision(0) << avg_vol << "\n";
+                << std::fixed << std::setprecision(6) << avg_vol << "\n";
 
     file_stream.flush();
 }
@@ -105,10 +105,10 @@ void CSVBarsLogger::log_market_snapshot(const std::string& timestamp, const std:
                 << std::fixed << std::setprecision(2) << snapshot.curr.high_price << ","
                 << std::fixed << std::setprecision(2) << snapshot.curr.low_price << ","
                 << std::fixed << std::setprecision(2) << snapshot.curr.close_price << ","
-                << std::fixed << std::setprecision(0) << snapshot.curr.volume << ","
+                << std::fixed << std::setprecision(6) << snapshot.curr.volume << ","
                 << std::fixed << std::setprecision(4) << snapshot.atr << ","
                 << std::fixed << std::setprecision(4) << snapshot.avg_atr << ","
-                << std::fixed << std::setprecision(0) << snapshot.avg_vol << "\n";
+                << std::fixed << std::setprecision(6) << snapshot.avg_vol << "\n";
 
     file_stream.flush();
 }
@@ -125,7 +125,7 @@ void CSVBarsLogger::log_indicators(const std::string& timestamp, const std::stri
                 << "INDICATORS" << ","
                 << std::fixed << std::setprecision(4) << atr << ","
                 << std::fixed << std::setprecision(4) << avg_atr << ","
-                << std::fixed << std::setprecision(0) << avg_vol << ","
+                << std::fixed << std::setprecision(6) << avg_vol << ","
                 << std::fixed << std::setprecision(4) << price_change << ","
                 << std::fixed << std::setprecision(4) << volume_change << "\n";
 
@@ -145,10 +145,10 @@ void CSVBarsLogger::log_market_data(const std::string& timestamp, const std::str
                 << std::fixed << std::setprecision(2) << high << ","
                 << std::fixed << std::setprecision(2) << low << ","
                 << std::fixed << std::setprecision(2) << close << ","
-                << std::fixed << std::setprecision(0) << volume << ","
+                << std::fixed << std::setprecision(6) << volume << ","
                 << std::fixed << std::setprecision(4) << atr << ","
                 << std::fixed << std::setprecision(4) << avg_atr << ","
-                << std::fixed << std::setprecision(0) << avg_vol << "\n";
+                << std::fixed << std::setprecision(6) << avg_vol << "\n";
 
     file_stream.flush();
 }

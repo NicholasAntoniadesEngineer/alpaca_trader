@@ -21,7 +21,6 @@ void MarketGateCoordinator::check_and_update_fetch_window(const std::string& tra
     }
     if (currently_within_trading_hours != last_within_trading_hours) {
         allow_fetch.store(currently_within_trading_hours);
-        MarketGateLogs::log_fetch_gate_state(currently_within_trading_hours);
         last_within_trading_hours = currently_within_trading_hours;
     }
 }

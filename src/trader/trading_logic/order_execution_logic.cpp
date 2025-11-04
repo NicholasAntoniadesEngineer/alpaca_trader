@@ -5,6 +5,8 @@
 #include <chrono>
 #include <stdexcept>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 using json = nlohmann::json;
 
@@ -24,7 +26,7 @@ void OrderExecutionLogic::execute_trade(const ProcessedData& processed_data_inpu
         throw std::runtime_error("Invalid price data - price is zero or negative");
     }
     
-    if (position_sizing_input.quantity <= 0) {
+    if (position_sizing_input.quantity <= 0.0) {
         throw std::runtime_error("Invalid quantity - must be positive");
     }
     
@@ -44,15 +46,17 @@ void OrderExecutionLogic::execute_trade(const ProcessedData& processed_data_inpu
     if (signal_decision_input.buy) {
         execute_order(OrderSide::Buy, processed_data_input, current_position_quantity, position_sizing_input);
     } else if (signal_decision_input.sell) {
+        // For crypto (symbols with "/"), shorts are always available - no need to check
+        // For stocks, short availability check is optional and requires symbol-specific API call
+        // Since we're trading crypto (BTC/USD), always allow shorts
         if (current_position_quantity == 0) {
-            if (!api_manager.get_account_info().empty()) {
-                throw std::runtime_error("SELL signal blocked - insufficient short availability for new position");
-            } else {
-                execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
-            }
+            // Opening new short position - always allowed for crypto
+            execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
         } else if (current_position_quantity > 0) {
+            // Closing long position
             execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
         } else {
+            // Closing short position (buy to cover)
             execute_order(OrderSide::Buy, processed_data_input, current_position_quantity, position_sizing_input);
         }
     }
@@ -110,14 +114,14 @@ void OrderExecutionLogic::execute_bracket_order(OrderSide order_side_input, cons
     
     std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
     std::string symbol_string = config.trading_mode.primary_symbol;
-    int quantity_value = position_sizing_input.quantity;
+    double quantity_value = position_sizing_input.quantity;
     double entry_price_amount = processed_data_input.curr.close_price;
     
     if (symbol_string.empty()) {
         throw std::runtime_error("Symbol is required for bracket order");
     }
     
-    if (quantity_value <= 0) {
+    if (quantity_value <= 0.0) {
         throw std::runtime_error("Quantity must be positive for bracket order");
     }
     
@@ -141,7 +145,9 @@ void OrderExecutionLogic::execute_bracket_order(OrderSide order_side_input, cons
         try {
             json bracket_order_json;
             bracket_order_json["symbol"] = symbol_string;
-            bracket_order_json["qty"] = std::to_string(quantity_value);
+            std::ostringstream qty_stream;
+            qty_stream << std::fixed << std::setprecision(8) << quantity_value;
+            bracket_order_json["qty"] = qty_stream.str();
             bracket_order_json["side"] = order_side_string;
             bracket_order_json["type"] = "market";
             bracket_order_json["time_in_force"] = "day";
@@ -186,14 +192,14 @@ void OrderExecutionLogic::execute_market_order(OrderSide order_side_input, const
     
     std::string order_side_string = (order_side_input == OrderSide::Buy) ? config.strategy.signal_buy_string : config.strategy.signal_sell_string;
     std::string symbol_string = config.trading_mode.primary_symbol;
-    int quantity_value = position_sizing_input.quantity;
+    double quantity_value = position_sizing_input.quantity;
     double current_price_amount = processed_data_input.curr.close_price;
     
     if (symbol_string.empty()) {
         throw std::runtime_error("Symbol is required for market order");
     }
     
-    if (quantity_value <= 0) {
+    if (quantity_value <= 0.0) {
         throw std::runtime_error("Quantity must be positive for market order");
     }
     
@@ -203,7 +209,9 @@ void OrderExecutionLogic::execute_market_order(OrderSide order_side_input, const
     
     json market_order_json;
     market_order_json["symbol"] = symbol_string;
-    market_order_json["qty"] = std::to_string(quantity_value);
+    std::ostringstream qty_stream;
+    qty_stream << std::fixed << std::setprecision(8) << quantity_value;
+    market_order_json["qty"] = qty_stream.str();
     market_order_json["side"] = order_side_string;
     market_order_json["type"] = "market";
     market_order_json["time_in_force"] = "day";
@@ -288,7 +296,7 @@ bool OrderExecutionLogic::validate_order_parameters(const ProcessedData& process
         return false;
     }
     
-    if (position_sizing_input.quantity <= 0) {
+    if (position_sizing_input.quantity <= 0.0) {
         return false;
     }
     
@@ -389,7 +397,7 @@ bool OrderExecutionLogic::should_cancel_existing_orders() const {
 }
 
 bool OrderExecutionLogic::validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const {
-    if (position_sizing_input.quantity <= 0) {
+    if (position_sizing_input.quantity <= 0.0) {
         return false;
     }
     

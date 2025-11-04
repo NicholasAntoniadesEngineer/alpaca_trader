@@ -99,15 +99,22 @@ void MarketDataThreadLogs::log_fresh_quote_data_to_csv(const QuoteData& quote_da
     log_message("Logged FRESH real-time quote data to CSV (Price: $" + std::to_string(quote_data.mid_price) + ")", "trading_system.log");
 }
 
-void MarketDataThreadLogs::log_historical_bars_to_csv(const std::vector<Bar>& historical_bars, const ProcessedData& processed_data, const std::string& timestamp) {
+void MarketDataThreadLogs::log_historical_bars_to_csv(const std::vector<Bar>& historical_bars, const ProcessedData& processed_data, const std::string& timestamp, const std::string& symbol) {
     auto csv_logger2 = get_logging_context()->csv_bars_logger;
     if (csv_logger2) {
         // Log ALL bars that were fetched, not just the last one
-        // Use individual bar timestamps instead of current system time
+        // Convert bar timestamps from milliseconds to human-readable format
         for (const auto& bar : historical_bars) {
-            std::string bar_timestamp = bar.timestamp.empty() ? timestamp : bar.timestamp;
+            std::string bar_timestamp;
+            if (bar.timestamp.empty()) {
+                bar_timestamp = timestamp;
+            } else {
+                // Convert milliseconds timestamp to human-readable format
+                bar_timestamp = TimeUtils::convert_milliseconds_to_human_readable(bar.timestamp);
+            }
+            
             csv_logger2->log_bar(
-                bar_timestamp, bar.timestamp, bar, processed_data.atr, processed_data.avg_atr, processed_data.avg_vol
+                bar_timestamp, symbol, bar, processed_data.atr, processed_data.avg_atr, processed_data.avg_vol
             );
         }
     }
@@ -148,7 +155,7 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
         if (!historical_bars.empty()) {
             const auto& latest_bar = historical_bars.back();
             if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
-                MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp);
+                MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp, symbol);
                 // Update previous_bar to track the latest bar we logged
                 previous_bar = latest_bar;
             } else {

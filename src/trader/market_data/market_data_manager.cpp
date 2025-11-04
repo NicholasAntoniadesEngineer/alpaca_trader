@@ -66,12 +66,12 @@ std::pair<ProcessedData, std::vector<Bar>> MarketDataManager::fetch_and_process_
             " L:" + std::to_string(processed_data.curr.low_price) + " C:" + std::to_string(processed_data.curr.close_price));
     }
 
-        // Process account and position data
-        if (!process_account_and_position_data(processed_data)) {
-            throw std::runtime_error("Failed to process account and position data");
-        }
-        
-        return {processed_data, fetched_bars_data};
+    // Process account and position data
+    if (!process_account_and_position_data(processed_data)) {
+        throw std::runtime_error("Failed to process account and position data");
+    }
+    
+    return {processed_data, fetched_bars_data};
     } catch (const std::exception& exception_error) {
         // Return empty ProcessedData with bars if exception occurs
         return {ProcessedData{}, fetched_bars_data};

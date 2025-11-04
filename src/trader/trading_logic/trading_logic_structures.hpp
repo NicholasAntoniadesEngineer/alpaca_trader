@@ -81,7 +81,7 @@ struct TradingDecisionResult {
     PositionSizing position_sizing_result;
     double buying_power_amount;
     bool should_execute_trade;
-    ProcessedData processed_data;  // Store copy instead of pointer to avoid use-after-free
+    ProcessedData processed_data;   
     int current_position_quantity;
     
     TradingDecisionResult()

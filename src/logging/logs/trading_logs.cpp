@@ -137,7 +137,9 @@ void TradingLogs::log_comprehensive_order_execution(const ComprehensiveOrderExec
     
     TABLE_ROW_48("Order Type", order_execution_request.order_type);
     TABLE_ROW_48("Side", order_execution_request.side);
-    TABLE_ROW_48("Quantity", std::to_string(order_execution_request.quantity));
+    std::ostringstream qty_oss;
+    qty_oss << std::fixed << std::setprecision(8) << order_execution_request.quantity;
+    TABLE_ROW_48("Quantity", qty_oss.str());
     TABLE_ROW_48("Symbol", order_execution_request.symbol);
     TABLE_ROW_48("Function", order_execution_request.function_name);
     
@@ -298,13 +300,13 @@ void TradingLogs::log_position_size(double risk_amount, int quantity) {
     log_message(oss.str(), "");
 }
 
-void TradingLogs::log_position_size_with_buying_power(double risk_amount, int quantity, double buying_power, double current_price) {
+void TradingLogs::log_position_size_with_buying_power(double risk_amount, double quantity, double buying_power, double current_price) {
     LOG_THREAD_POSITION_SIZING_HEADER();
     log_position_sizing_table(risk_amount, quantity, buying_power, current_price);
 }
 
-void TradingLogs::log_position_sizing_debug(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
-    log_sizing_analysis_table(risk_based_qty, exposure_based_qty, max_value_qty, buying_power_qty, final_qty);
+void TradingLogs::log_position_sizing_debug(double risk_based_qty, double exposure_based_qty, double max_value_qty, double buying_power_qty, double final_qty, bool is_crypto_mode) {
+    log_sizing_analysis_table(risk_based_qty, exposure_based_qty, max_value_qty, buying_power_qty, final_qty, is_crypto_mode);
 }
 
 void TradingLogs::log_current_position(int quantity, const std::string& symbol) {
@@ -325,41 +327,63 @@ void TradingLogs::log_current_position(int quantity, const std::string& symbol) 
 // Enhanced Tabulated Logging Functions
 // ========================================================================
 
-void TradingLogs::log_position_sizing_table(double risk_amount, int quantity, double buying_power, double current_price) {
+void TradingLogs::log_position_sizing_table(double risk_amount, double quantity, double buying_power, double current_price) {
     double position_value = quantity * current_price;
     
     TABLE_HEADER_30("Parameter", "Value");
     TABLE_ROW_30("Risk Amount", format_currency(risk_amount));
-    TABLE_ROW_30("Quantity", std::to_string(quantity) + " shares");
+    std::ostringstream qty_oss;
+    qty_oss << std::fixed << std::setprecision(8) << quantity;
+    TABLE_ROW_30("Quantity", qty_oss.str());
     TABLE_ROW_30("Position Value", format_currency(position_value));
     TABLE_ROW_30("Buying Power", format_currency(buying_power));
     TABLE_FOOTER_30();
     log_message("", "");
 }
 
-void TradingLogs::log_sizing_analysis_table(int risk_based_qty, int exposure_based_qty, int max_value_qty, int buying_power_qty, int final_qty) {
+void TradingLogs::log_sizing_analysis_table(double risk_based_qty, double exposure_based_qty, double max_value_qty, double buying_power_qty, double final_qty, bool is_crypto_mode) {
     TABLE_HEADER_30("Sizing Analysis", "Calculated Quantities");
     
-    TABLE_ROW_30("Risk-Based", std::to_string(risk_based_qty) + " shares");
-    TABLE_ROW_30("Exposure-Based", std::to_string(exposure_based_qty) + " shares");
+    std::string unit_label = is_crypto_mode ? "" : " shares";
+    std::ostringstream oss;
     
-    if (max_value_qty > 0) {
-        TABLE_ROW_30("Max Value", std::to_string(max_value_qty) + " shares");
+    oss << std::fixed << std::setprecision(8) << risk_based_qty;
+    TABLE_ROW_30("Risk-Based", oss.str() + unit_label);
+    
+    oss.str("");
+    oss << std::fixed << std::setprecision(8) << exposure_based_qty;
+    TABLE_ROW_30("Exposure-Based", oss.str() + unit_label);
+    
+    if (max_value_qty < std::numeric_limits<double>::max()) {
+        oss.str("");
+        oss << std::fixed << std::setprecision(8) << max_value_qty;
+        TABLE_ROW_30("Max Value", oss.str() + unit_label);
     }
     
-    std::string bp_str = (buying_power_qty == INT_MAX) ? "unlimited" : (std::to_string(buying_power_qty) + " shares");
+    std::string bp_str;
+    if (buying_power_qty >= std::numeric_limits<double>::max() * 0.9) {
+        bp_str = "unlimited";
+    } else {
+        oss.str("");
+        oss << std::fixed << std::setprecision(8) << buying_power_qty;
+        bp_str = oss.str() + unit_label;
+    }
     TABLE_ROW_30("Buying Power", bp_str);
     
     TABLE_SEPARATOR_30();
     
-    TABLE_ROW_30("FINAL QUANTITY", std::to_string(final_qty) + " shares");
+    oss.str("");
+    oss << std::fixed << std::setprecision(8) << final_qty;
+    TABLE_ROW_30("FINAL QUANTITY", oss.str() + unit_label);
     
-    if (final_qty == 0) {
+    // For crypto, use 0.00001 threshold; for stocks, use 0.001 threshold
+    double threshold = is_crypto_mode ? 0.00001 : 0.001;
+    if (final_qty < threshold) {
         std::string limitations = "";
-        if (risk_based_qty == 0) limitations += "RISK ";
-        if (exposure_based_qty == 0) limitations += "EXPOSURE ";
-        if (max_value_qty == 0) limitations += "MAX_VALUE ";
-        if (buying_power_qty == 0) limitations += "BUYING_POWER ";
+        if (risk_based_qty < threshold) limitations += "RISK ";
+        if (exposure_based_qty < threshold) limitations += "EXPOSURE ";
+        if (max_value_qty < std::numeric_limits<double>::max() && max_value_qty < threshold) limitations += "MAX_VALUE ";
+        if (buying_power_qty < threshold) limitations += "BUYING_POWER ";
         if (!limitations.empty()) {
             TABLE_ROW_30("LIMITED BY", limitations);
         }

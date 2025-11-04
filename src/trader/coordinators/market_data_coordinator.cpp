@@ -140,14 +140,14 @@ ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::st
 
 void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state) {
     if (processed_data_result.atr == 0.0) {
+        MarketDataThreadLogs::log_zero_atr_warning(processed_data_result.curr.timestamp.empty() ? "UNKNOWN" : processed_data_result.curr.timestamp);
         return;
     }
     
     std::lock_guard<std::mutex> state_lock(snapshot_state.state_mutex);
     
-    // DEBUG: Log bar data before updating snapshot
     if (processed_data_result.curr.open_price > 0.0 && (processed_data_result.curr.high_price == 0.0 || processed_data_result.curr.low_price == 0.0 || processed_data_result.curr.close_price == 0.0)) {
-        MarketDataThreadLogs::log_thread_loop_exception("WARNING: update_shared_market_snapshot - ProcessedData has incomplete bar data - O:" + 
+        MarketDataThreadLogs::log_thread_loop_exception("ProcessedData has incomplete bar data - O:" + 
             std::to_string(processed_data_result.curr.open_price) + " H:" + std::to_string(processed_data_result.curr.high_price) + 
             " L:" + std::to_string(processed_data_result.curr.low_price) + " C:" + std::to_string(processed_data_result.curr.close_price));
     }
@@ -156,7 +156,6 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
     snapshot_state.market_snapshot.avg_atr = processed_data_result.avg_atr;
     snapshot_state.market_snapshot.avg_vol = processed_data_result.avg_vol;
     
-    // CRITICAL: Explicitly copy all Bar fields to avoid struct copy issues
     snapshot_state.market_snapshot.curr.open_price = processed_data_result.curr.open_price;
     snapshot_state.market_snapshot.curr.high_price = processed_data_result.curr.high_price;
     snapshot_state.market_snapshot.curr.low_price = processed_data_result.curr.low_price;
@@ -173,9 +172,8 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
     
     snapshot_state.market_snapshot.oldest_bar_timestamp = processed_data_result.oldest_bar_timestamp;
     
-    // DEBUG: Verify bar data was copied correctly
     if (snapshot_state.market_snapshot.curr.open_price > 0.0 && (snapshot_state.market_snapshot.curr.high_price == 0.0 || snapshot_state.market_snapshot.curr.low_price == 0.0 || snapshot_state.market_snapshot.curr.close_price == 0.0)) {
-        MarketDataThreadLogs::log_thread_loop_exception("WARNING: update_shared_market_snapshot - Snapshot has incomplete bar data after copy - O:" + 
+        MarketDataThreadLogs::log_thread_loop_exception("Snapshot has incomplete bar data after copy - O:" + 
             std::to_string(snapshot_state.market_snapshot.curr.open_price) + " H:" + std::to_string(snapshot_state.market_snapshot.curr.high_price) + 
             " L:" + std::to_string(snapshot_state.market_snapshot.curr.low_price) + " C:" + std::to_string(snapshot_state.market_snapshot.curr.close_price));
     }

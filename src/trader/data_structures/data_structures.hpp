@@ -133,13 +133,13 @@ struct FilterResult {
 };
 
 struct PositionSizing {
-    int quantity;
+    double quantity;
     double risk_amount;
     double size_multiplier;
-    int risk_based_qty;
-    int exposure_based_qty;
-    int max_value_qty;
-    int buying_power_qty;
+    double risk_based_qty;
+    double exposure_based_qty;
+    double max_value_qty;
+    double buying_power_qty;
 };
 
 struct ExitTargets {
@@ -154,10 +154,11 @@ struct PositionSizingRequest {
     int current_position_quantity;
     const StrategyConfig& strategy_configuration;
     double available_buying_power;
+    const TradingModeConfig& trading_mode_configuration;
     
-    PositionSizingRequest(const ProcessedData& data, double equity, int current_position_qty, const StrategyConfig& config, double buying_power)
+    PositionSizingRequest(const ProcessedData& data, double equity, int current_position_qty, const StrategyConfig& config, double buying_power, const TradingModeConfig& trading_mode_config)
         : processed_data(data), account_equity(equity), current_position_quantity(current_position_qty), 
-          strategy_configuration(config), available_buying_power(buying_power) {}
+          strategy_configuration(config), available_buying_power(buying_power), trading_mode_configuration(trading_mode_config) {}
 };
 
 struct ExitTargetsRequest {

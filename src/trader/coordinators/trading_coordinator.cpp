@@ -344,9 +344,10 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         TradingLogs::log_current_position(decision_result.current_position_quantity, config.strategy.symbol);
         TradingLogs::log_position_size_with_buying_power(decision_result.position_sizing_result.risk_amount, decision_result.position_sizing_result.quantity, 
                                                         decision_result.buying_power_amount, processed_data_for_logging.curr.close_price);
+        bool is_crypto_mode_for_logging = config.trading_mode.mode == Config::TradingMode::CRYPTO;
         TradingLogs::log_position_sizing_debug(decision_result.position_sizing_result.risk_based_qty, decision_result.position_sizing_result.exposure_based_qty, 
                                                decision_result.position_sizing_result.max_value_qty, decision_result.position_sizing_result.buying_power_qty, 
-                                               decision_result.position_sizing_result.quantity);
+                                               decision_result.position_sizing_result.quantity, is_crypto_mode_for_logging);
     } else {
         TradingLogs::log_filters_not_met_preview(decision_result.position_sizing_result.risk_amount, decision_result.position_sizing_result.quantity);
     }
@@ -475,8 +476,8 @@ void TradingCoordinator::countdown_to_next_cycle(std::atomic<bool>& running, int
 }
 
 void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const TradeExecutionRequest& trade_request, const TradingDecisionResult& decision_result) {
-    if (trade_request.position_sizing.quantity < 1) {
-        TradingLogs::log_position_sizing_skipped("quantity < 1");
+    if (trade_request.position_sizing.quantity <= 0.0) {
+        TradingLogs::log_position_sizing_skipped("quantity <= 0");
         return;
     }
     
@@ -559,70 +560,55 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
             TradingLogs::log_signal_triggered(config.strategy.signal_sell_string, true);
             
             if (trade_request.current_position_quantity == 0) {
-                API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
-                std::string account_info_response;
+                // For crypto (BTC/USD), shorts are always available - no availability check needed
+                TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
+                double original_price = trade_request.processed_data.curr.close_price;
+                ExitTargets exit_targets_result;
                 try {
-                    account_info_response = api_manager_ref.get_account_info();
-                } catch (const std::exception& account_info_api_exception_error) {
-                    TradingLogs::log_market_status(false, "API error fetching account info: " + std::string(account_info_api_exception_error.what()));
+                    exit_targets_result = order_engine.calculate_exit_targets(
+                        OrderExecutionLogic::OrderSide::Sell, 
+                        trade_request.processed_data, 
+                        trade_request.position_sizing
+                    );
+                } catch (const std::exception& exit_targets_api_exception_error) {
+                    TradingLogs::log_market_status(false, "API error calculating exit targets: " + std::string(exit_targets_api_exception_error.what()));
                     return;
                 } catch (...) {
-                    TradingLogs::log_market_status(false, "Unknown API error fetching account info");
+                    TradingLogs::log_market_status(false, "Unknown API error calculating exit targets");
                     return;
                 }
                 
-                if (!account_info_response.empty()) {
-                    TradingLogs::log_market_status(false, "SELL signal blocked - insufficient short availability for new position");
-                    return;
-                } else {
-                    TradingLogs::log_market_status(true, "SELL signal - opening short position with bracket order");
-                    double original_price = trade_request.processed_data.curr.close_price;
-                    ExitTargets exit_targets_result;
+                if (config.strategy.use_current_market_price_for_order_execution) {
+                    API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
+                    double realtime_price_amount = 0.0;
                     try {
-                        exit_targets_result = order_engine.calculate_exit_targets(
-                            OrderExecutionLogic::OrderSide::Sell, 
-                            trade_request.processed_data, 
-                            trade_request.position_sizing
-                        );
-                    } catch (const std::exception& exit_targets_api_exception_error) {
-                        TradingLogs::log_market_status(false, "API error calculating exit targets: " + std::string(exit_targets_api_exception_error.what()));
-                        return;
-                    } catch (...) {
-                        TradingLogs::log_market_status(false, "Unknown API error calculating exit targets");
-                        return;
-                    }
-                    
-                    if (config.strategy.use_current_market_price_for_order_execution) {
-                        double realtime_price_amount = 0.0;
-                        try {
-                            realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
-                            if (realtime_price_amount > 0.0) {
-                                TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
-                            } else {
-                                TradingLogs::log_realtime_price_fallback(original_price);
-                            }
-                        } catch (const std::exception& realtime_price_api_exception_error) {
+                        realtime_price_amount = api_manager_ref.get_current_price(config.trading_mode.primary_symbol);
+                        if (realtime_price_amount > 0.0) {
+                            TradingLogs::log_realtime_price_used(realtime_price_amount, original_price);
+                        } else {
                             TradingLogs::log_realtime_price_fallback(original_price);
-                            TradingLogs::log_market_status(false, "API error fetching realtime price: " + std::string(realtime_price_api_exception_error.what()));
-                        } catch (...) {
-                            TradingLogs::log_realtime_price_fallback(original_price);
-                            TradingLogs::log_market_status(false, "Unknown API error fetching realtime price");
                         }
+                    } catch (const std::exception& realtime_price_api_exception_error) {
+                        TradingLogs::log_realtime_price_fallback(original_price);
+                        TradingLogs::log_market_status(false, "API error fetching realtime price: " + std::string(realtime_price_api_exception_error.what()));
+                    } catch (...) {
+                        TradingLogs::log_realtime_price_fallback(original_price);
+                        TradingLogs::log_market_status(false, "Unknown API error fetching realtime price");
                     }
-                    
-                    std::string order_side_string = config.strategy.signal_sell_string;
-                    Logging::ComprehensiveOrderExecutionRequest order_request_object("Bracket Order", order_side_string, trade_request.position_sizing.quantity, 
+                }
+                
+                std::string order_side_string = config.strategy.signal_sell_string;
+                Logging::ComprehensiveOrderExecutionRequest order_request_object("Bracket Order", order_side_string, trade_request.position_sizing.quantity, 
                                                                     trade_request.processed_data.curr.close_price, trade_request.processed_data.atr, 
                                                                     trade_request.processed_data.pos_details.position_quantity, 
                                                                     trade_request.position_sizing.risk_amount, exit_targets_result.stop_loss, 
                                                                     exit_targets_result.take_profit, config.trading_mode.primary_symbol, "execute_bracket_order");
-                    TradingLogs::log_comprehensive_order_execution(order_request_object);
-                    
-                    Logging::ExitTargetsTableRequest exit_targets_request_object(order_side_string, trade_request.processed_data.curr.close_price, 
+                TradingLogs::log_comprehensive_order_execution(order_request_object);
+                
+                Logging::ExitTargetsTableRequest exit_targets_request_object(order_side_string, trade_request.processed_data.curr.close_price, 
                                                                                 trade_request.position_sizing.risk_amount, config.strategy.rr_ratio, 
                                                                                 exit_targets_result.stop_loss, exit_targets_result.take_profit);
-                    TradingLogs::log_exit_targets_table(exit_targets_request_object);
-                }
+                TradingLogs::log_exit_targets_table(exit_targets_request_object);
             } else if (trade_request.current_position_quantity > 0) {
                 TradingLogs::log_market_status(true, "SELL signal - closing long position with market order");
                 std::string order_side_string = config.strategy.signal_sell_string;

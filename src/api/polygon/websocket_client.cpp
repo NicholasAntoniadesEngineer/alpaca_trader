@@ -90,7 +90,6 @@ bool WebSocketClient::connect(const std::string& websocketUrlString) {
         }
         
         connectedFlag.store(true);
-        WebSocketLogs::log_websocket_connection_table(websocketUrlString, true, "", "trading_system.log");
         return true;
         
     } catch (const std::exception& connectionExceptionError) {
@@ -156,7 +155,6 @@ bool WebSocketClient::authenticate(const std::string& apiKeyString) {
             return false;
         }
         
-        WebSocketLogs::log_websocket_authentication_table(true, authMessageString, "", "trading_system.log");
         return true;
         
     } catch (const std::exception& authExceptionError) {
@@ -815,8 +813,6 @@ bool WebSocketClient::performWebSocketHandshake() {
             WebSocketLogs::log_websocket_handshake_error(lastErrorStringValue, "trading_system.log");
             return false;
         }
-        
-        WebSocketLogs::log_websocket_message_details("HANDSHAKE_SUCCESS", "WebSocket handshake completed successfully", "trading_system.log");
         
         return true;
         

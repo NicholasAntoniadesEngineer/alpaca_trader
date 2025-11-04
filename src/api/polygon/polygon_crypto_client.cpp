@@ -587,13 +587,6 @@ bool PolygonCryptoClient::process_single_message(const json& msg_json) {
         std::string eventTypeString = msg_json.value("ev", "");
         
         if (eventTypeString == "status") {
-            std::string statusValue = msg_json.value("status", "");
-            std::string messageValue = msg_json.value("message", "");
-            try {
-                AlpacaTrader::Logging::WebSocketLogs::log_websocket_status_message(statusValue, messageValue, "trading_system.log");
-            } catch (...) {
-                // Logging failed, continue processing
-            }
             return true;
         }
         

@@ -30,23 +30,19 @@ void AccountDataThread::operator()() {
 
 void AccountDataThread::execute_account_data_collection_loop() {
     try {
-        AccountDataThreadLogs::log_thread_collection_loop_start();
         while (running.load()) {
             try {
-                AccountDataThreadLogs::log_fetch_allowed_check();
                 if (!AccountDataThreadLogs::is_fetch_allowed(allow_fetch_ptr)) {
                     std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
                     continue;
                 }
 
-                AccountDataThreadLogs::log_before_fetch_account_data();
                 account_data_coordinator.fetch_and_update_account_data(account_snapshot, state_mtx, data_cv, has_account);
 
                 if (iteration_counter) {
                     iteration_counter->fetch_add(1);
                 }
 
-                AccountDataThreadLogs::log_iteration_complete();
                 std::this_thread::sleep_for(std::chrono::seconds(timing.thread_account_data_poll_interval_sec));
                 
             } catch (const std::exception& exception_error) {

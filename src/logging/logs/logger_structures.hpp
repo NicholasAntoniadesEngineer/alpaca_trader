@@ -11,7 +11,7 @@ namespace Logging {
 struct ComprehensiveOrderExecutionRequest {
     std::string order_type;
     std::string side;
-    int quantity;
+    double quantity;
     double current_price;
     double atr;
     int position_quantity;
@@ -22,7 +22,7 @@ struct ComprehensiveOrderExecutionRequest {
     std::string function_name;
     
     ComprehensiveOrderExecutionRequest(const std::string& order_type_param, const std::string& side_param,
-                                     int quantity_param, double current_price_param, double atr_param,
+                                     double quantity_param, double current_price_param, double atr_param,
                                      int position_qty_param, double risk_amount_param,
                                      double stop_loss_param, double take_profit_param,
                                      const std::string& symbol_param, const std::string& function_name_param)

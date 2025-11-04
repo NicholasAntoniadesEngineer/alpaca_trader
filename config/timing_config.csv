@@ -15,8 +15,9 @@ timing.logging_thread_polling_interval_seconds,1
 timing.historical_data_fetch_period_minutes,120
 timing.historical_data_buffer_size,20
 timing.account_data_cache_duration_seconds,10
-timing.market_data_staleness_threshold_seconds,5
-timing.crypto_data_staleness_threshold_seconds,10
+timing.market_data_staleness_threshold_seconds,30
+timing.crypto_data_staleness_threshold_seconds,30
+timing.data_availability_wait_timeout_seconds,10
 
 # Market Session Buffer Times (in minutes)
 timing.pre_market_open_buffer_minutes,5

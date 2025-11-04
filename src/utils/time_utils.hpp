@@ -25,6 +25,9 @@ std::string get_iso_time_plus_minutes(int minutes);
 std::tm parse_iso_time(const std::string& timestamp);
 std::tm parse_iso_time_with_z(const std::string& timestamp);
 
+// Timestamp conversion functions
+std::string convert_milliseconds_to_human_readable(const std::string& milliseconds_timestamp);
+
 } // namespace TimeUtils
 
 #endif // TIME_UTILS_HPP
