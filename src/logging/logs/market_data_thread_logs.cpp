@@ -83,6 +83,43 @@ void MarketDataThreadLogs::log_zero_atr_warning(const std::string& symbol) {
     log_message("ATR is zero for " + symbol + ", not updating snapshot", "trading_system.log");
 }
 
+void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available) {
+    TABLE_HEADER_48("Insufficient Data", "Waiting for Market Data Accumulation");
+    
+    TABLE_ROW_48("Symbol", symbol);
+    
+    std::string status_text = "Accumulating";
+    if (atr_zero && price_data_invalid) {
+        status_text = "Waiting for bars";
+    } else if (atr_zero) {
+        status_text = "ATR calculating";
+    } else if (price_data_invalid) {
+        status_text = "Price data invalid";
+    }
+    TABLE_ROW_48("Status", status_text);
+    
+    std::string atr_status = atr_zero ? "Zero (calculating)" : "Available";
+    TABLE_ROW_48("ATR", atr_status);
+    
+    std::string price_data_status;
+    if (price_data_invalid) {
+        price_data_status = "Invalid (O:" + std::to_string(open_price).substr(0, 6) + 
+                           " H:" + std::to_string(high_price).substr(0, 6) + 
+                           " L:" + std::to_string(low_price).substr(0, 6) + 
+                           " C:" + std::to_string(close_price).substr(0, 6) + ")";
+    } else {
+        price_data_status = "Valid";
+    }
+    TABLE_ROW_48("Price Data", price_data_status);
+    
+    TABLE_ROW_48("Bars Available", std::to_string(bars_available));
+    
+    std::string csv_status = (bars_available > 0) ? "Available" : "No bars";
+    TABLE_ROW_48("CSV Logging", csv_status);
+    
+    TABLE_FOOTER_48();
+}
+
 void MarketDataThreadLogs::log_duplicate_bar_skipped(const std::string& symbol, const std::string& bar_timestamp) {
     log_message("Skipping bar logging for " + symbol + " - same historical data (latest bar: " + bar_timestamp + ")", "trading_system.log");
 }
@@ -161,8 +198,6 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
             } else {
                 MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
             }
-        } else {
-            log_message("No historical bars available for CSV logging", "trading_system.log");
         }
         
         last_bar_log_time = current_time;

@@ -143,6 +143,24 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     }
 
     
+    // CRITICAL: Validate price data before proceeding - fail hard if invalid
+    bool has_valid_price_data = current_market_snapshot.curr.close_price > 0.0 && 
+                                current_market_snapshot.curr.open_price > 0.0 &&
+                                current_market_snapshot.curr.high_price > 0.0 &&
+                                current_market_snapshot.curr.low_price > 0.0;
+    
+    if (!has_valid_price_data) {
+        std::ostringstream invalid_data_stream;
+        invalid_data_stream << "CRITICAL: Market snapshot has invalid price data (zeros detected) - "
+                           << "Close: " << current_market_snapshot.curr.close_price
+                           << " | Open: " << current_market_snapshot.curr.open_price
+                           << " | High: " << current_market_snapshot.curr.high_price
+                           << " | Low: " << current_market_snapshot.curr.low_price
+                           << " | Cannot proceed with trading decisions - failing hard per compliance rules";
+        TradingLogs::log_market_status(false, invalid_data_stream.str());
+        throw std::runtime_error("Market snapshot has invalid price data - all prices are zero. System cannot proceed.");
+    }
+    
     // Validate we have required data
     bool has_market_flag_value = snapshot_state.has_market_flag.load();
     bool has_account_flag_value = snapshot_state.has_account_flag.load();

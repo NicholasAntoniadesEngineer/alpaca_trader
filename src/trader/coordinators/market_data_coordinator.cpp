@@ -138,9 +138,34 @@ ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::st
     }
 }
 
-void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state) {
-    if (processed_data_result.atr == 0.0) {
-        MarketDataThreadLogs::log_zero_atr_warning(processed_data_result.curr.timestamp.empty() ? "UNKNOWN" : processed_data_result.curr.timestamp);
+void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state, const std::string& symbol, size_t bars_available_count) {
+    // CRITICAL: Do not update snapshot with invalid price data (all zeros)
+    // This prevents trading logic from receiving zero prices
+    bool has_valid_price_data = processed_data_result.curr.close_price > 0.0 && 
+                                processed_data_result.curr.open_price > 0.0 &&
+                                processed_data_result.curr.high_price > 0.0 &&
+                                processed_data_result.curr.low_price > 0.0;
+    
+    bool atr_is_zero = (processed_data_result.atr == 0.0);
+    
+    if (!has_valid_price_data) {
+        // Use condensed table format for insufficient data scenarios
+        MarketDataThreadLogs::log_insufficient_data_condensed(
+            symbol,
+            atr_is_zero,
+            true,
+            processed_data_result.curr.close_price,
+            processed_data_result.curr.open_price,
+            processed_data_result.curr.high_price,
+            processed_data_result.curr.low_price,
+            bars_available_count
+        );
+        return;
+    }
+    
+    if (atr_is_zero) {
+        // ATR is zero but price data is valid - log warning but proceed (snapshot will update)
+        MarketDataThreadLogs::log_zero_atr_warning(symbol);
     }
     
     std::lock_guard<std::mutex> state_lock(snapshot_state.state_mutex);
@@ -192,11 +217,8 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
         std::vector<Bar> historical_bars_for_logging;
         ProcessedData computed_data = fetch_and_process_market_data(symbol, historical_bars_for_logging);
         
-        if (computed_data.atr == 0.0) {
-            MarketDataThreadLogs::log_zero_atr_warning(symbol);
-        }
-        
-        update_shared_market_snapshot(computed_data, snapshot_state);
+        // Update snapshot - logging for insufficient data is handled inside update_shared_market_snapshot
+        update_shared_market_snapshot(computed_data, snapshot_state, symbol, historical_bars_for_logging.size());
         
         // Log bars to CSV immediately after successful processing for validation
         // This ensures we log the bars we're actually using for trading decisions

@@ -50,6 +50,7 @@ public:
     // Data validation logging
     static void log_zero_atr_warning(const std::string& symbol);
     static void log_duplicate_bar_skipped(const std::string& symbol, const std::string& bar_timestamp);
+    static void log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available);
     
     // Utility functions
     static bool is_fetch_allowed(const std::atomic<bool>* allow_fetch_ptr);
