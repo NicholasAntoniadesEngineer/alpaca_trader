@@ -151,6 +151,18 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.fixed_share_quantity_per_trade") cfg.strategy.fixed_share_quantity_per_trade = std::stoi(config_value_string);
         else if (config_key_string == "strategy.risk_based_position_size_multiplier") cfg.strategy.risk_based_position_size_multiplier = std::stod(config_value_string);
         else if (config_key_string == "strategy.maximum_share_quantity_per_single_trade") cfg.strategy.maximum_share_quantity_per_single_trade = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.maximum_dollar_value_per_single_trade") {
+            try {
+                double parsed_value = std::stod(config_value_string);
+                if (parsed_value <= 0.0) {
+                    throw std::runtime_error("strategy.maximum_dollar_value_per_single_trade must be > 0.0, got: " + config_value_string);
+                }
+                cfg.strategy.maximum_dollar_value_per_single_trade = parsed_value;
+                log_message("Loaded strategy.maximum_dollar_value_per_single_trade = " + std::to_string(cfg.strategy.maximum_dollar_value_per_single_trade), "");
+            } catch (const std::exception& parse_exception_error) {
+                throw std::runtime_error("Failed to parse strategy.maximum_dollar_value_per_single_trade from value '" + config_value_string + "': " + std::string(parse_exception_error.what()));
+            }
+        }
         else if (config_key_string == "strategy.minimum_acceptable_price_for_signals") cfg.strategy.minimum_acceptable_price_for_signals = std::stod(config_value_string);
         else if (config_key_string == "strategy.maximum_acceptable_price_for_signals") cfg.strategy.maximum_acceptable_price_for_signals = std::stod(config_value_string);
         
@@ -202,7 +214,18 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "risk.buying_power_utilization_percentage") cfg.strategy.buying_power_utilization_percentage = std::stod(config_value_string);
         else if (config_key_string == "risk.buying_power_validation_safety_margin") cfg.strategy.buying_power_validation_safety_margin = std::stod(config_value_string);
         else if (config_key_string == "risk.risk_percentage_per_trade") cfg.strategy.risk_percentage_per_trade = std::stod(config_value_string);
-        else if (config_key_string == "risk.maximum_dollar_value_per_trade") cfg.strategy.maximum_dollar_value_per_trade = std::stod(config_value_string);
+        else if (config_key_string == "risk.maximum_dollar_value_per_trade") {
+            try {
+                double parsed_value = std::stod(config_value_string);
+                if (parsed_value <= 0.0) {
+                    throw std::runtime_error("risk.maximum_dollar_value_per_trade must be > 0.0, got: " + config_value_string);
+                }
+                cfg.strategy.maximum_dollar_value_per_trade = parsed_value;
+                log_message("Loaded risk.maximum_dollar_value_per_trade = " + std::to_string(cfg.strategy.maximum_dollar_value_per_trade), "");
+            } catch (const std::exception& parse_exception_error) {
+                throw std::runtime_error("Failed to parse risk.maximum_dollar_value_per_trade from value '" + config_value_string + "': " + std::string(parse_exception_error.what()));
+            }
+        }
         else if (config_key_string == "risk.allow_multiple_positions_per_symbol") cfg.strategy.allow_multiple_positions_per_symbol = to_bool(config_value_string);
         else if (config_key_string == "risk.maximum_position_layers") cfg.strategy.maximum_position_layers = std::stoi(config_value_string);
         else if (config_key_string == "risk.close_positions_on_signal_reversal") cfg.strategy.close_positions_on_signal_reversal = to_bool(config_value_string);
@@ -273,10 +296,14 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(config_value_string);
         else if (config_key_string == "logging.include_function_name") cfg.logging.include_function_name = to_bool(config_value_string);
             } catch (const std::exception& line_exception_error) {
-                // Log and continue parsing other lines
-                log_message("Error parsing config line: " + config_line_string + " - " + std::string(line_exception_error.what()), "");
+                // COMPLIANCE: Fail hard on config parsing errors - no silent failures
+                // Log the error and re-throw to fail hard
+                log_message("CRITICAL: Error parsing config line: " + config_line_string + " - " + std::string(line_exception_error.what()), "");
+                throw; // Re-throw to fail hard
             } catch (...) {
-                log_message("Unknown error parsing config line: " + config_line_string, "");
+                // COMPLIANCE: Fail hard on unknown config parsing errors
+                log_message("CRITICAL: Unknown error parsing config line: " + config_line_string, "");
+                throw std::runtime_error("Unknown error parsing config line: " + config_line_string);
             }
         }
     return true;
@@ -522,6 +549,19 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     // Validate minimum signal strength threshold
     if (config.strategy.minimum_signal_strength_threshold < 0.0 || config.strategy.minimum_signal_strength_threshold > 1.0) {
         error_message = "strategy.minimum_signal_strength_threshold must be between 0.0 and 1.0";
+        return false;
+    }
+    
+    // COMPLIANCE: No defaults allowed - explicit configuration required; fail hard if invalid
+    // Validate maximum_dollar_value_per_trade is configured and > 0
+    if (config.strategy.maximum_dollar_value_per_trade <= 0.0) {
+        error_message = "Invalid configuration: risk.maximum_dollar_value_per_trade must be > 0.0 (provide via strategy_config.csv). Current value: " + std::to_string(config.strategy.maximum_dollar_value_per_trade);
+        return false;
+    }
+    
+    // Validate maximum_dollar_value_per_single_trade is configured and > 0
+    if (config.strategy.maximum_dollar_value_per_single_trade <= 0.0) {
+        error_message = "Invalid configuration: strategy.maximum_dollar_value_per_single_trade must be > 0.0 (provide via strategy_config.csv). Current value: " + std::to_string(config.strategy.maximum_dollar_value_per_single_trade);
         return false;
     }
 

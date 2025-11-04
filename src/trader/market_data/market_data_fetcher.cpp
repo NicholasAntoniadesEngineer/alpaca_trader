@@ -99,8 +99,8 @@ bool MarketDataFetcher::wait_for_data_availability(MarketDataSyncState& sync_sta
     
     
     try {
-        std::unique_lock<std::mutex> lock(*sync_state.mtx);
-        
+    std::unique_lock<std::mutex> lock(*sync_state.mtx);
+    
         
         bool data_ready = sync_state.cv->wait_for(lock, std::chrono::seconds(config.timing.data_availability_wait_timeout_seconds), [&]{
             if (!sync_state.has_market || !sync_state.has_account) {
@@ -109,10 +109,10 @@ bool MarketDataFetcher::wait_for_data_availability(MarketDataSyncState& sync_sta
             bool has_market_value = sync_state.has_market->load();
             bool has_account_value = sync_state.has_account->load();
             return has_market_value && has_account_value;
-        });
+    });
         
-        
-        return data_ready;
+    
+    return data_ready;
     } catch (const std::exception& lock_exception_error) {
         throw;
     } catch (...) {
@@ -132,7 +132,7 @@ bool MarketDataFetcher::is_data_fresh() const {
         return false;
     }
 
-    
+
     auto now = std::chrono::steady_clock::now();
     
     

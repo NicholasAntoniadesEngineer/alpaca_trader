@@ -44,7 +44,7 @@ public:
     std::string get_account_info() const;
     std::string get_positions() const;
     std::string get_open_orders() const;
-    void place_order(const std::string& order_json) const;
+    std::string place_order(const std::string& order_json) const;
     void cancel_order(const std::string& order_id) const;
     void close_position(const std::string& symbol, int quantity) const;
     

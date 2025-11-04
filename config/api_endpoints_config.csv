@@ -72,7 +72,7 @@ polygon_crypto.api_version,v1
 polygon_crypto.bar_timespan,day
 polygon_crypto.bar_multiplier,1
 polygon_crypto.bars_range_minutes,129600
-polygon_crypto.websocket_bar_accumulation_seconds,5
+polygon_crypto.websocket_bar_accumulation_seconds,1
 polygon_crypto.websocket_second_level_accumulation_seconds,30
 polygon_crypto.websocket_max_bar_history_size,1000
 

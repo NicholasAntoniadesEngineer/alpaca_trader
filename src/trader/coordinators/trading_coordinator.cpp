@@ -637,9 +637,9 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
     } catch (const std::runtime_error& runtime_error) {
         log_trade_execution_error(runtime_error.what(), trade_request, buying_power_amount);
     } catch (const std::exception& exception_error) {
-        TradingLogs::log_market_status(false, "Order execution exception: " + std::string(exception_error.what()));
+        TradingLogs::log_trade_validation_failed("Order execution exception: " + std::string(exception_error.what()));
     } catch (...) {
-        TradingLogs::log_market_status(false, "Unknown exception in order execution");
+        TradingLogs::log_trade_validation_failed("Unknown exception in order execution");
     }
 }
 
@@ -659,11 +659,11 @@ void TradingCoordinator::log_trade_execution_error(const std::string& error_mess
     } else if (error_message.find("Position limits reached") != std::string::npos) {
         TradingLogs::log_position_limits_reached(trade_request.signal_decision.buy ? config.strategy.signal_buy_string : config.strategy.signal_sell_string);
     } else if (error_message.find("Wash trade prevention") != std::string::npos) {
-        TradingLogs::log_market_status(false, error_message);
+        TradingLogs::log_trade_validation_failed(error_message);
     } else if (error_message.find("Position closure failed") != std::string::npos) {
-        TradingLogs::log_market_status(false, error_message);
+        TradingLogs::log_trade_validation_failed(error_message);
     } else {
-        TradingLogs::log_market_status(false, "Order execution error: " + error_message);
+        TradingLogs::log_trade_validation_failed("Order execution error: " + error_message);
     }
 }
 

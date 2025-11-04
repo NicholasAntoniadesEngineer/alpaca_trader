@@ -231,7 +231,7 @@ std::string AlpacaTradingClient::get_open_orders() const {
     return make_authenticated_request(request_url, "GET", "");
 }
 
-void AlpacaTradingClient::place_order(const std::string& order_json) const {
+std::string AlpacaTradingClient::place_order(const std::string& order_json) const {
     if (!is_connected()) {
         throw std::runtime_error("Alpaca trading client not connected");
     }
@@ -241,7 +241,7 @@ void AlpacaTradingClient::place_order(const std::string& order_json) const {
     }
     
     std::string request_url = build_url(config.endpoints.orders);
-    make_authenticated_request(request_url, "POST", order_json);
+    return make_authenticated_request(request_url, "POST", order_json);
 }
 
 void AlpacaTradingClient::cancel_order(const std::string& order_id) const {

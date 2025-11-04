@@ -131,7 +131,7 @@ std::string ApiManager::get_open_orders() const {
     return trading_provider->get_open_orders();
 }
 
-void ApiManager::place_order(const std::string& order_json) const {
+std::string ApiManager::place_order(const std::string& order_json) const {
     if (order_json.empty()) {
         throw std::runtime_error("Order JSON is required");
     }
@@ -140,7 +140,7 @@ void ApiManager::place_order(const std::string& order_json) const {
     if (!trading_provider) {
         throw std::runtime_error("Trading provider does not support order placement");
     }
-    trading_provider->place_order(order_json);
+    return trading_provider->place_order(order_json);
 }
 
 void ApiManager::cancel_order(const std::string& order_id) const {

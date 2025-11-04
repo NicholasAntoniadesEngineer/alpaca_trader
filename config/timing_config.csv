@@ -5,7 +5,7 @@
 # ========================================================================
 
 # Thread Polling Intervals (in seconds)
-timing.market_data_thread_polling_interval_seconds,3
+timing.market_data_thread_polling_interval_seconds,1
 timing.account_data_thread_polling_interval_seconds,10
 timing.market_gate_thread_polling_interval_seconds,30
 timing.trader_decision_thread_polling_interval_seconds,5
@@ -50,8 +50,8 @@ timing.maximum_concurrent_order_cancellations,10
 timing.maximum_position_verification_attempts,3
 
 # Trading Safety Constraints
-timing.minimum_interval_between_orders_seconds,30
-timing.enable_wash_trade_prevention_mechanism,true
+timing.minimum_interval_between_orders_seconds,0
+timing.enable_wash_trade_prevention_mechanism,false
 
 # Precision Settings for Metrics
 timing.cpu_usage_display_precision,1

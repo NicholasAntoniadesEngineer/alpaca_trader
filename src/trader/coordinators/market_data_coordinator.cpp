@@ -141,7 +141,6 @@ ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::st
 void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state) {
     if (processed_data_result.atr == 0.0) {
         MarketDataThreadLogs::log_zero_atr_warning(processed_data_result.curr.timestamp.empty() ? "UNKNOWN" : processed_data_result.curr.timestamp);
-        return;
     }
     
     std::lock_guard<std::mutex> state_lock(snapshot_state.state_mutex);
@@ -195,7 +194,6 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
         
         if (computed_data.atr == 0.0) {
             MarketDataThreadLogs::log_zero_atr_warning(symbol);
-            return;
         }
         
         update_shared_market_snapshot(computed_data, snapshot_state);

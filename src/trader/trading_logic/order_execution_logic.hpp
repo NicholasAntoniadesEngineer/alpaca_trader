@@ -19,6 +19,13 @@ public:
     
     enum class OrderSide { Buy, Sell };
     
+    // Order type enumeration - per Alpaca docs
+    enum class OrderType {
+        Market,      // Execute immediately at current market price (fastest, price slippage risk)
+        Limit,       // Execute only at specified price or better (price protection, may not fill)
+        StopLimit    // Trigger at stop price, then execute as limit order (risk management)
+    };
+    
     void execute_market_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input);
     bool validate_trade_feasibility(const PositionSizing& position_sizing_input, double buying_power_amount, double current_price_amount) const;
 
@@ -36,6 +43,16 @@ private:
     // Core execution methods
     void execute_order(OrderSide order_side_input, const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input);
     void execute_bracket_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, const ExitTargets& exit_targets_input);
+    
+    // Individual order type execution methods
+    void execute_limit_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, double limit_price);
+    void execute_stop_limit_order(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, double stop_price, double limit_price);
+    
+    // Order type selection logic
+    OrderType select_order_type(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, bool has_stop_targets) const;
+    
+    // Crypto bracket order simulation (using separate orders + monitoring)
+    void execute_crypto_bracket_simulation(OrderSide order_side_input, const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input, const ExitTargets& exit_targets_input);
     
     // Position management methods
     bool should_close_opposite_position(OrderSide order_side_input, int current_position_quantity) const;
