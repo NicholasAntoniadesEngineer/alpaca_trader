@@ -644,8 +644,14 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
 }
 
 void TradingCoordinator::log_trade_execution_error(const std::string& error_message, const TradeExecutionRequest& trade_request, double buying_power_amount) {
-    if (error_message == "Order validation failed - aborting trade execution") {
-        TradingLogs::log_trade_validation_failed("Order validation failed");
+    if (error_message.find("Order validation failed") != std::string::npos) {
+        // Extract the detailed validation error message if present
+        if (error_message.find("Order validation failed: ") != std::string::npos) {
+            std::string detailed_reason = error_message.substr(error_message.find("Order validation failed: ") + 26);
+            TradingLogs::log_trade_validation_failed(detailed_reason);
+        } else {
+            TradingLogs::log_trade_validation_failed("Order validation failed");
+        }
     } else if (error_message.find("Insufficient buying power") != std::string::npos || error_message.find("insufficient buying power") != std::string::npos) {
         double position_value_amount = trade_request.position_sizing.quantity * trade_request.processed_data.curr.close_price;
         double required_buying_power_amount = position_value_amount * config.strategy.buying_power_validation_safety_margin;

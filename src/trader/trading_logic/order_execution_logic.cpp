@@ -18,8 +18,13 @@ OrderExecutionLogic::OrderExecutionLogic(const OrderExecutionLogicConstructionPa
       config(construction_params.system_config), data_sync_ptr(construction_params.data_sync_ptr) {}
 
 void OrderExecutionLogic::execute_trade(const ProcessedData& processed_data_input, int current_position_quantity, const PositionSizing& position_sizing_input, const SignalDecision& signal_decision_input) {
-    if (!validate_order_parameters(processed_data_input, position_sizing_input)) {
-        throw std::runtime_error("Order validation failed - aborting trade execution");
+    try {
+        if (!validate_order_parameters(processed_data_input, position_sizing_input)) {
+            throw std::runtime_error("Order validation failed - aborting trade execution");
+        }
+    } catch (const std::runtime_error& validation_error) {
+        // Re-throw with detailed error message
+        throw std::runtime_error("Order validation failed: " + std::string(validation_error.what()));
     }
     
     if (processed_data_input.curr.close_price <= 0.0) {
@@ -293,31 +298,57 @@ bool OrderExecutionLogic::can_execute_new_position(int current_position_quantity
 // Order validation and preparation
 bool OrderExecutionLogic::validate_order_parameters(const ProcessedData& processed_data_input, const PositionSizing& position_sizing_input) const {
     if (processed_data_input.curr.close_price <= 0.0) {
-        return false;
+        throw std::runtime_error("Validation failed: Price <= 0.0");
     }
     
     if (position_sizing_input.quantity <= 0.0) {
-        return false;
+        throw std::runtime_error("Validation failed: Quantity <= 0.0");
     }
     
     if (position_sizing_input.risk_amount <= 0.0) {
-        return false;
+        throw std::runtime_error("Validation failed: Risk amount <= 0.0");
     }
     
+    // Detect crypto mode: symbol contains "/" (e.g., "BTC/USD")
+    bool is_crypto_mode = config.trading_mode.primary_symbol.find('/') != std::string::npos;
+    
     // Additional validation for order rejection prevention using config values
-    if (position_sizing_input.quantity > config.strategy.maximum_share_quantity_per_single_trade) {
-        return false;
+    // For crypto, skip share quantity check (crypto uses fractional quantities)
+    // For stocks, check against maximum share quantity
+    if (!is_crypto_mode) {
+        if (position_sizing_input.quantity > config.strategy.maximum_share_quantity_per_single_trade) {
+            throw std::runtime_error("Validation failed: Quantity (" + std::to_string(position_sizing_input.quantity) + 
+                ") exceeds maximum (" + std::to_string(config.strategy.maximum_share_quantity_per_single_trade) + ")");
+        }
     }
     
     // Validate price is within configured range
-    if (processed_data_input.curr.close_price < config.strategy.minimum_acceptable_price_for_signals || processed_data_input.curr.close_price > config.strategy.maximum_acceptable_price_for_signals) {
-        return false;
+    // For crypto, skip price range check (crypto prices can be much higher than stocks)
+    // For stocks, validate price range
+    if (!is_crypto_mode) {
+        if (processed_data_input.curr.close_price < config.strategy.minimum_acceptable_price_for_signals || 
+            processed_data_input.curr.close_price > config.strategy.maximum_acceptable_price_for_signals) {
+            throw std::runtime_error("Validation failed: Price (" + std::to_string(processed_data_input.curr.close_price) + 
+                ") outside range [" + std::to_string(config.strategy.minimum_acceptable_price_for_signals) + ", " + 
+                std::to_string(config.strategy.maximum_acceptable_price_for_signals) + "]");
+        }
     }
     
     // Check if order value exceeds configured maximum
+    // This check applies to both crypto and stocks
     double order_value_amount = processed_data_input.curr.close_price * position_sizing_input.quantity;
-    if (order_value_amount > config.strategy.maximum_dollar_value_per_single_trade) {
-        return false;
+    
+    // Use the stricter of the two limits: strategy.maximum_dollar_value_per_trade ($100) 
+    // or strategy.maximum_dollar_value_per_single_trade ($10,000)
+    double max_order_value = config.strategy.maximum_dollar_value_per_trade;
+    if (config.strategy.maximum_dollar_value_per_single_trade > 0.0 && 
+        config.strategy.maximum_dollar_value_per_single_trade < max_order_value) {
+        max_order_value = config.strategy.maximum_dollar_value_per_single_trade;
+    }
+    
+    if (order_value_amount > max_order_value) {
+        throw std::runtime_error("Validation failed: Order value ($" + std::to_string(order_value_amount) + 
+            ") exceeds maximum ($" + std::to_string(max_order_value) + ")");
     }
     
     return true;

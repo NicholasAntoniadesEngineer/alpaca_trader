@@ -119,4 +119,37 @@
     LOG_THREAD_CONTENT("└───────────────────┴────────────────────────────────┘"); \
 } while(0)
 
+// Condensed multi-column table macros for dynamic bar data
+// Column widths: Bar# (4), Time (19), Open/High/Low/Close/Volume (10 each)
+#define CONDENSED_BAR_TABLE_HEADER() do { \
+    LOG_THREAD_CONTENT("┌────┬───────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐"); \
+    LOG_THREAD_CONTENT("│Bar#│ Time               │ Open     │ High     │ Low      │ Close    │ Volume   │"); \
+    LOG_THREAD_CONTENT("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤"); \
+} while(0)
+
+#define CONDENSED_BAR_TABLE_ROW(bar_num, time_str, open_str, high_str, low_str, close_str, volume_str) do { \
+    std::string bar_num_str = std::to_string(bar_num); \
+    std::string time_str_fmt = std::string(time_str).substr(0, 19); \
+    std::string open_str_fmt = std::string(open_str).substr(0, 10); \
+    std::string high_str_fmt = std::string(high_str).substr(0, 10); \
+    std::string low_str_fmt = std::string(low_str).substr(0, 10); \
+    std::string close_str_fmt = std::string(close_str).substr(0, 10); \
+    std::string volume_str_fmt = std::string(volume_str).substr(0, 10); \
+    LOG_THREAD_CONTENT("│" + bar_num_str + std::string(4 - bar_num_str.length(), ' ') + \
+                       "│ " + time_str_fmt + std::string(19 - time_str_fmt.length(), ' ') + \
+                       "│ " + open_str_fmt + std::string(10 - open_str_fmt.length(), ' ') + \
+                       "│ " + high_str_fmt + std::string(10 - high_str_fmt.length(), ' ') + \
+                       "│ " + low_str_fmt + std::string(10 - low_str_fmt.length(), ' ') + \
+                       "│ " + close_str_fmt + std::string(10 - close_str_fmt.length(), ' ') + \
+                       "│ " + volume_str_fmt + std::string(10 - volume_str_fmt.length(), ' ') + "│"); \
+} while(0)
+
+#define CONDENSED_BAR_TABLE_SEPARATOR() do { \
+    LOG_THREAD_CONTENT("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤"); \
+} while(0)
+
+#define CONDENSED_BAR_TABLE_FOOTER() do { \
+    LOG_THREAD_CONTENT("└────┴───────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘"); \
+} while(0)
+
 #endif // LOGGING_MACROS_HPP

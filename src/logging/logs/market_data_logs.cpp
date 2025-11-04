@@ -4,7 +4,9 @@
 #include "trader/data_structures/data_structures.hpp"
 #include <iomanip>
 #include <sstream>
+#include <string>
 #include <ctime>
+#include <stdexcept>
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -224,6 +226,7 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
     log_message("================================================================================", log_file);
     log_message("", log_file);
     
+    // Header with symbol and bar count
     std::string headerTitleValue = "ACCUMULATED BARS: " + std::to_string(bars.size()) + " bars";
     std::string headerSubtitleValue = "Symbol: " + symbol;
     
@@ -239,28 +242,42 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
     }
     headerLineTwoValue += " │";
     log_message(headerLineTwoValue, log_file);
-    std::string headerLineThreeValue = "├───────────────────┼──────────────────────────────────────────────────┤";
+    std::string headerLineThreeValue = "└───────────────────┴──────────────────────────────────────────────────┘";
     log_message(headerLineThreeValue, log_file);
     
-    for (size_t i = 0; i < bars.size(); ++i) {
-        const Core::Bar& barData = bars[i];
+    log_message("", log_file);
+    
+    // Condensed table header
+    log_message("┌────┬───────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐", log_file);
+    log_message("│Bar#│ Time               │ Open     │ High     │ Low      │ Close    │ Volume   │", log_file);
+    log_message("├────┼───────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤", log_file);
+    
+    // Process each bar and add to table
+    for (size_t barIndexValue = 0; barIndexValue < bars.size(); ++barIndexValue) {
+        const Core::Bar& barData = bars[barIndexValue];
         
+        // Format timestamp
         std::string timeStringValue = barData.timestamp;
         try {
             long long timestampMillisValue = std::stoll(barData.timestamp);
             time_t timestampSecondsValue = timestampMillisValue / 1000;
             struct tm* timeInfoPointer = localtime(&timestampSecondsValue);
+            if (timeInfoPointer == nullptr) {
+                log_message("ERROR: localtime returned nullptr for timestamp: " + barData.timestamp, log_file);
+                throw std::runtime_error("localtime failed for bar timestamp conversion");
+            }
             char timeBufferString[32];
             strftime(timeBufferString, sizeof(timeBufferString), "%Y-%m-%d %H:%M:%S", timeInfoPointer);
             timeStringValue = std::string(timeBufferString);
-        } catch (const std::exception&) {
-            timeStringValue = barData.timestamp;
+        } catch (const std::exception& exceptionError) {
+            log_message("ERROR: Failed to format timestamp for bar: " + barData.timestamp + " - " + std::string(exceptionError.what()), log_file);
+            throw std::runtime_error("Timestamp formatting failed for bar data - cannot continue logging");
+        } catch (...) {
+            log_message("ERROR: Unknown exception during timestamp formatting for bar: " + barData.timestamp, log_file);
+            throw std::runtime_error("Unknown timestamp formatting error - cannot continue logging");
         }
         
-        std::ostringstream barNumberStream;
-        barNumberStream << "Bar #" << (i + 1);
-        std::string barNumberLabelValue = barNumberStream.str();
-        
+        // Format prices with 2 decimal places
         std::ostringstream openPriceStream;
         openPriceStream << std::fixed << std::setprecision(2) << barData.open_price;
         
@@ -273,53 +290,33 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
         std::ostringstream closePriceStream;
         closePriceStream << std::fixed << std::setprecision(2) << barData.close_price;
         
+        // Format volume with 6 decimal places
         std::ostringstream volumeStream;
         volumeStream << std::fixed << std::setprecision(6) << barData.volume;
         
-        if (i > 0) {
-            std::string separatorLineValue = "├───────────────────┼──────────────────────────────────────────────────┤";
-            log_message(separatorLineValue, log_file);
-        }
+        // Build table row with proper formatting
+        // Column widths: Bar# (4), Time (19), Open/High/Low/Close/Volume (10 each)
+        std::string barNumberStringValue = std::to_string(barIndexValue + 1);
+        std::string formattedTimeStringValue = timeStringValue.substr(0, 19);
+        std::string formattedOpenPriceStringValue = openPriceStream.str().substr(0, 10);
+        std::string formattedHighPriceStringValue = highPriceStream.str().substr(0, 10);
+        std::string formattedLowPriceStringValue = lowPriceStream.str().substr(0, 10);
+        std::string formattedClosePriceStringValue = closePriceStream.str().substr(0, 10);
+        std::string formattedVolumeStringValue = volumeStream.str().substr(0, 10);
         
-        std::string symbolTimeValue = "Symbol: " + symbol + " | Time: " + timeStringValue;
-        std::string symbolTimeRowLineValue = "│ " + barNumberLabelValue.substr(0, 17);
-        if (barNumberLabelValue.length() < 17) {
-            symbolTimeRowLineValue += std::string(17 - barNumberLabelValue.length(), ' ');
-        }
-        symbolTimeRowLineValue += " │ " + symbolTimeValue.substr(0, 48);
-        if (symbolTimeValue.length() < 48) {
-            symbolTimeRowLineValue += std::string(48 - symbolTimeValue.length(), ' ');
-        }
-        symbolTimeRowLineValue += " │";
-        log_message(symbolTimeRowLineValue, log_file);
+        std::string tableRowStringValue = "│" + barNumberStringValue + std::string(4 - barNumberStringValue.length(), ' ') +
+                                     "│ " + formattedTimeStringValue + std::string(19 - formattedTimeStringValue.length(), ' ') +
+                                     "│ " + formattedOpenPriceStringValue + std::string(10 - formattedOpenPriceStringValue.length(), ' ') +
+                                     "│ " + formattedHighPriceStringValue + std::string(10 - formattedHighPriceStringValue.length(), ' ') +
+                                     "│ " + formattedLowPriceStringValue + std::string(10 - formattedLowPriceStringValue.length(), ' ') +
+                                     "│ " + formattedClosePriceStringValue + std::string(10 - formattedClosePriceStringValue.length(), ' ') +
+                                     "│ " + formattedVolumeStringValue + std::string(10 - formattedVolumeStringValue.length(), ' ') + "│";
         
-        std::string openHighValue = "Open: " + openPriceStream.str() + " | High: " + highPriceStream.str();
-        std::string openHighRowLineValue = "│ OHLC              │ " + openHighValue.substr(0, 48);
-        if (openHighValue.length() < 48) {
-            openHighRowLineValue += std::string(48 - openHighValue.length(), ' ');
-        }
-        openHighRowLineValue += " │";
-        log_message(openHighRowLineValue, log_file);
-        
-        std::string lowCloseValue = "Low: " + lowPriceStream.str() + " | Close: " + closePriceStream.str();
-        std::string lowCloseRowLineValue = "│ OHLC              │ " + lowCloseValue.substr(0, 48);
-        if (lowCloseValue.length() < 48) {
-            lowCloseRowLineValue += std::string(48 - lowCloseValue.length(), ' ');
-        }
-        lowCloseRowLineValue += " │";
-        log_message(lowCloseRowLineValue, log_file);
-        
-        std::string volumeTimestampValue = "Volume: " + volumeStream.str() + " | Raw TS: " + barData.timestamp;
-        std::string volumeTimestampRowLineValue = "│ Data              │ " + volumeTimestampValue.substr(0, 48);
-        if (volumeTimestampValue.length() < 48) {
-            volumeTimestampRowLineValue += std::string(48 - volumeTimestampValue.length(), ' ');
-        }
-        volumeTimestampRowLineValue += " │";
-        log_message(volumeTimestampRowLineValue, log_file);
+        log_message(tableRowStringValue, log_file);
     }
     
-    std::string footerLineValue = "└───────────────────┴──────────────────────────────────────────────────┘";
-    log_message(footerLineValue, log_file);
+    // Table footer
+    log_message("└────┴───────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘", log_file);
     
     log_message("", log_file);
     log_message("================================================================================", log_file);
