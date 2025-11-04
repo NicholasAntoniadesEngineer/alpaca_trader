@@ -829,7 +829,6 @@ bool WebSocketClient::performWebSocketHandshake() {
 
 void WebSocketClient::receiveLoopWorker() {
     int loopIterationCount = 0;
-    auto lastHeartbeatLogTime = std::chrono::steady_clock::now();
     
     try {
         AlpacaTrader::Logging::LoggingContext* parentLoggingContextValue = parentLoggingContextPointer;
@@ -911,15 +910,8 @@ void WebSocketClient::receiveLoopWorker() {
             
             loopIterationCount++;
             
-            auto currentTime = std::chrono::steady_clock::now();
-            auto timeSinceLastLog = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastHeartbeatLogTime).count();
-            
+            // Compliance: Removed unused variables per "No unused parameters" rule
             // Receive loop status logs removed to reduce log noise
-            (void)loopIterationCount;
-            (void)messageProcessed;
-            (void)timeSinceLastLog;
-            (void)lastHeartbeatLogTime;
-            (void)currentTime;
             
         } catch (const std::exception& receiveLoopExceptionError) {
             try {

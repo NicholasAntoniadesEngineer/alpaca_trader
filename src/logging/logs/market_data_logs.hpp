@@ -35,7 +35,7 @@ public:
                                                bool isWebSocketActiveFlag, const std::string& log_file);
     
     // Detailed bar logging
-    static void log_all_bars_received(const std::string& symbol, const std::vector<Core::Bar>& bars, const std::string& log_file);
+    static void log_all_bars_received(const std::string& symbol, const std::vector<Core::Bar>& bars, const std::string& log_file, int bars_required);
 };
 
 } // namespace Logging

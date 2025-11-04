@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
 
 using AlpacaTrader::Logging::log_message;
 
@@ -158,7 +159,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
                     throw std::runtime_error("strategy.maximum_dollar_value_per_single_trade must be > 0.0, got: " + config_value_string);
                 }
                 cfg.strategy.maximum_dollar_value_per_single_trade = parsed_value;
-                log_message("Loaded strategy.maximum_dollar_value_per_single_trade = " + std::to_string(cfg.strategy.maximum_dollar_value_per_single_trade), "");
+                std::ostringstream strategy_max_stream;
+                strategy_max_stream << "Loaded strategy.maximum_dollar_value_per_single_trade = $" << std::fixed << std::setprecision(0) << cfg.strategy.maximum_dollar_value_per_single_trade;
+                log_message(strategy_max_stream.str(), "");
             } catch (const std::exception& parse_exception_error) {
                 throw std::runtime_error("Failed to parse strategy.maximum_dollar_value_per_single_trade from value '" + config_value_string + "': " + std::string(parse_exception_error.what()));
             }
@@ -221,7 +224,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
                     throw std::runtime_error("risk.maximum_dollar_value_per_trade must be > 0.0, got: " + config_value_string);
                 }
                 cfg.strategy.maximum_dollar_value_per_trade = parsed_value;
-                log_message("Loaded risk.maximum_dollar_value_per_trade = " + std::to_string(cfg.strategy.maximum_dollar_value_per_trade), "");
+                std::ostringstream risk_max_stream;
+                risk_max_stream << "Loaded risk.maximum_dollar_value_per_trade = $" << std::fixed << std::setprecision(0) << cfg.strategy.maximum_dollar_value_per_trade;
+                log_message(risk_max_stream.str(), "");
             } catch (const std::exception& parse_exception_error) {
                 throw std::runtime_error("Failed to parse risk.maximum_dollar_value_per_trade from value '" + config_value_string + "': " + std::string(parse_exception_error.what()));
             }
@@ -305,7 +310,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
                 log_message("CRITICAL: Unknown error parsing config line: " + config_line_string, "");
                 throw std::runtime_error("Unknown error parsing config line: " + config_line_string);
             }
-        }
+    }
     return true;
     } catch (const std::exception& exception_error) {
         log_message("Exception in load_config_from_csv: " + std::string(exception_error.what()), "");
@@ -523,7 +528,7 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         error_message = "strategy.atr_calculation_bars must be between 1 and 100";
         return false;
     }
-    
+
     if (config.strategy.minimum_bars_for_atr_calculation < 1) {
         error_message = "strategy.minimum_bars_for_atr_calculation must be >= 1";
         return false;

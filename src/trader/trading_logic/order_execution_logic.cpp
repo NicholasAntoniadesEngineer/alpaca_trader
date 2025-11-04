@@ -57,25 +57,81 @@ void OrderExecutionLogic::execute_trade(const ProcessedData& processed_data_inpu
         execute_order(OrderSide::Buy, processed_data_input, current_position_quantity, position_sizing_input);
     } else if (signal_decision_input.sell) {
         // ALPACA DOCS: Cryptocurrencies cannot be sold short
-        // For crypto: only allow sell orders to close existing long positions
+        // For crypto: buy-and-hold strategy - sell signal means close entire position immediately
         // For stocks: allow short selling if configured
         if (is_crypto_mode) {
-            if (current_position_quantity == 0) {
-                // CRITICAL: Crypto cannot be sold short - skip sell signal when no position exists
-                std::ostringstream skip_message_stream;
-                skip_message_stream << "⚠ SELL SIGNAL IGNORED - Crypto cannot be sold short. "
-                                   << "Sell orders only allowed to close existing positions. "
-                                   << "Current position: " << current_position_quantity 
-                                   << " | Symbol: " << config.trading_mode.primary_symbol;
-                log_message(skip_message_stream.str(), "");
-                throw std::runtime_error("Crypto sell signal rejected - cannot open short position for crypto. Crypto can only be sold to close existing long positions.");
-            } else if (current_position_quantity > 0) {
-                // Closing long position - allowed for crypto
-                execute_order(OrderSide::Sell, processed_data_input, current_position_quantity, position_sizing_input);
-            } else {
-                // Invalid state: negative quantity (should not happen)
-                throw std::runtime_error("Invalid position state - negative quantity: " + std::to_string(current_position_quantity));
+            // CRITICAL: For crypto sell signals, fetch the actual current position from account
+            // This ensures we sell the entire actual position, not a potentially stale value
+            // CRITICAL: Handle fractional crypto quantities - fetch directly from API as double
+            // This ensures we get the exact current position quantity, including fractional amounts
+            double actual_position_quantity = 0.0;
+            bool position_found_in_api = false;
+            try {
+                std::string positions_json = api_manager.get_positions();
+                if (!positions_json.empty()) {
+                    json positions_data = json::parse(positions_json);
+                    // Check if positions_data is an array
+                    if (positions_data.is_array()) {
+                        for (const auto& position : positions_data) {
+                            if (position.contains("symbol") && position["symbol"].get<std::string>() == config.trading_mode.primary_symbol) {
+                                if (position.contains("qty")) {
+                                    position_found_in_api = true;
+                                    if (position["qty"].is_string()) {
+                                        // Crypto quantities are often returned as strings (e.g., "0.00099645")
+                                        actual_position_quantity = std::stod(position["qty"].get<std::string>());
+                                    } else if (position["qty"].is_number()) {
+                                        // Some APIs return as number - use double for fractional crypto quantities
+                                        actual_position_quantity = position["qty"].get<double>();
+                                    } else {
+                                        // Fallback: use cached value if qty field is unexpected type
+                                        actual_position_quantity = static_cast<double>(current_position_quantity);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // If position not found in API response, fall back to cached value
+                if (!position_found_in_api) {
+                    actual_position_quantity = static_cast<double>(current_position_quantity);
+                    std::ostringstream fallback_log_stream;
+                    fallback_log_stream << "Position not found in API response for " << config.trading_mode.primary_symbol 
+                                       << ", using cached quantity: " << current_position_quantity;
+                    log_message(fallback_log_stream.str(), "");
+                }
+            } catch (const std::exception& position_fetch_exception_error) {
+                // Fallback to using the passed current_position_quantity if fetch fails
+                actual_position_quantity = static_cast<double>(current_position_quantity);
+                std::ostringstream fallback_log_stream;
+                fallback_log_stream << "Warning: Failed to fetch fresh position from account, using cached value. Error: " 
+                                   << std::string(position_fetch_exception_error.what());
+                log_message(fallback_log_stream.str(), "");
             }
+            
+            if (actual_position_quantity <= 0.0) {
+                // No position to close - silently skip (crypto cannot be shorted)
+                return;
+            }
+            
+            // CRITICAL: Crypto sell signal - close entire position immediately with market order
+            // Create PositionSizing with full actual position quantity for immediate market order execution
+            PositionSizing full_position_sizing = position_sizing_input;
+            full_position_sizing.quantity = actual_position_quantity;
+            
+            // Log the full position closure with actual fetched quantity
+            std::ostringstream closure_log_stream;
+            closure_log_stream << "Crypto sell signal detected - closing entire position immediately. "
+                               << "Fetched position quantity: " << std::fixed << std::setprecision(8) << actual_position_quantity
+                               << " | Symbol: " << config.trading_mode.primary_symbol;
+            log_message(closure_log_stream.str(), "");
+            
+            // Execute market order directly to close entire position (bypass bracket order logic)
+            execute_market_order(OrderSide::Sell, processed_data_input, full_position_sizing);
+            
+            // Update the last order timestamp after successful order placement
+            update_last_order_timestamp();
         } else {
             // Stocks: allow short selling
             if (current_position_quantity == 0) {
@@ -355,32 +411,13 @@ void OrderExecutionLogic::execute_bracket_order(OrderSide order_side_input, cons
                     
                     order_placed_status = true;
                     
-                    // Log actual API confirmation with all details
-                    std::ostringstream success_message_stream;
-                    success_message_stream << "ORDER ACCEPTED BY ALPACA API - " << order_side_string << " " 
-                                           << std::fixed << std::setprecision(8) << quantity_value 
-                                           << " " << symbol_string 
-                                           << " | Order ID: " << order_id 
-                                           << " | Status: " << order_status
-                                           << " | Type: " << order_type
-                                           << " | Time in Force: " << time_in_force_actual;
-                    if (!filled_qty.empty() && filled_qty != "0") {
-                        success_message_stream << " | Filled Qty: " << filled_qty;
-                    }
-                    if (!filled_avg_price.empty()) {
-                        success_message_stream << " | Filled Avg Price: $" << filled_avg_price;
-                    }
-                    if (!submitted_at.empty()) {
-                        success_message_stream << " | Submitted: " << submitted_at;
-                    }
-                    success_message_stream << " | Stop Loss: $" << std::fixed << std::setprecision(2) << exit_targets_input.stop_loss 
-                                           << " | Take Profit: $" << std::fixed << std::setprecision(2) << exit_targets_input.take_profit;
-                    log_message(success_message_stream.str(), "");
+                    // Log actual API confirmation with all details using table format
+                    TradingLogs::log_order_accepted("Market Order", symbol_string, order_side_string, quantity_value,
+                                                     order_id, order_status, filled_qty, filled_avg_price,
+                                                     submitted_at, exit_targets_input.stop_loss, exit_targets_input.take_profit);
                     
                     // Log full API response for debugging
-                    std::ostringstream api_response_stream;
-                    api_response_stream << "Full Alpaca API Success Response: " << api_response;
-                    log_message(api_response_stream.str(), "");
+                    TradingLogs::log_api_response_full(api_response);
                 } else {
                     // Unexpected response format
                     std::ostringstream unexpected_error_stream;
@@ -461,15 +498,9 @@ void OrderExecutionLogic::execute_market_order(OrderSide order_side_input, const
         market_order_json["time_in_force"] = "day";
     }
     
-    // Log order details before submission for debugging
-    std::ostringstream order_details_stream;
-    order_details_stream << "Submitting market order - Symbol: " << symbol_string 
-                         << " | Side: " << order_side_string 
-                         << " | Qty: " << std::fixed << std::setprecision(8) << quantity_value
-                         << " | Price: $" << std::fixed << std::setprecision(2) << current_price_amount
-                         << " | Time in Force: " << (is_crypto_mode ? "gtc" : "day")
-                         << " | Crypto Mode: " << (is_crypto_mode ? "YES" : "NO");
-    log_message(order_details_stream.str(), "");
+    // Log order details before submission using table format
+    TradingLogs::log_order_submission("Market Order", symbol_string, order_side_string, quantity_value, 
+                                     current_price_amount, (is_crypto_mode ? "gtc" : "day"), is_crypto_mode);
     
     std::string order_json_string = market_order_json.dump();
     std::string api_response = api_manager.place_order(order_json_string);
@@ -540,30 +571,13 @@ void OrderExecutionLogic::execute_market_order(OrderSide order_side_input, const
             std::string order_type = safe_get_string(response_json, "type", "");
             std::string time_in_force_actual = safe_get_string(response_json, "time_in_force", "");
             
-            // Log actual API confirmation with all details
-            std::ostringstream success_message_stream;
-            success_message_stream << "ORDER ACCEPTED BY ALPACA API - " << order_side_string << " " 
-                                   << std::fixed << std::setprecision(8) << quantity_value 
-                                   << " " << symbol_string 
-                                   << " | Order ID: " << order_id 
-                                   << " | Status: " << order_status
-                                   << " | Type: " << order_type
-                                   << " | Time in Force: " << time_in_force_actual;
-            if (!filled_qty.empty() && filled_qty != "0") {
-                success_message_stream << " | Filled Qty: " << filled_qty;
-            }
-            if (!filled_avg_price.empty()) {
-                success_message_stream << " | Filled Avg Price: $" << filled_avg_price;
-            }
-            if (!submitted_at.empty()) {
-                success_message_stream << " | Submitted: " << submitted_at;
-            }
-            log_message(success_message_stream.str(), "");
+            // Log actual API confirmation with all details using table format
+            TradingLogs::log_order_accepted("Market Order", symbol_string, order_side_string, quantity_value,
+                                             order_id, order_status, filled_qty, filled_avg_price,
+                                             submitted_at, 0.0, 0.0);
             
             // Log full API response for debugging
-            std::ostringstream api_response_stream;
-            api_response_stream << "Full Alpaca API Success Response: " << api_response;
-            log_message(api_response_stream.str(), "");
+            TradingLogs::log_api_response_full(api_response);
         } else {
             // Unexpected response format
             std::ostringstream unexpected_error_stream;
@@ -899,14 +913,9 @@ void OrderExecutionLogic::execute_limit_order(OrderSide order_side_input, const 
         limit_order_json["time_in_force"] = "day";
     }
     
-    std::ostringstream order_details_stream;
-    order_details_stream << "Submitting limit order - Symbol: " << symbol_string 
-                         << " | Side: " << order_side_string 
-                         << " | Qty: " << std::fixed << std::setprecision(8) << quantity_value
-                         << " | Limit Price: $" << std::fixed << std::setprecision(2) << limit_price
-                         << " | Current Market Price: $" << std::fixed << std::setprecision(2) << processed_data_input.curr.close_price
-                         << " | Time in Force: " << (is_crypto_mode ? "gtc" : "day");
-    log_message(order_details_stream.str(), "");
+    // Log order details before submission using table format
+    TradingLogs::log_order_submission("Limit Order", symbol_string, order_side_string, quantity_value,
+                                     processed_data_input.curr.close_price, (is_crypto_mode ? "gtc" : "day"), is_crypto_mode);
     
     std::string order_json_string = limit_order_json.dump();
     std::string api_response = api_manager.place_order(order_json_string);
@@ -930,18 +939,36 @@ void OrderExecutionLogic::execute_limit_order(OrderSide order_side_input, const 
         }
         
         if (response_json.contains("id")) {
-            std::string order_id = response_json.value("id", "");
-            std::string order_status = response_json.value("status", "");
+            // Safe extraction helper: handles null values in JSON
+            auto safe_get_string = [](const json& json_obj, const std::string& key, const std::string& default_value) -> std::string {
+                if (!json_obj.contains(key)) {
+                    return default_value;
+                }
+                if (json_obj[key].is_null()) {
+                    return default_value;
+                }
+                if (json_obj[key].is_string()) {
+                    return json_obj[key].get<std::string>();
+                }
+                if (json_obj[key].is_number()) {
+                    return std::to_string(json_obj[key].get<double>());
+                }
+                return default_value;
+            };
             
-            std::ostringstream success_message_stream;
-            success_message_stream << "LIMIT ORDER ACCEPTED BY ALPACA API - " << order_side_string << " " 
-                                   << std::fixed << std::setprecision(8) << quantity_value 
-                                   << " " << symbol_string 
-                                   << " | Order ID: " << order_id 
-                                   << " | Status: " << order_status
-                                   << " | Limit Price: $" << std::fixed << std::setprecision(2) << limit_price;
-            log_message(success_message_stream.str(), "");
-            log_message("Full Alpaca API Success Response: " + api_response, "");
+            std::string order_id = safe_get_string(response_json, "id", "");
+            std::string order_status = safe_get_string(response_json, "status", "");
+            std::string filled_qty_value = safe_get_string(response_json, "filled_qty", "0");
+            std::string filled_avg_price_value = safe_get_string(response_json, "filled_avg_price", "");
+            std::string submitted_at_value = safe_get_string(response_json, "submitted_at", "");
+            
+            // Log order acceptance using table format
+            TradingLogs::log_order_accepted("Limit Order", symbol_string, order_side_string, quantity_value,
+                                             order_id, order_status, filled_qty_value, filled_avg_price_value,
+                                             submitted_at_value, 0.0, limit_price);
+            
+            // Log full API response for debugging
+            TradingLogs::log_api_response_full(api_response);
         } else {
             throw std::runtime_error("Unexpected API response format - no order ID or error code found. Response: " + api_response);
         }
@@ -996,15 +1023,9 @@ void OrderExecutionLogic::execute_stop_limit_order(OrderSide order_side_input, c
         stop_limit_order_json["time_in_force"] = "day";
     }
     
-    std::ostringstream order_details_stream;
-    order_details_stream << "Submitting stop-limit order - Symbol: " << symbol_string 
-                         << " | Side: " << order_side_string 
-                         << " | Qty: " << std::fixed << std::setprecision(8) << quantity_value
-                         << " | Stop Price: $" << std::fixed << std::setprecision(2) << stop_price
-                         << " | Limit Price: $" << std::fixed << std::setprecision(2) << limit_price
-                         << " | Current Market Price: $" << std::fixed << std::setprecision(2) << processed_data_input.curr.close_price
-                         << " | Time in Force: " << (is_crypto_mode ? "gtc" : "day");
-    log_message(order_details_stream.str(), "");
+    // Log order details before submission using table format
+    TradingLogs::log_order_submission("Stop-Limit Order", symbol_string, order_side_string, quantity_value,
+                                     processed_data_input.curr.close_price, (is_crypto_mode ? "gtc" : "day"), is_crypto_mode);
     
     std::string order_json_string = stop_limit_order_json.dump();
     std::string api_response = api_manager.place_order(order_json_string);
@@ -1047,17 +1068,17 @@ void OrderExecutionLogic::execute_stop_limit_order(OrderSide order_side_input, c
             
             std::string order_id = safe_get_string(response_json, "id", "");
             std::string order_status = safe_get_string(response_json, "status", "");
+            std::string filled_qty_value = safe_get_string(response_json, "filled_qty", "0");
+            std::string filled_avg_price_value = safe_get_string(response_json, "filled_avg_price", "");
+            std::string submitted_at_value = safe_get_string(response_json, "submitted_at", "");
             
-            std::ostringstream success_message_stream;
-            success_message_stream << "STOP-LIMIT ORDER ACCEPTED BY ALPACA API - " << order_side_string << " " 
-                                   << std::fixed << std::setprecision(8) << quantity_value 
-                                   << " " << symbol_string 
-                                   << " | Order ID: " << order_id 
-                                   << " | Status: " << order_status
-                                   << " | Stop Price: $" << std::fixed << std::setprecision(2) << stop_price
-                                   << " | Limit Price: $" << std::fixed << std::setprecision(2) << limit_price;
-            log_message(success_message_stream.str(), "");
-            log_message("Full Alpaca API Success Response: " + api_response, "");
+            // Log order acceptance using table format
+            TradingLogs::log_order_accepted("Stop-Limit Order", symbol_string, order_side_string, quantity_value,
+                                             order_id, order_status, filled_qty_value, filled_avg_price_value,
+                                             submitted_at_value, stop_price, limit_price);
+            
+            // Log full API response for debugging
+            TradingLogs::log_api_response_full(api_response);
         } else {
             throw std::runtime_error("Unexpected API response format - no order ID or error code found. Response: " + api_response);
         }
@@ -1078,15 +1099,9 @@ void OrderExecutionLogic::execute_crypto_bracket_simulation(OrderSide order_side
     double stop_loss_price = exit_targets_input.stop_loss;
     double take_profit_price = exit_targets_input.take_profit;
     
-    std::ostringstream bracket_sim_log_stream;
-    bracket_sim_log_stream << "CRYPTO BRACKET SIMULATION - Symbol: " << symbol_string 
-                           << " | Side: " << order_side_string
-                           << " | Qty: " << std::fixed << std::setprecision(8) << position_sizing_input.quantity
-                           << " | Entry: $" << std::fixed << std::setprecision(2) << processed_data_input.curr.close_price
-                           << " | Stop Loss: $" << std::fixed << std::setprecision(2) << stop_loss_price
-                           << " | Take Profit: $" << std::fixed << std::setprecision(2) << take_profit_price
-                           << " | Placing entry order, then separate stop-loss and take-profit orders";
-    log_message(bracket_sim_log_stream.str(), "");
+    // Log crypto bracket simulation using table format
+    TradingLogs::log_crypto_bracket_simulation(symbol_string, order_side_string, position_sizing_input.quantity,
+                                               processed_data_input.curr.close_price, stop_loss_price, take_profit_price);
     
     // CRITICAL: Cancel existing orders before placing new ones to avoid wash trade detection
     // ALPACA DOCS: Wash trade detection occurs when opposite side orders exist
@@ -1218,7 +1233,7 @@ void OrderExecutionLogic::execute_crypto_bracket_simulation(OrderSide order_side
         OrderSide tp_side = (order_side_input == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy;
         execute_limit_order(tp_side, processed_data_input, position_sizing_input, take_profit_price);
         
-        log_message("CRYPTO BRACKET SIMULATION COMPLETE - Entry, stop-loss, and take-profit orders placed", "");
+        TradingLogs::log_crypto_bracket_complete();
         
     } catch (const std::exception& exception_error) {
         std::ostringstream error_stream;

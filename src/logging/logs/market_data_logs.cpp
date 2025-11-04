@@ -7,6 +7,7 @@
 #include <string>
 #include <ctime>
 #include <stdexcept>
+#include <algorithm>
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -216,7 +217,12 @@ void MarketDataLogs::log_market_data_failure_table(const std::string& symbol, co
     log_message(footerLineValue, log_file);
 }
 
-void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std::vector<Core::Bar>& bars, const std::string& log_file) {
+void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std::vector<Core::Bar>& bars, const std::string& log_file, int bars_required) {
+    // Compliance: No defaults allowed - bars_required must be explicitly provided and validated
+    if (bars_required <= 0) {
+        throw std::runtime_error("log_all_bars_received: bars_required must be > 0. Provided value: " + std::to_string(bars_required));
+    }
+    
     if (bars.empty()) {
         log_message("BARS RECEIVED: No bars received for " + symbol, log_file);
         return;
@@ -226,9 +232,14 @@ void MarketDataLogs::log_all_bars_received(const std::string& symbol, const std:
     log_message("================================================================================", log_file);
     log_message("", log_file);
     
-    // Header with symbol and bar count
-    std::string headerTitleValue = "ACCUMULATED BARS: " + std::to_string(bars.size()) + " bars";
-    std::string headerSubtitleValue = "Symbol: " + symbol;
+    // Header with symbol and bar count, showing progress
+    std::string headerTitleValue = "ACCUMULATED BARS";
+    double progress_percentage = (static_cast<double>(bars.size()) / static_cast<double>(bars_required)) * 100.0;
+    progress_percentage = std::min(100.0, std::max(0.0, progress_percentage));
+    std::ostringstream progress_stream;
+    progress_stream << std::fixed << std::setprecision(1) << "Symbol: " << symbol 
+                   << " | " << bars.size() << " / " << bars_required << " (" << progress_percentage << "%)";
+    std::string headerSubtitleValue = progress_stream.str();
     
     std::string headerLineOneValue = "┌───────────────────┬──────────────────────────────────────────────────┐";
     log_message(headerLineOneValue, log_file);

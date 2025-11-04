@@ -48,7 +48,13 @@ void TradingLogs::log_shutdown(unsigned long total_loops, double final_equity) {
 
 void TradingLogs::log_market_status(bool is_open, const std::string& reason) {
     if (is_open) {
-        log_message("Market is OPEN - trading allowed", "");
+        std::string msg = "Market is OPEN";
+        if (!reason.empty()) {
+            msg += " - " + reason;
+        } else {
+            msg += " - trading allowed";
+        }
+        log_message(msg, "");
     } else {
         std::string msg = "Market is CLOSED";
         if (!reason.empty()) {
@@ -1051,6 +1057,125 @@ void TradingLogs::end_inline_status() {
 // Order execution header
 void TradingLogs::log_order_execution_header() {
     LOG_THREAD_ORDER_EXECUTION_HEADER();
+}
+
+// Order submission logging
+void TradingLogs::log_order_submission(const std::string& order_type, const std::string& symbol, const std::string& side, 
+                                      double quantity, double price, const std::string& time_in_force, bool is_crypto_mode) {
+    TABLE_HEADER_48("ORDER SUBMISSION", "Submitting Order to Alpaca API");
+    
+    TABLE_ROW_48("Order Type", order_type);
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Side", side);
+    std::ostringstream qty_stream;
+    qty_stream << std::fixed << std::setprecision(8) << quantity;
+    TABLE_ROW_48("Quantity", qty_stream.str());
+    std::ostringstream price_stream;
+    price_stream << "$" << std::fixed << std::setprecision(2) << price;
+    TABLE_ROW_48("Price", price_stream.str());
+    TABLE_ROW_48("Time in Force", time_in_force);
+    TABLE_ROW_48("Crypto Mode", is_crypto_mode ? "YES" : "NO");
+    
+    TABLE_FOOTER_48();
+}
+
+// Order accepted confirmation logging
+void TradingLogs::log_order_accepted(const std::string& order_type, const std::string& symbol, const std::string& side,
+                                     double quantity, const std::string& order_id, const std::string& status,
+                                     const std::string& filled_qty, const std::string& filled_avg_price,
+                                     const std::string& submitted_at, double stop_price, double limit_price) {
+    TABLE_HEADER_48("ORDER ACCEPTED", "Alpaca API Confirmation");
+    
+    std::ostringstream qty_stream;
+    qty_stream << std::fixed << std::setprecision(8) << quantity;
+    TABLE_ROW_48("Order Type", order_type);
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Side", side);
+    TABLE_ROW_48("Quantity", qty_stream.str());
+    TABLE_ROW_48("Order ID", order_id.empty() ? "N/A" : order_id);
+    TABLE_ROW_48("Status", status.empty() ? "N/A" : status);
+    
+    if (!filled_qty.empty() && filled_qty != "0") {
+        TABLE_SEPARATOR_48();
+        TABLE_ROW_48("Filled Quantity", filled_qty);
+        if (!filled_avg_price.empty()) {
+            std::ostringstream filled_price_stream;
+            filled_price_stream << "$" << filled_avg_price;
+            TABLE_ROW_48("Filled Avg Price", filled_price_stream.str());
+        }
+    }
+    
+    if (!submitted_at.empty()) {
+        TABLE_SEPARATOR_48();
+        TABLE_ROW_48("Submitted At", submitted_at);
+    }
+    
+    if (stop_price > 0.0 || limit_price > 0.0) {
+        TABLE_SEPARATOR_48();
+        if (stop_price > 0.0) {
+            std::ostringstream stop_stream;
+            stop_stream << "$" << std::fixed << std::setprecision(2) << stop_price;
+            TABLE_ROW_48("Stop Price", stop_stream.str());
+        }
+        
+        if (limit_price > 0.0) {
+            std::ostringstream limit_stream;
+            limit_stream << "$" << std::fixed << std::setprecision(2) << limit_price;
+            TABLE_ROW_48("Limit Price", limit_stream.str());
+        }
+    }
+    
+    TABLE_FOOTER_48();
+}
+
+// Full API response logging (condensed to key fields)
+void TradingLogs::log_api_response_full(const std::string& api_response_json) {
+    // Log full JSON to file (not in table format for readability)
+    log_message("Full Alpaca API Response JSON: " + api_response_json, "");
+}
+
+// Crypto bracket simulation logging
+void TradingLogs::log_crypto_bracket_simulation(const std::string& symbol, const std::string& side, double quantity,
+                                               double entry_price, double stop_loss, double take_profit) {
+    TABLE_HEADER_48("CRYPTO BRACKET", "Simulating Bracket Order");
+    
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Side", side);
+    std::ostringstream qty_stream;
+    qty_stream << std::fixed << std::setprecision(8) << quantity;
+    TABLE_ROW_48("Quantity", qty_stream.str());
+    
+    TABLE_SEPARATOR_48();
+    
+    std::ostringstream entry_stream;
+    entry_stream << "$" << std::fixed << std::setprecision(2) << entry_price;
+    TABLE_ROW_48("Entry Price", entry_stream.str());
+    
+    std::ostringstream stop_stream;
+    stop_stream << "$" << std::fixed << std::setprecision(2) << stop_loss;
+    TABLE_ROW_48("Stop Loss", stop_stream.str());
+    
+    std::ostringstream take_profit_stream;
+    take_profit_stream << "$" << std::fixed << std::setprecision(2) << take_profit;
+    TABLE_ROW_48("Take Profit", take_profit_stream.str());
+    
+    TABLE_SEPARATOR_48();
+    
+    TABLE_ROW_48("Strategy", "Placing entry, then separate stop-loss and take-profit orders");
+    
+    TABLE_FOOTER_48();
+}
+
+// Crypto bracket simulation complete
+void TradingLogs::log_crypto_bracket_complete() {
+    TABLE_HEADER_48("BRACKET COMPLETE", "All Orders Placed Successfully");
+    
+    TABLE_ROW_48("Entry Order", "Placed");
+    TABLE_ROW_48("Stop-Loss Order", "Placed");
+    TABLE_ROW_48("Take-Profit Order", "Placed");
+    TABLE_ROW_48("Status", "Complete");
+    
+    TABLE_FOOTER_48();
 }
 
 // Enhanced signal analysis logging

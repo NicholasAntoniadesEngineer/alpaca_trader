@@ -64,7 +64,7 @@ bool MarketBarsManager::compute_technical_indicators_from_bars(ProcessedData& pr
     if (bars_data.empty()) {
         return false;
     }
-    
+
     const Bar& current_bar = bars_data.back();
     processed_data.curr = current_bar;
 
@@ -109,9 +109,9 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
     MarketSnapshot market_snapshot;
     
     try {
-        if (bars_data.empty()) {
-            return market_snapshot;
-        }
+    if (bars_data.empty()) {
+        return market_snapshot;
+    }
 
     // Calculate maximum bars needed for all calculations
     // avg_atr uses: atr_calculation_bars * average_atr_comparison_multiplier + 1 (for true range calculation)
@@ -146,9 +146,9 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
     // Set current and previous bars - CRITICAL: Add try-catch and validate bounds
     try {
         if (bars_data.empty()) {
-            return market_snapshot;
-        }
-        
+        return market_snapshot;
+    }
+
         const Bar& latest_bar = bars_data.back();
         
         // CRITICAL: Validate bar data before assigning
@@ -169,7 +169,7 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
         market_snapshot.curr.volume = latest_bar.volume;
         market_snapshot.curr.timestamp = latest_bar.timestamp;
         
-        if (bars_data.size() > 1) {
+    if (bars_data.size() > 1) {
             size_t prev_index = bars_data.size() - 2;
             if (prev_index < bars_data.size()) {
                 const Bar& prev_bar = bars_data[prev_index];
@@ -236,10 +236,10 @@ ProcessedData MarketBarsManager::compute_processed_data_from_bars(const std::vec
     ProcessedData processed_data_result;
     
     try {
-        if (bars_data.empty()) {
-            return processed_data_result;
-        }
-
+    if (bars_data.empty()) {
+        return processed_data_result;
+    }
+    
     // Calculate maximum bars needed for all calculations
     // avg_atr uses: atr_calculation_bars * average_atr_comparison_multiplier + 1 (for true range calculation)
     const int atr_calculation_bars_value = config.strategy.atr_calculation_bars;
@@ -256,13 +256,13 @@ ProcessedData MarketBarsManager::compute_processed_data_from_bars(const std::vec
     } else {
         bars_for_calculation_data = bars_data;
     }
-    
+
     // Extract price data for calculations (using only bars needed)
     std::vector<double> highs = extract_highs_from_bars(bars_for_calculation_data);
     std::vector<double> lows = extract_lows_from_bars(bars_for_calculation_data);
     std::vector<double> closes = extract_closes_from_bars(bars_for_calculation_data);
     std::vector<double> volumes = extract_volumes_from_bars(bars_for_calculation_data);
-    
+
     // Compute technical indicators - ATR calculates continuously, can be 0.0 during initial accumulation
     processed_data_result.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars_value, minimum_bars_for_atr_value);
     
@@ -271,10 +271,10 @@ ProcessedData MarketBarsManager::compute_processed_data_from_bars(const std::vec
     
     // Defensive checks before accessing tail elements - CRITICAL: Add comprehensive bounds checking
     try {
-        if (bars_data.size() < 2) {
-            throw std::runtime_error("Insufficient bars for processed data tail access");
-        }
-        
+    if (bars_data.size() < 2) {
+        throw std::runtime_error("Insufficient bars for processed data tail access");
+    }
+    
         // Validate indices before accessing
         size_t bars_size_value = bars_data.size();
         if (bars_size_value == 0) {
@@ -282,7 +282,7 @@ ProcessedData MarketBarsManager::compute_processed_data_from_bars(const std::vec
         }
         
         // Access current bar (last element)
-        processed_data_result.curr = bars_data.back();
+    processed_data_result.curr = bars_data.back();
         
         // Access previous bar (second to last) - CRITICAL: Validate index
         size_t prev_index_value = bars_size_value - 2;

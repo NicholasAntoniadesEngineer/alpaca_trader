@@ -57,7 +57,7 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,11
+strategy.bars_to_fetch_for_calculations,20
 strategy.minutes_per_bar,1
 strategy.atr_calculation_bars,10
 strategy.minimum_bars_for_atr_calculation,2
@@ -127,7 +127,7 @@ strategy.risk_based_position_size_multiplier,1.0
 
 # Position Size Constraints
 strategy.maximum_share_quantity_per_single_trade,1000
-strategy.maximum_dollar_value_per_single_trade,10000.0
+strategy.maximum_dollar_value_per_single_trade,1000.0
 
 # ========================================================================
 # PROFIT TAKING AND EXIT STRATEGY

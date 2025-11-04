@@ -240,9 +240,34 @@ std::vector<Core::Bar> PolygonCryptoClient::get_recent_bars(const Core::BarReque
     
     if (shouldLogBarsFlag) {
         try {
-            AlpacaTrader::Logging::MarketDataLogs::log_all_bars_received(request.symbol, accumulatedBarsResult, "trading_system.log");
+            // Compliance: Validate request.limit before passing (must be > 0 per config validation)
+            if (request.limit <= 0) {
+                throw std::runtime_error("Invalid bars_required for logging: request.limit must be > 0. Got: " + std::to_string(request.limit));
+            }
+            // Pass the requested limit (bars_to_fetch_for_calculations) to show progress
+            AlpacaTrader::Logging::MarketDataLogs::log_all_bars_received(request.symbol, accumulatedBarsResult, "trading_system.log", request.limit);
+        } catch (const std::exception& logging_exception_error) {
+            // Log error but continue - logging failure should not stop data flow
+            try {
+                AlpacaTrader::Logging::WebSocketLogs::log_websocket_message_details(
+                    "LOGGING_ERROR",
+                    "Failed to log accumulated bars: " + std::string(logging_exception_error.what()),
+                    "trading_system.log"
+                );
+            } catch (...) {
+                // Logging of logging error failed - continue anyway
+            }
         } catch (...) {
-            // Logging failed, continue
+            // Unknown exception in logging - continue anyway
+            try {
+                AlpacaTrader::Logging::WebSocketLogs::log_websocket_message_details(
+                    "LOGGING_ERROR",
+                    "Unknown exception while logging accumulated bars",
+                    "trading_system.log"
+                );
+            } catch (...) {
+                // Logging failed - continue
+            }
         }
     }
     

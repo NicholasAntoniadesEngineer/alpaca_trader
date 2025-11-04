@@ -16,6 +16,10 @@ using namespace AlpacaTrader::Logging;
 namespace AlpacaTrader {
 namespace Core {
 
+// Static variables for throttling logs when waiting for data
+static std::chrono::steady_clock::time_point last_waiting_data_log_time = std::chrono::steady_clock::time_point{};
+static constexpr int waiting_data_log_interval_seconds = 5; // Log every 5 seconds when waiting for data
+
 MarketDataCoordinator::MarketDataCoordinator(MarketDataManager& market_data_manager_ref)
     : market_data_manager(market_data_manager_ref) {}
 
@@ -27,26 +31,55 @@ ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::st
     }
     
     try {
-        // Log market data fetch start
-        MarketDataLogs::log_market_data_fetch_table(trading_symbol, manager_config.logging.log_file);
-        
         // MarketDataManager fetches bars internally and returns them to avoid duplicate fetching
         auto fetch_result = market_data_manager.fetch_and_process_market_data();
         
         ProcessedData processed_data = fetch_result.first;
         historical_bars_output = fetch_result.second;
         
-        // Log position data and warnings
-        MarketDataLogs::log_position_data_and_warnings(
-            processed_data.pos_details.position_quantity,
-            processed_data.pos_details.current_value,
-            processed_data.pos_details.unrealized_pl,
-            processed_data.exposure_pct,
-            processed_data.open_orders,
-            manager_config.logging.log_file,
-            manager_config.strategy.position_long_string,
-            manager_config.strategy.position_short_string
-        );
+        // Check if we have valid price data
+        bool has_valid_price_data = processed_data.curr.close_price > 0.0 && 
+                                    processed_data.curr.open_price > 0.0 &&
+                                    processed_data.curr.high_price > 0.0 &&
+                                    processed_data.curr.low_price > 0.0;
+        
+        // Throttle logging when waiting for data - only log every N seconds
+        auto current_time = std::chrono::steady_clock::now();
+        bool should_log_verbose = true;
+        
+        if (!has_valid_price_data) {
+            // Check if enough time has passed since last log
+            if (last_waiting_data_log_time != std::chrono::steady_clock::time_point{}) {
+                auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_waiting_data_log_time).count();
+                should_log_verbose = (time_since_last_log >= waiting_data_log_interval_seconds);
+            }
+            
+            if (should_log_verbose) {
+                last_waiting_data_log_time = current_time;
+            }
+        } else {
+            // We have valid data, reset the throttling timer and always log
+            last_waiting_data_log_time = std::chrono::steady_clock::time_point{};
+            should_log_verbose = true;
+        }
+        
+        // Only log verbose messages when we should (either have data or throttling allows it)
+        if (should_log_verbose) {
+            // Log market data fetch start
+            MarketDataLogs::log_market_data_fetch_table(trading_symbol, manager_config.logging.log_file);
+            
+            // Log position data and warnings
+            MarketDataLogs::log_position_data_and_warnings(
+                processed_data.pos_details.position_quantity,
+                processed_data.pos_details.current_value,
+                processed_data.pos_details.unrealized_pl,
+                processed_data.exposure_pct,
+                processed_data.open_orders,
+                manager_config.logging.log_file,
+                manager_config.strategy.position_long_string,
+                manager_config.strategy.position_short_string
+            );
+        }
         
         return processed_data;
         
@@ -149,19 +182,40 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
     bool atr_is_zero = (processed_data_result.atr == 0.0);
     
     if (!has_valid_price_data) {
-        // Use condensed table format for insufficient data scenarios
-        MarketDataThreadLogs::log_insufficient_data_condensed(
-            symbol,
-            atr_is_zero,
-            true,
-            processed_data_result.curr.close_price,
-            processed_data_result.curr.open_price,
-            processed_data_result.curr.high_price,
-            processed_data_result.curr.low_price,
-            bars_available_count
-        );
+        // Throttle logging when waiting for data - only log every N seconds
+        auto current_time = std::chrono::steady_clock::now();
+        bool should_log_insufficient_data = true;
+        
+        if (last_waiting_data_log_time != std::chrono::steady_clock::time_point{}) {
+            auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_waiting_data_log_time).count();
+            should_log_insufficient_data = (time_since_last_log >= waiting_data_log_interval_seconds);
+        } else {
+            // First time logging, update the timestamp
+            last_waiting_data_log_time = current_time;
+        }
+        
+        if (should_log_insufficient_data) {
+            // Use condensed table format for insufficient data scenarios
+            const SystemConfig& config = market_data_manager.get_config();
+            int bars_required_count = config.strategy.bars_to_fetch_for_calculations;
+            MarketDataThreadLogs::log_insufficient_data_condensed(
+                symbol,
+                atr_is_zero,
+                true,
+                processed_data_result.curr.close_price,
+                processed_data_result.curr.open_price,
+                processed_data_result.curr.high_price,
+                processed_data_result.curr.low_price,
+                bars_available_count,
+                bars_required_count
+            );
+            last_waiting_data_log_time = current_time;
+        }
         return;
     }
+    
+    // We have valid data, reset the throttling timer
+    last_waiting_data_log_time = std::chrono::steady_clock::time_point{};
     
     if (atr_is_zero) {
         // ATR is zero but price data is valid - log warning but proceed (snapshot will update)
@@ -246,10 +300,8 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
             MarketDataThreadLogs::log_csv_logging_error(symbol, "Unknown exception logging bar to CSV");
         }
         
-        MarketDataValidator& validator = market_data_manager.get_market_data_validator();
         const SystemConfig& config = market_data_manager.get_config();
-        API::ApiManager& api_manager = market_data_manager.get_api_manager();
-        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, validator, symbol, config.timing, api_manager, last_bar_log_time, previous_bar);
+        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, symbol, config.timing, last_bar_log_time, previous_bar);
         
     } catch (const std::exception& exception_error) {
         MarketDataThreadLogs::log_thread_loop_exception("Error in process_market_data_iteration: " + std::string(exception_error.what()));

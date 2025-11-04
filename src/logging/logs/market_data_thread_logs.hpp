@@ -50,11 +50,11 @@ public:
     // Data validation logging
     static void log_zero_atr_warning(const std::string& symbol);
     static void log_duplicate_bar_skipped(const std::string& symbol, const std::string& bar_timestamp);
-    static void log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available);
+    static void log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available, int bars_required);
     
     // Utility functions
     static bool is_fetch_allowed(const std::atomic<bool>* allow_fetch_ptr);
-    static void process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, MarketDataValidator& validator, const std::string& symbol, const TimingConfig& timing, ApiManager& api_manager, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
+    static void process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
 };
 
 } // namespace Logging

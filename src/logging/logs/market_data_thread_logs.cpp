@@ -5,6 +5,7 @@
 #include "logging/logger/logging_macros.hpp"
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace AlpacaTrader::Logging;
 using namespace AlpacaTrader::Core;
@@ -83,7 +84,7 @@ void MarketDataThreadLogs::log_zero_atr_warning(const std::string& symbol) {
     log_message("ATR is zero for " + symbol + ", not updating snapshot", "trading_system.log");
 }
 
-void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available) {
+void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available, int bars_required) {
     TABLE_HEADER_48("Insufficient Data", "Waiting for Market Data Accumulation");
     
     TABLE_ROW_48("Symbol", symbol);
@@ -98,6 +99,21 @@ void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& sy
     }
     TABLE_ROW_48("Status", status_text);
     
+    // Progress indicator: bars available / bars required
+    std::string progress_text;
+    if (bars_required > 0) {
+        double progress_percentage = (static_cast<double>(bars_available) / static_cast<double>(bars_required)) * 100.0;
+        progress_percentage = std::min(100.0, std::max(0.0, progress_percentage));
+        
+        std::ostringstream progress_stream;
+        progress_stream << std::fixed << std::setprecision(1) << bars_available << " / " << bars_required 
+                       << " (" << progress_percentage << "%)";
+        progress_text = progress_stream.str();
+    } else {
+        progress_text = std::to_string(bars_available) + " / ?";
+    }
+    TABLE_ROW_48("Data Progress", progress_text);
+    
     std::string atr_status = atr_zero ? "Zero (calculating)" : "Available";
     TABLE_ROW_48("ATR", atr_status);
     
@@ -111,8 +127,6 @@ void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& sy
         price_data_status = "Valid";
     }
     TABLE_ROW_48("Price Data", price_data_status);
-    
-    TABLE_ROW_48("Bars Available", std::to_string(bars_available));
     
     std::string csv_status = (bars_available > 0) ? "Available" : "No bars";
     TABLE_ROW_48("CSV Logging", csv_status);
@@ -162,21 +176,49 @@ bool MarketDataThreadLogs::is_fetch_allowed(const std::atomic<bool>* allow_fetch
     return allow_fetch_ptr && allow_fetch_ptr->load();
 }
 
-void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, MarketDataValidator& validator, const std::string& symbol, const TimingConfig& timing, ApiManager& api_manager, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
-    (void)validator;  // Not used - we log bars directly without validating quotes
-    (void)api_manager;  // Not used - we don't make API calls for CSV logging
+void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
+    // Compliance: Removed unused parameters validator and api_manager per "No unused parameters" rule
     
     auto csv_logger = get_logging_context()->csv_bars_logger;
     if (!csv_logger) {
         return;
     }
     
+    // Check if we have valid price data - if not, throttle CSV logging decision messages
+    bool has_valid_price_data = computed_data.curr.close_price > 0.0 && 
+                                computed_data.curr.open_price > 0.0 &&
+                                computed_data.curr.high_price > 0.0 &&
+                                computed_data.curr.low_price > 0.0;
+    
     auto current_time = std::chrono::steady_clock::now();
     auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_bar_log_time).count();
     bool should_log_csv_data = last_bar_log_time == std::chrono::steady_clock::time_point{} || 
                               time_since_last_log >= timing.market_data_logging_interval_seconds;
     
-    MarketDataThreadLogs::log_csv_logging_decision(symbol, should_log_csv_data, time_since_last_log);
+    // Only log CSV logging decision messages when we have valid data or when throttling allows it
+    // When waiting for data, throttle these messages to reduce log spam
+    static std::chrono::steady_clock::time_point last_csv_decision_log_time = std::chrono::steady_clock::time_point{};
+    static constexpr int csv_decision_log_interval_seconds = 5; // Log every 5 seconds when waiting for data
+    
+    bool should_log_csv_decision = true;
+    if (!has_valid_price_data && historical_bars.empty()) {
+        if (last_csv_decision_log_time != std::chrono::steady_clock::time_point{}) {
+            auto time_since_last_csv_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_csv_decision_log_time).count();
+            should_log_csv_decision = (time_since_last_csv_log >= csv_decision_log_interval_seconds);
+        } else {
+            last_csv_decision_log_time = current_time;
+        }
+    } else {
+        // We have data, reset the throttling timer and always log
+        last_csv_decision_log_time = std::chrono::steady_clock::time_point{};
+    }
+    
+    if (should_log_csv_decision) {
+        MarketDataThreadLogs::log_csv_logging_decision(symbol, should_log_csv_data, time_since_last_log);
+        if (!has_valid_price_data && historical_bars.empty()) {
+            last_csv_decision_log_time = current_time;
+        }
+    }
     
     if (!should_log_csv_data) {
         LOG_THREAD_CONTENT("Skipping CSV logging - too soon since last log (" + std::to_string(time_since_last_log) + "s, need " + std::to_string(timing.market_data_logging_interval_seconds) + "s)");
@@ -189,14 +231,14 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
         // Log bars directly without making API calls for quotes
         // Bars are already logged in market_data_coordinator, but this provides additional logging
         // with duplicate detection to avoid logging the same bar multiple times
-        if (!historical_bars.empty()) {
-            const auto& latest_bar = historical_bars.back();
-            if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
+            if (!historical_bars.empty()) {
+                const auto& latest_bar = historical_bars.back();
+                if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
                 MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp, symbol);
-                // Update previous_bar to track the latest bar we logged
-                previous_bar = latest_bar;
-            } else {
-                MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
+                    // Update previous_bar to track the latest bar we logged
+                    previous_bar = latest_bar;
+                } else {
+                    MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
             }
         }
         

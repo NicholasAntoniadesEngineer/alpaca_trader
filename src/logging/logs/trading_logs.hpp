@@ -155,6 +155,18 @@ public:
     // Order execution header
     static void log_order_execution_header();
     
+    // Order submission and API response logging
+    static void log_order_submission(const std::string& order_type, const std::string& symbol, const std::string& side, 
+                                     double quantity, double price, const std::string& time_in_force, bool is_crypto_mode);
+    static void log_order_accepted(const std::string& order_type, const std::string& symbol, const std::string& side,
+                                   double quantity, const std::string& order_id, const std::string& status,
+                                   const std::string& filled_qty, const std::string& filled_avg_price,
+                                   const std::string& submitted_at, double stop_price, double limit_price);
+    static void log_api_response_full(const std::string& api_response_json);
+    static void log_crypto_bracket_simulation(const std::string& symbol, const std::string& side, double quantity,
+                                              double entry_price, double stop_loss, double take_profit);
+    static void log_crypto_bracket_complete();
+    
 private:
     static std::string format_currency(double amount);
     static std::string format_percentage(double percentage);
