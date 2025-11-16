@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <stdexcept>
 #include <filesystem>
+#include <cmath>
 
 namespace AlpacaTrader {
 namespace Logging {
@@ -77,6 +78,11 @@ void CSVBarsLogger::log_bar(const std::string& timestamp, const std::string& sym
                            const AlpacaTrader::Core::Bar& bar, double atr, double avg_atr, double avg_vol) {
     ensure_initialized();
 
+    // Safety check: Replace NaN/inf values with 0.0 to prevent CSV logging crashes
+    double safe_atr = std::isfinite(atr) ? atr : 0.0;
+    double safe_avg_atr = std::isfinite(avg_atr) ? avg_atr : 0.0;
+    double safe_avg_vol = std::isfinite(avg_vol) ? avg_vol : 0.0;
+
     std::lock_guard<std::mutex> lock(file_mutex);
 
     file_stream << timestamp << ","
@@ -86,9 +92,9 @@ void CSVBarsLogger::log_bar(const std::string& timestamp, const std::string& sym
                 << std::fixed << std::setprecision(2) << bar.low_price << ","
                 << std::fixed << std::setprecision(2) << bar.close_price << ","
                 << std::fixed << std::setprecision(6) << bar.volume << ","
-                << std::fixed << std::setprecision(4) << atr << ","
-                << std::fixed << std::setprecision(4) << avg_atr << ","
-                << std::fixed << std::setprecision(6) << avg_vol << "\n";
+                << std::fixed << std::setprecision(4) << safe_atr << ","
+                << std::fixed << std::setprecision(4) << safe_avg_atr << ","
+                << std::fixed << std::setprecision(6) << safe_avg_vol << "\n";
 
     file_stream.flush();
 }

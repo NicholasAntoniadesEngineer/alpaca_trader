@@ -17,3 +17,8 @@ logging.file_log_level,DEBUG
 logging.include_timestamp,true
 logging.include_thread_id,true
 logging.include_function_name,false
+
+# CSV logging decision messages
+logging.csv_logging_trigger_description,TRADING LOOP ITERATION (~1 SECOND)
+logging.csv_logging_enabled_reason,TRADING ITERATION - LOGGING ENABLED
+logging.csv_logging_disabled_reason,TOO SOON SINCE LAST LOG - SKIPPING

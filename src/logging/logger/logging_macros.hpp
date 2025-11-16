@@ -119,6 +119,30 @@
     LOG_THREAD_CONTENT("└───────────────────┴────────────────────────────────┘"); \
 } while(0)
 
+// 5-column table macros for MTH-TS consolidated analysis
+// Column widths: Metric (8), Daily (24), 30-Min (24), 1-Min (24), 1-Sec (24)
+#define TABLE_HEADER_5COL(title, subtitle) do { \
+    LOG_THREAD_CONTENT("┌──────────┬──────────────────────────┬──────────────────────────┬──────────────────────────┬──────────────────────────┐"); \
+    LOG_THREAD_CONTENT("│ " + std::string(title).substr(0,113) + std::string(113 - std::min(113, (int)std::string(title).length()), ' ') + "    │"); \
+    LOG_THREAD_CONTENT("│ " + std::string(subtitle).substr(0,113) + std::string(113 - std::min(113, (int)std::string(subtitle).length()), ' ') + "    │"); \
+    LOG_THREAD_CONTENT("├──────────┼──────────────────────────┼──────────────────────────┼──────────────────────────┼──────────────────────────┤"); \
+    LOG_THREAD_CONTENT("│ METRIC   │ DAILY                    │ 30-MIN                   │ 1-MIN                    │ 1-SEC                    │"); \
+    LOG_THREAD_CONTENT("├──────────┼──────────────────────────┼──────────────────────────┼──────────────────────────┼──────────────────────────┤"); \
+} while(0)
+
+#define TABLE_ROW_5COL(metric, daily, thirty_min, one_min, one_sec) do { \
+    std::string metric_str = std::string(metric).substr(0,8); \
+    std::string daily_str = std::string(daily).substr(0,24); \
+    std::string thirty_min_str = std::string(thirty_min).substr(0,24); \
+    std::string one_min_str = std::string(one_min).substr(0,24); \
+    std::string one_sec_str = std::string(one_sec).substr(0,24); \
+    LOG_THREAD_CONTENT("│ " + metric_str + std::string(8 - metric_str.length(), ' ') + " │ " + daily_str + std::string(24 - daily_str.length(), ' ') + " │ " + thirty_min_str + std::string(24 - thirty_min_str.length(), ' ') + " │ " + one_min_str + std::string(24 - one_min_str.length(), ' ') + " │ " + one_sec_str + std::string(24 - one_sec_str.length(), ' ') + " │"); \
+} while(0)
+
+#define TABLE_FOOTER_5COL() do { \
+    LOG_THREAD_CONTENT("└──────────┴──────────────────────────┴──────────────────────────┴──────────────────────────┴──────────────────────────┘"); \
+} while(0)
+
 // Condensed multi-column table macros for dynamic bar data
 // Column widths: Bar# (4), Time (19), Open/High/Low/Close/Volume (10 each)
 #define CONDENSED_BAR_TABLE_HEADER() do { \

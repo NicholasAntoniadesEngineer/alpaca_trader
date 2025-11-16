@@ -39,6 +39,8 @@ void BarAccumulator::addBar(const Core::Bar& incomingBarData) {
     std::lock_guard<std::mutex> stateGuard(accumulatorStateMutex);
     
     try {
+        // For crypto, reject bars with invalid OHLC values
+        // Only accept bars with valid positive prices
         if (incomingBarData.open_price <= 0.0 || incomingBarData.close_price <= 0.0 ||
             incomingBarData.high_price <= 0.0 || incomingBarData.low_price <= 0.0) {
             return;

@@ -99,6 +99,14 @@ std::vector<Core::Bar> AlpacaStocksClient::get_recent_bars(const Core::BarReques
     return bars;
 }
 
+std::vector<Core::Bar> AlpacaStocksClient::get_historical_bars(const std::string& /*symbol*/, const std::string& /*timeframe*/,
+                                                              const std::string& /*start_date*/, const std::string& /*end_date*/,
+                                                              int /*limit*/) const {
+    // Alpaca stocks API may not support the same historical data endpoints as Polygon
+    // This is a placeholder implementation - would need to be implemented based on Alpaca's API
+    throw std::runtime_error("Historical bars not implemented for Alpaca stocks API - use Polygon for historical data");
+}
+
 double AlpacaStocksClient::get_current_price(const std::string& symbol) const {
     if (!is_connected()) {
         throw std::runtime_error("Alpaca stocks client not connected");

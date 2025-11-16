@@ -40,7 +40,7 @@ public:
     static void log_stale_quote_warning(const std::string& symbol, int age_seconds);
     
     // CSV logging operations
-    static void log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log);
+    static void log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log, const LoggingConfig& logging_config);
     static void log_csv_quote_logging(const std::string& symbol, double mid_price);
     static void log_csv_bar_logging(const std::string& symbol, size_t bars_count);
     static void log_csv_logging_error(const std::string& symbol, const std::string& error_message);
@@ -54,7 +54,7 @@ public:
     
     // Utility functions
     static bool is_fetch_allowed(const std::atomic<bool>* allow_fetch_ptr);
-    static void process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
+    static void process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, const LoggingConfig& logging_config, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar);
 };
 
 } // namespace Logging

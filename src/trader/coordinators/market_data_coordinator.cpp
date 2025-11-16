@@ -23,6 +23,53 @@ static constexpr int waiting_data_log_interval_seconds = 5; // Log every 5 secon
 MarketDataCoordinator::MarketDataCoordinator(MarketDataManager& market_data_manager_ref)
     : market_data_manager(market_data_manager_ref) {}
 
+void MarketDataCoordinator::initialize_mth_ts_components() {
+    try {
+        const SystemConfig& config = market_data_manager.get_config();
+
+        // Initialize MTH-TS components if enabled
+        if (config.strategy.mth_ts_enabled) {
+            API::ApiManager& api_manager = market_data_manager.get_api_manager();
+
+            if (api_manager.is_crypto_symbol(config.strategy.symbol)) {
+                try {
+                    API::PolygonCryptoClient* polygon_client = api_manager.get_polygon_crypto_client();
+                    if (polygon_client) {
+                        try {
+                            polygon_client->initialize_multi_timeframe_manager(config);
+                            log_message("MTH-TS MultiTimeframeManager initialized for symbol: " + config.strategy.symbol, "");
+                        } catch (const std::exception& mth_init_exception_error) {
+                            std::ostringstream mth_init_error_stream;
+                            mth_init_error_stream << "CRITICAL: Failed to initialize MTH-TS MultiTimeframeManager: " << mth_init_exception_error.what();
+                            log_message(mth_init_error_stream.str(), "");
+                            throw std::runtime_error("MTH-TS MultiTimeframeManager initialization failed: " + std::string(mth_init_exception_error.what()));
+                        } catch (...) {
+                            log_message("CRITICAL: Unknown error initializing MTH-TS MultiTimeframeManager", "");
+                            throw std::runtime_error("Unknown error initializing MTH-TS MultiTimeframeManager");
+                        }
+                    } else {
+                        log_message("CRITICAL: PolygonCryptoClient not available for MTH-TS initialization", "");
+                        throw std::runtime_error("PolygonCryptoClient not available for MTH-TS initialization");
+                    }
+                } catch (const std::exception& polygon_exception_error) {
+                    std::ostringstream polygon_error_stream;
+                    polygon_error_stream << "CRITICAL: Failed to get PolygonCryptoClient: " << polygon_exception_error.what();
+                    log_message(polygon_error_stream.str(), "");
+                    throw std::runtime_error("PolygonCryptoClient access failed: " + std::string(polygon_exception_error.what()));
+                } catch (...) {
+                    log_message("CRITICAL: Unknown error accessing PolygonCryptoClient", "");
+                    throw std::runtime_error("Unknown error accessing PolygonCryptoClient");
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        std::ostringstream error_stream;
+        error_stream << "Failed to initialize MTH-TS components: " << e.what();
+        log_message(error_stream.str(), "");
+        throw;
+    }
+}
+
 ProcessedData MarketDataCoordinator::fetch_and_process_market_data(const std::string& trading_symbol, std::vector<Bar>& historical_bars_output) {
     // Validate symbol matches MarketDataManager's configured symbol
     const SystemConfig& manager_config = market_data_manager.get_config();
@@ -217,6 +264,21 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
     // We have valid data, reset the throttling timer
     last_waiting_data_log_time = std::chrono::steady_clock::time_point{};
     
+    // SPECIAL HANDLING FOR MTH-TS: If snapshot already has valid ATR but processing gives zero ATR,
+    // this indicates MTH-TS data is being overwritten by insufficient accumulator data
+    if (atr_is_zero && snapshot_state.market_snapshot.atr > 0.0) {
+        // MTH-TS data is already in snapshot, skip update with zero ATR data
+        MarketDataThreadLogs::log_zero_atr_warning(symbol + " (MTH-TS data preserved)");
+        return;
+    }
+
+    // Handle MTH-TS sentinel values: -1.0 indicates ATR should be calculated by MTH-TS processing
+    if (processed_data_result.atr == -1.0) {
+        // This is expected for MTH-TS - ATR will be set by the MTH-TS processing in trading coordinator
+        // Don't update the snapshot with sentinel values
+        return;
+    }
+    
     if (atr_is_zero) {
         // ATR is zero but price data is valid - log warning but proceed (snapshot will update)
         MarketDataThreadLogs::log_zero_atr_warning(symbol);
@@ -270,12 +332,86 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
 
         std::vector<Bar> historical_bars_for_logging;
         ProcessedData computed_data = fetch_and_process_market_data(symbol, historical_bars_for_logging);
+
+        // LOG MOST RECENT BARS FROM ROLLING WINDOWS
+        // The historical_bars_for_logging comes from websocket accumulator which may be stale
+        // But the rolling windows (minute_bars, thirty_min_bars, daily_bars) are continuously updated
+        // For logging, we want the most recent bars from these rolling windows, not the stale accumulator
+
+        // Get fresh bars from the rolling windows instead of potentially stale accumulator
+        std::vector<Bar> fresh_bars_for_logging;
+        try {
+            auto& api_mgr = market_data_manager.get_api_manager();
+            auto* polygon_client = api_mgr.get_polygon_crypto_client();
+            auto* mtf_manager = polygon_client ? polygon_client->get_multi_timeframe_manager() : nullptr;
+
+            if (mtf_manager) {
+                const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
+
+                // Use the most recent bars from rolling windows (prioritize smaller timeframes)
+                // Convert MultiTimeframeBar to Bar for CSV logging compatibility
+                if (!mtf_data.minute_bars.empty()) {
+                    const auto& mtf_bar = mtf_data.minute_bars.back();
+                    Bar bar;
+                    bar.open_price = mtf_bar.open_price;
+                    bar.high_price = mtf_bar.high_price;
+                    bar.low_price = mtf_bar.low_price;
+                    bar.close_price = mtf_bar.close_price;
+                    bar.volume = mtf_bar.volume;
+                    bar.timestamp = mtf_bar.timestamp;
+                    fresh_bars_for_logging.push_back(bar);
+                } else if (!mtf_data.thirty_min_bars.empty()) {
+                    const auto& mtf_bar = mtf_data.thirty_min_bars.back();
+                    Bar bar;
+                    bar.open_price = mtf_bar.open_price;
+                    bar.high_price = mtf_bar.high_price;
+                    bar.low_price = mtf_bar.low_price;
+                    bar.close_price = mtf_bar.close_price;
+                    bar.volume = mtf_bar.volume;
+                    bar.timestamp = mtf_bar.timestamp;
+                    fresh_bars_for_logging.push_back(bar);
+                } else if (!mtf_data.daily_bars.empty()) {
+                    const auto& mtf_bar = mtf_data.daily_bars.back();
+                    Bar bar;
+                    bar.open_price = mtf_bar.open_price;
+                    bar.high_price = mtf_bar.high_price;
+                    bar.low_price = mtf_bar.low_price;
+                    bar.close_price = mtf_bar.close_price;
+                    bar.volume = mtf_bar.volume;
+                    bar.timestamp = mtf_bar.timestamp;
+                    fresh_bars_for_logging.push_back(bar);
+                } else if (!historical_bars_for_logging.empty()) {
+                    // Fallback to accumulator bars if rolling windows are empty
+                    fresh_bars_for_logging.push_back(historical_bars_for_logging.back());
+                }
+
+                // Replace historical_bars_for_logging with fresh rolling window bars
+                if (!fresh_bars_for_logging.empty()) {
+                    historical_bars_for_logging = std::move(fresh_bars_for_logging);
+                }
+            }
+        } catch (const std::exception& rolling_window_error) {
+            // Log error but continue with original bars
+            LOG_THREAD_CONTENT("Failed to get fresh bars from rolling windows: " + std::string(rolling_window_error.what()));
+        }
         
         // Update snapshot - logging for insufficient data is handled inside update_shared_market_snapshot
         update_shared_market_snapshot(computed_data, snapshot_state, symbol, historical_bars_for_logging.size());
         
-        // Log bars to CSV immediately after successful processing for validation
-        // This ensures we log the bars we're actually using for trading decisions
+        const SystemConfig& config_ref = market_data_manager.get_config();
+
+        // Log bars to CSV on every trading iteration (event-driven by trading loop)
+        // The user wants logging "everytime there is a new bar that should come in around once a second"
+        // This means logging on every trading decision iteration, not just when WebSocket data arrives
+        // Check timing to ensure we don't log more frequently than intended (every ~1 second)
+        auto current_time = std::chrono::steady_clock::now();
+        auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_bar_log_time).count();
+
+        // Log if this is startup OR if at least 1 second has passed since last log
+        bool should_log_this_iteration = (last_bar_log_time == std::chrono::steady_clock::time_point{}) ||
+                                        (time_since_last_log >= 1);
+
+        if (should_log_this_iteration) {
         try {
             auto* logging_context = AlpacaTrader::Logging::get_logging_context();
             if (logging_context && logging_context->csv_bars_logger && !historical_bars_for_logging.empty()) {
@@ -293,15 +429,18 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
                     computed_data.avg_atr,
                     computed_data.avg_vol
                 );
+
+                    // Update previous_bar to track what we just logged
+                    previous_bar = latest_bar;
             }
         } catch (const std::exception& csv_log_exception) {
             MarketDataThreadLogs::log_csv_logging_error(symbol, "Exception logging bar to CSV: " + std::string(csv_log_exception.what()));
         } catch (...) {
             MarketDataThreadLogs::log_csv_logging_error(symbol, "Unknown exception logging bar to CSV");
+            }
         }
         
-        const SystemConfig& config = market_data_manager.get_config();
-        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, symbol, config.timing, last_bar_log_time, previous_bar);
+        MarketDataThreadLogs::process_csv_logging_if_needed(computed_data, historical_bars_for_logging, symbol, config_ref.timing, config_ref.logging, last_bar_log_time, previous_bar);
         
     } catch (const std::exception& exception_error) {
         MarketDataThreadLogs::log_thread_loop_exception("Error in process_market_data_iteration: " + std::string(exception_error.what()));

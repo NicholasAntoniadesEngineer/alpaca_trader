@@ -13,6 +13,11 @@ struct LoggingConfig {
     bool include_timestamp;
     bool include_thread_id;
     bool include_function_name;
+
+    // CSV logging decision messages
+    std::string csv_logging_trigger_description;
+    std::string csv_logging_enabled_reason;
+    std::string csv_logging_disabled_reason;
 };
 
 #endif // LOGGING_CONFIG_HPP

@@ -34,13 +34,25 @@ void TraderThread::operator()() {
         execute_trading_decision_loop();
         
     } catch (const std::exception& exception) {
-        ThreadLogs::log_thread_exception("TraderThread", std::string(exception.what()));
-        log_message("TraderThread exception: " + std::string(exception.what()), "trading_system.log");
-        std::abort();
+        try {
+            ThreadLogs::log_thread_exception("TraderThread", std::string(exception.what()));
+            log_message("TraderThread exception: " + std::string(exception.what()), "trading_system.log");
+        } catch (...) {
+            std::cerr << "CRITICAL: TraderThread exception: " << exception.what() << std::endl;
+        }
+        
+        std::cerr << "CRITICAL: TraderThread failed - terminating thread" << std::endl;
+        throw std::runtime_error("TraderThread exception: " + std::string(exception.what()));
     } catch (...) {
-        ThreadLogs::log_thread_unknown_exception("TraderThread");
-        log_message("TraderThread unknown exception", "trading_system.log");
-        std::abort();
+        try {
+            ThreadLogs::log_thread_unknown_exception("TraderThread");
+            log_message("TraderThread unknown exception", "trading_system.log");
+        } catch (...) {
+            std::cerr << "CRITICAL: TraderThread unknown exception" << std::endl;
+        }
+        
+        std::cerr << "CRITICAL: TraderThread unknown error - terminating thread" << std::endl;
+        throw std::runtime_error("TraderThread unknown exception");
     }
 }
 

@@ -136,6 +136,26 @@ void MultiApiConfigLoader::parse_provider_config(const std::string& key, const s
         if (!value.empty()) {
             provider_config.websocket_max_bar_history_size = std::stoi(value);
         }
+    } else if (field == "historical_bars.adjusted") {
+        if (!value.empty()) {
+            provider_config.historical_bars_adjusted = to_bool(value);
+        }
+    } else if (field == "historical_bars.sort") {
+        if (!value.empty()) {
+            provider_config.historical_bars_sort = value;
+        }
+    } else if (field == "historical_bars.limit") {
+        if (!value.empty()) {
+            provider_config.historical_bars_limit = std::stoi(value);
+        }
+    } else if (field == "websocket.wait_attempts") {
+        if (!value.empty()) {
+            provider_config.websocket_wait_attempts = std::stoi(value);
+        }
+    } else if (field == "websocket.wait_interval_ms") {
+        if (!value.empty()) {
+            provider_config.websocket_wait_interval_ms = std::stoi(value);
+        }
     } else if (field.find("endpoints.") == 0) {
         std::string endpoint_name = field.substr(10);
         
@@ -155,6 +175,8 @@ void MultiApiConfigLoader::parse_provider_config(const std::string& key, const s
             provider_config.endpoints.clock = value;
         } else if (endpoint_name == "assets") {
             provider_config.endpoints.assets = value;
+        } else if (endpoint_name == "historical_bars") {
+            provider_config.endpoints.historical_bars = value;
         }
     }
 }

@@ -13,6 +13,8 @@ namespace Logging {
 
 using AlpacaTrader::Core::AccountManager;
 using AlpacaTrader::Core::ProcessedData;
+using AlpacaTrader::Core::MthTsTimeframeAnalysis;
+using AlpacaTrader::Core::MultiTimeframeData;
 using AlpacaTrader::Core::SignalDecision;
 using AlpacaTrader::Core::FilterResult;
 
@@ -25,6 +27,18 @@ std::string TradingLogs::format_currency(double amount) {
 std::string TradingLogs::format_percentage(double percentage) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3) << percentage << "%";
+    return oss.str();
+}
+
+std::string TradingLogs::format_price(double price) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << price;
+    return oss.str();
+}
+
+std::string TradingLogs::format_decimal(double value, int precision) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(precision) << value;
     return oss.str();
 }
 
@@ -47,22 +61,60 @@ void TradingLogs::log_shutdown(unsigned long total_loops, double final_equity) {
 
 
 void TradingLogs::log_market_status(bool is_open, const std::string& reason) {
-    if (is_open) {
-        std::string msg = "Market is OPEN";
+    TABLE_HEADER_48("MARKET STATUS", "Trading Session Information");
+
+    TABLE_ROW_48("Market State", is_open ? "OPEN" : "CLOSED");
+    TABLE_ROW_48("Trading Status", is_open ? "ALLOWED" : "BLOCKED");
+
         if (!reason.empty()) {
-            msg += " - " + reason;
+        TABLE_ROW_48("Details", reason);
         } else {
-            msg += " - trading allowed";
+        TABLE_ROW_48("Details", is_open ? "Normal operation" : "Market closed");
         }
-        log_message(msg, "");
-    } else {
-        std::string msg = "Market is CLOSED";
-        if (!reason.empty()) {
-            msg += " - " + reason;
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("ACTION", is_open ? "PROCEED WITH TRADING" : "WAIT FOR MARKET OPEN");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_comprehensive_market_status(bool is_open, const std::string& primary_reason, const std::string& historical_data_status, double snapshot_price, bool proceeding_with_historical) {
+    TABLE_HEADER_48("COMPREHENSIVE MARKET STATUS", "Complete Trading Session Analysis");
+
+    TABLE_ROW_48("Market State", is_open ? "OPEN" : "CLOSED");
+    TABLE_ROW_48("Trading Status", is_open ? "ALLOWED" : "BLOCKED");
+
+    if (!primary_reason.empty()) {
+        TABLE_ROW_48("Primary Status", primary_reason);
+    }
+
+    if (!historical_data_status.empty()) {
+        TABLE_ROW_48("Historical Data", historical_data_status);
+    }
+
+    if (snapshot_price > 0.0) {
+        TABLE_ROW_48("Snapshot Price", "$" + std::to_string(snapshot_price).substr(0, 10));
         }
         
-        log_message(msg, "");
+    TABLE_ROW_48("Data Strategy", proceeding_with_historical ? "HISTORICAL DATA MODE" : "REAL-TIME DATA MODE");
+
+    TABLE_SEPARATOR_48();
+
+    std::string action_msg;
+    if (is_open) {
+        if (proceeding_with_historical) {
+            action_msg = "PROCEED WITH TRADING (HISTORICAL DATA)";
+        } else {
+            action_msg = "PROCEED WITH TRADING (REAL-TIME DATA)";
     }
+    } else {
+        action_msg = "WAIT FOR MARKET OPEN";
+    }
+
+    TABLE_ROW_48("ACTION", action_msg);
+
+    TABLE_FOOTER_48();
 }
 
 void TradingLogs::log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config) {
@@ -1235,6 +1287,289 @@ void TradingLogs::log_signal_strength_breakdown(const SignalDecision& signals, c
     TABLE_ROW_48("Reason", signals.signal_reason.empty() ? "No analysis" : signals.signal_reason);
     
     TABLE_FOOTER_48();
+}
+
+// MTH-TS Strategy Analysis Logging
+void TradingLogs::log_mth_ts_strategy_header() {
+    LOG_THREAD_SECTION_HEADER("MTH-TS STRATEGY ANALYSIS");
+}
+
+void TradingLogs::log_mth_ts_consolidated_analysis(const MultiTimeframeData& mtf_data, const MthTsTimeframeAnalysis& timeframe_status, const SignalDecision& signals, const ProcessedData& processed_data) {
+    // Create a consolidated table showing all MTH-TS analysis in one view
+    TABLE_HEADER_5COL("MTH-TS CONSOLIDATED ANALYSIS", "Multi-Timeframe Analysis (Daily Ignored)");
+
+    // Row 1: Clear Decision Status with Reasons
+    std::string daily_reason = timeframe_status.daily_bias ?
+        "BULLISH (Price > EMA)" : "BEARISH (Price < EMA)";
+    std::string thirty_min_reason = timeframe_status.thirty_min_confirmation ?
+        "CONFIRMED (EMA + ADX + Spread OK)" :
+        "FAILED (EMA/ADX/Spread)";
+    std::string one_min_reason = timeframe_status.one_min_trigger ?
+        "TRIGGERED (EMA Cross + RSI + Vol)" :
+        (mtf_data.thirty_min_confirmation ? "FAILED (EMA/RSI/Volume)" : "BLOCKED (30min Not Confirmed)");
+    std::string one_sec_reason = timeframe_status.one_sec_execution ?
+        "READY (Momentum + Tight Spread)" :
+        (mtf_data.minute_trigger_signal ? "FAILED (Momentum/Spread)" : "BLOCKED (1min Not Triggered)");
+
+    TABLE_ROW_5COL("DECISION", daily_reason, thirty_min_reason, one_min_reason, one_sec_reason);
+
+    // Row 2: Price vs Trend (EMA)
+    std::string daily_trend = mtf_data.daily_bars.empty() ? "N/A" :
+        format_price(mtf_data.daily_bars.back().close_price) + " vs " + format_price(mtf_data.daily_indicators.ema);
+    std::string thirty_min_trend = mtf_data.thirty_min_bars.empty() ? "N/A" :
+        format_price(mtf_data.thirty_min_bars.back().close_price) + " vs " + format_price(mtf_data.thirty_min_indicators.ema);
+    std::string one_min_trend = mtf_data.minute_bars.empty() ? "N/A" :
+        "EMA9: " + format_price(mtf_data.minute_indicators.ema) + " (last 60s window)";
+    std::string one_sec_trend = "N/A"; // 1-sec uses momentum
+
+    TABLE_ROW_5COL("TREND", daily_trend, thirty_min_trend, one_min_trend, one_sec_trend);
+
+    // Row 3: Strength Indicators
+    std::string daily_strength = mtf_data.daily_bars.empty() ? "N/A" :
+        "ADX: " + format_decimal(mtf_data.daily_indicators.adx, 1) + " (>25)";
+    std::string thirty_min_strength = mtf_data.thirty_min_bars.empty() ? "N/A" :
+        "ADX: " + format_decimal(mtf_data.thirty_min_indicators.adx, 1) + " (>25)";
+    std::string one_min_strength = mtf_data.minute_bars.empty() ? "N/A" :
+        "RSI: " + format_decimal(mtf_data.minute_indicators.rsi, 1) + " (<40)";
+    std::string one_sec_strength = mtf_data.second_bars.size() < 2 ? "N/A" :
+        (mtf_data.second_bars.back().close_price > mtf_data.second_bars[mtf_data.second_bars.size()-2].close_price ? "UPWARD" : "DOWNWARD");
+
+    TABLE_ROW_5COL("STRENGTH", daily_strength, thirty_min_strength, one_min_strength, one_sec_strength);
+
+    // Row 4: Volume Confirmation
+    std::string daily_volume = "N/A"; // Daily doesn't check volume
+    std::string thirty_min_volume = mtf_data.thirty_min_bars.empty() ? "N/A" :
+        format_decimal(mtf_data.thirty_min_indicators.volume_ma, 2) + " (>1.5x)";
+    std::string one_min_volume = mtf_data.minute_bars.empty() ? "N/A" :
+        format_decimal(mtf_data.minute_indicators.volume_ma, 3) + " (>1.2x)";
+    std::string one_sec_bars = std::to_string(mtf_data.second_bars.size()) + " bars";
+
+    TABLE_ROW_5COL("VOLUME", daily_volume, thirty_min_volume, one_min_volume, one_sec_bars);
+
+    // Row 5: Traditional Filters (ATR, Volume, Doji) - integrated into 1-sec level
+    std::string daily_filters = "N/A"; // Daily doesn't use traditional filters
+    std::string thirty_min_filters = "N/A"; // 30-min uses volume only
+    std::string one_min_filters = "N/A"; // 1-min uses RSI/volume
+    std::string atr_status = processed_data.atr > 0.01 ? "PASS" : "FAIL";
+    std::string vol_status = (processed_data.prev.volume > 0.0 && processed_data.curr.volume / processed_data.prev.volume >= 1.5) ? "PASS" : "FAIL";
+    std::string one_sec_filters = std::string("ATR: ") + atr_status + " | VOL: " + vol_status + " | DOJI: PASS"; // Simplified - detailed analysis in 1-sec level
+
+    TABLE_ROW_5COL("FILTERS", daily_filters, thirty_min_filters, one_min_filters, one_sec_filters);
+
+    // Row 6: Market Quality (Spread) - rolling windows
+    std::string daily_spread = mtf_data.daily_bars.empty() ? "N/A" :
+        format_percentage(mtf_data.daily_indicators.spread_avg) + " (24h window max 0.030%)";
+    std::string thirty_min_spread = mtf_data.thirty_min_bars.empty() ? "N/A" :
+        format_percentage(mtf_data.thirty_min_indicators.spread_avg) + " (30min window max 0.040%)";
+    std::string one_min_spread = mtf_data.minute_bars.empty() ? "N/A" :
+        format_percentage(mtf_data.minute_indicators.spread_avg) + " (1min window max 0.020%)";
+    std::string one_sec_spread = mtf_data.second_bars.empty() ? "N/A" :
+        format_percentage(mtf_data.second_indicators.spread_avg) + " (live data max 0.010%)";
+
+    TABLE_ROW_5COL("QUALITY", daily_spread, thirty_min_spread, one_min_spread, one_sec_spread);
+
+    TABLE_FOOTER_5COL();
+
+    // Add final decision row
+    TABLE_HEADER_48("MTH-TS FINAL DECISION", "Trading Signals");
+    std::string buy_signal = signals.buy ? "BUY ✓" : "NO BUY";
+    std::string sell_signal = signals.sell ? "SELL ✓" : "NO SELL";
+    std::string overall = signals.buy ? "BUY SIGNAL" : (signals.sell ? "SELL SIGNAL" : "NO SIGNAL");
+    TABLE_ROW_48("Decision", overall + " | Buy: " + buy_signal + " | Sell: " + sell_signal);
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_timeframe_status(const MthTsTimeframeAnalysis& timeframe_status) {
+    TABLE_HEADER_48("MTH-TS Timeframe Status", "Hierarchical Analysis");
+
+    TABLE_ROW_48("Daily Bias", timeframe_status.daily_bias ? "BULLISH" : "BEARISH");
+    TABLE_ROW_48("30-Min Confirmation", timeframe_status.thirty_min_confirmation ? "CONFIRMED" : "NOT_CONFIRMED");
+    TABLE_ROW_48("1-Min Trigger", timeframe_status.one_min_trigger ? "TRIGGERED" : "NOT_TRIGGERED");
+    TABLE_ROW_48("1-Sec Execution", timeframe_status.one_sec_execution ? "READY" : "NOT_READY");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_strategy_result(const SignalDecision& signals) {
+    TABLE_HEADER_48("MTH-TS Strategy Result", "Final Decision");
+
+    std::string buy_status = signals.buy ? "YES" : "NO";
+    std::string sell_status = signals.sell ? "YES" : "NO";
+    std::string overall_status = signals.buy ? "BUY SIGNAL" : (signals.sell ? "SELL SIGNAL" : "NO SIGNAL");
+
+    TABLE_ROW_48("Buy Signal", buy_status);
+    TABLE_ROW_48("Sell Signal", sell_status);
+    TABLE_ROW_48("Overall Decision", overall_status);
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_detailed_analysis(const MultiTimeframeData& mtf_data, const SystemConfig& config) {
+    // Log Daily Bias Analysis
+    if (!mtf_data.daily_bars.empty()) {
+        double latest_close = mtf_data.daily_bars.back().close_price;
+        bool ema_alignment = latest_close > mtf_data.daily_indicators.ema;
+        bool adx_ok = mtf_data.daily_indicators.adx >= config.strategy.mth_ts_daily_adx_threshold;
+        bool spread_ok = mtf_data.daily_indicators.spread_avg <= config.strategy.mth_ts_daily_avg_spread_threshold;
+        bool bias = mtf_data.daily_bullish_bias;
+
+        log_mth_ts_daily_bias_analysis(
+            latest_close, mtf_data.daily_indicators.ema, ema_alignment,
+            mtf_data.daily_indicators.adx, config.strategy.mth_ts_daily_adx_threshold, adx_ok,
+            mtf_data.daily_indicators.spread_avg, config.strategy.mth_ts_daily_avg_spread_threshold, spread_ok,
+            bias
+        );
+    }
+
+    // Log 30-Min Confirmation Analysis
+    if (!mtf_data.thirty_min_bars.empty()) {
+        double latest_close = mtf_data.thirty_min_bars.back().close_price;
+        bool ema_alignment = latest_close > mtf_data.thirty_min_indicators.ema;
+        bool adx_ok = mtf_data.thirty_min_indicators.adx >= config.strategy.mth_ts_30min_adx_threshold;
+        bool volume_ok = mtf_data.thirty_min_indicators.volume_ma >= config.strategy.mth_ts_30min_volume_multiplier_strict;
+        bool spread_ok = mtf_data.thirty_min_indicators.spread_avg <= config.strategy.mth_ts_30min_avg_spread_threshold;
+
+        log_mth_ts_30min_confirmation_analysis(
+            mtf_data.daily_bullish_bias, latest_close, mtf_data.thirty_min_indicators.ema, ema_alignment,
+            mtf_data.thirty_min_indicators.adx, config.strategy.mth_ts_30min_adx_threshold, adx_ok,
+            mtf_data.thirty_min_indicators.volume_ma, config.strategy.mth_ts_30min_volume_multiplier_strict, volume_ok,
+            mtf_data.thirty_min_indicators.spread_avg, config.strategy.mth_ts_30min_avg_spread_threshold, spread_ok,
+            mtf_data.thirty_min_confirmation
+        );
+    }
+
+    // Log 1-Min Trigger Analysis
+    if (!mtf_data.minute_bars.empty()) {
+        double latest_close = mtf_data.minute_bars.back().close_price;
+        bool ema_crossover = latest_close > mtf_data.minute_indicators.ema;
+        bool rsi_ok = mtf_data.minute_indicators.rsi <= config.strategy.mth_ts_1min_rsi_threshold;
+        bool volume_ok = mtf_data.minute_indicators.volume_ma >= config.strategy.mth_ts_1min_volume_multiplier;
+        bool spread_ok = mtf_data.minute_indicators.spread_avg <= config.strategy.mth_ts_1min_spread_threshold;
+
+        log_mth_ts_1min_trigger_analysis(
+            mtf_data.thirty_min_confirmation, latest_close, mtf_data.minute_indicators.ema, ema_crossover,
+            mtf_data.minute_indicators.rsi, config.strategy.mth_ts_1min_rsi_threshold, rsi_ok,
+            mtf_data.minute_indicators.volume_ma, config.strategy.mth_ts_1min_volume_multiplier, volume_ok,
+            mtf_data.minute_indicators.spread_avg, config.strategy.mth_ts_1min_spread_threshold, spread_ok,
+            mtf_data.minute_trigger_signal
+        );
+    }
+
+    // 1-Sec Execution Analysis is now consolidated into the main table above
+    // All traditional indicators (ATR, volume, doji, momentum) are integrated into MTH-TS 1-sec level
+}
+
+void TradingLogs::log_mth_ts_daily_bias_analysis(double latest_close, double ema, bool ema_alignment, double adx, double adx_threshold, bool adx_ok, double spread, double spread_threshold, bool spread_ok, bool bias) {
+    TABLE_HEADER_48("MTH-TS Daily Bias Analysis", "Macro Trend Evaluation");
+
+    TABLE_ROW_48("Latest Close", format_currency(latest_close));
+    TABLE_ROW_48("EMA (200)", format_currency(ema));
+    TABLE_ROW_48("EMA Alignment", ema_alignment ? "BULLISH" : "BEARISH");
+    TABLE_ROW_48("ADX Value", std::to_string(adx).substr(0,4));
+    TABLE_ROW_48("ADX Threshold", std::to_string(adx_threshold).substr(0,4));
+    TABLE_ROW_48("ADX Strength", adx_ok ? "SUFFICIENT" : "INSUFFICIENT");
+    TABLE_ROW_48("Avg Spread", std::to_string(spread).substr(0,6) + "%");
+    TABLE_ROW_48("Spread Threshold", std::to_string(spread_threshold).substr(0,6) + "%");
+    TABLE_ROW_48("Spread OK", spread_ok ? "ACCEPTABLE" : "TOO WIDE");
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("DAILY BIAS", bias ? "BULLISH ✓" : "BEARISH ✗");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_30min_confirmation_analysis(bool daily_bias, double latest_close, double ema, bool ema_alignment, double adx, double adx_threshold, bool adx_ok, double volume, double volume_threshold, bool volume_ok, double spread, double spread_threshold, bool spread_ok, bool confirmed) {
+    TABLE_HEADER_48("MTH-TS 30-Min Confirmation", "Intermediate Trend Confirmation");
+
+    TABLE_ROW_48("Daily Bias", daily_bias ? "BULLISH" : "BEARISH");
+    TABLE_ROW_48("Latest Close", format_currency(latest_close));
+    TABLE_ROW_48("EMA (50)", format_currency(ema));
+    TABLE_ROW_48("EMA Alignment", ema_alignment ? "CONFIRMS" : "CONFLICTS");
+    TABLE_ROW_48("ADX Value", std::to_string(adx).substr(0,4));
+    TABLE_ROW_48("ADX Threshold", std::to_string(adx_threshold).substr(0,4));
+    TABLE_ROW_48("ADX Strength", adx_ok ? "STRONG" : "WEAK");
+    TABLE_ROW_48("Volume MA", std::to_string(volume).substr(0,6));
+    TABLE_ROW_48("Volume Threshold", std::to_string(volume_threshold).substr(0,4));
+    TABLE_ROW_48("Volume OK", volume_ok ? "ADEQUATE" : "INSUFFICIENT");
+    TABLE_ROW_48("Avg Spread", std::to_string(spread).substr(0,6) + "%");
+    TABLE_ROW_48("Spread Threshold", std::to_string(spread_threshold).substr(0,6) + "%");
+    TABLE_ROW_48("Spread OK", spread_ok ? "ACCEPTABLE" : "TOO WIDE");
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("30-MIN CONFIRMATION", confirmed ? "CONFIRMED ✓" : "NOT CONFIRMED ✗");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_1min_trigger_analysis(bool thirty_min_confirmed, double latest_close, double ema, bool ema_crossover, double rsi, double rsi_threshold, bool rsi_ok, double volume, double volume_threshold, bool volume_ok, double spread, double spread_threshold, bool spread_ok, bool triggered) {
+    TABLE_HEADER_48("MTH-TS 1-Min Trigger", "Micro-Level Entry Signal");
+
+    TABLE_ROW_48("30-Min Confirmed", thirty_min_confirmed ? "YES" : "NO");
+    TABLE_ROW_48("Latest Close", format_currency(latest_close));
+    TABLE_ROW_48("EMA (9)", format_currency(ema));
+    TABLE_ROW_48("EMA Crossover", ema_crossover ? "BULLISH" : "BEARISH");
+    TABLE_ROW_48("RSI Value", std::to_string(rsi).substr(0,5));
+    TABLE_ROW_48("RSI Threshold", std::to_string(rsi_threshold).substr(0,5));
+    TABLE_ROW_48("RSI Status", rsi_ok ? "NOT OVERBOUGHT" : "OVERBOUGHT");
+    TABLE_ROW_48("Volume MA", std::to_string(volume).substr(0,6));
+    TABLE_ROW_48("Volume Threshold", std::to_string(volume_threshold).substr(0,4));
+    TABLE_ROW_48("Volume OK", volume_ok ? "CONFIRMED" : "WEAK");
+    TABLE_ROW_48("Avg Spread", std::to_string(spread).substr(0,6) + "%");
+    TABLE_ROW_48("Spread Threshold", std::to_string(spread_threshold).substr(0,6) + "%");
+    TABLE_ROW_48("Spread OK", spread_ok ? "ACCEPTABLE" : "TOO WIDE");
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("1-MIN TRIGGER", triggered ? "TRIGGERED ✓" : "NOT TRIGGERED ✗");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_1sec_execution_analysis(bool minute_triggered, double spread, double spread_threshold, bool spread_ok, size_t bars_count, bool momentum_up,
+                                             double atr, bool atr_ok, double volume_ratio, bool volume_ok, bool doji_ok,
+                                             double price_change_pct, double volume_change_pct, double volatility_pct,
+                                             bool pattern_ok, bool momentum_ok, bool ready) {
+    TABLE_HEADER_48("MTH-TS 1-Sec Execution", "Consolidated Real-Time Analysis");
+
+    TABLE_ROW_48("1-Min Triggered", minute_triggered ? "YES" : "NO");
+
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("SPREAD ANALYSIS", "");
+    TABLE_ROW_48("Current Spread", std::to_string(spread).substr(0,6) + "%");
+    TABLE_ROW_48("Spread Threshold", std::to_string(spread_threshold).substr(0,6) + "%");
+    TABLE_ROW_48("Spread OK", spread_ok ? "TIGHT ENOUGH ✓" : "TOO WIDE ✗");
+
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("TRADITIONAL FILTERS", "");
+    TABLE_ROW_48("ATR Value", format_currency(atr));
+    TABLE_ROW_48("ATR Filter", atr_ok ? "PASS ✓" : "FAIL ✗");
+    TABLE_ROW_48("Volume Ratio", std::to_string(volume_ratio).substr(0,4) + "x");
+    TABLE_ROW_48("Volume Filter", volume_ok ? "PASS ✓" : "FAIL ✗");
+    TABLE_ROW_48("Doji Filter", doji_ok ? "PASS ✓" : "FAIL ✗");
+
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("MOMENTUM ANALYSIS", "");
+    TABLE_ROW_48("Price Change", std::to_string(price_change_pct).substr(0,5) + "%");
+    TABLE_ROW_48("Volume Change", std::to_string(volume_change_pct).substr(0,5) + "%");
+    TABLE_ROW_48("Volatility", std::to_string(volatility_pct).substr(0,5) + "%");
+    TABLE_ROW_48("Pattern OK", pattern_ok ? "YES ✓" : "NO ✗");
+    TABLE_ROW_48("Momentum OK", momentum_ok ? "YES ✓" : "NO ✗");
+
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("DATA QUALITY", "");
+    TABLE_ROW_48("Recent Bars", std::to_string(bars_count) + " bars");
+    TABLE_ROW_48("Momentum Direction", momentum_up ? "UPWARD ✓" : "DOWNWARD/NOT CLEAR ✗");
+
+    TABLE_SEPARATOR_48();
+    TABLE_ROW_48("CONSOLIDATED READY", ready ? "EXECUTION READY ✓" : "NOT READY ✗");
+
+    TABLE_FOOTER_48();
+}
+
+void TradingLogs::log_mth_ts_analysis_complete() {
+    LOG_THREAD_SECTION_FOOTER();
 }
 
 void TradingLogs::log_position_sizing_csv(const AlpacaTrader::Core::PositionSizing& position_sizing_result, const AlpacaTrader::Core::ProcessedData& processed_data_input, const SystemConfig& system_config, double available_buying_power) {

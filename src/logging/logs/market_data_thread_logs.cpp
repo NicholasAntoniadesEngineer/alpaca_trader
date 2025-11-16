@@ -25,19 +25,65 @@ void MarketDataThreadLogs::log_thread_loop_exception(const std::string& error_me
 }
 
 void MarketDataThreadLogs::log_market_data_fetch_start(const std::string& symbol, int bars_requested) {
-    log_message("Requesting " + std::to_string(bars_requested) + " bars for " + symbol, "trading_system.log");
+    TABLE_HEADER_48("MARKET DATA REQUEST", "Historical Bars Fetch");
+
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Bars Requested", std::to_string(bars_requested));
+    TABLE_ROW_48("Data Type", "HISTORICAL BARS");
+    TABLE_ROW_48("Status", "REQUEST INITIATED");
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_market_data_fetch_result(const std::string& symbol, size_t bars_received) {
-    log_message("Received " + std::to_string(bars_received) + " bars for " + symbol, "trading_system.log");
+    TABLE_HEADER_48("MARKET DATA RECEIVED", "Historical Bars Response");
+
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Bars Received", std::to_string(bars_received));
+    TABLE_ROW_48("Data Type", "HISTORICAL BARS");
+    TABLE_ROW_48("Status", bars_received > 0 ? "SUCCESS" : "NO DATA");
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_insufficient_bars(const std::string& symbol, size_t bars_received, int bars_required) {
-    log_message("Insufficient bars (" + std::to_string(bars_received) + " < " + std::to_string(bars_required) + ") for " + symbol, "trading_system.log");
+    TABLE_HEADER_48("INSUFFICIENT DATA", "Market Data Accumulation Required");
+
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Bars Received", std::to_string(bars_received));
+    TABLE_ROW_48("Bars Required", std::to_string(bars_required));
+    TABLE_ROW_48("Deficit", std::to_string(bars_required - (int)bars_received) + " bars");
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("STATUS", "WAITING FOR MORE DATA");
+    TABLE_ROW_48("ACTION", "Will retry on next cycle");
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_atr_calculation_result(const std::string& symbol, double atr_value, double current_price) {
-    log_message("ATR computed for " + symbol + ": " + std::to_string(atr_value) + " (Price: $" + std::to_string(current_price) + ")", "trading_system.log");
+    TABLE_HEADER_48("ATR CALCULATION", "Volatility Assessment");
+
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("ATR Value", std::to_string(atr_value).substr(0,6));
+    TABLE_ROW_48("Current Price", "$" + std::to_string(current_price).substr(0,8));
+    TABLE_ROW_48("ATR %", std::to_string((atr_value / current_price) * 100.0).substr(0,4) + "%");
+
+    TABLE_SEPARATOR_48();
+
+    std::string volatility_assessment;
+    double atr_percent = (atr_value / current_price) * 100.0;
+    if (atr_percent < 0.1) volatility_assessment = "VERY LOW VOLATILITY";
+    else if (atr_percent < 0.5) volatility_assessment = "LOW VOLATILITY";
+    else if (atr_percent < 1.0) volatility_assessment = "MODERATE VOLATILITY";
+    else if (atr_percent < 2.0) volatility_assessment = "HIGH VOLATILITY";
+    else volatility_assessment = "EXTREME VOLATILITY";
+
+    TABLE_ROW_48("VOLATILITY LEVEL", volatility_assessment);
+    TABLE_ROW_48("TRADING STATUS", atr_value > 0.0 ? "READY" : "INVALID DATA");
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_market_snapshot_update(const std::string& symbol) {
@@ -61,10 +107,31 @@ void MarketDataThreadLogs::log_stale_quote_warning(const std::string& symbol, in
     log_message("⚠️  NOTE: Alpaca crypto data appears to be delayed/historical only, not real-time", "trading_system.log");
 }
 
-void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log) {
+void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log, const LoggingConfig& logging_config) {
     auto csv_logger = get_logging_context()->csv_bars_logger;
-    log_message("CSV Logger available: " + std::string(csv_logger ? "YES" : "NO"), "trading_system.log");
-    log_message("Should log " + symbol + ": " + std::string(should_log ? "YES" : "NO") + " (time since last: " + std::to_string(time_since_last_log) + "s)", "trading_system.log");
+
+    TABLE_HEADER_48("CSV LOGGING DECISION", "Data Recording Status");
+
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("CSV Logger", csv_logger ? "AVAILABLE" : "UNAVAILABLE");
+    TABLE_ROW_48("Time Since Last Log", std::to_string(time_since_last_log) + " seconds");
+    TABLE_ROW_48("Trigger", logging_config.csv_logging_trigger_description);
+
+    TABLE_SEPARATOR_48();
+
+    std::string decision_reason;
+    if (!csv_logger) {
+        decision_reason = "CSV LOGGER UNAVAILABLE";
+    } else if (should_log) {
+        decision_reason = logging_config.csv_logging_enabled_reason;
+    } else {
+        decision_reason = logging_config.csv_logging_disabled_reason;
+    }
+
+    TABLE_ROW_48("DECISION", should_log ? "LOG DATA" : "SKIP LOGGING");
+    TABLE_ROW_48("REASON", decision_reason);
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_csv_quote_logging(const std::string& symbol, double mid_price) {
@@ -81,7 +148,18 @@ void MarketDataThreadLogs::log_csv_logging_error(const std::string& symbol, cons
 }
 
 void MarketDataThreadLogs::log_zero_atr_warning(const std::string& symbol) {
-    log_message("ATR is zero for " + symbol + ", not updating snapshot", "trading_system.log");
+    TABLE_HEADER_48("ATR CALCULATION ISSUE", "Market Data Quality Warning");
+
+    TABLE_ROW_48("Issue", "ATR calculation returned zero");
+    TABLE_ROW_48("Symbol", symbol);
+    TABLE_ROW_48("Impact", "Market snapshot not updated");
+    TABLE_ROW_48("Reason", "Insufficient/poor quality bar data");
+
+    TABLE_SEPARATOR_48();
+
+    TABLE_ROW_48("STATUS", "MTH-TS DATA PRESERVED");
+
+    TABLE_FOOTER_48();
 }
 
 void MarketDataThreadLogs::log_insufficient_data_condensed(const std::string& symbol, bool atr_zero, bool price_data_invalid, double close_price, double open_price, double high_price, double low_price, size_t bars_available, int bars_required) {
@@ -176,7 +254,7 @@ bool MarketDataThreadLogs::is_fetch_allowed(const std::atomic<bool>* allow_fetch
     return allow_fetch_ptr && allow_fetch_ptr->load();
 }
 
-void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
+void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, const LoggingConfig& logging_config, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
     // Compliance: Removed unused parameters validator and api_manager per "No unused parameters" rule
     
     auto csv_logger = get_logging_context()->csv_bars_logger;
@@ -192,8 +270,26 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
     
     auto current_time = std::chrono::steady_clock::now();
     auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_bar_log_time).count();
-    bool should_log_csv_data = last_bar_log_time == std::chrono::steady_clock::time_point{} || 
-                              time_since_last_log >= timing.market_data_logging_interval_seconds;
+
+    // Check if there's a new bar to log (immediate logging on new bars)
+    // Compare both timestamp AND price data to detect truly new bars
+    bool has_new_bar = false;
+    if (!historical_bars.empty()) {
+        const auto& latest_bar = historical_bars.back();
+        bool timestamp_different = previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp;
+        bool price_data_different = (latest_bar.close_price != previous_bar.close_price) ||
+                                   (latest_bar.open_price != previous_bar.open_price) ||
+                                   (latest_bar.high_price != previous_bar.high_price) ||
+                                   (latest_bar.low_price != previous_bar.low_price) ||
+                                   (latest_bar.volume != previous_bar.volume);
+        has_new_bar = timestamp_different || price_data_different;
+    }
+
+    // Log on every trading iteration (every ~1 second) OR on first run (startup historical data)
+    // This is now time-based but aligned with trading loop frequency, not arbitrary intervals
+    // The user wants logging "everytime there is a new bar that should come in around once a second"
+    bool should_log_csv_data = (time_since_last_log >= 1) ||
+                              (last_bar_log_time == std::chrono::steady_clock::time_point{});
     
     // Only log CSV logging decision messages when we have valid data or when throttling allows it
     // When waiting for data, throttle these messages to reduce log spam
@@ -214,14 +310,19 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
     }
     
     if (should_log_csv_decision) {
-        MarketDataThreadLogs::log_csv_logging_decision(symbol, should_log_csv_data, time_since_last_log);
+        MarketDataThreadLogs::log_csv_logging_decision(symbol, should_log_csv_data, time_since_last_log, logging_config);
         if (!has_valid_price_data && historical_bars.empty()) {
             last_csv_decision_log_time = current_time;
         }
     }
     
     if (!should_log_csv_data) {
-        LOG_THREAD_CONTENT("Skipping CSV logging - too soon since last log (" + std::to_string(time_since_last_log) + "s, need " + std::to_string(timing.market_data_logging_interval_seconds) + "s)");
+        if (has_new_bar) {
+            // This shouldn't happen with new logic, but log it if it does
+            LOG_THREAD_CONTENT("Skipping CSV logging despite new bar - unexpected condition");
+        } else {
+            LOG_THREAD_CONTENT("Skipping CSV logging - no new bars and too soon since last log (" + std::to_string(time_since_last_log) + "s, need " + std::to_string(timing.market_data_logging_interval_seconds) + "s)");
+        }
         return;
     }
     
@@ -229,17 +330,9 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
         std::string current_timestamp = TimeUtils::get_current_human_readable_time();
         
         // Log bars directly without making API calls for quotes
-        // Bars are already logged in market_data_coordinator, but this provides additional logging
-        // with duplicate detection to avoid logging the same bar multiple times
+        // This logs all bars in the historical_bars vector when new bars are detected
             if (!historical_bars.empty()) {
-                const auto& latest_bar = historical_bars.back();
-                if (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp) {
                 MarketDataThreadLogs::log_historical_bars_to_csv(historical_bars, computed_data, current_timestamp, symbol);
-                    // Update previous_bar to track the latest bar we logged
-                    previous_bar = latest_bar;
-                } else {
-                    MarketDataThreadLogs::log_duplicate_bar_skipped(symbol, latest_bar.timestamp);
-            }
         }
         
         last_bar_log_time = current_time;

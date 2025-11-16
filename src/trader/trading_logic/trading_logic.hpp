@@ -5,7 +5,7 @@
 #include "api/general/api_manager.hpp"
 #include "trader/account_management/account_manager.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "trader/strategy_analysis/strategy_logic.hpp"
+#include "trader/strategy_analysis/mth_ts_strategy.hpp"
 #include "trader/strategy_analysis/risk_manager.hpp"
 #include "trader/market_data/market_data_manager.hpp"
 #include "trader/data_structures/data_sync_structures.hpp"

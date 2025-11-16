@@ -12,11 +12,12 @@ timing.trader_decision_thread_polling_interval_seconds,5
 timing.logging_thread_polling_interval_seconds,1
 
 # Historical Data Configuration
-timing.historical_data_fetch_period_minutes,120
+timing.historical_data_fetch_period_minutes,15
 timing.historical_data_buffer_size,20
 timing.account_data_cache_duration_seconds,10
 timing.market_data_staleness_threshold_seconds,30
 timing.crypto_data_staleness_threshold_seconds,30
+timing.market_data_logging_interval_seconds,5
 timing.data_availability_wait_timeout_seconds,10
 
 # Market Session Buffer Times (in minutes)

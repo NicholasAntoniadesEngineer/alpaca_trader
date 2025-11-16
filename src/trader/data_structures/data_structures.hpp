@@ -2,6 +2,11 @@
 #define DATA_STRUCTURES_HPP
 
 #include <string>
+#include <deque>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 #include "configs/system_config.hpp"
 
 using AlpacaTrader::Config::TradingModeConfig;
@@ -16,6 +21,8 @@ struct Bar {
     double close_price;
     double volume;
     std::string timestamp;
+
+    Bar() : open_price(0.0), high_price(0.0), low_price(0.0), close_price(0.0), volume(0.0), timestamp("") {}
 };
 
 struct QuoteData {
@@ -31,6 +38,8 @@ struct PositionDetails {
     int position_quantity;
     double unrealized_pl;
     double current_value;
+
+    PositionDetails() : position_quantity(0), unrealized_pl(0.0), current_value(0.0) {}
 };
 
 // Optional split views for multi-threading.
@@ -48,6 +57,8 @@ struct AccountSnapshot {
     PositionDetails pos_details;
     int open_orders;
     double exposure_pct;
+
+    AccountSnapshot() : equity(0.0), pos_details(), open_orders(0), exposure_pct(0.0) {}
 };
 
 struct ProcessedData {
@@ -121,6 +132,8 @@ struct SignalDecision {
     bool sell;
     double signal_strength;
     std::string signal_reason;
+
+    SignalDecision() : buy(false), sell(false), signal_strength(0.0), signal_reason("") {}
 };
 
 struct FilterResult {
@@ -168,8 +181,38 @@ struct ExitTargetsRequest {
     const StrategyConfig& strategy_configuration;
     
     ExitTargetsRequest(const std::string& side, double entry_price, double risk_amount, const StrategyConfig& config)
-        : position_side(side), entry_price(entry_price), risk_amount(risk_amount), 
+        : position_side(side), entry_price(entry_price), risk_amount(risk_amount),
           strategy_configuration(config) {}
+};
+
+// ========================================================================
+// ORDER EXECUTION RESULT STRUCTURES
+// ========================================================================
+
+struct OrderExecutionResult {
+    bool order_successful;
+    std::string order_id;
+    std::string execution_status;
+    double executed_quantity;
+    double executed_price;
+    std::string error_message;
+
+    OrderExecutionResult()
+        : order_successful(false), order_id(""), execution_status(""),
+          executed_quantity(0.0), executed_price(0.0), error_message("") {}
+};
+
+struct PositionClosureResult {
+    bool closure_successful;
+    std::string closure_reason;
+    double closed_quantity;
+    double closure_price;
+    double profit_loss_amount;
+    std::string error_message;
+
+    PositionClosureResult()
+        : closure_successful(false), closure_reason(""), closed_quantity(0.0),
+          closure_price(0.0), profit_loss_amount(0.0), error_message("") {}
 };
 
 struct PositionSizingProcessRequest {
@@ -177,12 +220,148 @@ struct PositionSizingProcessRequest {
     double account_equity;
     int current_position_quantity;
     double available_buying_power;
+    double signal_strength;  // Signal strength (0.0 to 1.0) for hybrid evaluation
     const StrategyConfig& strategy_configuration;
     const TradingModeConfig& trading_mode_configuration;
-    
-    PositionSizingProcessRequest(const ProcessedData& data, double equity, int current_position_qty, double buying_power, const StrategyConfig& strategy_config, const TradingModeConfig& trading_mode_config)
-        : processed_data(data), account_equity(equity), current_position_quantity(current_position_qty), 
-          available_buying_power(buying_power), strategy_configuration(strategy_config), trading_mode_configuration(trading_mode_config) {}
+
+    PositionSizingProcessRequest(const ProcessedData& data, double equity, int current_position_qty, double buying_power, double signal_strength_val, const StrategyConfig& strategy_config, const TradingModeConfig& trading_mode_config)
+        : processed_data(data), account_equity(equity), current_position_quantity(current_position_qty),
+          available_buying_power(buying_power), signal_strength(signal_strength_val),
+          strategy_configuration(strategy_config), trading_mode_configuration(trading_mode_config) {}
+};
+
+// ========================================================================
+// MTH-TS MULTI-TIMEFRAME DATA STRUCTURES
+// ========================================================================
+
+// Multi-timeframe bar data structure
+struct MultiTimeframeBar {
+    double open_price;
+    double high_price;
+    double low_price;
+    double close_price;
+    double volume;
+    double spread;  // bid-ask spread percentage
+    std::string timestamp;
+    std::chrono::system_clock::time_point timestamp_tp;
+
+    MultiTimeframeBar() : open_price(0.0), high_price(0.0), low_price(0.0), close_price(0.0),
+                         volume(0.0), spread(0.0), timestamp(), timestamp_tp() {}
+
+    MultiTimeframeBar(double o, double h, double l, double c, double v, double s, const std::string& ts)
+        : open_price(o), high_price(h), low_price(l), close_price(c), volume(v), spread(s), timestamp(ts) {
+        // Parse timestamp to time_point for easier time-based operations
+        // Handle both Unix millisecond timestamps (digits only) and ISO strings
+        try {
+            bool is_unix_ms = !ts.empty() && std::all_of(ts.begin(), ts.end(), ::isdigit);
+            if (is_unix_ms) {
+                try {
+                    long long unix_milliseconds = std::stoll(ts);
+                    // Validate timestamp is reasonable (not negative, not too far in future)
+                    if (unix_milliseconds > 0 && unix_milliseconds < 9999999999999LL) { // reasonable range
+                        // Polygon sends timestamps in milliseconds, convert to system_clock time_point
+                        auto duration_ms = std::chrono::milliseconds(unix_milliseconds);
+                        timestamp_tp = std::chrono::time_point<std::chrono::system_clock>(duration_ms);
+                    } else {
+                        // Invalid timestamp - leave uninitialized
+                        timestamp_tp = std::chrono::system_clock::time_point{};
+                    }
+                } catch (const std::invalid_argument&) {
+                    // Not a valid number - leave uninitialized
+                    timestamp_tp = std::chrono::system_clock::time_point{};
+                } catch (const std::out_of_range&) {
+                    // Number too large - leave uninitialized
+                    timestamp_tp = std::chrono::system_clock::time_point{};
+                } catch (const std::exception&) {
+                    // Any other error - leave uninitialized
+                    timestamp_tp = std::chrono::system_clock::time_point{};
+                }
+            } else {
+                // Try parsing as ISO string format
+                try {
+                    std::tm tm = {};
+                    std::istringstream ss(ts);
+                    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+                    if (!ss.fail()) {
+                        timestamp_tp = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+                    } else {
+                        // Parsing failed - leave uninitialized
+                        timestamp_tp = std::chrono::system_clock::time_point{};
+                    }
+                } catch (const std::exception&) {
+                    // Parsing failed - leave uninitialized
+                    timestamp_tp = std::chrono::system_clock::time_point{};
+                }
+            }
+        } catch (const std::exception&) {
+            // Any error in timestamp parsing - ensure timestamp_tp is in a safe state
+            timestamp_tp = std::chrono::system_clock::time_point{};
+        }
+    }
+};
+
+// Timeframe enumeration for MTH-TS strategy
+enum class MthTsTimeframe {
+    SECOND_1,
+    MINUTE_1,
+    MINUTE_30,
+    DAILY
+};
+
+// MTH-TS Timeframe Analysis Structure
+struct MthTsTimeframeAnalysis {
+    bool daily_bias;
+    bool thirty_min_confirmation;
+    bool one_min_trigger;
+    bool one_sec_execution;
+
+    MthTsTimeframeAnalysis() : daily_bias(false), thirty_min_confirmation(false),
+                              one_min_trigger(false), one_sec_execution(false) {}
+};
+
+// Multi-timeframe data container
+struct MultiTimeframeData {
+    std::deque<MultiTimeframeBar> second_bars;    // 1-second bars (last 300 for 5-min history)
+    std::deque<MultiTimeframeBar> minute_bars;    // 1-minute bars (last 1800 for 30-hour history)
+    std::deque<MultiTimeframeBar> thirty_min_bars; // 30-minute bars (last 336 for 7-day history)
+    std::deque<MultiTimeframeBar> daily_bars;     // Daily bars (last 30 for 30-day history)
+
+    // Technical indicators for each timeframe
+    struct TechnicalIndicators {
+        double ema;           // EMA value
+        double adx;           // ADX value
+        double rsi;           // RSI value
+        double atr;           // ATR value
+        double volume_ma;     // Volume moving average
+        double spread_avg;    // Average spread
+
+        TechnicalIndicators() : ema(0.0), adx(0.0), rsi(0.0), atr(0.0), volume_ma(0.0), spread_avg(0.0) {}
+    };
+
+    TechnicalIndicators daily_indicators;
+    TechnicalIndicators thirty_min_indicators;
+    TechnicalIndicators minute_indicators;
+    TechnicalIndicators second_indicators;
+
+    // Bias flags for hierarchical analysis
+    bool daily_bullish_bias;
+    bool thirty_min_confirmation;
+    bool minute_trigger_signal;
+    bool second_execution_ready;
+
+    // Propagation scores for hybrid evaluation (0.0 to 1.0)
+    double minute_to_thirty_min_propagation_score;
+    double second_to_minute_propagation_score;
+
+    // Consecutive bar tracking to prevent bottom-up whipsaws
+    int consecutive_minute_bars_aligned;
+    int consecutive_second_bars_aligned;
+
+    MultiTimeframeData()
+        : daily_bullish_bias(false), thirty_min_confirmation(false),
+          minute_trigger_signal(false), second_execution_ready(false),
+          minute_to_thirty_min_propagation_score(0.0), second_to_minute_propagation_score(0.0),
+          consecutive_minute_bars_aligned(0), consecutive_second_bars_aligned(0) {}
 };
 
 // Market data thread parameter structures

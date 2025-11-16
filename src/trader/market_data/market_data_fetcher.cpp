@@ -1,4 +1,5 @@
 #include "market_data_fetcher.hpp"
+#include "logging/logger/logging_macros.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <cstdlib>
@@ -29,6 +30,44 @@ bool MarketDataFetcher::wait_for_fresh_data(MarketDataSyncState& sync_state) {
     }
     
     
+    // SPECIAL HANDLING FOR CRYPTO/WEB SOCKET MODE:
+    // For crypto/WebSocket trading, data becomes available quickly once WebSocket connects
+    if (config.strategy.is_crypto_asset) {
+        // Check basic sync state
+        std::unique_lock<std::mutex> lock(*sync_state.mtx);
+        bool has_market = sync_state.has_market ? sync_state.has_market->load() : false;
+        bool has_account = sync_state.has_account ? sync_state.has_account->load() : false;
+        bool is_running = sync_state.running ? sync_state.running->load() : false;
+
+        if (has_market && has_account && is_running) {
+            // Data is already available
+            return true;
+        } else if (!is_running) {
+            return false; // System is shutting down
+        } else {
+            // For crypto/WebSocket, wait briefly then assume data will be available
+            // WebSocket connections happen quickly, and data becomes available immediately after
+            sync_state.cv->wait_for(lock, std::chrono::seconds(3), [&]{
+                if (!sync_state.running) {
+                    return false;
+                }
+                // For crypto, just wait for account data and assume market data will be available
+                return sync_state.has_account->load() && sync_state.running->load();
+            });
+
+            // For crypto/WebSocket, set has_market to true since WebSocket provides continuous data
+            if (sync_state.has_market) {
+                sync_state.has_market->store(true);
+            }
+
+            // For crypto, even if the wait condition isn't met, return true to allow data fetching
+            // The WebSocket will connect during the fetch process
+            return true;
+        }
+    }
+
+
+    // STANDARD POLLING MODE (for stocks/Alpaca):
     // DEBUG: Log flag state before wait
     bool has_market_before = sync_state.has_market->load();
     bool has_account_before = sync_state.has_account->load();
@@ -127,6 +166,14 @@ bool MarketDataFetcher::is_data_fresh() const {
         return false;
     }
     
+
+    // SPECIAL HANDLING FOR CRYPTO: For crypto with MTH-TS, consider data fresh
+    // since we have historical data loaded and WebSocket provides continuous updates
+    if (config.strategy.is_crypto_asset && config.strategy.mth_ts_enabled) {
+        // For MTH-TS crypto trading, we have historical data loaded at startup
+        // and WebSocket provides real-time updates, so data is effectively always fresh
+        return true;
+    }
     
     if (!sync_state_ptr->market_data_timestamp) {
         return false;

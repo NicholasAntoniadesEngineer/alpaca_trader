@@ -32,6 +32,15 @@ struct ApiProviderConfig {
     int websocket_second_level_accumulation_seconds;
     int websocket_max_bar_history_size;
     
+    // Historical bars configuration
+    bool historical_bars_adjusted;
+    std::string historical_bars_sort;
+    int historical_bars_limit;
+
+    // WebSocket wait configuration
+    int websocket_wait_attempts;
+    int websocket_wait_interval_ms;
+    
     struct EndpointConfig {
         std::string bars;
         std::string quotes_latest;
@@ -41,6 +50,7 @@ struct ApiProviderConfig {
         std::string orders;
         std::string clock;
         std::string assets;
+        std::string historical_bars;
     } endpoints;
 };
 

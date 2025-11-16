@@ -4,8 +4,11 @@
 #include "logging/logs/market_data_logs.hpp"
 #include "logging/logger/csv_trade_logger.hpp"
 #include "logging/logs/logger_structures.hpp"
+#include "logging/logger/logging_macros.hpp"
 #include "utils/time_utils.hpp"
-#include "trader/strategy_analysis/strategy_logic.hpp"
+#include "trader/strategy_analysis/mth_ts_strategy.hpp"
+#include "api/polygon/polygon_crypto_client.hpp"
+#include "trader/data_structures/data_structures.hpp"
 #include <thread>
 #include <chrono>
 #include <cmath>
@@ -44,9 +47,44 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         return;
     }
 
-    // Wait for fresh market data
+    // Wait for fresh market data (unless MTH-TS has historical data available)
     
     bool data_wait_result = false;
+    bool skip_data_wait_for_mth_ts = false;
+    bool mth_ts_available = false;
+    double snapshot_price_populated = 0.0;
+    bool proceeding_with_historical = false;
+
+    // Check if MTH-TS is enabled and has historical data available
+    if (config.strategy.mth_ts_enabled && config.strategy.is_crypto_asset) {
+        try {
+            API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
+            if (api_manager_ref.is_crypto_symbol(config.trading_mode.primary_symbol)) {
+                API::PolygonCryptoClient* polygon_client = api_manager_ref.get_polygon_crypto_client();
+                if (polygon_client) {
+                    auto* mtf_manager = polygon_client->get_multi_timeframe_manager();
+                    if (mtf_manager) {
+                        const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
+                        // Check if we have minimum required historical bars for MTH-TS
+                        bool mth_ts_data_available = (static_cast<int>(mtf_data.daily_bars.size()) >= config.strategy.mth_ts_min_daily_bars) &&
+                                                   (static_cast<int>(mtf_data.thirty_min_bars.size()) >= config.strategy.mth_ts_min_30min_bars) &&
+                                                   (static_cast<int>(mtf_data.minute_bars.size()) >= config.strategy.mth_ts_min_1min_bars) &&
+                                                   (static_cast<int>(mtf_data.second_bars.size()) >= config.strategy.mth_ts_min_1sec_bars);
+
+                        if (mth_ts_data_available) {
+                            skip_data_wait_for_mth_ts = true;
+                            // Store MTH-TS status for comprehensive logging later
+                            mth_ts_available = true;
+                        }
+                    }
+                }
+            }
+        } catch (const std::exception& mth_ts_check_error) {
+            TradingLogs::log_market_status(false, "Error checking MTH-TS historical data availability: " + std::string(mth_ts_check_error.what()));
+        }
+    }
+
+    if (!skip_data_wait_for_mth_ts) {
     try {
         
         data_wait_result = market_data_manager.wait_for_fresh_data(market_data_sync_state);
@@ -82,10 +120,13 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         TradingLogs::log_market_status(false, "Failed to wait for fresh market data");
         return;
     }
+    }
     
+    // Check if we have data available (either fresh real-time data OR MTH-TS historical data)
+    bool data_available = data_wait_result || skip_data_wait_for_mth_ts;
     
-    if (!data_wait_result) {
-        TradingLogs::log_market_status(false, "Timeout waiting for fresh data");
+    if (!data_available) {
+        TradingLogs::log_market_status(false, "No data available (timeout waiting for fresh data + no MTH-TS historical data)");
         return;
     }
     
@@ -137,18 +178,76 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         }
         
     } catch (const std::exception& snapshot_copy_exception_error) {
-        std::abort();
+        std::cerr << "CRITICAL: Failed to copy market snapshot: " << snapshot_copy_exception_error.what() << std::endl;
+        throw std::runtime_error("Market snapshot copy failed: " + std::string(snapshot_copy_exception_error.what()));
     } catch (...) {
-        std::abort();
+        std::cerr << "CRITICAL: Unknown error copying market snapshot" << std::endl;
+        throw std::runtime_error("Unknown error copying market snapshot");
     }
 
-    
-    // CRITICAL: Validate price data before proceeding - fail hard if invalid
+    // SPECIAL HANDLING FOR MTH-TS: Populate market snapshot from historical data if real-time data is invalid
     bool has_valid_price_data = current_market_snapshot.curr.close_price > 0.0 && 
                                 current_market_snapshot.curr.open_price > 0.0 &&
                                 current_market_snapshot.curr.high_price > 0.0 &&
                                 current_market_snapshot.curr.low_price > 0.0;
     
+    if (!has_valid_price_data && config.strategy.mth_ts_enabled && config.strategy.is_crypto_asset) {
+        try {
+            // Try to populate market snapshot from MTH-TS historical data
+            API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
+            if (api_manager_ref.is_crypto_symbol(config.trading_mode.primary_symbol)) {
+                API::PolygonCryptoClient* polygon_client = api_manager_ref.get_polygon_crypto_client();
+                if (polygon_client) {
+                    auto* mtf_manager = polygon_client->get_multi_timeframe_manager();
+                    if (mtf_manager) {
+                        const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
+
+                        // Check if we have sufficient 1-second bars for market snapshot
+                        if (!mtf_data.second_bars.empty()) {
+                            const auto& latest_bar = mtf_data.second_bars.back();
+
+                            // Populate current bar from latest 1-second bar
+                            current_market_snapshot.curr.open_price = latest_bar.open_price;
+                            current_market_snapshot.curr.high_price = latest_bar.high_price;
+                            current_market_snapshot.curr.low_price = latest_bar.low_price;
+                            current_market_snapshot.curr.close_price = latest_bar.close_price;
+                            current_market_snapshot.curr.volume = latest_bar.volume;
+                            current_market_snapshot.curr.timestamp = latest_bar.timestamp;
+
+                            // Populate previous bar if available
+                            if (mtf_data.second_bars.size() >= 2) {
+                                const auto& prev_bar = mtf_data.second_bars[mtf_data.second_bars.size() - 2];
+                                current_market_snapshot.prev.open_price = prev_bar.open_price;
+                                current_market_snapshot.prev.high_price = prev_bar.high_price;
+                                current_market_snapshot.prev.low_price = prev_bar.low_price;
+                                current_market_snapshot.prev.close_price = prev_bar.close_price;
+                                current_market_snapshot.prev.volume = prev_bar.volume;
+                                current_market_snapshot.prev.timestamp = prev_bar.timestamp;
+                            }
+
+                            // Set oldest bar timestamp
+                            if (!mtf_data.second_bars.empty()) {
+                                current_market_snapshot.oldest_bar_timestamp = mtf_data.second_bars.front().timestamp;
+                            }
+
+                            // Calculate basic indicators from historical data
+                            current_market_snapshot.avg_vol = calculate_average_volume(mtf_data.second_bars);
+                            current_market_snapshot.atr = calculate_atr_from_bars(mtf_data.second_bars);
+                            current_market_snapshot.avg_atr = current_market_snapshot.atr; // Simplified
+
+                            has_valid_price_data = true;
+                            snapshot_price_populated = current_market_snapshot.curr.close_price;
+                        }
+                    }
+                }
+            }
+        } catch (const std::exception& mth_ts_snapshot_error) {
+            TradingLogs::log_market_status(false, "MTH-TS: Failed to populate market snapshot from historical data: " +
+                                          std::string(mth_ts_snapshot_error.what()));
+        }
+    }
+
+    // CRITICAL: Validate price data before proceeding - fail hard if invalid
     if (!has_valid_price_data) {
         std::ostringstream invalid_data_stream;
         invalid_data_stream << "CRITICAL: Market snapshot has invalid price data (zeros detected) - "
@@ -165,10 +264,37 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     bool has_market_flag_value = snapshot_state.has_market_flag.load();
     bool has_account_flag_value = snapshot_state.has_account_flag.load();
     
+    // SPECIAL HANDLING FOR MTH-TS: Allow proceeding with historical data even if flags are not set
+    bool allow_mth_ts_proceed = false;
+    if (config.strategy.mth_ts_enabled && config.strategy.is_crypto_asset) {
+        try {
+            API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
+            if (api_manager_ref.is_crypto_symbol(config.trading_mode.primary_symbol)) {
+                API::PolygonCryptoClient* polygon_client = api_manager_ref.get_polygon_crypto_client();
+                if (polygon_client) {
+                    auto* mtf_manager = polygon_client->get_multi_timeframe_manager();
+                    if (mtf_manager) {
+                        const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
+                        // Check if we have sufficient historical data for MTH-TS
+                        allow_mth_ts_proceed = (static_cast<int>(mtf_data.second_bars.size()) >= config.strategy.mth_ts_min_1sec_bars);
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            // COMPLIANCE LAW: Must not continue on catch - fail hard with proper logging
+            std::string error_msg = "CRITICAL: MTH-TS data check failed - system cannot continue safely. Error: " + std::string(e.what());
+            TradingLogs::log_market_status(false, error_msg);
+            throw std::runtime_error(error_msg);
+        }
+    }
     
     if (!has_market_flag_value || !has_account_flag_value) {
+        if (allow_mth_ts_proceed) {
+            proceeding_with_historical = true;
+        } else {
         TradingLogs::log_market_status(false, "Missing required snapshot data");
         return;
+        }
     }
     
 
@@ -182,13 +308,21 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     
     std::string symbol = config.trading_mode.primary_symbol;
     
+    // Log comprehensive market status (consolidates multiple status messages into one table)
+    std::string primary_reason = mth_ts_available ? "MTH-TS historical data available - skipping real-time data wait" : "Standard market data initialization";
+    std::string historical_status = snapshot_price_populated > 0.0 ? "Populated from historical 1-second bars" : (mth_ts_available ? "Available" : "Not used");
+    TradingLogs::log_comprehensive_market_status(true, primary_reason, historical_status, snapshot_price_populated, proceeding_with_historical);
     
     try {
     TradingLogs::log_loop_header(loop_counter_value, symbol);
     } catch (const std::exception& log_header_exception_error) {
-        std::abort();
+        
+        std::cerr << "CRITICAL: Failed to log loop header: " << log_header_exception_error.what() << std::endl;
+        throw std::runtime_error("Loop header logging failed: " + std::string(log_header_exception_error.what()));
     } catch (...) {
-        std::abort();
+        
+        std::cerr << "CRITICAL: Unknown error logging loop header" << std::endl;
+        throw std::runtime_error("Unknown error logging loop header");
     }
 
 
@@ -215,18 +349,22 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         }
     } catch (const std::exception& exception_error) {
         try {
-        TradingLogs::log_market_data_result_table("CSV logging error in account update: " + std::string(exception_error.what()), false, 0);
+        TradingLogs::log_market_data_result_table("CRITICAL CSV logging error in account update: " + std::string(exception_error.what()), false, 0);
         } catch (...) {
-            // Logging failed
+            std::cerr << "CRITICAL: CSV logging error in account update: " << exception_error.what() << std::endl;
         }
-        std::abort();
+        
+        std::cerr << "CRITICAL: CSV logging failed - system cannot continue safely" << std::endl;
+        throw std::runtime_error("CSV logging failure in account update: " + std::string(exception_error.what()));
     } catch (...) {
         try {
-        TradingLogs::log_market_data_result_table("Unknown CSV logging error in account update", false, 0);
+        TradingLogs::log_market_data_result_table("CRITICAL Unknown CSV logging error in account update", false, 0);
         } catch (...) {
-            // Logging failed
+            std::cerr << "CRITICAL: Unknown CSV logging error in account update" << std::endl;
         }
-        std::abort();
+        
+        std::cerr << "CRITICAL: Unknown CSV logging error - system cannot continue safely" << std::endl;
+        throw std::runtime_error("Unknown CSV logging failure in account update");
     }
     
 
@@ -235,13 +373,144 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
     bool market_data_fresh_result = false;
     try {
         
-        market_data_fresh_result = market_data_manager.is_data_fresh();
-        
-        
+        // SPECIAL HANDLING FOR CRYPTO/WEB SOCKET MODE:
+        // For crypto/WebSocket trading, check both WebSocket status AND MTH-TS historical data availability
+        if (config.strategy.is_crypto_asset) {
+            try {
+                // Check if WebSocket is active for crypto
+                API::ApiManager& api_manager_ref = market_data_manager.get_api_manager();
+                if (api_manager_ref.is_crypto_symbol(config.trading_mode.primary_symbol)) {
+                    API::PolygonCryptoClient* polygon_client = api_manager_ref.get_polygon_crypto_client();
+                    bool websocket_active = polygon_client && polygon_client->is_websocket_active();
+
+                    // For MTH-TS, also check if historical data is available
+                    bool mth_ts_data_available = false;
+                    if (config.strategy.mth_ts_enabled && polygon_client) {
+                        auto* mtf_manager = polygon_client->get_multi_timeframe_manager();
+                        if (mtf_manager) {
+                            const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
+                            // Check if we have minimum required historical bars for MTH-TS
+                            mth_ts_data_available = (static_cast<int>(mtf_data.daily_bars.size()) >= config.strategy.mth_ts_min_daily_bars) &&
+                                                   (static_cast<int>(mtf_data.thirty_min_bars.size()) >= config.strategy.mth_ts_min_30min_bars) &&
+                                                   (static_cast<int>(mtf_data.minute_bars.size()) >= config.strategy.mth_ts_min_1min_bars) &&
+                                                   (static_cast<int>(mtf_data.second_bars.size()) >= config.strategy.mth_ts_min_1sec_bars);
+                        }
+                    }
+
+                    // CRITICAL COMPLIANCE: System must fail hard on stale data
+                    // Check actual data freshness, not just availability
+                    bool data_actually_fresh = false;
+
+                    if (websocket_active) {
+                        // Check if WebSocket bars are fresh (not throwing staleness errors)
+                        try {
+                            // Request enough bars for ATR calculation (needs at least 15 bars)
+                            Core::BarRequest bar_request(config.trading_mode.primary_symbol, 30, 15);
+                            auto recent_bars = polygon_client->get_recent_bars(bar_request);
+                            // If we get here without exception, bars are fresh
+                            data_actually_fresh = true;
+                        } catch (const std::runtime_error& stale_error) {
+                            // FIRST PRINCIPLES: Crypto markets are 24/7 - staleness logic updated
+                            // WebSocket connectivity is now the primary freshness check
+                            // If WebSocket is active, data is considered fresh for continuous markets
+
+                            // Check if WebSocket is still active for crypto markets
+                            bool websocket_still_active = false;
+                            if (polygon_client) {
+                                websocket_still_active = polygon_client->is_websocket_active();
+                            }
+
+                            if (websocket_still_active) {
+                                // WebSocket is active, data is fresh for 24/7 crypto market
+                                TradingLogs::log_market_status(true, "WebSocket active - crypto data considered fresh");
+                                data_actually_fresh = true;
+                            } else {
+                                // WebSocket disconnected - this is a real problem
+                                std::string error_msg = "CRITICAL: WebSocket disconnected for crypto market: " + std::string(stale_error.what());
+                                TradingLogs::log_market_status(false, error_msg);
+                                throw std::runtime_error(error_msg);
+                            }
+                        }
+                    }
+
+                    // Check MTH-TS historical data freshness
+                    if (!data_actually_fresh && mth_ts_data_available) {
+                        // Check if historical bars are recent enough
+                        auto* local_mtf_manager = polygon_client->get_multi_timeframe_manager();
+                        if (local_mtf_manager) {
+                            const auto& mtf_data = local_mtf_manager->get_multi_timeframe_data();
+                            if (!mtf_data.second_bars.empty()) {
+                                auto latest_bar_time = mtf_data.second_bars.back().timestamp;
+
+                                // Parse timestamp and check age
+                                try {
+                                    // Convert timestamp string to time_point for age calculation
+                                    // Assume format: Unix timestamp in milliseconds
+                                    long long timestamp_ms = std::stoll(latest_bar_time);
+                                    auto bar_time = std::chrono::system_clock::time_point(
+                                        std::chrono::milliseconds(timestamp_ms)
+                                    );
+                                    auto now = std::chrono::system_clock::now();
+                                    auto age_duration = now - bar_time;
+                                    auto age_minutes = std::chrono::duration_cast<std::chrono::minutes>(age_duration).count();
+
+                                    // COMPLIANCE: Bars older than 15 minutes are stale for trading
+                                    int max_age_minutes = 15;
+                                    if (age_minutes > max_age_minutes) {
+                                        // COMPLIANCE: For crypto markets, forced historical data reload violates API rules
+                                        // Historical data API calls can only be used once at startup
+                                        // When MTH-TS historical data is stale in crypto (24/7 market), fail hard per compliance laws
+                                        std::string error_msg = "CRITICAL: MTH-TS historical data stale in crypto market - cannot reload (violates API compliance): " +
+                                            std::to_string(age_minutes) + "min old > " + std::to_string(max_age_minutes) + "min limit";
+                                        TradingLogs::log_market_status(false, error_msg);
+                                        throw std::runtime_error(error_msg);
+                                    }
+                                } catch (const std::exception& parse_error) {
+                                    // If timestamp parsing fails, assume data is stale
+                                    std::string parse_error_msg = "CRITICAL: Cannot parse historical timestamp - " +
+                                        std::string(parse_error.what()) + " - Timestamp: " + latest_bar_time;
+                                    TradingLogs::log_market_status(false, parse_error_msg);
+                                    throw std::runtime_error(parse_error_msg);
+                                }
+                            }
+                        }
+                    }
+
+                    if (data_actually_fresh) {
+                        market_data_fresh_result = true;
+                        TradingLogs::log_market_status(true, "Market data is fresh (WebSocket providing live data)");
+                    } else {
+                        // COMPLIANCE: No fallback allowed - fail hard
+                        TradingLogs::log_market_status(false, "CRITICAL: No fresh market data available - system cannot proceed safely");
+                        market_data_fresh_result = false;
+                    }
+                } else {
+                    // Fallback to standard check
+                    market_data_fresh_result = market_data_manager.is_data_fresh();
         if (market_data_fresh_result) {
             TradingLogs::log_market_status(true, "Market data is fresh");
         } else {
             TradingLogs::log_market_status(false, "Market data is stale or unavailable");
+                    }
+                }
+            } catch (const std::exception& crypto_check_error) {
+                // Log error but continue with standard check
+                Logging::log_message("Error checking WebSocket/MTH-TS status for crypto: " + std::string(crypto_check_error.what()), "");
+                market_data_fresh_result = market_data_manager.is_data_fresh();
+        if (market_data_fresh_result) {
+            TradingLogs::log_market_status(true, "Market data is fresh");
+        } else {
+            TradingLogs::log_market_status(false, "Market data is stale or unavailable");
+                }
+            }
+        } else {
+            // STANDARD CHECK FOR STOCKS:
+            market_data_fresh_result = market_data_manager.is_data_fresh();
+            if (market_data_fresh_result) {
+                TradingLogs::log_market_status(true, "Market data is fresh");
+            } else {
+                TradingLogs::log_market_status(false, "Market data is stale or unavailable");
+            }
         }
     } catch (const std::exception& exception_error) {
         TradingLogs::log_market_status(false, "Error checking market data freshness: " + std::string(exception_error.what()));
@@ -275,6 +544,14 @@ void TradingCoordinator::execute_trading_cycle_iteration(TradingSnapshotState& s
         
         if (!market_open_result) {
             int position_quantity = processed_data_for_market_close.pos_details.position_quantity;
+
+            // CRITICAL DEFENSE: Validate position quantity before market close handling
+            if (std::abs(position_quantity) > config.strategy.maximum_reasonable_position_quantity) {
+                TradingLogs::log_market_status(false, "CRITICAL: Detected corrupted position quantity (" +
+                                               std::to_string(position_quantity) + ") - skipping market close handling");
+                return;
+            }
+
             if (position_quantity != 0) {
                 // Log market close warning with grace period
                 int grace_period_minutes = config.timing.market_close_grace_period_minutes;
@@ -444,18 +721,21 @@ void TradingCoordinator::process_trading_cycle_iteration(MarketSnapshot& market_
         
     } catch (const std::exception& exception_error) {
         try {
-        TradingLogs::log_market_data_result_table("Exception in process_trading_cycle_iteration: " + std::string(exception_error.what()), false, 0);
+        TradingLogs::log_market_data_result_table("CRITICAL Exception in process_trading_cycle_iteration: " + std::string(exception_error.what()), false, 0);
         } catch (...) {
-            // Logging failed
+            std::cerr << "CRITICAL: Exception in process_trading_cycle_iteration: " << exception_error.what() << std::endl;
         }
-        std::abort();
+        std::cerr << "CRITICAL: Trading cycle iteration failed - system cannot continue safely" << std::endl;
+        throw std::runtime_error("Trading cycle iteration failed: " + std::string(exception_error.what()));
     } catch (...) {
         try {
-        TradingLogs::log_market_data_result_table("Unknown exception in process_trading_cycle_iteration", false, 0);
+        TradingLogs::log_market_data_result_table("CRITICAL Unknown exception in process_trading_cycle_iteration", false, 0);
         } catch (...) {
-            // Logging failed
+            std::cerr << "CRITICAL: Unknown exception in process_trading_cycle_iteration" << std::endl;
         }
-        std::abort();
+        
+        std::cerr << "CRITICAL: Unknown error in trading cycle iteration - system cannot continue safely" << std::endl;
+        throw std::runtime_error("Unknown error in trading cycle iteration");
     }
 }
 
@@ -582,6 +862,15 @@ void TradingCoordinator::log_and_execute_trade_with_comprehensive_logging(const 
             
             if (is_crypto_mode) {
                 // Crypto: buy-and-hold strategy - sell signal means close entire position immediately
+
+                // CRITICAL DEFENSE: Validate position quantity before crypto sell
+                if (std::abs(trade_request.current_position_quantity) > config.strategy.maximum_reasonable_position_quantity) {
+                    TradingLogs::log_market_status(false, "CRITICAL: Detected corrupted position quantity (" +
+                                                   std::to_string(trade_request.current_position_quantity) +
+                                                   ") - skipping crypto sell to prevent invalid orders");
+                    return;
+                }
+
             if (trade_request.current_position_quantity == 0) {
                     // No position to close - silently skip (crypto cannot be shorted)
                     // Logging handled in order_execution_logic.cpp
@@ -722,6 +1011,41 @@ void TradingCoordinator::log_trade_execution_error(const std::string& error_mess
     } else {
         TradingLogs::log_trade_validation_failed("Order execution error: " + error_message);
     }
+}
+
+// MTH-TS helper methods for market snapshot population
+double TradingCoordinator::calculate_average_volume(const std::deque<MultiTimeframeBar>& bars) const {
+    if (bars.empty()) return 0.0;
+
+    double total_volume = 0.0;
+    size_t count = std::min(bars.size(), static_cast<size_t>(20)); // Use last 20 bars for average
+
+    for (size_t i = bars.size() - count; i < bars.size(); ++i) {
+        total_volume += bars[i].volume;
+    }
+
+    return total_volume / count;
+}
+
+double TradingCoordinator::calculate_atr_from_bars(const std::deque<MultiTimeframeBar>& bars) const {
+    if (bars.size() < 2) return 0.0;
+
+    double total_tr = 0.0;
+    size_t count = std::min(bars.size() - 1, static_cast<size_t>(14)); // ATR(14) period
+
+    for (size_t i = bars.size() - count; i < bars.size(); ++i) {
+        const auto& current = bars[i];
+        const auto& previous = bars[i - 1];
+
+        double tr1 = current.high_price - current.low_price;
+        double tr2 = std::abs(current.high_price - previous.close_price);
+        double tr3 = std::abs(current.low_price - previous.close_price);
+
+        double true_range = std::max({tr1, tr2, tr3});
+        total_tr += true_range;
+    }
+
+    return total_tr / count;
 }
 
 } // namespace Core

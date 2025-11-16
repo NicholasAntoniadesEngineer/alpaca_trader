@@ -127,35 +127,88 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
     modules.market_data_coordinator = std::make_unique<AlpacaTrader::Core::MarketDataCoordinator>(
         modules.trading_logic->get_market_data_manager_reference()
     );
+
+    // Initialize MTH-TS components
+    try {
+        modules.market_data_coordinator->initialize_mth_ts_components();
+    } catch (const std::exception& mth_ts_exception_error) {
+        log_message("CRITICAL: Failed to initialize MTH-TS components: " + std::string(mth_ts_exception_error.what()), "");
+        throw std::runtime_error("MTH-TS initialization failed: " + std::string(mth_ts_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error during MTH-TS initialization", "");
+        throw std::runtime_error("Unknown error during MTH-TS initialization");
+    }
     modules.account_data_coordinator = std::make_unique<AlpacaTrader::Core::AccountDataCoordinator>(*modules.portfolio_manager);
     modules.market_gate_coordinator = std::make_unique<AlpacaTrader::Core::MarketGateCoordinator>(*modules.api_manager, state.connectivity_manager);
     
     // Create thread modules
     
+    try {
     // Create MARKET_DATA thread
     modules.market_data_thread = std::make_unique<AlpacaTrader::Threads::MarketDataThread>(configs.market_data_thread, *modules.market_data_coordinator,
                                                                    state.mtx, state.cv, state.market,
                                                                    state.has_market, state.running,
                                                                    state.market_data_timestamp, state.market_data_fresh);
-    
+    } catch (const std::exception& market_thread_exception_error) {
+        log_message("CRITICAL: Failed to create MARKET_DATA thread: " + std::string(market_thread_exception_error.what()), "");
+        throw std::runtime_error("Market data thread creation failed: " + std::string(market_thread_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error creating MARKET_DATA thread", "");
+        throw std::runtime_error("Unknown error creating MARKET_DATA thread");
+    }
+
+    try {
     // Create ACCOUNT_DATA thread
     modules.account_data_thread = std::make_unique<AlpacaTrader::Threads::AccountDataThread>(configs.account_data_thread, *modules.account_data_coordinator, 
                                                                      state.mtx, state.cv, state.account,
                                                                      state.has_account, state.running);
-    
+    } catch (const std::exception& account_thread_exception_error) {
+        log_message("CRITICAL: Failed to create ACCOUNT_DATA thread: " + std::string(account_thread_exception_error.what()), "");
+        throw std::runtime_error("Account data thread creation failed: " + std::string(account_thread_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error creating ACCOUNT_DATA thread", "");
+        throw std::runtime_error("Unknown error creating ACCOUNT_DATA thread");
+    }
+
+    try {
     // Create MARKET_GATE thread
     modules.market_gate_thread = std::make_unique<AlpacaTrader::Threads::MarketGateThread>(state.config.timing, state.config.logging,
                                                                    state.allow_fetch, state.running, *modules.market_gate_coordinator, state.config.trading_mode.primary_symbol);
-    
+    } catch (const std::exception& gate_thread_exception_error) {
+        log_message("CRITICAL: Failed to create MARKET_GATE thread: " + std::string(gate_thread_exception_error.what()), "");
+        throw std::runtime_error("Market gate thread creation failed: " + std::string(gate_thread_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error creating MARKET_GATE thread", "");
+        throw std::runtime_error("Unknown error creating MARKET_GATE thread");
+    }
+
+    try {
     // Create LOGGING thread (uses LoggingThreadConfig from SystemConfigurations)
     modules.logging_thread = std::make_unique<AlpacaTrader::Threads::LoggingThread>(logger, thread_handles.logger_iterations, state.config);
-    
-    // Get initial equity for trader thread
-    double initial_equity = modules.portfolio_manager->fetch_account_equity();
-    if (initial_equity <= 0.0 || !std::isfinite(initial_equity)) {
-        throw std::runtime_error("Failed to get initial equity for trader thread");
+    } catch (const std::exception& logging_thread_exception_error) {
+        log_message("CRITICAL: Failed to create LOGGING thread: " + std::string(logging_thread_exception_error.what()), "");
+        throw std::runtime_error("Logging thread creation failed: " + std::string(logging_thread_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error creating LOGGING thread", "");
+        throw std::runtime_error("Unknown error creating LOGGING thread");
     }
     
+    // Get initial equity for trader thread
+    double initial_equity = 0.0;
+    try {
+        initial_equity = modules.portfolio_manager->fetch_account_equity();
+    if (initial_equity <= 0.0 || !std::isfinite(initial_equity)) {
+            throw std::runtime_error("Invalid initial equity value: " + std::to_string(initial_equity));
+        }
+    } catch (const std::exception& equity_exception_error) {
+        log_message("CRITICAL: Failed to get initial equity for trader thread: " + std::string(equity_exception_error.what()), "");
+        throw std::runtime_error("Initial equity fetch failed: " + std::string(equity_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error getting initial equity for trader thread", "");
+        throw std::runtime_error("Unknown error getting initial equity for trader thread");
+    }
+
+    try {
     // Create TRADER_DECISION thread (uses TraderThreadConfig from SystemConfigurations)
     modules.trading_thread = std::make_unique<AlpacaTrader::Threads::TraderThread>(
         configs.trader_thread.timing,
@@ -167,6 +220,13 @@ SystemModules create_trading_modules(SystemState& state, std::shared_ptr<AlpacaT
         state.last_order_timestamp,
         initial_equity
     );
+    } catch (const std::exception& trader_thread_exception_error) {
+        log_message("CRITICAL: Failed to create TRADER_DECISION thread: " + std::string(trader_thread_exception_error.what()), "");
+        throw std::runtime_error("Trader decision thread creation failed: " + std::string(trader_thread_exception_error.what()));
+    } catch (...) {
+        log_message("CRITICAL: Unknown error creating TRADER_DECISION thread", "");
+        throw std::runtime_error("Unknown error creating TRADER_DECISION thread");
+    }
     
     return modules;
 }
@@ -203,60 +263,158 @@ void configure_trading_modules(SystemThreads& handles, SystemModules& modules, S
 }
 
 SystemThreads startup(SystemState& system_state, std::shared_ptr<AlpacaTrader::Logging::AsyncLogger> logger) {
+    try {
     // Configure system monitor
     bool config_set_result = system_state.system_monitor.set_configuration(system_state.config);
     if (!config_set_result) {
-        SystemLogs::log_system_startup_error("Failed to set system monitor configuration");
+            SystemLogs::log_system_startup_error("CRITICAL: Failed to set system monitor configuration");
         throw std::runtime_error("Failed to set system monitor configuration");
     }
-    
+    } catch (const std::exception& monitor_config_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Exception setting system monitor configuration: " + std::string(monitor_config_exception_error.what()));
+        throw std::runtime_error("System monitor configuration failed: " + std::string(monitor_config_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error setting system monitor configuration");
+        throw std::runtime_error("Unknown error setting system monitor configuration");
+    }
+
+    try {
     bool config_validated_result = system_state.system_monitor.record_configuration_validated(true);
     if (!config_validated_result) {
-        SystemLogs::log_system_startup_error("Failed to record configuration validation");
+            SystemLogs::log_system_startup_error("CRITICAL: Failed to record configuration validation");
         throw std::runtime_error("Failed to record configuration validation");
     }
     SystemLogs::log_configuration_validated(true);
+    } catch (const std::exception& validation_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Exception recording configuration validation: " + std::string(validation_exception_error.what()));
+        throw std::runtime_error("Configuration validation recording failed: " + std::string(validation_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error recording configuration validation");
+        throw std::runtime_error("Unknown error recording configuration validation");
+    }
     
     // Create handles for the threads
     SystemThreads handles;
     
+    try {
     // Initialize the global logging system first
     if (!logger) {
-        throw std::runtime_error("System startup failed: Logger is required but not provided");
+            throw std::runtime_error("Logger is required but not provided");
     }
     AlpacaTrader::Logging::initialize_global_logger(*logger);
-    
+    } catch (const std::exception& logger_init_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to initialize global logging system: " + std::string(logger_init_exception_error.what()));
+        throw std::runtime_error("Global logging system initialization failed: " + std::string(logger_init_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error initializing global logging system");
+        throw std::runtime_error("Unknown error initializing global logging system");
+    }
+
+    try {
     // Create all trading system modules and store them in system_state for lifetime management
     system_state.trading_modules = std::make_unique<SystemModules>(create_trading_modules(system_state, logger, handles));
+    } catch (const std::exception& modules_create_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to create trading system modules: " + std::string(modules_create_exception_error.what()));
+        throw std::runtime_error("Trading system modules creation failed: " + std::string(modules_create_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error creating trading system modules");
+        throw std::runtime_error("Unknown error creating trading system modules");
+    }
     
+    try {
     // Set up data synchronization for trading engine
     DataSyncConfig sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account, 
                                 system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
                                 system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
     system_state.trading_modules->trading_logic->setup_data_synchronization(sync_config);
-    
-    // Set up market data manager sync state
-    // CRITICAL: Store MarketDataSyncState in a persistent location to avoid use-after-free
-    // Create a persistent sync state object that lives in SystemState
-    static AlpacaTrader::Core::MarketDataSyncState fetcher_sync_state_persistent = AlpacaTrader::Core::DataSyncReferences(sync_config).to_market_data_sync_state();
-    system_state.fetcher_sync_state_ptr = &fetcher_sync_state_persistent;
-    
-    bool sync_state_set_result = system_state.trading_modules->trading_coordinator->get_market_data_manager_reference().set_sync_state_references(fetcher_sync_state_persistent);
-    if (!sync_state_set_result) {
-        SystemLogs::log_fatal_error("Failed to set market data manager sync state references");
-        throw std::runtime_error("Failed to set market data manager sync state references");
+    } catch (const std::exception& sync_setup_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to setup data synchronization: " + std::string(sync_setup_exception_error.what()));
+        throw std::runtime_error("Data synchronization setup failed: " + std::string(sync_setup_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error setting up data synchronization");
+        throw std::runtime_error("Unknown error setting up data synchronization");
     }
 
+    try {
+    // Set up market data manager sync state
+    // CRITICAL: Store MarketDataSyncState in SystemState to ensure proper lifetime management
+    // Create sync state object that lives in SystemState using direct construction
+        DataSyncConfig local_sync_config(system_state.mtx, system_state.cv, system_state.market, system_state.account,
+                                        system_state.has_market, system_state.has_account, system_state.running, system_state.allow_fetch,
+                                        system_state.market_data_timestamp, system_state.market_data_fresh, system_state.last_order_timestamp);
+        auto sync_refs = AlpacaTrader::Core::DataSyncReferences(local_sync_config);
+    system_state.fetcher_sync_state = std::make_unique<AlpacaTrader::Core::MarketDataSyncState>(
+        sync_refs.mtx, sync_refs.cv, sync_refs.market, sync_refs.account,
+        sync_refs.has_market, sync_refs.has_account, sync_refs.running, sync_refs.allow_fetch,
+        sync_refs.market_data_timestamp, sync_refs.market_data_fresh, sync_refs.last_order_timestamp
+    );
+    } catch (const std::exception& sync_state_create_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to create market data sync state: " + std::string(sync_state_create_exception_error.what()));
+        throw std::runtime_error("Market data sync state creation failed: " + std::string(sync_state_create_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error creating market data sync state");
+        throw std::runtime_error("Unknown error creating market data sync state");
+    }
+
+    try {
+    bool sync_state_set_result = system_state.trading_modules->trading_coordinator->get_market_data_manager_reference().set_sync_state_references(*system_state.fetcher_sync_state);
+    if (!sync_state_set_result) {
+            SystemLogs::log_system_startup_error("CRITICAL: Failed to set market data manager sync state references");
+        throw std::runtime_error("Failed to set market data manager sync state references");
+    }
+    } catch (const std::exception& sync_state_set_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Exception setting market data manager sync state: " + std::string(sync_state_set_exception_error.what()));
+        throw std::runtime_error("Market data manager sync state setup failed: " + std::string(sync_state_set_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error setting market data manager sync state");
+        throw std::runtime_error("Unknown error setting market data manager sync state");
+    }
+
+    try {
     // Log startup information
     StartupLogs::log_startup_information(*system_state.trading_modules, system_state.config);
-    
+    } catch (const std::exception& startup_log_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to log startup information: " + std::string(startup_log_exception_error.what()));
+        throw std::runtime_error("Startup information logging failed: " + std::string(startup_log_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error logging startup information");
+        throw std::runtime_error("Unknown error logging startup information");
+    }
+
+    try {
     // Configure trading modules
     configure_trading_modules(handles, *system_state.trading_modules, system_state);
+    } catch (const std::exception& config_modules_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to configure trading modules: " + std::string(config_modules_exception_error.what()));
+        throw std::runtime_error("Trading modules configuration failed: " + std::string(config_modules_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error configuring trading modules");
+        throw std::runtime_error("Unknown error configuring trading modules");
+    }
     
     // Create thread configurations from single source
     auto& modules = *system_state.trading_modules;
-    auto thread_definitions = AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules, system_state.config);
-    auto thread_infos = AlpacaTrader::Core::ThreadRegistry::create_thread_infos(thread_definitions);
+    auto thread_definitions = decltype(AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules, system_state.config)){};
+    auto thread_infos = decltype(AlpacaTrader::Core::ThreadRegistry::create_thread_infos(thread_definitions)){};
+
+    try {
+        thread_definitions = AlpacaTrader::Core::ThreadRegistry::create_thread_definitions(handles, modules, system_state.config);
+        try {
+            thread_infos = AlpacaTrader::Core::ThreadRegistry::create_thread_infos(thread_definitions);
+        } catch (const std::exception& thread_infos_exception_error) {
+            SystemLogs::log_system_startup_error("CRITICAL: Failed to create thread infos: " + std::string(thread_infos_exception_error.what()));
+            throw std::runtime_error("Thread infos creation failed: " + std::string(thread_infos_exception_error.what()));
+        } catch (...) {
+            SystemLogs::log_system_startup_error("CRITICAL: Unknown error creating thread infos");
+            throw std::runtime_error("Unknown error creating thread infos");
+        }
+    } catch (const std::exception& thread_defs_exception_error) {
+        SystemLogs::log_system_startup_error("CRITICAL: Failed to create thread definitions: " + std::string(thread_defs_exception_error.what()));
+        throw std::runtime_error("Thread definitions creation failed: " + std::string(thread_defs_exception_error.what()));
+    } catch (...) {
+        SystemLogs::log_system_startup_error("CRITICAL: Unknown error creating thread definitions");
+        throw std::runtime_error("Unknown error creating thread definitions");
+    }
     
     // Start all threads
     try {

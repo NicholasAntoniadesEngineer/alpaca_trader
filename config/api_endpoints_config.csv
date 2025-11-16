@@ -62,8 +62,8 @@ alpaca_stocks.endpoints.assets,/v2/assets
 # Polygon.io Crypto API credentials (REQUIRED FOR CRYPTO MODE)
 polygon_crypto.api_key,gBrcJ2r2fzrW3yLC7aIJoTKOrm4gu6sU	
 polygon_crypto.api_secret,gBrcJ2r2fzrW3yLC7aIJoTKOrm4gu6sU
-polygon_crypto.base_url,https://api.massive.com
-polygon_crypto.websocket_url,wss://socket.massive.com/crypto
+polygon_crypto.base_url,https://api.polygon.io
+polygon_crypto.websocket_url,wss://socket.polygon.io/crypto
 polygon_crypto.retry_count,3
 polygon_crypto.timeout_seconds,30
 polygon_crypto.enable_ssl_verification,true
@@ -72,8 +72,8 @@ polygon_crypto.api_version,v1
 polygon_crypto.bar_timespan,day
 polygon_crypto.bar_multiplier,1
 polygon_crypto.bars_range_minutes,129600
-polygon_crypto.websocket_bar_accumulation_seconds,1
-polygon_crypto.websocket_second_level_accumulation_seconds,30
+polygon_crypto.websocket_bar_accumulation_seconds,60
+polygon_crypto.websocket_second_level_accumulation_seconds,600
 polygon_crypto.websocket_max_bar_history_size,1000
 
 # Polygon Crypto API Endpoints
@@ -82,6 +82,16 @@ polygon_crypto.endpoints.bars,/v2/aggs/ticker/{symbol}/range/{multiplier}/{times
 polygon_crypto.endpoints.quotes_latest,/v1/last_quote/currencies/{symbol}
 polygon_crypto.endpoints.trades,/v1/last/crypto/{symbol}
 polygon_crypto.endpoints.assets,/v3/reference/tickers?market=crypto
+polygon_crypto.endpoints.historical_bars,/v2/aggs/ticker/{symbol}/range/{multiplier}/{timespan}/{from}/{to}
+
+# Polygon Historical Bars Configuration
+polygon_crypto.historical_bars.adjusted,true
+polygon_crypto.historical_bars.sort,asc
+polygon_crypto.historical_bars.limit,50000
+
+# Polygon WebSocket Wait Configuration
+polygon_crypto.websocket.wait_attempts,20
+polygon_crypto.websocket.wait_interval_ms,100
 
 # ========================================================================
 # EASY MODE SWITCHING - JUST CHANGE 2 LINES ABOVE!

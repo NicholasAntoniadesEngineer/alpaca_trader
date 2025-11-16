@@ -29,6 +29,7 @@ public:
 
     MarketDataCoordinator(MarketDataManager& market_data_manager_ref);
     
+    void initialize_mth_ts_components();
     ProcessedData fetch_and_process_market_data(const std::string& trading_symbol, std::vector<Bar>& historical_bars_output);
     void update_shared_market_snapshot(const ProcessedData& processed_data_result, MarketDataSnapshotState& snapshot_state, const std::string& symbol, size_t bars_available_count);
     

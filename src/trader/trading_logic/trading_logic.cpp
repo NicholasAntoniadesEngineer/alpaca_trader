@@ -1,5 +1,7 @@
 #include "trading_logic.hpp"
 #include "api/general/api_manager.hpp"
+#include "trader/strategy_analysis/mth_ts_strategy.hpp"
+#include "logging/logger/async_logger.hpp"
 #include <chrono>
 #include <cmath>
 #include <memory>
@@ -121,22 +123,44 @@ TradingDecisionResult TradingLogic::execute_trading_cycle(const MarketSnapshot& 
         // Create processed data from snapshots
         ProcessedData processed_data_for_trading;
         try {
-            
+
             processed_data_for_trading = ProcessedData(market_snapshot, account_snapshot);
-            
-            
+
+            // CRITICAL: Update ATR with real-time data from multi-timeframe manager
+            // The ATR in market_snapshot is calculated from historical data and never updated
+            // We need the current ATR based on real-time bars for accurate volatility assessment
+            try {
+                if (api_manager.get_polygon_crypto_client()) {
+                    auto* mtf_manager = api_manager.get_polygon_crypto_client()->get_multi_timeframe_manager();
+                    if (mtf_manager) {
+                        // Use the most current ATR from 1-second timeframe for trading decisions
+                        // This ensures ATR reflects real-time volatility, not stale historical data
+                        double realtime_atr = mtf_manager->get_multi_timeframe_data().second_indicators.atr;
+                        if (realtime_atr > 0.0) {
+                            processed_data_for_trading.atr = realtime_atr;
+                        }
+                    }
+                }
+            } catch (const std::exception& atr_update_error) {
+                // Log error but continue with historical ATR - don't fail the trading cycle
+                Logging::log_message("WARNING: Failed to update ATR with real-time data: " + std::string(atr_update_error.what()), "");
+            } catch (...) {
+                Logging::log_message("WARNING: Unknown error updating ATR with real-time data", "");
+            }
+
+
             // CRITICAL: Validate ProcessedData after creation
-            
+
             if (!std::isfinite(processed_data_for_trading.curr.close_price) || !std::isfinite(processed_data_for_trading.curr.open_price)) {
                 empty_result.validation_failed = true;
                 empty_result.validation_error_message = "CRITICAL: ProcessedData created with invalid curr bar data";
                 return empty_result;
             }
-            
-            
-            if (!std::isfinite(processed_data_for_trading.atr)) {
+
+
+            if (!std::isfinite(processed_data_for_trading.atr) || processed_data_for_trading.atr <= 0.0) {
                 empty_result.validation_failed = true;
-                empty_result.validation_error_message = "CRITICAL: ProcessedData created with invalid ATR";
+                empty_result.validation_error_message = "CRITICAL: ProcessedData has invalid ATR after real-time update";
                 return empty_result;
             }
             
@@ -361,26 +385,40 @@ TradingDecisionResult TradingLogic::execute_trading_decision(const ProcessedData
 
 
     try {
+        // CRITICAL DEFENSE: Validate position quantity before profit taking
+        // Prevent execution with corrupted position data
         if (current_position_quantity != 0 && config.strategy.profit_taking_threshold_dollars > 0.0) {
+            // DEFENSIVE CHECK: Ensure position quantity is reasonable (not corrupted)
+            // Maximum reasonable position size for crypto (prevent memory corruption exploits)
+            if (std::abs(current_position_quantity) > config.strategy.maximum_reasonable_position_quantity) {
+                Logging::log_message("CRITICAL: Detected corrupted position quantity (" + std::to_string(current_position_quantity) +
+                                   ") - skipping profit taking to prevent invalid orders", "");
+                // Do not execute profit taking with corrupted data
+            } else {
             try {
                 ProfitTakingRequest profit_taking_request(processed_data_input, current_position_quantity, config.strategy.profit_taking_threshold_dollars);
                 check_and_execute_profit_taking(profit_taking_request);
             } catch (const std::exception& profit_taking_exception_error) {
+                    Logging::log_message("Profit taking failed: " + std::string(profit_taking_exception_error.what()), "");
                 // Log but continue - profit taking failed
             } catch (...) {
+                    Logging::log_message("Unknown exception in profit taking", "");
                 // Unknown exception in profit taking - continue
+                }
             }
         } else {
         }
     } catch (const std::exception& profit_taking_check_exception_error) {
+        Logging::log_message("Profit taking check failed: " + std::string(profit_taking_check_exception_error.what()), "");
         // Log but continue - profit taking check failed
     } catch (...) {
+        Logging::log_message("Unknown exception in profit taking check", "");
         // Unknown exception in profit taking check - continue
     }
 
 
     try {
-        result.signal_decision = detect_trading_signals(processed_data_input, config);
+        result.signal_decision = detect_trading_signals(processed_data_input, config, &api_manager);
     } catch (const std::exception& signal_detection_exception_error) {
         result.validation_failed = true;
         result.validation_error_message = "Exception detecting trading signals: " + std::string(signal_detection_exception_error.what());
@@ -421,7 +459,7 @@ TradingDecisionResult TradingLogic::execute_trading_decision(const ProcessedData
     try {
         
         auto [position_sizing_result, position_sizing_signal_decision] = AlpacaTrader::Core::process_position_sizing(PositionSizingProcessRequest(
-            processed_data_input, account_equity, current_position_quantity, result.buying_power_amount, config.strategy, config.trading_mode
+            processed_data_input, account_equity, current_position_quantity, result.buying_power_amount, result.signal_decision.signal_strength, config.strategy, config.trading_mode
         ));
         
         
@@ -454,10 +492,12 @@ TradingDecisionResult TradingLogic::execute_trading_decision(const ProcessedData
         result.processed_data.prev.timestamp = processed_data_input.prev.timestamp;
         
         result.current_position_quantity = current_position_quantity;
-        
-        if (position_sizing_result.quantity > 0.0) {
+        // For crypto assets, this ensures MTH-TS signals are properly validated
+        if (position_sizing_result.quantity > 0.0 && (result.signal_decision.buy || result.signal_decision.sell)) {
             result.should_execute_trade = true;
         } else {
+            // No valid signal or no position sizing - do not execute trade
+            result.should_execute_trade = false;
         }
     } catch (const std::exception& position_sizing_exception_error) {
         result.validation_failed = true;

@@ -85,6 +85,85 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "session.market_close_hour") cfg.strategy.market_close_hour = std::stoi(config_value_string);
         else if (config_key_string == "session.market_close_minute") cfg.strategy.market_close_minute = std::stoi(config_value_string);
 
+        // MTH-TS Strategy Configuration
+        else if (config_key_string == "strategy.mth_ts_enabled") cfg.strategy.mth_ts_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_name") cfg.strategy.mth_ts_name = config_value_string;
+        else if (config_key_string == "strategy.mth_ts_description") cfg.strategy.mth_ts_description = config_value_string;
+        else if (config_key_string == "strategy.mth_ts_position_notional") cfg.strategy.mth_ts_position_notional = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_take_profit_percentage") cfg.strategy.mth_ts_take_profit_percentage = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_stop_loss_percentage") cfg.strategy.mth_ts_stop_loss_percentage = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_reversal_detection_enabled") cfg.strategy.mth_ts_reversal_detection_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_reversal_spread_threshold") cfg.strategy.mth_ts_reversal_spread_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_reversal_momentum_threshold") cfg.strategy.mth_ts_reversal_momentum_threshold = std::stod(config_value_string);
+
+        // MTH-TS Daily Level Configuration
+        else if (config_key_string == "strategy.mth_ts_daily_enabled") cfg.strategy.mth_ts_daily_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_ema_period") cfg.strategy.mth_ts_daily_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_adx_period") cfg.strategy.mth_ts_daily_adx_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_adx_threshold") cfg.strategy.mth_ts_daily_adx_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_adx_threshold_high") cfg.strategy.mth_ts_daily_adx_threshold_high = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_spread_filter_enabled") cfg.strategy.mth_ts_daily_spread_filter_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_avg_spread_threshold") cfg.strategy.mth_ts_daily_avg_spread_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_volume_ma_period") cfg.strategy.mth_ts_daily_volume_ma_period = std::stoi(config_value_string);
+
+        // MTH-TS 30-Minute Level Configuration
+        else if (config_key_string == "strategy.mth_ts_30min_enabled") cfg.strategy.mth_ts_30min_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_ema_period") cfg.strategy.mth_ts_30min_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_adx_period") cfg.strategy.mth_ts_30min_adx_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_adx_threshold") cfg.strategy.mth_ts_30min_adx_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_spread_filter_enabled") cfg.strategy.mth_ts_30min_spread_filter_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_avg_spread_threshold") cfg.strategy.mth_ts_30min_avg_spread_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_volume_multiplier_strict") cfg.strategy.mth_ts_30min_volume_multiplier_strict = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_volume_ma_period") cfg.strategy.mth_ts_30min_volume_ma_period = std::stoi(config_value_string);
+
+        // MTH-TS 1-Minute Level Configuration
+        else if (config_key_string == "strategy.mth_ts_1min_enabled") cfg.strategy.mth_ts_1min_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_fast_ema_period") cfg.strategy.mth_ts_1min_fast_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_slow_ema_period") cfg.strategy.mth_ts_1min_slow_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_rsi_period") cfg.strategy.mth_ts_1min_rsi_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_rsi_threshold") cfg.strategy.mth_ts_1min_rsi_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_rsi_threshold_strict") cfg.strategy.mth_ts_1min_rsi_threshold_strict = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_volume_ma_period") cfg.strategy.mth_ts_1min_volume_ma_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_volume_multiplier") cfg.strategy.mth_ts_1min_volume_multiplier = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_spread_filter_enabled") cfg.strategy.mth_ts_1min_spread_filter_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_spread_threshold") cfg.strategy.mth_ts_1min_spread_threshold = std::stod(config_value_string);
+
+        // MTH-TS 1-Second Level Configuration
+        else if (config_key_string == "strategy.mth_ts_1sec_enabled") cfg.strategy.mth_ts_1sec_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_ema_period") cfg.strategy.mth_ts_1sec_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_momentum_bars") cfg.strategy.mth_ts_1sec_momentum_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_execution_timeout_seconds") cfg.strategy.mth_ts_1sec_execution_timeout_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_spread_filter_enabled") cfg.strategy.mth_ts_1sec_spread_filter_enabled = to_bool(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_spread_threshold") cfg.strategy.mth_ts_1sec_spread_threshold = std::stod(config_value_string);
+
+        // MTH-TS Historical Data Configuration
+        else if (config_key_string == "strategy.mth_ts_historical_daily_days") cfg.strategy.mth_ts_historical_daily_days = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_30min_days") cfg.strategy.mth_ts_historical_30min_days = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_1min_days") cfg.strategy.mth_ts_historical_1min_days = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_1sec_hours") cfg.strategy.mth_ts_historical_1sec_hours = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_daily_limit") cfg.strategy.mth_ts_historical_daily_limit = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_30min_limit") cfg.strategy.mth_ts_historical_30min_limit = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_1min_limit") cfg.strategy.mth_ts_historical_1min_limit = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_historical_1sec_limit") cfg.strategy.mth_ts_historical_1sec_limit = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_maintenance_daily_max") cfg.strategy.mth_ts_maintenance_daily_max = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_maintenance_30min_max") cfg.strategy.mth_ts_maintenance_30min_max = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_maintenance_1min_max") cfg.strategy.mth_ts_maintenance_1min_max = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_maintenance_1sec_max") cfg.strategy.mth_ts_maintenance_1sec_max = std::stoi(config_value_string);
+
+        // MTH-TS minimum bars required for evaluation
+        else if (config_key_string == "strategy.mth_ts_min_daily_bars") cfg.strategy.mth_ts_min_daily_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_min_30min_bars") cfg.strategy.mth_ts_min_30min_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_min_1min_bars") cfg.strategy.mth_ts_min_1min_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_min_1sec_bars") cfg.strategy.mth_ts_min_1sec_bars = std::stoi(config_value_string);
+
+        // MTH-TS trading parameters
+        else if (config_key_string == "strategy.mth_ts_min_crypto_quantity") cfg.strategy.mth_ts_min_crypto_quantity = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_stop_limit_multiplier") cfg.strategy.mth_ts_stop_limit_multiplier = std::stod(config_value_string);
+
+        // MTH-TS reversal detection parameters
+        else if (config_key_string == "strategy.mth_ts_reversal_min_bars") cfg.strategy.mth_ts_reversal_min_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_reversal_momentum_bars") cfg.strategy.mth_ts_reversal_momentum_bars = std::stoi(config_value_string);
+
         // Strategy parameters
         else if (config_key_string == "strategy.bars_to_fetch_for_calculations") cfg.strategy.bars_to_fetch_for_calculations = std::stoi(config_value_string);
         else if (config_key_string == "strategy.minutes_per_bar") cfg.strategy.minutes_per_bar = std::stoi(config_value_string);
@@ -134,6 +213,12 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.stop_loss_buffer_amount_dollars") cfg.strategy.stop_loss_buffer_amount_dollars = std::stod(config_value_string);
         else if (config_key_string == "strategy.use_current_market_price_for_order_execution") cfg.strategy.use_current_market_price_for_order_execution = to_bool(config_value_string);
         else if (config_key_string == "strategy.profit_taking_threshold_dollars") cfg.strategy.profit_taking_threshold_dollars = std::stod(config_value_string);
+
+        // MTH-TS Propagation Configuration (Hybrid Evaluation)
+        else if (config_key_string == "strategy.mth_ts_propagation_lookback") cfg.strategy.mth_ts_propagation_lookback = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_ema_slope_threshold") cfg.strategy.mth_ts_propagation_ema_slope_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_min_score") cfg.strategy.mth_ts_propagation_min_score = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_min_consecutive_min_bars") cfg.strategy.mth_ts_min_consecutive_min_bars = std::stoi(config_value_string);
         
         // System monitoring configuration (support both monitoring.* and strategy.* prefixes)
         else if (config_key_string == "strategy.max_failure_rate_pct" || config_key_string == "monitoring.max_failure_rate_pct") cfg.strategy.max_failure_rate_pct = std::stod(config_value_string);
@@ -216,6 +301,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "risk.position_scaling_multiplier") cfg.strategy.position_scaling_multiplier = std::stod(config_value_string);
         else if (config_key_string == "risk.buying_power_utilization_percentage") cfg.strategy.buying_power_utilization_percentage = std::stod(config_value_string);
         else if (config_key_string == "risk.buying_power_validation_safety_margin") cfg.strategy.buying_power_validation_safety_margin = std::stod(config_value_string);
+        else if (config_key_string == "risk.maximum_reasonable_position_quantity") cfg.strategy.maximum_reasonable_position_quantity = std::stoi(config_value_string);
         else if (config_key_string == "risk.risk_percentage_per_trade") cfg.strategy.risk_percentage_per_trade = std::stod(config_value_string);
         else if (config_key_string == "risk.maximum_dollar_value_per_trade") {
             try {
@@ -253,6 +339,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "timing.account_data_cache_duration_seconds") cfg.timing.account_data_cache_duration_seconds = std::stoi(config_value_string);
         else if (config_key_string == "timing.market_data_staleness_threshold_seconds") cfg.timing.market_data_staleness_threshold_seconds = std::stoi(config_value_string);
         else if (config_key_string == "timing.crypto_data_staleness_threshold_seconds") cfg.timing.crypto_data_staleness_threshold_seconds = std::stoi(config_value_string);
+        else if (config_key_string == "timing.market_data_logging_interval_seconds") cfg.timing.market_data_logging_interval_seconds = std::stoi(config_value_string);
         else if (config_key_string == "timing.data_availability_wait_timeout_seconds") cfg.timing.data_availability_wait_timeout_seconds = std::stoi(config_value_string);
 
         // System Health Monitoring
@@ -300,6 +387,9 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "logging.include_timestamp") cfg.logging.include_timestamp = to_bool(config_value_string);
         else if (config_key_string == "logging.include_thread_id") cfg.logging.include_thread_id = to_bool(config_value_string);
         else if (config_key_string == "logging.include_function_name") cfg.logging.include_function_name = to_bool(config_value_string);
+        else if (config_key_string == "logging.csv_logging_trigger_description") cfg.logging.csv_logging_trigger_description = config_value_string;
+        else if (config_key_string == "logging.csv_logging_enabled_reason") cfg.logging.csv_logging_enabled_reason = config_value_string;
+        else if (config_key_string == "logging.csv_logging_disabled_reason") cfg.logging.csv_logging_disabled_reason = config_value_string;
             } catch (const std::exception& line_exception_error) {
                 // COMPLIANCE: Fail hard on config parsing errors - no silent failures
                 // Log the error and re-throw to fail hard
@@ -570,6 +660,13 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
         return false;
     }
 
+    // COMPLIANCE: No defaults allowed - explicit configuration required; fail hard if invalid
+    // Validate maximum_reasonable_position_quantity is configured and > 0
+    if (config.strategy.maximum_reasonable_position_quantity <= 0) {
+        error_message = "Invalid configuration: risk.maximum_reasonable_position_quantity must be > 0 (provide via strategy_config.csv). Current value: " + std::to_string(config.strategy.maximum_reasonable_position_quantity);
+        return false;
+    }
+
     // Validate thread polling intervals are reasonable
     if (config.timing.thread_market_data_poll_interval_sec <= 0 || config.timing.thread_market_data_poll_interval_sec > 3600) {
         error_message = "timing.thread_market_data_poll_interval_sec must be between 1 and 3600 seconds";
@@ -627,6 +724,38 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     }
     if (config.strategy.max_inactivity_min <= 0) {
         error_message = "strategy.max_inactivity_min must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+
+    // Validate MTH-TS propagation configuration (no defaults allowed)
+    if (config.strategy.mth_ts_propagation_lookback <= 0) {
+        error_message = "strategy.mth_ts_propagation_lookback must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_ema_slope_threshold <= 0.0) {
+        error_message = "strategy.mth_ts_propagation_ema_slope_threshold must be configured and > 0.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_min_score <= 0.0 || config.strategy.mth_ts_propagation_min_score > 1.0) {
+        error_message = "strategy.mth_ts_propagation_min_score must be configured and between 0.0-1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_min_consecutive_min_bars <= 0) {
+        error_message = "strategy.mth_ts_min_consecutive_min_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+
+    // Validate logging configuration (no defaults allowed)
+    if (config.logging.csv_logging_trigger_description.empty()) {
+        error_message = "logging.csv_logging_trigger_description must be configured and not empty (no defaults allowed)";
+        return false;
+    }
+    if (config.logging.csv_logging_enabled_reason.empty()) {
+        error_message = "logging.csv_logging_enabled_reason must be configured and not empty (no defaults allowed)";
+        return false;
+    }
+    if (config.logging.csv_logging_disabled_reason.empty()) {
+        error_message = "logging.csv_logging_disabled_reason must be configured and not empty (no defaults allowed)";
         return false;
     }
 

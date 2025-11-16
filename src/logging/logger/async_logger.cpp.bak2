@@ -23,26 +23,22 @@ void log_message_to_stderr(const std::string& error_message);
 LoggingContext* get_logging_context() {
     LoggingContext* thread_logging_context_ptr = thread_local_logging_context_pointer;
     if (!thread_logging_context_ptr) {
-        // LOGGING IS FUNDAMENTAL: If logging context is not available, system must fail hard
-        // This enforces the compliance rule that logging must work or the system cannot continue
-        std::cerr << "CRITICAL: Logging context not initialized for current thread - system cannot continue safely" << std::endl;
-        throw std::runtime_error("Logging context not initialized - logging system failure, system must fail hard");
+        throw std::runtime_error("Logging context not initialized for current thread - system must fail without context");
     }
     return thread_logging_context_ptr;
 }
 
 void set_log_thread_tag(const std::string& thread_tag_value) {
     LoggingContext* thread_logging_context_ptr = get_logging_context();
-    // get_logging_context() now throws if context is null, so we can assume it's valid
     thread_logging_context_ptr->set_thread_tag(thread_tag_value);
 }
 
 
 void log_message(const std::string& message, const std::string& log_file_path) {
+    (void)log_file_path; // Parameter may be unused depending on logger availability
     try {
         LoggingContext* thread_logging_context_ptr = get_logging_context();
-        // get_logging_context() now throws if context is null, so we can assume it's valid
-        
+
         std::string timestamp_string;
         try {
             timestamp_string = TimeUtils::get_current_human_readable_time();
@@ -53,7 +49,7 @@ void log_message(const std::string& message, const std::string& log_file_path) {
             log_message_to_stderr("ERROR: Unknown time utility failure");
             timestamp_string = "ERROR-TIME";
         }
-        
+
         std::string thread_tag_string = thread_logging_context_ptr->get_thread_tag();
         std::stringstream log_stream;
         log_stream << timestamp_string << " [" << thread_tag_string << "]   " << message << std::endl;
@@ -82,30 +78,13 @@ void log_message(const std::string& message, const std::string& log_file_path) {
         } catch (...) {
             log_message_to_stderr("ERROR: Unknown console logging failure");
         }
-        
-        if (!log_file_path.empty()) {
-            try {
-                std::ofstream log_file_stream(log_file_path, std::ios::app);
-                if (log_file_stream.is_open()) {
-                    log_file_stream << log_formatted_string;
-                    log_file_stream.close();
-                } else {
-                    log_message_to_stderr("ERROR: Failed to open log file: " + log_file_path);
-                }
-            } catch (const std::exception& file_exception_error) {
-                log_message_to_stderr("ERROR: File logging failed: " + std::string(file_exception_error.what()));
-            } catch (...) {
-                log_message_to_stderr("ERROR: Unknown file logging failure");
-            }
-        }
-    } catch (const std::exception& critical_exception_error) {
-        log_message_to_stderr("CRITICAL ERROR: Logging system failure: " + std::string(critical_exception_error.what()));
-        std::cerr << message << std::endl;
+    } catch (const std::exception& exception_error) {
+        log_message_to_stderr("CRITICAL ERROR: Logging system failure: " + std::string(exception_error.what()));
     } catch (...) {
         log_message_to_stderr("CRITICAL ERROR: Unknown logging system failure");
-        std::cerr << message << std::endl;
     }
 }
+
 
 void log_message_to_stderr(const std::string& error_message) {
     std::cerr << error_message << std::endl;
@@ -250,7 +229,7 @@ void shutdown_global_logger(AsyncLogger& logger) {
 }
 
 // AsyncLogger implementation
-void AsyncLogger::stop() {
+void Logging::AsyncLogger::stop() {
     {
         std::lock_guard<std::mutex> lock(mtx);
         running.store(false);
@@ -258,7 +237,7 @@ void AsyncLogger::stop() {
     cv.notify_all();
 }
 
-void AsyncLogger::enqueue(const std::string& formatted_line) {
+void Logging::AsyncLogger::enqueue(const std::string& formatted_line) {
     {
         std::lock_guard<std::mutex> lock(mtx);
         queue.push(formatted_line);
@@ -267,7 +246,7 @@ void AsyncLogger::enqueue(const std::string& formatted_line) {
 }
 
 // Message processing implementations
-void AsyncLogger::collect_all_available_messages_internal(std::vector<std::string>& message_buffer) {
+void Logging::AsyncLogger::collect_all_available_messages_internal(std::vector<std::string>& message_buffer) {
     // Collect all available messages immediately (no waiting)
     while (!queue.empty()) {
         message_buffer.push_back(std::move(queue.front()));
@@ -275,12 +254,12 @@ void AsyncLogger::collect_all_available_messages_internal(std::vector<std::strin
     }
 }
 
-void AsyncLogger::collect_all_available_messages(std::vector<std::string>& message_buffer) {
+void Logging::AsyncLogger::collect_all_available_messages(std::vector<std::string>& message_buffer) {
     std::unique_lock<std::mutex> lock(mtx);
     collect_all_available_messages_internal(message_buffer);
 }
 
-void AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofstream& log_file) {
+void Logging::AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofstream& log_file) {
     {
         LoggingContext* thread_logging_context_ptr = get_logging_context();
         std::lock_guard<std::mutex> cguard(thread_logging_context_ptr->console_mutex);
@@ -290,27 +269,28 @@ void AsyncLogger::output_log_line_internal(const std::string& log_line, std::ofs
         }
         std::cout << log_line << std::flush;
     }
-    
+
     if (log_file.is_open()) {
         log_file << log_line;
         log_file.flush();
     }
 }
+}
 
-void AsyncLogger::write_buffered_messages_to_log(const std::vector<std::string>& message_buffer, std::ofstream& log_file) {
+void Logging::AsyncLogger::write_buffered_messages_to_log(const std::vector<std::string>& message_buffer, std::ofstream& log_file) {
     // Write all buffered messages to console and log file
     for (const auto& log_line : message_buffer) {
         output_log_line_internal(log_line, log_file);
     }
 }
 
-void AsyncLogger::flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file) {
+void Logging::AsyncLogger::flush_message_buffer(std::vector<std::string>& message_buffer, std::ofstream& log_file) {
     // Write messages to log and clear buffer
     write_buffered_messages_to_log(message_buffer, log_file);
     message_buffer.clear();
 }
 
-void AsyncLogger::process_logging_queue_with_timeout(std::ofstream& log_file, int poll_interval_seconds) {
+void Logging::AsyncLogger::process_logging_queue_with_timeout(std::ofstream& log_file, int poll_interval_seconds) {
     std::unique_lock<std::mutex> lock(mtx);
     
     // Wait for messages with configurable timeout to allow periodic checks for thread shutdown
@@ -329,7 +309,7 @@ void AsyncLogger::process_logging_queue_with_timeout(std::ofstream& log_file, in
     }
 }
 
-void AsyncLogger::process_logging_queue(std::ofstream& log_file) {
+void Logging::AsyncLogger::process_logging_queue(std::ofstream& log_file) {
     std::unique_lock<std::mutex> lock(mtx);
     cv.wait(lock, [&]{ return !queue.empty() || !running.load(); });
     
@@ -347,22 +327,22 @@ void AsyncLogger::process_logging_queue(std::ofstream& log_file) {
 std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrader::Config::SystemConfig& config) {
     LoggingContext* thread_logging_context_ptr = get_logging_context();
 
-    thread_logging_context_ptr->run_folder = create_unique_run_folder();
+    thread_logging_context_ptr->run_folder = Logging::create_unique_run_folder();
 
-    std::string base_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(config.logging.log_file);
-    std::string timestamped_log_filename = generate_timestamped_log_filename(base_filename_string);
+    std::string base_filename_string = thread_logging_context_ptr->run_folder + "/" + Logging::extract_base_filename(config.logging.log_file);
+    std::string timestamped_log_filename = Logging::generate_timestamped_log_filename(base_filename_string);
 
     auto logger_instance = std::make_shared<AsyncLogger>(timestamped_log_filename);
 
     std::string configuration_error_message;
-    if (!validate_config(config, configuration_error_message)) {
-        log_message_to_stderr("ERROR: Config error: " + configuration_error_message);
+    if (!AlpacaTrader::Config::validate_config(config, configuration_error_message)) {
+        Logging::log_message_to_stderr("ERROR: Config error: " + configuration_error_message);
         throw std::runtime_error("Configuration validation failed: " + configuration_error_message);
     }
 
     thread_logging_context_ptr->async_logger = logger_instance;
-    initialize_global_logger(*logger_instance);
-    set_log_thread_tag("MAIN  ");
+    Logging::initialize_global_logger(*logger_instance);
+    Logging::set_log_thread_tag("MAIN  ");
 
     return logger_instance;
 }
@@ -370,13 +350,13 @@ std::shared_ptr<AsyncLogger> initialize_application_foundation(const AlpacaTrade
 std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& base_filename) {
     try {
         LoggingContext* thread_logging_context_ptr = get_logging_context();
-        
+
         if (thread_logging_context_ptr->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string bars_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(base_filename) + "_bars";
-        std::string timestamped_bars_filename_string = generate_timestamped_log_filename(bars_filename_string);
+        std::string bars_filename_string = thread_logging_context_ptr->run_folder + "/" + Logging::extract_base_filename(base_filename) + "_bars";
+        std::string timestamped_bars_filename_string = Logging::generate_timestamped_log_filename(bars_filename_string);
         auto bars_logger_instance = std::make_shared<CSVBarsLogger>(timestamped_bars_filename_string);
 
         if (!bars_logger_instance->is_initialized()) {
@@ -386,24 +366,25 @@ std::shared_ptr<CSVBarsLogger> initialize_csv_bars_logger(const std::string& bas
         thread_logging_context_ptr->csv_bars_logger = bars_logger_instance;
         return bars_logger_instance;
     } catch (const std::exception& exception_error) {
-        log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + exception_error.what());
+        Logging::log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV bars logger: ") + exception_error.what());
         throw;
     } catch (...) {
-        log_message_to_stderr("CRITICAL ERROR: Unknown error initializing CSV bars logger");
+        Logging::log_message_to_stderr("CRITICAL ERROR: Unknown error initializing CSV bars logger");
         throw std::runtime_error("Failed to initialize CSV bars logger");
     }
+}
 }
 
 std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& base_filename) {
     try {
         LoggingContext* thread_logging_context_ptr = get_logging_context();
-        
+
         if (thread_logging_context_ptr->run_folder.empty()) {
             throw std::runtime_error("Run folder not initialized - call initialize_application_foundation first");
         }
 
-        std::string trade_filename_string = thread_logging_context_ptr->run_folder + "/" + extract_base_filename(base_filename) + "_trades";
-        std::string timestamped_trade_filename_string = generate_timestamped_log_filename(trade_filename_string);
+        std::string trade_filename_string = thread_logging_context_ptr->run_folder + "/" + Logging::extract_base_filename(base_filename) + "_trades";
+        std::string timestamped_trade_filename_string = Logging::generate_timestamped_log_filename(trade_filename_string);
         auto trade_logger_instance = std::make_shared<CSVTradeLogger>(timestamped_trade_filename_string);
 
         if (!trade_logger_instance->is_valid()) {
@@ -413,10 +394,10 @@ std::shared_ptr<CSVTradeLogger> initialize_csv_trade_logger(const std::string& b
         thread_logging_context_ptr->csv_trade_logger = trade_logger_instance;
         return trade_logger_instance;
     } catch (const std::exception& exception_error) {
-        log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV trade logger: ") + exception_error.what());
+        Logging::log_message_to_stderr(std::string("CRITICAL ERROR: Failed to initialize CSV trade logger: ") + exception_error.what());
         throw;
     } catch (...) {
-        log_message_to_stderr("CRITICAL ERROR: Unknown error initializing CSV trade logger");
+        Logging::log_message_to_stderr("CRITICAL ERROR: Unknown error initializing CSV trade logger");
         throw std::runtime_error("Failed to initialize CSV trade logger");
     }
 }

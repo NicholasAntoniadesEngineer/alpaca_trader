@@ -67,6 +67,10 @@ private:
     
     void log_and_execute_trade_with_comprehensive_logging(const TradeExecutionRequest& trade_request, const TradingDecisionResult& decision_result);
     void log_trade_execution_error(const std::string& error_message, const TradeExecutionRequest& trade_request, double buying_power_amount);
+
+    // MTH-TS helper methods for market snapshot population
+    double calculate_average_volume(const std::deque<MultiTimeframeBar>& bars) const;
+    double calculate_atr_from_bars(const std::deque<MultiTimeframeBar>& bars) const;
 };
 
 } // namespace Core

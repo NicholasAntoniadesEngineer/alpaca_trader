@@ -1,22 +1,18 @@
 # Modern C++ Trading System Build Configuration
-
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -O2
 OPENSSL_PREFIX := $(shell brew --prefix openssl@3 2>/dev/null || brew --prefix openssl 2>/dev/null || echo "/usr/local/opt/openssl")
 INCLUDES = -I. -Isrc -I$(OPENSSL_PREFIX)/include
 LIBS = -lcurl -pthread -L$(OPENSSL_PREFIX)/lib -lssl -lcrypto
-
 # Sanitized build flags
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -g -O0
 ASAN_LIBS = -fsanitize=address
-
 # Directories
 OBJ_DIR = obj
 BIN_DIR = bin
 GIT_HASH = $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 TARGET = $(BIN_DIR)/alpaca_trader_$(GIT_HASH)
-
 # Production source files
 SOURCES = src/main.cpp \
   src/api/general/api_manager.cpp \
@@ -32,12 +28,13 @@ SOURCES = src/main.cpp \
   src/trader/trading_logic/trading_logic.cpp \
   src/trader/strategy_analysis/risk_manager.cpp \
   src/trader/trading_logic/order_execution_logic.cpp \
-  src/trader/strategy_analysis/strategy_logic.cpp \
+  src/trader/strategy_analysis/mth_ts_strategy.cpp \
   src/trader/strategy_analysis/indicators.cpp \
   src/trader/market_data/market_data_fetcher.cpp \
   src/trader/market_data/market_data_manager.cpp \
   src/trader/market_data/market_data_validator.cpp \
   src/trader/market_data/market_bars_manager.cpp \
+  src/trader/market_data/multi_timeframe_manager.cpp \
   src/utils/connectivity_manager.cpp \
   src/system/system_manager.cpp \
   src/threads/thread_register.cpp \
@@ -75,17 +72,13 @@ SOURCES = src/main.cpp \
   src/threads/system_threads/market_gate_thread.cpp \
   src/threads/system_threads/logging_thread.cpp \
   src/threads/system_threads/trader_thread.cpp
-
 # Object files
 OBJECTS = $(SOURCES:%.cpp=$(OBJ_DIR)/%.o)
-
 # Default target builds the binary only (no parallel race with clean)
 all: $(TARGET)
-
 # Create directories if they don't exist
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
-
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)/src
@@ -113,45 +106,36 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)/src/threads/system_threads
 	mkdir -p $(OBJ_DIR)/src/configs
 	mkdir -p $(OBJ_DIR)/src/json
-
 # Link the target
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	$(CXX) $(OBJECTS) -o $@ $(LIBS)
 	@ln -sf $(notdir $(TARGET)) $(BIN_DIR)/alpaca_trader_latest
 	@echo "Build successful: $(TARGET)"
 	@echo "Latest symlink created: $(BIN_DIR)/alpaca_trader_latest"
-
 # Compile source files to object files
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
 # AddressSanitizer build
 asan: CXXFLAGS := $(CXXFLAGS) $(ASAN_FLAGS)
 asan: LIBS := $(LIBS) $(ASAN_LIBS)
 asan: clean $(TARGET)
 	@echo "ASAN build complete"
-
 # Clean build artifacts
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)/alpaca_trader_* $(BIN_DIR)/alpaca_trader_latest
 	@echo "Clean complete"
-
 # Build and then clean object files
 build-and-clean: $(TARGET) clean-obj
-
 # Clean only object files (keep binary)
 clean-obj:
 	rm -rf $(OBJ_DIR)
 	@echo "Object files cleaned"
-
 # Clean everything including binary
 clean-all:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 	@echo "All build artifacts cleaned"
-
 # Force rebuild
 rebuild: clean all
-
 # Help target
 help:
 	@echo "Alpaca Trader Build System"
@@ -168,6 +152,5 @@ help:
 	@echo "Versioning:"
 	@echo "  Binary:      alpaca_trader_$(GIT_HASH)"
 	@echo "  Symlink:     alpaca_trader_latest"
-
 # Prevent make from treating file names as targets
 .PHONY: all clean clean-obj clean-all rebuild help build-and-clean asan

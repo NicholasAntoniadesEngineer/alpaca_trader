@@ -11,6 +11,127 @@ struct StrategyConfig {
     std::string symbol;                              // Target symbol for trading
     bool is_crypto_asset;                            // Whether the target symbol is a cryptocurrency
 
+    // ========================================================================
+    // MTH-TS STRATEGY CONFIGURATION
+    // ========================================================================
+
+    // Strategy identification and enablement
+    bool mth_ts_enabled;                             // Enable MTH-TS strategy
+    std::string mth_ts_name;                         // Strategy name identifier
+    std::string mth_ts_description;                  // Strategy description
+
+    // Position sizing for MTH-TS
+    double mth_ts_position_notional;                 // Position size in notional value (e.g., $40)
+
+    // Take profit and stop loss percentages for MTH-TS
+    double mth_ts_take_profit_percentage;            // Take profit percentage (0.15% = 0.0015)
+    double mth_ts_stop_loss_percentage;              // Stop loss percentage (0.075% = 0.00075)
+
+    // Reversal detection parameters
+    bool mth_ts_reversal_detection_enabled;          // Enable reversal detection
+    double mth_ts_reversal_spread_threshold;         // Spread threshold for reversal detection
+    double mth_ts_reversal_momentum_threshold;       // Momentum threshold for reversal detection
+
+    // ========================================================================
+    // MTH-TS DAILY LEVEL CONFIGURATION
+    // ========================================================================
+
+    // Daily level enablement and parameters
+    bool mth_ts_daily_enabled;                       // Enable daily level analysis
+    int mth_ts_daily_ema_period;                     // EMA period for daily trend (200)
+    int mth_ts_daily_adx_period;                     // ADX period for daily trend strength (14)
+    double mth_ts_daily_adx_threshold;               // ADX threshold for trend confirmation (25)
+    double mth_ts_daily_adx_threshold_high;          // Higher ADX threshold for strict conditions (30)
+
+    // Daily spread filters
+    bool mth_ts_daily_spread_filter_enabled;         // Enable daily spread filtering
+    double mth_ts_daily_avg_spread_threshold;        // Average spread threshold for daily filtering (0.03%)
+    int mth_ts_daily_volume_ma_period;               // Volume MA period for daily analysis (20)
+
+    // ========================================================================
+    // MTH-TS 30-MINUTE LEVEL CONFIGURATION
+    // ========================================================================
+
+    // 30-minute level enablement and parameters
+    bool mth_ts_30min_enabled;                       // Enable 30-minute level confirmation
+    int mth_ts_30min_ema_period;                     // EMA period for 30-minute trend (50)
+    int mth_ts_30min_adx_period;                     // ADX period for 30-minute trend strength (14)
+    double mth_ts_30min_adx_threshold;               // ADX threshold for 30-minute confirmation (25)
+
+    // 30-minute spread filters
+    bool mth_ts_30min_spread_filter_enabled;         // Enable 30-minute spread filtering
+    double mth_ts_30min_avg_spread_threshold;        // Average spread threshold for 30-minute filtering (0.04%)
+    double mth_ts_30min_volume_multiplier_strict;    // Volume multiplier for strict conditions (1.5x)
+    int mth_ts_30min_volume_ma_period;               // Volume MA period for 30-minute timeframe (20)
+
+    // ========================================================================
+    // MTH-TS 1-MINUTE LEVEL CONFIGURATION
+    // ========================================================================
+
+    // 1-minute level enablement and parameters
+    bool mth_ts_1min_enabled;                        // Enable 1-minute level triggers
+    int mth_ts_1min_fast_ema_period;                 // Fast EMA period for 1-minute signals (9)
+    int mth_ts_1min_slow_ema_period;                 // Slow EMA period for 1-minute signals (21)
+    int mth_ts_1min_rsi_period;                      // RSI period for 1-minute momentum (14)
+    double mth_ts_1min_rsi_threshold;                // RSI threshold for normal conditions (40)
+    double mth_ts_1min_rsi_threshold_strict;         // RSI threshold for strict conditions (35)
+    int mth_ts_1min_volume_ma_period;                // Volume MA period for 1-minute signals (20)
+    double mth_ts_1min_volume_multiplier;            // Volume multiplier for 1-minute triggers (1.2x)
+
+    // 1-minute spread filters
+    bool mth_ts_1min_spread_filter_enabled;          // Enable 1-minute spread filtering
+    double mth_ts_1min_spread_threshold;             // Spread threshold for 1-minute filtering (0.02%)
+
+    // ========================================================================
+    // MTH-TS 1-SECOND LEVEL CONFIGURATION
+    // ========================================================================
+
+    // 1-second level enablement and parameters
+    bool mth_ts_1sec_enabled;                        // Enable 1-second level execution confirmation
+    int mth_ts_1sec_ema_period;                      // EMA period for 1-second confirmation (5)
+    int mth_ts_1sec_momentum_bars;                   // Number of bars for momentum confirmation (3)
+    int mth_ts_1sec_execution_timeout_seconds;       // Execution timeout in seconds (3)
+
+    // 1-second spread filters
+    bool mth_ts_1sec_spread_filter_enabled;          // Enable 1-second spread filtering
+    double mth_ts_1sec_spread_threshold;             // Spread threshold for 1-second execution (0.01%)
+
+    // ========================================================================
+    // MTH-TS HISTORICAL DATA CONFIGURATION
+    // ========================================================================
+
+    // Historical data time ranges (in days/hours)
+    int mth_ts_historical_daily_days;                // Days of daily data to load (200)
+    int mth_ts_historical_30min_days;                // Days of 30-minute data to load (30)
+    int mth_ts_historical_1min_days;                 // Days of 1-minute data to load (7)
+    int mth_ts_historical_1sec_hours;                // Hours of 1-second data to load (2)
+
+    // Historical data limits (maximum bars to load per timeframe)
+    int mth_ts_historical_daily_limit;               // Maximum daily bars to load (250)
+    int mth_ts_historical_30min_limit;               // Maximum 30-minute bars to load (2000)
+    int mth_ts_historical_1min_limit;                // Maximum 1-minute bars to load (10000)
+    int mth_ts_historical_1sec_limit;                // Maximum 1-second bars to load (7200)
+
+    // Multi-timeframe data maintenance (maximum bars to keep in memory)
+    int mth_ts_maintenance_daily_max;                // Maximum daily bars to maintain (250)
+    int mth_ts_maintenance_30min_max;                // Maximum 30-minute bars to maintain (2000)
+    int mth_ts_maintenance_1min_max;                 // Maximum 1-minute bars to maintain (10000)
+    int mth_ts_maintenance_1sec_max;                 // Maximum 1-second bars to maintain (7200)
+
+    // MTH-TS minimum bars required for evaluation
+    int mth_ts_min_daily_bars;                       // Minimum daily bars for evaluation (10)
+    int mth_ts_min_30min_bars;                       // Minimum 30-minute bars for evaluation (20)
+    int mth_ts_min_1min_bars;                        // Minimum 1-minute bars for evaluation (20)
+    int mth_ts_min_1sec_bars;                        // Minimum 1-second bars for evaluation (10)
+
+    // MTH-TS trading parameters
+    double mth_ts_min_crypto_quantity;               // Minimum crypto quantity (0.00001)
+    double mth_ts_stop_limit_multiplier;             // Stop limit price multiplier (0.995)
+
+    // MTH-TS reversal detection parameters
+    int mth_ts_reversal_min_bars;                    // Minimum bars for reversal detection (5)
+    int mth_ts_reversal_momentum_bars;               // Bars for momentum check (3)
+
     // Market session timing (Eastern Time)
     int et_utc_offset_hours;                         // UTC offset for Eastern Time
     int market_open_hour;                            // Market open hour (Eastern Time)
@@ -89,6 +210,9 @@ struct StrategyConfig {
     // Buying Power Management
     double buying_power_utilization_percentage;      // Percentage of available buying power to use
     double buying_power_validation_safety_margin;    // Safety margin for buying power validation
+
+    // Position Data Integrity Validation
+    int maximum_reasonable_position_quantity;        // Maximum reasonable position quantity for validation
 
     // ========================================================================
     // POSITION MANAGEMENT CONFIGURATION
@@ -201,6 +325,16 @@ struct StrategyConfig {
     int max_inactivity_min;                          // Maximum inactivity period in minutes
 
     // ========================================================================
+    // MTH-TS PROPAGATION CONFIGURATION (Hybrid Evaluation)
+    // ========================================================================
+
+    // Propagation detection parameters for hybrid top-down/bottom-up evaluation
+    int mth_ts_propagation_lookback;                // Number of bars to look back for trend calculation (3-5)
+    double mth_ts_propagation_ema_slope_threshold;  // EMA slope threshold for upward propagation (0.001)
+    double mth_ts_propagation_min_score;            // Minimum propagation score for provisional signals (0.7)
+    int mth_ts_min_consecutive_min_bars;            // Minimum consecutive aligned minute bars before triggering (2-3)
+
+    // ========================================================================
     // PRECISION SETTINGS
     // ========================================================================
 
@@ -217,6 +351,16 @@ struct StrategyConfig {
     std::string signal_sell_string;                  // String label for sell signals
     std::string position_long_string;                 // String label for long positions
     std::string position_short_string;                // String label for short positions
+
+    // Constructor - initializes critical parameters to invalid values for validation
+    // Config loading must override these - system fails if validation finds invalid values
+    // This ensures no defaults are used while allowing proper validation of missing config
+    StrategyConfig() :
+        mth_ts_propagation_lookback(-1),  // Invalid value - must be overridden by config
+        mth_ts_propagation_ema_slope_threshold(-1.0),
+        mth_ts_propagation_min_score(-1.0),
+        mth_ts_min_consecutive_min_bars(-1)
+    {}
 };
 
 #endif // STRATEGY_CONFIG_HPP

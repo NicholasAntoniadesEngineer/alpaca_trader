@@ -1358,6 +1358,7 @@ std::vector<unsigned char> WebSocketClient::generateRandomBytes(size_t byteCount
 }
 
 void WebSocketClient::cleanupConnection() {
+    std::lock_guard<std::mutex> stateGuard(clientStateMutex);
     try {
         // Cleanup SSL connection - check if pointer is valid before freeing
         void* sslConnectionToFree = sslConnectionPointer;
@@ -1374,7 +1375,7 @@ void WebSocketClient::cleanupConnection() {
                 // Ignore free errors
             }
         }
-        
+
         // Cleanup SSL context - check if pointer is valid before freeing
         void* sslContextToFree = sslContextPointer;
         if (sslContextToFree) {
@@ -1385,7 +1386,7 @@ void WebSocketClient::cleanupConnection() {
                 // Ignore free errors
             }
         }
-        
+
         // Cleanup socket - check if file descriptor is valid before closing
         int socketFileDescriptorToClose = socketFileDescriptor;
         if (socketFileDescriptorToClose >= 0) {

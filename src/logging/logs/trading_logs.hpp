@@ -3,7 +3,6 @@
 
 #include "configs/system_config.hpp"
 #include "trader/data_structures/data_structures.hpp"
-#include "trader/strategy_analysis/strategy_logic.hpp"
 #include "logging/logger/logging_macros.hpp"
 #include "logger_structures.hpp"
 #include <vector>
@@ -46,9 +45,25 @@ public:
     static void log_signal_analysis_start(const std::string& symbol);
     static void log_signal_analysis_complete();
     
+    // MTH-TS Strategy Analysis
+    static void log_mth_ts_strategy_header();
+    static void log_mth_ts_consolidated_analysis(const AlpacaTrader::Core::MultiTimeframeData& mtf_data, const AlpacaTrader::Core::MthTsTimeframeAnalysis& timeframe_status, const AlpacaTrader::Core::SignalDecision& signals, const AlpacaTrader::Core::ProcessedData& processed_data);
+    static void log_mth_ts_timeframe_status(const AlpacaTrader::Core::MthTsTimeframeAnalysis& timeframe_status);
+    static void log_mth_ts_detailed_analysis(const AlpacaTrader::Core::MultiTimeframeData& mtf_data, const SystemConfig& config);
+    static void log_mth_ts_daily_bias_analysis(double latest_close, double ema, bool ema_alignment, double adx, double adx_threshold, bool adx_ok, double spread, double spread_threshold, bool spread_ok, bool bias);
+    static void log_mth_ts_30min_confirmation_analysis(bool daily_bias, double latest_close, double ema, bool ema_alignment, double adx, double adx_threshold, bool adx_ok, double volume, double volume_threshold, bool volume_ok, double spread, double spread_threshold, bool spread_ok, bool confirmed);
+    static void log_mth_ts_1min_trigger_analysis(bool thirty_min_confirmed, double latest_close, double ema, bool ema_crossover, double rsi, double rsi_threshold, bool rsi_ok, double volume, double volume_threshold, bool volume_ok, double spread, double spread_threshold, bool spread_ok, bool triggered);
+    static void log_mth_ts_1sec_execution_analysis(bool minute_triggered, double spread, double spread_threshold, bool spread_ok, size_t bars_count, bool momentum_up,
+                                                 double atr, bool atr_ok, double volume_ratio, bool volume_ok, bool doji_ok,
+                                                 double price_change_pct, double volume_change_pct, double volatility_pct,
+                                                 bool pattern_ok, bool momentum_ok, bool ready);
+    static void log_mth_ts_strategy_result(const AlpacaTrader::Core::SignalDecision& signals);
+    static void log_mth_ts_analysis_complete();
+    
     
     // Market conditions
     static void log_market_status(bool is_open, const std::string& reason);
+    static void log_comprehensive_market_status(bool is_open, const std::string& primary_reason, const std::string& historical_data_status, double snapshot_price, bool proceeding_with_historical);
     static void log_trading_conditions(double daily_pnl, double exposure_pct, bool allowed, const SystemConfig& config);
     static void log_equity_update(double current_equity);
     
@@ -170,6 +185,8 @@ public:
 private:
     static std::string format_currency(double amount);
     static std::string format_percentage(double percentage);
+    static std::string format_price(double price);
+    static std::string format_decimal(double value, int precision);
 };
 
 } // namespace Logging

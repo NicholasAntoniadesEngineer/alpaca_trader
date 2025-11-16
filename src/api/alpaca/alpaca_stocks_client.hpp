@@ -31,6 +31,9 @@ public:
     void disconnect() override;
     
     std::vector<Core::Bar> get_recent_bars(const Core::BarRequest& request) const override;
+    std::vector<Core::Bar> get_historical_bars(const std::string& symbol, const std::string& timeframe,
+                                              const std::string& start_date, const std::string& end_date,
+                                              int limit = 50000) const override;
     double get_current_price(const std::string& symbol) const override;
     Core::QuoteData get_realtime_quotes(const std::string& symbol) const override;
     

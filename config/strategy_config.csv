@@ -13,6 +13,141 @@
 trading_mode.mode,crypto
 trading_mode.primary_symbol,BTC/USD
 
+# ========================================================================
+# MTH-TS STRATEGY CONFIGURATION
+# ========================================================================
+# Multi-Timeframe Hierarchical Trend Strategy for Crypto (BTC/USD)
+# Target: $20+ daily via 20-40 aligned longs (no shorts)
+# Position: $40 notional, TP +0.15%, SL -0.075%
+
+# Strategy identification and enablement
+strategy.mth_ts_enabled,true
+strategy.mth_ts_name,MTH-TS
+strategy.mth_ts_description,Multi-Timeframe Hierarchical Trend Strategy for BTC/USD
+
+# Position sizing for MTH-TS
+strategy.mth_ts_position_notional,40.0
+
+# Take profit and stop loss percentages for MTH-TS
+strategy.mth_ts_take_profit_percentage,0.0015
+strategy.mth_ts_stop_loss_percentage,0.00075
+
+# Reversal detection parameters
+strategy.mth_ts_reversal_detection_enabled,true
+strategy.mth_ts_reversal_spread_threshold,0.01
+strategy.mth_ts_reversal_momentum_threshold,0.5
+
+# ========================================================================
+# MTH-TS DAILY LEVEL CONFIGURATION
+# ========================================================================
+# Macro bias: 200-EMA, ADX(14) from 30-min proxies
+
+# Daily level enablement and parameters
+strategy.mth_ts_daily_enabled,true
+strategy.mth_ts_daily_ema_period,200
+strategy.mth_ts_daily_adx_period,14
+strategy.mth_ts_daily_adx_threshold,25
+strategy.mth_ts_daily_adx_threshold_high,30
+
+# Daily spread filters
+strategy.mth_ts_daily_spread_filter_enabled,true
+strategy.mth_ts_daily_avg_spread_threshold,0.03
+
+# ========================================================================
+# MTH-TS 30-MINUTE LEVEL CONFIGURATION
+# ========================================================================
+# Intermediate confirmation: 50-EMA, ADX(14)
+
+# 30-minute level enablement and parameters
+strategy.mth_ts_30min_enabled,true
+strategy.mth_ts_30min_ema_period,50
+strategy.mth_ts_30min_adx_period,14
+strategy.mth_ts_30min_adx_threshold,25
+
+# 30-minute spread filters
+strategy.mth_ts_30min_spread_filter_enabled,true
+strategy.mth_ts_30min_avg_spread_threshold,0.04
+strategy.mth_ts_30min_volume_multiplier_strict,1.5
+strategy.mth_ts_30min_volume_ma_period,20
+
+# ========================================================================
+# MTH-TS 1-MINUTE LEVEL CONFIGURATION
+# ========================================================================
+# Micro-trigger: 9/21-EMAs, RSI(14), volume MA(20)
+
+# 1-minute level enablement and parameters
+strategy.mth_ts_1min_enabled,true
+strategy.mth_ts_1min_fast_ema_period,9
+strategy.mth_ts_1min_slow_ema_period,21
+strategy.mth_ts_1min_rsi_period,14
+strategy.mth_ts_1min_rsi_threshold,40
+strategy.mth_ts_1min_rsi_threshold_strict,35
+strategy.mth_ts_1min_volume_ma_period,20
+strategy.mth_ts_1min_volume_multiplier,1.2
+
+# 1-minute spread filters
+strategy.mth_ts_1min_spread_filter_enabled,true
+strategy.mth_ts_1min_spread_threshold,0.02
+
+# ========================================================================
+# MTH-TS 1-SECOND LEVEL CONFIGURATION
+# ========================================================================
+# Execution confirmation: EMA(5), spread validation
+
+# 1-second level enablement and parameters
+strategy.mth_ts_1sec_enabled,true
+strategy.mth_ts_1sec_ema_period,5
+strategy.mth_ts_1sec_momentum_bars,3
+strategy.mth_ts_1sec_execution_timeout_seconds,3
+
+# 1-second spread filters
+strategy.mth_ts_1sec_spread_filter_enabled,true
+strategy.mth_ts_1sec_spread_threshold,0.01
+
+# ========================================================================
+# MTH-TS HISTORICAL DATA CONFIGURATION
+# ========================================================================
+# Historical data loading parameters for multi-timeframe analysis
+
+# Historical data time ranges (in days)
+strategy.mth_ts_historical_daily_days,200
+strategy.mth_ts_historical_30min_days,30
+strategy.mth_ts_historical_1min_days,7
+strategy.mth_ts_historical_1sec_hours,2
+
+# Historical data limits (maximum bars to load per timeframe)
+strategy.mth_ts_historical_daily_limit,250
+strategy.mth_ts_historical_30min_limit,2000
+strategy.mth_ts_historical_1min_limit,10000
+strategy.mth_ts_historical_1sec_limit,7200
+
+# Multi-timeframe data maintenance (maximum bars to keep in memory)
+strategy.mth_ts_maintenance_daily_max,250
+strategy.mth_ts_maintenance_30min_max,2000
+strategy.mth_ts_maintenance_1min_max,10000
+strategy.mth_ts_maintenance_1sec_max,7200
+
+# MTH-TS minimum bars required for evaluation
+strategy.mth_ts_min_daily_bars,10
+strategy.mth_ts_daily_volume_ma_period,20
+strategy.mth_ts_min_30min_bars,20
+strategy.mth_ts_min_1min_bars,20
+strategy.mth_ts_min_1sec_bars,10
+
+# MTH-TS Propagation Configuration (Hybrid Evaluation)
+strategy.mth_ts_propagation_lookback,3
+strategy.mth_ts_propagation_ema_slope_threshold,0.001
+strategy.mth_ts_propagation_min_score,0.7
+strategy.mth_ts_min_consecutive_min_bars,2
+
+# MTH-TS trading parameters
+strategy.mth_ts_min_crypto_quantity,0.00001
+strategy.mth_ts_stop_limit_multiplier,0.995
+
+# MTH-TS reversal detection parameters
+strategy.mth_ts_reversal_min_bars,5
+strategy.mth_ts_reversal_momentum_bars,3
+
 
 # Market session timing (Eastern Time)
 session.et_utc_offset_hours,-4
@@ -57,10 +192,10 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,20
+strategy.bars_to_fetch_for_calculations,21
 strategy.minutes_per_bar,1
-strategy.atr_calculation_bars,10
-strategy.minimum_bars_for_atr_calculation,2
+strategy.atr_calculation_bars,20
+strategy.minimum_bars_for_atr_calculation,30
 strategy.daily_bars_timeframe,1Day
 strategy.daily_bars_count,10
 strategy.minimum_data_accumulation_seconds_before_trading,10
@@ -105,6 +240,9 @@ risk.close_positions_on_signal_reversal,false
 risk.buying_power_utilization_percentage,1.0
 risk.buying_power_validation_safety_margin,1.1
 
+# Position Data Integrity Validation
+risk.maximum_reasonable_position_quantity,1000000
+
 # ========================================================================
 # POSITION MANAGEMENT CONFIGURATION
 # ========================================================================
@@ -126,8 +264,8 @@ strategy.fixed_share_quantity_per_trade,10
 strategy.risk_based_position_size_multiplier,1.0
 
 # Position Size Constraints
-strategy.maximum_share_quantity_per_single_trade,1000
-strategy.maximum_dollar_value_per_single_trade,1000.0
+strategy.maximum_share_quantity_per_single_trade,100000
+strategy.maximum_dollar_value_per_single_trade,10000.0
 
 # ========================================================================
 # PROFIT TAKING AND EXIT STRATEGY

@@ -69,7 +69,7 @@ struct SystemState {
     // =========================================================================
     // DATA SYNCHRONIZATION STATE (for MarketDataFetcher)
     // =========================================================================
-    AlpacaTrader::Core::MarketDataSyncState* fetcher_sync_state_ptr = nullptr;  // Stored sync state for MarketDataFetcher (must be initialized during startup)
+    std::unique_ptr<AlpacaTrader::Core::MarketDataSyncState> fetcher_sync_state;  // Stored sync state for MarketDataFetcher (must be initialized during startup)
 
     // =========================================================================
     // CONSTRUCTORS

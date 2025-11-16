@@ -1,12 +1,16 @@
 #include "indicators.hpp"
+#include "logging/logger/logging_macros.hpp"
 #include <algorithm>
 #include <cmath>
 
 namespace AlpacaTrader {
 namespace Core {
 
+using AlpacaTrader::Logging::log_message;
+
 double compute_atr(const std::vector<double>& highs, const std::vector<double>& lows, const std::vector<double>& closes, int period, int minimum_bars_required) {
     if (static_cast<int>(highs.size()) < minimum_bars_required) {
+        log_message("ATR: Insufficient bars - have " + std::to_string(highs.size()) + ", need " + std::to_string(minimum_bars_required), "");
         return 0.0;
     }
     
@@ -20,11 +24,20 @@ double compute_atr(const std::vector<double>& highs, const std::vector<double>& 
     
     // CRITICAL: Validate vector sizes before accessing
     if (highs.size() != lows.size() || highs.size() != closes.size()) {
+        log_message("ATR: Vector size mismatch - highs:" + std::to_string(highs.size()) +
+                    ", lows:" + std::to_string(lows.size()) + ", closes:" + std::to_string(closes.size()), "");
         return 0.0;
     }
-    
+
     if (highs.size() < 2) {
+        log_message("ATR: Need at least 2 bars, have " + std::to_string(highs.size()), "");
         return 0.0;
+    }
+
+    // Debug: Log first few values
+    if (!highs.empty()) {
+        log_message("ATR: First bar - H:" + std::to_string(highs[0]) +
+                   " L:" + std::to_string(lows[0]) + " C:" + std::to_string(closes[0]), "");
     }
     
     std::vector<double> true_range_values;

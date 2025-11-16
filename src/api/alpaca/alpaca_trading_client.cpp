@@ -204,6 +204,14 @@ Config::ApiProvider AlpacaTradingClient::get_provider_type() const {
     return Config::ApiProvider::ALPACA_TRADING;
 }
 
+std::vector<Core::Bar> AlpacaTradingClient::get_historical_bars(const std::string& /*symbol*/, const std::string& /*timeframe*/,
+                                                               const std::string& /*start_date*/, const std::string& /*end_date*/,
+                                                               int /*limit*/) const {
+    // Alpaca trading API focuses on order management, not historical data
+    // Use Polygon for historical data
+    throw std::runtime_error("Historical bars not implemented for Alpaca trading API - use Polygon for historical data");
+}
+
 std::string AlpacaTradingClient::get_account_info() const {
     if (!is_connected()) {
         throw std::runtime_error("Alpaca trading client not connected");

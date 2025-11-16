@@ -1268,6 +1268,16 @@ bool OrderExecutionLogic::handle_market_close_positions(const ProcessedData& pro
     }
     
     int current_position_quantity = processed_data_input.pos_details.position_quantity;
+
+    // CRITICAL DEFENSE: Validate position quantity before market close handling
+    // Prevent execution with corrupted position data
+    if (std::abs(current_position_quantity) > config.strategy.maximum_reasonable_position_quantity) {
+        // Log the corruption but don't attempt to close invalid positions
+        std::cerr << "CRITICAL: Detected corrupted position quantity (" << current_position_quantity
+                  << ") in market close handling - skipping to prevent invalid orders" << std::endl;
+        return false;
+    }
+
     if (current_position_quantity == 0) {
         return false;
     }

@@ -1,5 +1,7 @@
 #include "market_bars_manager.hpp"
 #include "trader/strategy_analysis/indicators.hpp"
+#include "logging/logger/logging_macros.hpp"
+#include "logging/logs/websocket_logs.hpp"
 #include <stdexcept>
 #include <sstream>
 
@@ -17,8 +19,6 @@ std::vector<Bar> MarketBarsManager::fetch_bars_data(const std::string& symbol) c
     BarRequest bar_request(symbol, config.strategy.bars_to_fetch_for_calculations, config.strategy.minimum_bars_for_atr_calculation);
     std::vector<Bar> fetched_bars_result = api_manager.get_recent_bars(bar_request);
     
-    // DEBUG: Log what was actually fetched (will be logged via coordinator)
-    // Note: bars_to_fetch_for_calculations = 25, but accumulator may have more bars available
     
     return fetched_bars_result;
 }
@@ -36,12 +36,12 @@ bool MarketBarsManager::fetch_and_validate_bars(const std::string& symbol, std::
         return false;
     }
 
-    // Validate individual bars
+    // Validate individual bars - ensure all bars have valid positive prices
     for (const auto& bar : bars_data) {
         if (bar.close_price <= 0.0 || bar.high_price <= 0.0 || bar.low_price <= 0.0 || bar.open_price <= 0.0) {
             return false;
         }
-        
+        // Ensure logical relationships between prices
         if (bar.high_price < bar.low_price || bar.high_price < bar.close_price || bar.low_price > bar.close_price) {
             return false;
         }
@@ -136,12 +136,25 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
     std::vector<double> closes = extract_closes_from_bars(bars_for_calculation_data);
     std::vector<double> volumes = extract_volumes_from_bars(bars_for_calculation_data);
 
-    // Use configurable ATR calculation bars, but ATR will adapt to available bars
+    // CRITICAL FIX: For MTH-TS enabled crypto, ATR should come from MTH-TS processing, not WebSocket data
+    // The trading coordinator handles MTH-TS ATR calculation separately
+    if (config.strategy.mth_ts_enabled && api_manager.is_crypto_symbol(config.strategy.symbol)) {
+        // For MTH-TS, set ATR to a sentinel value to indicate it should be calculated elsewhere
+        // The trading coordinator will override this with proper MTH-TS ATR values
+        market_snapshot.atr = -1.0;  // Sentinel value
+        market_snapshot.avg_atr = -1.0;  // Sentinel value
+        market_snapshot.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, atr_calculation_bars_value, config.strategy.minimum_volume_threshold);
+        AlpacaTrader::Logging::log_message("MTH-TS enabled - ATR will be calculated by trading coordinator from historical data", "");
+    } else {
+        // Standard ATR calculation for non-MTH-TS assets
     market_snapshot.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars_value, minimum_bars_for_atr_value);
-    
     market_snapshot.avg_atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, average_atr_period_bars_value, minimum_bars_for_atr_value);
-    
     market_snapshot.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, atr_calculation_bars_value, config.strategy.minimum_volume_threshold);
+
+        if (market_snapshot.atr == 0.0) {
+            AlpacaTrader::Logging::log_message("ATR calculation returned zero - insufficient bars (" + std::to_string(bars_for_calculation_data.size()) + " available, " + std::to_string(minimum_bars_for_atr_value) + " required)", "");
+        }
+    }
 
     // Set current and previous bars - CRITICAL: Add try-catch and validate bounds
     try {
