@@ -137,14 +137,14 @@ MarketSnapshot MarketBarsManager::create_market_snapshot_from_bars(const std::ve
     std::vector<double> volumes = extract_volumes_from_bars(bars_for_calculation_data);
 
     // CRITICAL FIX: For MTH-TS enabled crypto, ATR should come from MTH-TS processing, not WebSocket data
-    // The trading coordinator handles MTH-TS ATR calculation separately
+    // The trading coordinator handles MTH-TS ATR calculation from real-time data
     if (config.strategy.mth_ts_enabled && api_manager.is_crypto_symbol(config.strategy.symbol)) {
         // For MTH-TS, set ATR to a sentinel value to indicate it should be calculated elsewhere
-        // The trading coordinator will override this with proper MTH-TS ATR values
+        // The trading coordinator will override this with real-time ATR values from multi-timeframe manager
         market_snapshot.atr = -1.0;  // Sentinel value
         market_snapshot.avg_atr = -1.0;  // Sentinel value
         market_snapshot.avg_vol = AlpacaTrader::Core::compute_average_volume(volumes, atr_calculation_bars_value, config.strategy.minimum_volume_threshold);
-        AlpacaTrader::Logging::log_message("MTH-TS enabled - ATR will be calculated by trading coordinator from historical data", "");
+        AlpacaTrader::Logging::log_message("MTH-TS enabled - ATR will be calculated by trading coordinator from real-time WebSocket data", "");
     } else {
         // Standard ATR calculation for non-MTH-TS assets
     market_snapshot.atr = AlpacaTrader::Core::compute_atr(highs, lows, closes, atr_calculation_bars_value, minimum_bars_for_atr_value);
