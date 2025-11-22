@@ -107,7 +107,7 @@ void MarketDataThreadLogs::log_stale_quote_warning(const std::string& symbol, in
     log_message("⚠️  NOTE: Alpaca crypto data appears to be delayed/historical only, not real-time", "trading_system.log");
 }
 
-void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log, const LoggingConfig& logging_config) {
+void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, bool should_log, int time_since_last_log, const LoggingConfig&) {
     auto csv_logger = get_logging_context()->csv_bars_logger;
 
     TABLE_HEADER_48("CSV LOGGING DECISION", "Data Recording Status");
@@ -115,7 +115,7 @@ void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, b
     TABLE_ROW_48("Symbol", symbol);
     TABLE_ROW_48("CSV Logger", csv_logger ? "AVAILABLE" : "UNAVAILABLE");
     TABLE_ROW_48("Time Since Last Log", std::to_string(time_since_last_log) + " seconds");
-    TABLE_ROW_48("Trigger", logging_config.csv_logging_trigger_description);
+    TABLE_ROW_48("Trigger", "NEW BAR DETECTION (IMMEDIATE LOGGING)");
 
     TABLE_SEPARATOR_48();
 
@@ -123,9 +123,9 @@ void MarketDataThreadLogs::log_csv_logging_decision(const std::string& symbol, b
     if (!csv_logger) {
         decision_reason = "CSV LOGGER UNAVAILABLE";
     } else if (should_log) {
-        decision_reason = logging_config.csv_logging_enabled_reason;
+        decision_reason = "NEW BAR DETECTED - LOGGING IMMEDIATELY";
     } else {
-        decision_reason = logging_config.csv_logging_disabled_reason;
+        decision_reason = "NO NEW BAR - SAME DATA AS PREVIOUS";
     }
 
     TABLE_ROW_48("DECISION", should_log ? "LOG DATA" : "SKIP LOGGING");
@@ -254,8 +254,7 @@ bool MarketDataThreadLogs::is_fetch_allowed(const std::atomic<bool>* allow_fetch
     return allow_fetch_ptr && allow_fetch_ptr->load();
 }
 
-void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig& timing, const LoggingConfig& logging_config, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
-    // Compliance: Removed unused parameters validator and api_manager per "No unused parameters" rule
+void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& computed_data, const std::vector<Bar>& historical_bars, const std::string& symbol, const TimingConfig&, const LoggingConfig& logging_config, std::chrono::steady_clock::time_point& last_bar_log_time, Bar& previous_bar) {
     
     auto csv_logger = get_logging_context()->csv_bars_logger;
     if (!csv_logger) {
@@ -285,19 +284,18 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
         has_new_bar = timestamp_different || price_data_different;
     }
 
-    // Log on every trading iteration (every ~1 second) OR on first run (startup historical data)
-    // This is now time-based but aligned with trading loop frequency, not arbitrary intervals
-    // The user wants logging "everytime there is a new bar that should come in around once a second"
-    bool should_log_csv_data = (time_since_last_log >= 1) ||
-                              (last_bar_log_time == std::chrono::steady_clock::time_point{});
+    // IMMEDIATE LOGGING: Log every new bar as soon as it arrives
+    // For MTH-TS with 1-second bars, we must capture every single bar
+    // Deduplication is handled by checking if the bar is actually new (timestamp or data changed)
+    bool should_log_csv_data = has_new_bar || (last_bar_log_time == std::chrono::steady_clock::time_point{});
     
-    // Only log CSV logging decision messages when we have valid data or when throttling allows it
-    // When waiting for data, throttle these messages to reduce log spam
+    // Throttle CSV logging DECISION messages only when waiting for data (reduce log spam)
     static std::chrono::steady_clock::time_point last_csv_decision_log_time = std::chrono::steady_clock::time_point{};
-    static constexpr int csv_decision_log_interval_seconds = 5; // Log every 5 seconds when waiting for data
+    static constexpr int csv_decision_log_interval_seconds = 5; // Log decision messages every 5 seconds when waiting
     
     bool should_log_csv_decision = true;
     if (!has_valid_price_data && historical_bars.empty()) {
+        // No data available - throttle decision messages
         if (last_csv_decision_log_time != std::chrono::steady_clock::time_point{}) {
             auto time_since_last_csv_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_csv_decision_log_time).count();
             should_log_csv_decision = (time_since_last_csv_log >= csv_decision_log_interval_seconds);
@@ -305,7 +303,7 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
             last_csv_decision_log_time = current_time;
         }
     } else {
-        // We have data, reset the throttling timer and always log
+        // Data available - always log decision messages, reset throttling timer
         last_csv_decision_log_time = std::chrono::steady_clock::time_point{};
     }
     
@@ -317,12 +315,7 @@ void MarketDataThreadLogs::process_csv_logging_if_needed(const ProcessedData& co
     }
     
     if (!should_log_csv_data) {
-        if (has_new_bar) {
-            // This shouldn't happen with new logic, but log it if it does
-            LOG_THREAD_CONTENT("Skipping CSV logging despite new bar - unexpected condition");
-        } else {
-            LOG_THREAD_CONTENT("Skipping CSV logging - no new bars and too soon since last log (" + std::to_string(time_since_last_log) + "s, need " + std::to_string(timing.market_data_logging_interval_seconds) + "s)");
-        }
+        LOG_THREAD_CONTENT("Skipping CSV logging - no new bar detected (same timestamp and OHLCV data as previous)");
         return;
     }
     

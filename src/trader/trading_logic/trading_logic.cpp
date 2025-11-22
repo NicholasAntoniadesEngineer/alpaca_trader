@@ -17,7 +17,8 @@ TradingLogic::TradingLogic(const TradingLogicConstructionParams& construction_pa
       order_engine(OrderExecutionLogicConstructionParams(construction_params.api_manager_ref, construction_params.account_manager_ref, construction_params.system_config, nullptr)),
       market_data_manager(construction_params.system_config, construction_params.api_manager_ref, construction_params.account_manager_ref),
       connectivity_manager(construction_params.connectivity_manager_ref),
-      data_sync_ptr(nullptr) {}
+      data_sync_ptr(nullptr),
+      last_valid_equity_cached_value(0.0) {}
 
 TradingDecisionResult TradingLogic::execute_trading_cycle(const MarketSnapshot& market_snapshot, const AccountSnapshot& account_snapshot, double initial_equity) {
     
@@ -211,9 +212,29 @@ TradingDecisionResult TradingLogic::execute_trading_cycle(const MarketSnapshot& 
                 return empty_result;
             }
             
-            if (!std::isfinite(account_snapshot.equity) || account_snapshot.equity <= 0.0) {
+            // Cached equity fallback handles temporary invalid values during account updates
+            // Class member variable maintains last known good equity value
+            double working_equity = account_snapshot.equity;
+            
+            // Check if current equity is valid
+            if (std::isfinite(working_equity) && working_equity > 0.0) {
+                // Update cached equity with current valid value
+                last_valid_equity_cached_value = working_equity;
+            } else if (last_valid_equity_cached_value > 0.0) {
+                // Use cached equity if current is invalid but we have a previous good value
+                // This handles race conditions during account updates
+                working_equity = last_valid_equity_cached_value;
+            } else {
+                // No valid equity available at all - this is a real error
                 empty_result.validation_failed = true;
-                empty_result.validation_error_message = "CRITICAL: Invalid equity before trading decision: " + std::to_string(account_snapshot.equity);
+                empty_result.validation_error_message = "CRITICAL: Invalid equity before trading decision and no cached value: " + std::to_string(working_equity);
+                return empty_result;
+            }
+            
+            // Additional validation: ensure working_equity is still valid after fallback
+            if (!std::isfinite(working_equity) || working_equity <= 0.0) {
+                empty_result.validation_failed = true;
+                empty_result.validation_error_message = "CRITICAL: Working equity invalid after fallback: " + std::to_string(working_equity);
                 return empty_result;
             }
             

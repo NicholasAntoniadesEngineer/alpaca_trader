@@ -60,7 +60,7 @@ public:
 
     // Utility methods
     bool is_new_timeframe_bar_needed(MthTsTimeframe timeframe, const std::string& current_timestamp) const;
-    std::string get_timeframe_start_timestamp(const std::string& current_timestamp) const;
+    std::string get_timeframe_start_timestamp(const std::string& current_timestamp, MthTsTimeframe timeframe) const;
 
 private:
     const SystemConfig& config;

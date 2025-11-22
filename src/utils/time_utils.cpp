@@ -93,7 +93,7 @@ std::tm parse_iso_time_with_z(const std::string& timestamp) {
 std::string convert_milliseconds_to_human_readable(const std::string& milliseconds_timestamp) {
     try {
         long long timestamp_millis = std::stoll(milliseconds_timestamp);
-        time_t timestamp_seconds = timestamp_millis / 1000;
+        time_t timestamp_seconds = timestamp_millis / MILLISECONDS_PER_SECOND;
         
         struct tm timeinfo;
         localtime_r(&timestamp_seconds, &timeinfo);

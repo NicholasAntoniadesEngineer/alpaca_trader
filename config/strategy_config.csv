@@ -43,8 +43,11 @@ strategy.mth_ts_reversal_momentum_threshold,0.5
 # Macro bias: 200-EMA, ADX(14) from 30-min proxies
 
 # Daily level enablement and parameters
+# 50-period EMA balances trend accuracy with responsiveness to current market conditions
+# Partial bar mechanism updates daily indicators every 30 minutes for intraday responsiveness
 strategy.mth_ts_daily_enabled,true
-strategy.mth_ts_daily_ema_period,200
+strategy.mth_ts_daily_ema_period,50
+strategy.mth_ts_daily_ema_significant_change_threshold,10.0
 strategy.mth_ts_daily_adx_period,14
 strategy.mth_ts_daily_adx_threshold,25
 strategy.mth_ts_daily_adx_threshold_high,30
@@ -81,6 +84,7 @@ strategy.mth_ts_1min_fast_ema_period,9
 strategy.mth_ts_1min_slow_ema_period,21
 strategy.mth_ts_1min_rsi_period,14
 strategy.mth_ts_1min_rsi_threshold,40
+strategy.mth_ts_1min_rsi_threshold_high,70
 strategy.mth_ts_1min_rsi_threshold_strict,35
 strategy.mth_ts_1min_volume_ma_period,20
 strategy.mth_ts_1min_volume_multiplier,1.2
@@ -192,10 +196,10 @@ strategy.use_absolute_atr_threshold_instead_of_relative,true
 # ========================================================================
 # Configurable parameters for volatility calculations
 
-strategy.bars_to_fetch_for_calculations,21
+strategy.bars_to_fetch_for_calculations,50
 strategy.minutes_per_bar,1
 strategy.atr_calculation_bars,20
-strategy.minimum_bars_for_atr_calculation,30
+strategy.minimum_bars_for_atr_calculation,21
 strategy.daily_bars_timeframe,1Day
 strategy.daily_bars_count,10
 strategy.minimum_data_accumulation_seconds_before_trading,10

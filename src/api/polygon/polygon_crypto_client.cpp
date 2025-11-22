@@ -801,10 +801,13 @@ bool PolygonCryptoClient::start_realtime_feed(const std::vector<std::string>& sy
         std::string subscriptionParamsString;
         if (subscribed_symbols.size() == 1) {
             std::string websocketSymbolString = convert_symbol_for_websocket(subscribed_symbols[0]);
-            // Subscribe to both bars (XA) and quotes (XQ) for crypto - Polygon uses XA for crypto aggregates
-            subscriptionParamsString = "XA." + websocketSymbolString + ",XQ." + websocketSymbolString;
+            // Subscribe to 1-second bars (XAS) and quotes (XQ) for crypto
+            // XAS = Aggregates Per Second (1-second OHLCV bars)
+            // XQ = Real-time quotes (bid/ask updates)
+            subscriptionParamsString = "XAS." + websocketSymbolString + ",XQ." + websocketSymbolString;
         } else {
-            subscriptionParamsString = "XA.*,XQ.*";
+            // Multi-symbol: Subscribe to 1-second aggregates (XAS) and quotes (XQ) for all symbols
+            subscriptionParamsString = "XAS.*,XQ.*";
         }
         
         if (!websocketClientPointer->subscribe(subscriptionParamsString)) {
@@ -988,10 +991,17 @@ bool PolygonCryptoClient::process_single_message(const json& msg_json) {
             return true;
         }
         
+        // XAS = Aggregates Per Second (1-second bars) - PRIMARY DATA SOURCE
+        if (event_type == "XAS") {
+            return process_bar_message(msg_json);
+        }
+        
+        // XA = 1-minute aggregates (legacy, may not be used)
         if (event_type == "XA") {
             return process_bar_message(msg_json);
         }
 
+        // XQ = Real-time quotes (bid/ask)
         if (event_type == "XQ") {
             return process_quote_message(msg_json);
         }

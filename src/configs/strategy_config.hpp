@@ -39,6 +39,7 @@ struct StrategyConfig {
     // Daily level enablement and parameters
     bool mth_ts_daily_enabled;                       // Enable daily level analysis
     int mth_ts_daily_ema_period;                     // EMA period for daily trend (200)
+    double mth_ts_daily_ema_significant_change_threshold; // Threshold for logging significant EMA changes ($)
     int mth_ts_daily_adx_period;                     // ADX period for daily trend strength (14)
     double mth_ts_daily_adx_threshold;               // ADX threshold for trend confirmation (25)
     double mth_ts_daily_adx_threshold_high;          // Higher ADX threshold for strict conditions (30)
@@ -73,7 +74,8 @@ struct StrategyConfig {
     int mth_ts_1min_fast_ema_period;                 // Fast EMA period for 1-minute signals (9)
     int mth_ts_1min_slow_ema_period;                 // Slow EMA period for 1-minute signals (21)
     int mth_ts_1min_rsi_period;                      // RSI period for 1-minute momentum (14)
-    double mth_ts_1min_rsi_threshold;                // RSI threshold for normal conditions (40)
+    double mth_ts_1min_rsi_threshold;                // RSI lower threshold - minimum momentum (40)
+    double mth_ts_1min_rsi_threshold_high;           // RSI upper threshold - overbought limit (70)
     double mth_ts_1min_rsi_threshold_strict;         // RSI threshold for strict conditions (35)
     int mth_ts_1min_volume_ma_period;                // Volume MA period for 1-minute signals (20)
     double mth_ts_1min_volume_multiplier;            // Volume multiplier for 1-minute triggers (1.2x)

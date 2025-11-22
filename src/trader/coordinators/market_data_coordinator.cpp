@@ -348,9 +348,20 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
             if (mtf_manager) {
                 const auto& mtf_data = mtf_manager->get_multi_timeframe_data();
 
-                // Use the most recent bars from rolling windows (prioritize smaller timeframes)
+                // CRITICAL FIX: Log 1-second bars for real-time granularity, not 1-minute aggregated bars
+                // This ensures each logged bar represents a unique 1-second window, not stale 1-minute data
                 // Convert MultiTimeframeBar to Bar for CSV logging compatibility
-                if (!mtf_data.minute_bars.empty()) {
+                if (!mtf_data.second_bars.empty()) {
+                    const auto& mtf_bar = mtf_data.second_bars.back();
+                    Bar bar;
+                    bar.open_price = mtf_bar.open_price;
+                    bar.high_price = mtf_bar.high_price;
+                    bar.low_price = mtf_bar.low_price;
+                    bar.close_price = mtf_bar.close_price;
+                    bar.volume = mtf_bar.volume;
+                    bar.timestamp = mtf_bar.timestamp;
+                    fresh_bars_for_logging.push_back(bar);
+                } else if (!mtf_data.minute_bars.empty()) {
                     const auto& mtf_bar = mtf_data.minute_bars.back();
                     Bar bar;
                     bar.open_price = mtf_bar.open_price;
@@ -400,18 +411,12 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
         
         const SystemConfig& config_ref = market_data_manager.get_config();
 
-        // Log bars to CSV on every trading iteration (event-driven by trading loop)
-        // The user wants logging "everytime there is a new bar that should come in around once a second"
-        // This means logging on every trading decision iteration, not just when WebSocket data arrives
-        // Check timing to ensure we don't log more frequently than intended (every ~1 second)
+        // Log bars to CSV IMMEDIATELY as they arrive - no throttling for real-time 1-second bars
+        // For MTH-TS strategy, we need every single 1-second bar logged for analysis
+        // Deduplication is handled by checking if bar timestamp/data is different from previous
         auto current_time = std::chrono::steady_clock::now();
-        auto time_since_last_log = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_bar_log_time).count();
 
-        // Log if this is startup OR if at least 1 second has passed since last log
-        bool should_log_this_iteration = (last_bar_log_time == std::chrono::steady_clock::time_point{}) ||
-                                        (time_since_last_log >= 1);
-
-        if (should_log_this_iteration) {
+        if (true) {  // Always attempt to log - deduplication logic below prevents duplicates
         try {
             auto* logging_context = AlpacaTrader::Logging::get_logging_context();
             if (logging_context && logging_context->csv_bars_logger && !historical_bars_for_logging.empty()) {
@@ -419,19 +424,48 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
                 
                 // Log the latest bar (the one we're using for trading decisions)
                 const auto& latest_bar = historical_bars_for_logging.back();
-                std::string bar_timestamp = latest_bar.timestamp.empty() ? current_timestamp : latest_bar.timestamp;
                 
-                logging_context->csv_bars_logger->log_bar(
-                    current_timestamp,  // System timestamp
-                    symbol,
-                    latest_bar,
-                    computed_data.atr,
-                    computed_data.avg_atr,
-                    computed_data.avg_vol
-                );
+                // CRITICAL: Only log if this is a NEW bar (different timestamp from previous)
+                // This prevents duplicate logging of the same 1-second bar across multiple trading cycles
+                bool is_new_bar = (previous_bar.timestamp.empty() || latest_bar.timestamp != previous_bar.timestamp);
+                
+                if (is_new_bar) {
+                    std::string bar_timestamp = latest_bar.timestamp.empty() ? current_timestamp : latest_bar.timestamp;
+                    
+                    // For MTH-TS, use real-time ATR from multi-timeframe indicators, not historical ATR sentinel value
+                    double realtime_atr = computed_data.atr;
+                    double realtime_avg_atr = computed_data.avg_atr;
+                    
+                    try {
+                        auto& api_mgr = market_data_manager.get_api_manager();
+                        auto* polygon_client = api_mgr.get_polygon_crypto_client();
+                        auto* mtf_mgr = polygon_client ? polygon_client->get_multi_timeframe_manager() : nullptr;
+                        
+                        if (mtf_mgr) {
+                            const auto& mtf_data = mtf_mgr->get_multi_timeframe_data();
+                            // Use 1-second timeframe ATR for most current volatility measurement
+                            if (mtf_data.second_indicators.atr > 0.0) {
+                                realtime_atr = mtf_data.second_indicators.atr;
+                                realtime_avg_atr = mtf_data.second_indicators.atr; // Can calculate moving average if needed
+                            }
+                        }
+                    } catch (...) {
+                        // If we can't get MTH-TS ATR, use the historical ATR value
+                    }
+                    
+                    logging_context->csv_bars_logger->log_bar(
+                        current_timestamp,  // System timestamp
+                        symbol,
+                        latest_bar,
+                        realtime_atr,
+                        realtime_avg_atr,
+                        computed_data.avg_vol
+                    );
 
                     // Update previous_bar to track what we just logged
                     previous_bar = latest_bar;
+                    last_bar_log_time = current_time;
+                }
             }
         } catch (const std::exception& csv_log_exception) {
             MarketDataThreadLogs::log_csv_logging_error(symbol, "Exception logging bar to CSV: " + std::string(csv_log_exception.what()));

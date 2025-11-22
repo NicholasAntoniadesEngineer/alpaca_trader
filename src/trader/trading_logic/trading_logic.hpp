@@ -45,6 +45,9 @@ private:
     // Data synchronization references - initialized via setup_data_synchronization
     std::unique_ptr<DataSyncReferences> data_sync_ptr;
     
+    // Cached equity state for handling temporary invalid values during account updates
+    double last_valid_equity_cached_value;
+    
     // Trading decision methods
     void check_and_execute_profit_taking(const ProfitTakingRequest& profit_taking_request);
     

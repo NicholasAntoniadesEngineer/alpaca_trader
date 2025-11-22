@@ -8,7 +8,7 @@
 timing.market_data_thread_polling_interval_seconds,1
 timing.account_data_thread_polling_interval_seconds,10
 timing.market_gate_thread_polling_interval_seconds,30
-timing.trader_decision_thread_polling_interval_seconds,5
+timing.trader_decision_thread_polling_interval_seconds,1
 timing.logging_thread_polling_interval_seconds,1
 
 # Historical Data Configuration

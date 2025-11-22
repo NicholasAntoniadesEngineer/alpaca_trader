@@ -851,6 +851,24 @@ void WebSocketClient::receiveLoopWorker() {
     
     while (shouldReceiveLoopContinue.load()) {
         try {
+            // CRITICAL: Ensure logging context is maintained throughout receive loop
+            // Re-initialize if lost (can happen during reconnections or thread state changes)
+            try {
+                AlpacaTrader::Logging::LoggingContext* parentLoggingContextValue = parentLoggingContextPointer;
+                if (parentLoggingContextValue) {
+                    // Verify context is still set, re-set if needed
+                    try {
+                        AlpacaTrader::Logging::get_logging_context();
+                    } catch (...) {
+                        // Context lost, re-initialize
+                        AlpacaTrader::Logging::set_logging_context(*parentLoggingContextValue);
+                        AlpacaTrader::Logging::set_log_thread_tag("WS    ");
+                    }
+                }
+            } catch (...) {
+                // If logging context cannot be maintained, continue without it
+            }
+            
             if (!connectedFlag.load()) {
                 if (shouldReceiveLoopContinue.load()) {
                     // Cleanup old connection before reconnecting to prevent connection limit issues
@@ -1226,7 +1244,8 @@ bool WebSocketClient::receiveAndProcessMessage() {
                             "Exception in message callback: " + std::string(callbackExceptionError.what()),
                             "trading_system.log");
                     } catch (...) {
-                        // Logging failed, continue
+                        // If logging context not available, fall back to stderr
+                        std::cerr << "WS CALLBACK EXCEPTION: " << callbackExceptionError.what() << std::endl;
                     }
                     callbackResult = false;
                 } catch (...) {
@@ -1235,7 +1254,8 @@ bool WebSocketClient::receiveAndProcessMessage() {
                             "Unknown exception in message callback",
                             "trading_system.log");
                     } catch (...) {
-                        // Logging failed, continue
+                        // If logging context not available, fall back to stderr
+                        std::cerr << "WS CALLBACK UNKNOWN EXCEPTION" << std::endl;
                     }
                     callbackResult = false;
                 }
@@ -1246,13 +1266,8 @@ bool WebSocketClient::receiveAndProcessMessage() {
                             "Message callback returned false for message: " + messageString.substr(0, 100),
                             "trading_system.log");
                     } catch (...) {
-                        // Logging failed, continue
-                    }
-                } else {
-                    try {
-                        // "Message received" log removed to reduce log noise
-                    } catch (...) {
-                        // Logging failed, continue
+                        // If logging context not available, fall back to stderr
+                        std::cerr << "WS CALLBACK FAILED for message: " << messageString.substr(0, 100) << std::endl;
                     }
                 }
             } else {
@@ -1261,7 +1276,8 @@ bool WebSocketClient::receiveAndProcessMessage() {
                         "Message received but no callback function set. Message: " + messageString.substr(0, 100),
                         "trading_system.log");
                 } catch (...) {
-                    // Logging failed, continue
+                    // If logging context not available, fall back to stderr
+                    std::cerr << "WS NO CALLBACK set, message received: " << messageString.substr(0, 100) << std::endl;
                 }
             }
         }

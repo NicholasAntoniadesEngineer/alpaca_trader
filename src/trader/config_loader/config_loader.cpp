@@ -99,6 +99,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         // MTH-TS Daily Level Configuration
         else if (config_key_string == "strategy.mth_ts_daily_enabled") cfg.strategy.mth_ts_daily_enabled = to_bool(config_value_string);
         else if (config_key_string == "strategy.mth_ts_daily_ema_period") cfg.strategy.mth_ts_daily_ema_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_ema_significant_change_threshold") cfg.strategy.mth_ts_daily_ema_significant_change_threshold = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_daily_adx_period") cfg.strategy.mth_ts_daily_adx_period = std::stoi(config_value_string);
         else if (config_key_string == "strategy.mth_ts_daily_adx_threshold") cfg.strategy.mth_ts_daily_adx_threshold = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_daily_adx_threshold_high") cfg.strategy.mth_ts_daily_adx_threshold_high = std::stod(config_value_string);
@@ -122,6 +123,7 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.mth_ts_1min_slow_ema_period") cfg.strategy.mth_ts_1min_slow_ema_period = std::stoi(config_value_string);
         else if (config_key_string == "strategy.mth_ts_1min_rsi_period") cfg.strategy.mth_ts_1min_rsi_period = std::stoi(config_value_string);
         else if (config_key_string == "strategy.mth_ts_1min_rsi_threshold") cfg.strategy.mth_ts_1min_rsi_threshold = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_rsi_threshold_high") cfg.strategy.mth_ts_1min_rsi_threshold_high = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_1min_rsi_threshold_strict") cfg.strategy.mth_ts_1min_rsi_threshold_strict = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_1min_volume_ma_period") cfg.strategy.mth_ts_1min_volume_ma_period = std::stoi(config_value_string);
         else if (config_key_string == "strategy.mth_ts_1min_volume_multiplier") cfg.strategy.mth_ts_1min_volume_multiplier = std::stod(config_value_string);

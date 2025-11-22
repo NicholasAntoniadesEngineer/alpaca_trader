@@ -314,7 +314,13 @@ bool MthTsStrategy::evaluate_one_min_level() {
 
         // 1-min level requires EMA crossover + RSI control + volume + spread + comprehensive analysis
         bool ema_crossover = current_bar.close_price > mtf_data.minute_indicators.ema;
-        bool rsi_ok = mtf_data.minute_indicators.rsi <= config.strategy.mth_ts_1min_rsi_threshold;
+        
+        // RSI validation for long-only strategy
+        // RSI must be above lower threshold (sufficient momentum) AND below upper threshold (not overbought)
+        // This ensures entries during bullish momentum while avoiding overbought conditions
+        bool rsi_ok = mtf_data.minute_indicators.rsi >= config.strategy.mth_ts_1min_rsi_threshold &&
+                      mtf_data.minute_indicators.rsi <= config.strategy.mth_ts_1min_rsi_threshold_high;
+        
         bool volume_ok = mtf_data.minute_indicators.volume_ma >= config.strategy.mth_ts_1min_volume_multiplier;
         bool spread_ok = mtf_data.minute_indicators.spread_avg <= config.strategy.mth_ts_1min_spread_threshold;
 
