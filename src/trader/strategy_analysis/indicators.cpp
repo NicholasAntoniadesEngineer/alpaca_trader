@@ -106,6 +106,165 @@ bool detect_doji_pattern(double open, double high, double low, double close) {
     return (upper + lower) > body;
 }
 
+double calculate_ema(const std::deque<MultiTimeframeBar>& bars, int ema_period) {
+    try {
+        if (static_cast<int>(bars.size()) < ema_period || ema_period <= 0) {
+            return 0.0;
+        }
+
+        double sma = 0.0;
+        for (int i = 0; i < ema_period; ++i) {
+            sma += bars[bars.size() - ema_period + i].close_price;
+        }
+        sma /= ema_period;
+
+        if (static_cast<int>(bars.size()) == ema_period) {
+            return sma;
+        }
+
+        double ema = sma;
+        double multiplier = 2.0 / (ema_period + 1.0);
+
+        for (size_t i = bars.size() - ema_period + 1; i < bars.size(); ++i) {
+            ema = (bars[i].close_price * multiplier) + (ema * (1.0 - multiplier));
+        }
+
+        return ema;
+    } catch (const std::exception& e) {
+        return 0.0;
+    }
+}
+
+double calculate_adx(const std::deque<MultiTimeframeBar>& bars, int period) {
+    try {
+        if (static_cast<int>(bars.size()) < period + 1) {
+            return 0.0;
+        }
+
+        double adx_sum = 0.0;
+        int count = 0;
+
+        for (size_t i = 1; i < bars.size(); ++i) {
+            double true_range = std::max({bars[i].high_price - bars[i].low_price,
+                                std::abs(bars[i].high_price - bars[i-1].close_price),
+                                std::abs(bars[i].low_price - bars[i-1].close_price)});
+
+            if (true_range > 0.0) {
+                double dm_plus = (bars[i].high_price > bars[i-1].high_price) ?
+                               std::max(bars[i].high_price - bars[i-1].high_price, 0.0) : 0.0;
+                double dm_minus = (bars[i-1].low_price > bars[i].low_price) ?
+                                std::max(bars[i-1].low_price - bars[i].low_price, 0.0) : 0.0;
+
+                double di_plus = (dm_plus / true_range) * 100.0;
+                double di_minus = (dm_minus / true_range) * 100.0;
+
+                double di_sum = di_plus + di_minus;
+                double dx = (di_sum > 0.0) ? (std::abs(di_plus - di_minus) / di_sum) * 100.0 : 0.0;
+
+                if (!std::isnan(dx) && !std::isinf(dx)) {
+                    adx_sum += dx;
+                    count++;
+                }
+            }
+        }
+
+        return (count > 0) ? adx_sum / count : 0.0;
+    } catch (const std::exception& e) {
+        return 0.0;
+    }
+}
+
+double calculate_rsi(const std::deque<MultiTimeframeBar>& bars, int period) {
+    try {
+        if (static_cast<int>(bars.size()) < period + 1) {
+            return 50.0;
+        }
+
+        double gains = 0.0;
+        double losses = 0.0;
+
+        for (size_t i = bars.size() - period; i < bars.size(); ++i) {
+            double change = bars[i].close_price - bars[i-1].close_price;
+            if (change > 0) {
+                gains += change;
+            } else {
+                losses += std::abs(change);
+            }
+        }
+
+        if (losses == 0.0) {
+            return 100.0;
+        }
+        
+        double relative_strength = gains / losses;
+        return 100.0 - (100.0 / (1.0 + relative_strength));
+    } catch (const std::exception& e) {
+        return 50.0;
+    }
+}
+
+double calculate_atr(const std::deque<MultiTimeframeBar>& bars, int period) {
+    try {
+        if (static_cast<int>(bars.size()) < period + 1) {
+            return 0.0;
+        }
+
+        std::vector<double> highs;
+        std::vector<double> lows;
+        std::vector<double> closes;
+
+        highs.reserve(bars.size());
+        lows.reserve(bars.size());
+        closes.reserve(bars.size());
+
+        for (const auto& bar : bars) {
+            highs.push_back(bar.high_price);
+            lows.push_back(bar.low_price);
+            closes.push_back(bar.close_price);
+        }
+
+        return compute_atr(highs, lows, closes, period, period + 1);
+    } catch (const std::exception& e) {
+        return 0.0;
+    }
+}
+
+double calculate_volume_ma(const std::deque<MultiTimeframeBar>& bars, int period) {
+    try {
+        if (static_cast<int>(bars.size()) < period) {
+            return 0.0;
+        }
+
+        std::vector<double> volumes;
+        volumes.reserve(bars.size());
+
+        for (const auto& bar : bars) {
+            volumes.push_back(bar.volume);
+        }
+
+        return compute_average_volume(volumes, period, 0.0);
+    } catch (const std::exception& e) {
+        return 0.0;
+    }
+}
+
+double calculate_average_spread(const std::deque<MultiTimeframeBar>& bars, int period) {
+    try {
+        if (static_cast<int>(bars.size()) < period) {
+            return 0.0;
+        }
+
+        double spread_sum = 0.0;
+        for (size_t i = bars.size() - period; i < bars.size(); ++i) {
+            spread_sum += bars[i].spread;
+        }
+
+        return spread_sum / period;
+    } catch (const std::exception& e) {
+        return 0.0;
+    }
+}
+
 bool compute_technical_indicators(ProcessedData& processed_data, const std::vector<Bar>& bars, const SystemConfig& config) {
     // Top-level try-catch to prevent segfault
     try {

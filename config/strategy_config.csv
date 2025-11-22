@@ -152,6 +152,31 @@ strategy.mth_ts_stop_limit_multiplier,0.995
 strategy.mth_ts_reversal_min_bars,5
 strategy.mth_ts_reversal_momentum_bars,3
 
+# MTH-TS technical indicator periods
+strategy.mth_ts_atr_period,14
+strategy.mth_ts_daily_spread_lookback_bars,10
+strategy.mth_ts_30min_spread_lookback_bars,20
+strategy.mth_ts_1min_spread_lookback_bars,20
+strategy.mth_ts_1sec_spread_lookback_bars,10
+strategy.mth_ts_1sec_volume_ma_period,20
+
+# MTH-TS signal strength parameters
+strategy.mth_ts_signal_strength_provisional,0.7
+strategy.mth_ts_signal_strength_full,1.0
+strategy.mth_ts_signal_strength_medium,0.8
+
+# MTH-TS propagation weight parameters
+strategy.mth_ts_propagation_weight_minute_to_thirty,0.7
+strategy.mth_ts_propagation_weight_second_to_minute,0.3
+strategy.mth_ts_propagation_weight_minute_only,0.8
+strategy.mth_ts_propagation_weight_second_only,0.4
+
+# MTH-TS propagation detection parameters
+strategy.mth_ts_propagation_adx_threshold,20.0
+
+# MTH-TS diagnostic logging parameters
+strategy.mth_ts_spread_debug_log_interval,100
+
 
 # Market session timing (Eastern Time)
 session.et_utc_offset_hours,-4

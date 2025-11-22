@@ -16,49 +16,40 @@ class MultiTimeframeManager {
 public:
     MultiTimeframeManager(const SystemConfig& config, API::ApiProviderInterface& api_provider);
 
-    // Main data processing methods
     void process_new_second_bar(const MultiTimeframeBar& second_bar);
     void process_new_quote_data(double bid_price, double ask_price, const std::string& timestamp);
 
-    // Historical data loading methods
     void load_historical_data(const std::string& symbol);
+    void load_daily_historical_bars(const std::string& symbol, 
+                                     const std::chrono::system_clock::time_point& current_time, 
+                                     const std::string& end_timestamp);
+    void load_minute_historical_bars(const std::string& symbol,
+                                      const std::chrono::system_clock::time_point& current_time,
+                                      const std::string& end_timestamp);
+    void load_second_historical_bars(const std::string& symbol,
+                                      const std::chrono::system_clock::time_point& current_time,
+                                      const std::string& end_timestamp);
+    void generate_thirty_min_bars_from_minute_bars();
 
-    // Data access methods
     const MultiTimeframeData& get_multi_timeframe_data() const { return multi_timeframe_data; }
     MultiTimeframeData& get_multi_timeframe_data() { return multi_timeframe_data; }
 
-    // Partial bar access methods
     std::deque<MultiTimeframeBar> get_bars_with_partial(MthTsTimeframe tf) const;
 
-    // Propagation detection methods
     double get_propagation_score(MthTsTimeframe lower_tf) const;
 
-    // Indicator calculation methods
-    void calculate_daily_indicators();
-    void calculate_thirty_min_indicators();
-    void calculate_minute_indicators();
-    void calculate_second_indicators();
-
-    // Force recalculation of all indicators (called every strategy evaluation cycle)
-    void recalculate_all_indicators();
-
-    // Aggregation methods
     MultiTimeframeBar aggregate_bars_to_timeframe(const std::deque<MultiTimeframeBar>& source_bars,
                                                  MthTsTimeframe target_timeframe,
                                                  const std::string& target_timestamp) const;
+    MultiTimeframeBar aggregate_consecutive_bars(const std::deque<MultiTimeframeBar>& source_bars,
+                                                size_t start_index,
+                                                size_t end_index,
+                                                const std::string& target_timestamp) const;
 
-    // Timeframe aggregation methods
     void aggregate_to_minute_bar(const std::string& current_timestamp);
     void aggregate_to_thirty_min_bar(const std::string& current_timestamp);
     void aggregate_to_daily_bar(const std::string& current_timestamp);
 
-    // Indicator evaluation methods
-    void evaluate_daily_bias();
-    void evaluate_thirty_min_confirmation();
-    void evaluate_minute_trigger();
-    void evaluate_second_execution_readiness();
-
-    // Utility methods
     bool is_new_timeframe_bar_needed(MthTsTimeframe timeframe, const std::string& current_timestamp) const;
     std::string get_timeframe_start_timestamp(const std::string& current_timestamp, MthTsTimeframe timeframe) const;
 
@@ -67,7 +58,6 @@ private:
     API::ApiProviderInterface& api_provider;
     MultiTimeframeData multi_timeframe_data;
 
-    // Partial bar management for incremental updates
     MultiTimeframeBar current_minute_bar;
     MultiTimeframeBar current_thirty_min_bar;
     MultiTimeframeBar current_daily_bar;
@@ -77,32 +67,19 @@ private:
     std::string current_daily_start_ts;
 
     size_t current_minute_count;
-    size_t current_thirty_min_count;
-    size_t current_daily_count;
+    int quote_debug_counter;
 
-    // Technical indicator calculation helpers
-    double calculate_ema(const std::deque<MultiTimeframeBar>& bars, int period, int ema_period) const;
-    double calculate_adx(const std::deque<MultiTimeframeBar>& bars, int period) const;
-    double calculate_rsi(const std::deque<MultiTimeframeBar>& bars, int period) const;
-    double calculate_atr(const std::deque<MultiTimeframeBar>& bars, int period) const;
-    double calculate_volume_ma(const std::deque<MultiTimeframeBar>& bars, int period) const;
-    double calculate_average_spread(const std::deque<MultiTimeframeBar>& bars, int period) const;
-
-    // Data management helpers
-    void maintain_deque_size(std::deque<MultiTimeframeBar>& deque, size_t max_size);
+    void maintain_deque_size(std::deque<MultiTimeframeBar>& bar_deque, size_t maximum_size);
     bool is_timestamp_in_timeframe(const std::string& timestamp, MthTsTimeframe timeframe,
                                   const std::string& reference_timestamp) const;
     std::chrono::system_clock::time_point parse_timestamp(const std::string& timestamp_str) const;
     std::string format_timestamp(const std::chrono::system_clock::time_point& tp) const;
     std::chrono::system_clock::time_point get_utc_midnight(const std::chrono::system_clock::time_point& tp) const;
 
-    // Incremental update helpers for partial bars
     void update_minute_with_new_second(const MultiTimeframeBar& second_bar);
     void update_thirty_min_with_new_minute(const MultiTimeframeBar& new_minute_bar);
     void update_daily_with_new_thirty_min(const MultiTimeframeBar& new_thirty_min_bar);
 
-    // Propagation detection helpers
-    double calculate_indicator_trend(const std::deque<MultiTimeframeBar>& bars, const std::string& indicator_type, int lookback) const;
     void update_propagation_scores();
 };
 

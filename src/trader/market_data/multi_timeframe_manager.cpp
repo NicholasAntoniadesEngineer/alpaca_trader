@@ -10,7 +10,7 @@ namespace AlpacaTrader {
 namespace Core {
 
 MultiTimeframeManager::MultiTimeframeManager(const SystemConfig& config, API::ApiProviderInterface& api_provider)
-    : config(config), api_provider(api_provider) {
+    : config(config), api_provider(api_provider), quote_debug_counter(0) {
     try {
         log_message("Initializing Multi-Timeframe Manager for MTH-TS strategy", "");
     } catch (const std::exception& e) {
@@ -21,247 +21,211 @@ MultiTimeframeManager::MultiTimeframeManager(const SystemConfig& config, API::Ap
 void MultiTimeframeManager::load_historical_data(const std::string& symbol) {
     try {
         log_message("Loading historical data for MTH-TS strategy - Symbol: " + symbol, "");
+        auto current_time = std::chrono::system_clock::now();
+        std::string end_timestamp = format_timestamp(current_time);
 
-        // Calculate date ranges for historical data using configured parameters
-        auto now = std::chrono::system_clock::now();
-
-        // Daily data: Load configured number of days for EMA calculation
-        auto daily_start = now - std::chrono::hours(24LL * config.strategy.mth_ts_historical_daily_days);
-        std::string daily_start_str = format_timestamp(daily_start);
-
-        // 30-minute data: Load configured number of days
-        auto thirty_min_start = now - std::chrono::hours(24LL * config.strategy.mth_ts_historical_30min_days);
-        std::string thirty_min_start_str = format_timestamp(thirty_min_start);
-
-        // 1-minute data: Load configured number of days
-        auto minute_start = now - std::chrono::hours(24LL * config.strategy.mth_ts_historical_1min_days);
-        std::string minute_start_str = format_timestamp(minute_start);
-
-        // 1-second data: Load configured number of hours
-        auto second_start = now - std::chrono::hours(config.strategy.mth_ts_historical_1sec_hours);
-        std::string second_start_str = format_timestamp(second_start);
-
-        std::string end_date = format_timestamp(now);
-
-        // Load daily bars
-        if (config.strategy.mth_ts_daily_enabled) {
-            try {
-                // Load sufficient historical daily bars for configured EMA period
-                // 50-day period enables faster convergence while maintaining trend accuracy
-                log_message("Daily data request: FROM " + daily_start_str + " TO " + end_date, "");
-                log_message("Daily data request: Limit=" + std::to_string(config.strategy.mth_ts_historical_daily_limit) + " bars", "");
-                log_message("Daily EMA period: " + std::to_string(config.strategy.mth_ts_daily_ema_period) + " (needs " + 
-                           std::to_string(config.strategy.mth_ts_daily_ema_period) + " bars minimum)", "");
-                
-                auto daily_bars = api_provider.get_historical_bars(symbol, "1day", daily_start_str, end_date,
-                                                                 config.strategy.mth_ts_historical_daily_limit);
-                
-                // DIAGNOSTIC: Analyze daily data received
-                if (!daily_bars.empty()) {
-                    auto first_bar_time = daily_bars.front().timestamp;
-                    auto last_bar_time = daily_bars.back().timestamp;
-                    log_message("Daily data received: " + std::to_string(daily_bars.size()) + " bars", "");
-                    log_message("Daily time span: " + first_bar_time + " to " + last_bar_time, "");
-                    
-                    if (static_cast<int>(daily_bars.size()) < config.strategy.mth_ts_daily_ema_period) {
-                        log_message("WARNING: Insufficient daily bars for EMA calculation. Have " + 
-                                   std::to_string(daily_bars.size()) + ", need " + 
-                                   std::to_string(config.strategy.mth_ts_daily_ema_period), "");
-                    }
-                }
-                
-                for (const auto& bar : daily_bars) {
-                    MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
-                                             bar.close_price, bar.volume, 0.0, bar.timestamp);
-                    multi_timeframe_data.daily_bars.push_back(mtf_bar);
-                }
-                maintain_deque_size(multi_timeframe_data.daily_bars, config.strategy.mth_ts_maintenance_daily_max);
-                log_message("Loaded " + std::to_string(multi_timeframe_data.daily_bars.size()) + " daily bars after maintenance", "");
-            } catch (const std::exception& e) {
-                log_message("Failed to load daily historical bars: " + std::string(e.what()), "");
-            }
-        }
-
-        // Will generate them from 1-minute bars for consistency
-        log_message("Generate from 1-minute data for consistency", "");
-
-        // Load 1-minute bars
-        if (config.strategy.mth_ts_1min_enabled) {
-            try {
-                auto minute_bars = api_provider.get_historical_bars(symbol, "1min", minute_start_str, end_date,
-                                                             config.strategy.mth_ts_historical_1min_limit);
-                for (const auto& bar : minute_bars) {
-                    MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
-                                             bar.close_price, bar.volume, 0.0, bar.timestamp);
-                    multi_timeframe_data.minute_bars.push_back(mtf_bar);
-                }
-                maintain_deque_size(multi_timeframe_data.minute_bars, config.strategy.mth_ts_maintenance_1min_max);
-                log_message("Loaded " + std::to_string(multi_timeframe_data.minute_bars.size()) + " 1-minute bars", "");
-                
-                // Generate 30-minute bars from 1-minute bars for consistency
-                if (!multi_timeframe_data.minute_bars.empty()) {
-                    log_message("Generating initial 30-minute bars from 1-minute historical data...", "");
-                    size_t minute_bars_count = multi_timeframe_data.minute_bars.size();
-                    size_t thirty_min_bars_generated = 0;
-                    
-                    const size_t bars_per_thirty_min = 30;
-                    for (size_t i = bars_per_thirty_min; i <= minute_bars_count; i += bars_per_thirty_min) {
-                        MultiTimeframeBar thirty_min_bar;
-                        thirty_min_bar.timestamp = multi_timeframe_data.minute_bars[i-1].timestamp;
-                        thirty_min_bar.open_price = multi_timeframe_data.minute_bars[i-bars_per_thirty_min].open_price;
-                        thirty_min_bar.close_price = multi_timeframe_data.minute_bars[i-1].close_price;
-                        thirty_min_bar.high_price = multi_timeframe_data.minute_bars[i-bars_per_thirty_min].high_price;
-                        thirty_min_bar.low_price = multi_timeframe_data.minute_bars[i-bars_per_thirty_min].low_price;
-                        thirty_min_bar.volume = 0.0;
-                        thirty_min_bar.spread = 0.0;
-                        
-                        for (size_t j = i - bars_per_thirty_min; j < i; ++j) {
-                            thirty_min_bar.high_price = std::max(thirty_min_bar.high_price, multi_timeframe_data.minute_bars[j].high_price);
-                            thirty_min_bar.low_price = std::min(thirty_min_bar.low_price, multi_timeframe_data.minute_bars[j].low_price);
-                            thirty_min_bar.volume += multi_timeframe_data.minute_bars[j].volume;
-                            thirty_min_bar.spread += multi_timeframe_data.minute_bars[j].spread;
-                        }
-                        thirty_min_bar.spread /= bars_per_thirty_min;
-                        
-                        multi_timeframe_data.thirty_min_bars.push_back(thirty_min_bar);
-                        thirty_min_bars_generated++;
-                    }
-                    
-                    maintain_deque_size(multi_timeframe_data.thirty_min_bars, config.strategy.mth_ts_maintenance_30min_max);
-                    log_message("Generated " + std::to_string(thirty_min_bars_generated) + " 30-minute bars from 1-minute data", "");
-                    log_message("Kept " + std::to_string(multi_timeframe_data.thirty_min_bars.size()) + " 30-minute bars after maintenance", "");
-                }
-            } catch (const std::exception& e) {
-                log_message("Failed to load 1-minute historical bars: " + std::string(e.what()), "");
-            }
-        }
-
-        // Load 1-second bars (last 2 hours for initial indicators)
-        if (config.strategy.mth_ts_1sec_enabled) {
-            try {
-                auto second_bars = api_provider.get_historical_bars(symbol, "1sec", second_start_str, end_date,
-                                                             config.strategy.mth_ts_historical_1sec_limit);
-                for (const auto& bar : second_bars) {
-                    MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
-                                             bar.close_price, bar.volume, 0.0, bar.timestamp);
-                    multi_timeframe_data.second_bars.push_back(mtf_bar);
-                }
-                maintain_deque_size(multi_timeframe_data.second_bars, config.strategy.mth_ts_maintenance_1sec_max);
-                log_message("Loaded " + std::to_string(multi_timeframe_data.second_bars.size()) + " 1-second bars", "");
-            } catch (const std::exception& e) {
-                log_message("Failed to load 1-second historical bars: " + std::string(e.what()), "");
-            }
-        }
-
-        // Calculate initial indicators for all timeframes
-        calculate_daily_indicators();
-        calculate_thirty_min_indicators();
-        calculate_minute_indicators();
-        calculate_second_indicators();
-
-        // Evaluate initial bias and confirmation
-        evaluate_daily_bias();
-        evaluate_thirty_min_confirmation();
-        evaluate_minute_trigger();
-        evaluate_second_execution_readiness();
+        load_daily_historical_bars(symbol, current_time, end_timestamp);
+        load_minute_historical_bars(symbol, current_time, end_timestamp);
+        generate_thirty_min_bars_from_minute_bars();
+        load_second_historical_bars(symbol, current_time, end_timestamp);
 
         log_message("Historical data loading completed for MTH-TS strategy", "");
-
     } catch (const std::exception& e) {
         log_message("Error loading historical data for MTH-TS: " + std::string(e.what()), "");
     }
 }
 
-void MultiTimeframeManager::process_new_second_bar(const MultiTimeframeBar& second_bar) {
-    // ABSOLUTE DEFENSIVE PROGRAMMING - NO EXCEPTIONS CAN ESCAPE THIS FUNCTION
+void MultiTimeframeManager::load_daily_historical_bars(const std::string& symbol, 
+                                                        const std::chrono::system_clock::time_point& current_time, 
+                                                        const std::string& end_timestamp) {
+    if (!config.strategy.mth_ts_daily_enabled) {
+        return;
+    }
+
     try {
-        // Add the new 1-second bar to our data
-        try {
-            multi_timeframe_data.second_bars.push_back(second_bar);
-            maintain_deque_size(multi_timeframe_data.second_bars, config.strategy.mth_ts_maintenance_1sec_max);
-        } catch (const std::exception& e) {
-            std::cerr << "MTH-TS: Failed to add second bar to deque: " << e.what() << std::endl;
-            return;
-        } catch (...) {
-            std::cerr << "MTH-TS: Unknown error adding second bar to deque" << std::endl;
-            return;
+        auto daily_start_time = current_time - std::chrono::hours(24LL * config.strategy.mth_ts_historical_daily_days);
+        std::string daily_start_timestamp = format_timestamp(daily_start_time);
+        
+        log_message("Daily data request: FROM " + daily_start_timestamp + " TO " + end_timestamp, "");
+        log_message("Daily data request: Limit=" + std::to_string(config.strategy.mth_ts_historical_daily_limit) + " bars", "");
+        log_message("Daily EMA period: " + std::to_string(config.strategy.mth_ts_daily_ema_period) + " (needs " + 
+                   std::to_string(config.strategy.mth_ts_daily_ema_period) + " bars minimum)", "");
+        
+        auto daily_bars = api_provider.get_historical_bars(symbol, "1day", daily_start_timestamp, end_timestamp,
+                                                         config.strategy.mth_ts_historical_daily_limit);
+        
+        if (!daily_bars.empty()) {
+            log_message("Daily data received: " + std::to_string(daily_bars.size()) + " bars", "");
+            log_message("Daily time span: " + daily_bars.front().timestamp + " to " + daily_bars.back().timestamp, "");
+            
+            if (static_cast<int>(daily_bars.size()) < config.strategy.mth_ts_daily_ema_period) {
+                log_message("WARNING: Insufficient daily bars for EMA calculation. Have " + 
+                           std::to_string(daily_bars.size()) + ", need " + 
+                           std::to_string(config.strategy.mth_ts_daily_ema_period), "");
+            }
         }
-
-        // INCREMENTAL UPDATE: Update minute bar with new second bar
-        try {
-            update_minute_with_new_second(second_bar);
-        } catch (const std::exception& e) {
-            std::cerr << "MTH-TS: Failed to update minute with new second: " << e.what() << std::endl;
-        } catch (...) {
-            std::cerr << "MTH-TS: Unknown error updating minute with new second" << std::endl;
+        
+        for (const auto& bar : daily_bars) {
+            MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
+                                     bar.close_price, bar.volume, 0.0, bar.timestamp);
+            multi_timeframe_data.daily_bars.push_back(mtf_bar);
         }
+        maintain_deque_size(multi_timeframe_data.daily_bars, config.strategy.mth_ts_maintenance_daily_max);
+        log_message("Loaded " + std::to_string(multi_timeframe_data.daily_bars.size()) + " daily bars after maintenance", "");
+    } catch (const std::exception& e) {
+        log_message("Failed to load daily historical bars: " + std::string(e.what()), "");
+    }
+}
 
-        // Update propagation scores for hybrid evaluation
-        try {
-            update_propagation_scores();
-        } catch (const std::exception& e) {
-            std::cerr << "MTH-TS: Failed to update propagation scores: " << e.what() << std::endl;
+void MultiTimeframeManager::load_minute_historical_bars(const std::string& symbol,
+                                                         const std::chrono::system_clock::time_point& current_time,
+                                                         const std::string& end_timestamp) {
+    if (!config.strategy.mth_ts_1min_enabled) {
+        return;
+    }
+
+    try {
+        auto minute_start_time = current_time - std::chrono::hours(24LL * config.strategy.mth_ts_historical_1min_days);
+        std::string minute_start_timestamp = format_timestamp(minute_start_time);
+        
+        auto minute_bars = api_provider.get_historical_bars(symbol, "1min", minute_start_timestamp, end_timestamp,
+                                                     config.strategy.mth_ts_historical_1min_limit);
+        for (const auto& bar : minute_bars) {
+            MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
+                                     bar.close_price, bar.volume, 0.0, bar.timestamp);
+            multi_timeframe_data.minute_bars.push_back(mtf_bar);
         }
+        maintain_deque_size(multi_timeframe_data.minute_bars, config.strategy.mth_ts_maintenance_1min_max);
+        log_message("Loaded " + std::to_string(multi_timeframe_data.minute_bars.size()) + " 1-minute bars", "");
+    } catch (const std::exception& e) {
+        log_message("Failed to load 1-minute historical bars: " + std::string(e.what()), "");
+    }
+}
 
-        // CRITICAL: Recalculate ALL timeframe indicators with every new second bar
-        // This ensures all MTH-TS layers use the latest data including partial bars
-        try {
-            // Recalculate indicators for all timeframes (they now use get_bars_with_partial internally)
-            calculate_daily_indicators();
-            evaluate_daily_bias();
+void MultiTimeframeManager::generate_thirty_min_bars_from_minute_bars() {
+    if (multi_timeframe_data.minute_bars.empty()) {
+        return;
+    }
 
-            calculate_thirty_min_indicators();
-            evaluate_thirty_min_confirmation();
-
-            calculate_minute_indicators();
-            evaluate_minute_trigger();
-
-            calculate_second_indicators();
-            evaluate_second_execution_readiness();
-        } catch (const std::exception& e) {
-            std::cerr << "MTH-TS: Failed to recalculate all indicators: " << e.what() << std::endl;
-        } catch (...) {
-            std::cerr << "MTH-TS: Unknown error recalculating all indicators" << std::endl;
+    try {
+        log_message("Generating initial 30-minute bars from 1-minute historical data...", "");
+        
+        const size_t bars_per_thirty_min = 30;
+        size_t minute_bars_count = multi_timeframe_data.minute_bars.size();
+        size_t thirty_min_bars_generated = 0;
+        
+        for (size_t i = bars_per_thirty_min; i <= minute_bars_count; i += bars_per_thirty_min) {
+            MultiTimeframeBar thirty_min_bar = aggregate_consecutive_bars(
+                multi_timeframe_data.minute_bars,
+                i - bars_per_thirty_min,
+                i,
+                multi_timeframe_data.minute_bars[i-1].timestamp
+            );
+            
+            multi_timeframe_data.thirty_min_bars.push_back(thirty_min_bar);
+            thirty_min_bars_generated++;
         }
+        
+        maintain_deque_size(multi_timeframe_data.thirty_min_bars, config.strategy.mth_ts_maintenance_30min_max);
+        log_message("Generated " + std::to_string(thirty_min_bars_generated) + " 30-minute bars from 1-minute data", "");
+        log_message("Kept " + std::to_string(multi_timeframe_data.thirty_min_bars.size()) + " 30-minute bars after maintenance", "");
+    } catch (const std::exception& e) {
+        log_message("Failed to generate 30-minute bars: " + std::string(e.what()), "");
+    }
+}
 
-    } catch (...) {
-        // ABSOLUTE CATCH-ALL - NO EXCEPTIONS CAN ESCAPE THIS FUNCTION
-        std::cerr << "MTH-TS: CRITICAL - Unknown exception in process_new_second_bar - system must continue" << std::endl;
+void MultiTimeframeManager::load_second_historical_bars(const std::string& symbol,
+                                                         const std::chrono::system_clock::time_point& current_time,
+                                                         const std::string& end_timestamp) {
+    if (!config.strategy.mth_ts_1sec_enabled) {
+        return;
+    }
+
+    try {
+        auto second_start_time = current_time - std::chrono::hours(config.strategy.mth_ts_historical_1sec_hours);
+        std::string second_start_timestamp = format_timestamp(second_start_time);
+        
+        auto second_bars = api_provider.get_historical_bars(symbol, "1sec", second_start_timestamp, end_timestamp,
+                                                     config.strategy.mth_ts_historical_1sec_limit);
+        for (const auto& bar : second_bars) {
+            MultiTimeframeBar mtf_bar(bar.open_price, bar.high_price, bar.low_price,
+                                     bar.close_price, bar.volume, 0.0, bar.timestamp);
+            multi_timeframe_data.second_bars.push_back(mtf_bar);
+        }
+        maintain_deque_size(multi_timeframe_data.second_bars, config.strategy.mth_ts_maintenance_1sec_max);
+        log_message("Loaded " + std::to_string(multi_timeframe_data.second_bars.size()) + " 1-second bars", "");
+    } catch (const std::exception& e) {
+        log_message("Failed to load 1-second historical bars: " + std::string(e.what()), "");
+    }
+}
+
+void MultiTimeframeManager::process_new_second_bar(const MultiTimeframeBar& second_bar) {
+    try {
+        multi_timeframe_data.second_bars.push_back(second_bar);
+        maintain_deque_size(multi_timeframe_data.second_bars, config.strategy.mth_ts_maintenance_1sec_max);
+        update_minute_with_new_second(second_bar);
+        update_propagation_scores();
+    } catch (const std::exception& e) {
+        std::cerr << "MTH-TS: Failed to process new second bar: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to process second bar: " + std::string(e.what()));
     }
 }
 
 void MultiTimeframeManager::process_new_quote_data(double bid_price, double ask_price, const std::string& /*timestamp*/) {
-    // ABSOLUTE DEFENSIVE PROGRAMMING - NO EXCEPTIONS CAN ESCAPE THIS FUNCTION
     try {
         if (bid_price <= 0.0 || ask_price <= 0.0 || bid_price >= ask_price) {
-            return; // Invalid quote data
+            return;
         }
 
-        try {
-            // Update spread in the latest second bar if it exists
-            if (!multi_timeframe_data.second_bars.empty()) {
-                double spread_pct = ((ask_price - bid_price) / bid_price) * 100.0;
-                multi_timeframe_data.second_bars.back().spread = spread_pct;
+        if (!multi_timeframe_data.second_bars.empty()) {
+            double spread_percentage = ((ask_price - bid_price) / bid_price) * 100.0;
+            multi_timeframe_data.second_bars.back().spread = spread_percentage;
 
-                // DEBUG: Log spread calculation details periodically
-                static int debug_counter = 0;
-                if (++debug_counter % 100 == 0) {  // Log every 100 quotes
-                    std::ostringstream debug_msg;
-                    debug_msg << "MTH-TS SPREAD DEBUG: Bid=" << bid_price
+            if (++quote_debug_counter % config.strategy.mth_ts_spread_debug_log_interval == 0) {
+                std::ostringstream debug_message;
+                debug_message << "MTH-TS SPREAD DEBUG: Bid=" << bid_price
                              << " Ask=" << ask_price
                              << " Spread=$" << (ask_price - bid_price)
-                             << " Spread%=" << spread_pct << "%";
-                    log_message(debug_msg.str(), "");
-                }
+                             << " Spread%=" << spread_percentage << "%";
+                log_message(debug_message.str(), "");
             }
-        } catch (...) {
-            std::cerr << "MTH-TS: Failed to update spread in quote data" << std::endl;
         }
-
-    } catch (...) {
-        // ABSOLUTE CATCH-ALL - NO EXCEPTIONS CAN ESCAPE THIS FUNCTION
-        std::cerr << "MTH-TS: CRITICAL - Unknown exception in process_new_quote_data - system must continue" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "MTH-TS: Failed to process quote data: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to process quote data: " + std::string(e.what()));
     }
+}
+
+MultiTimeframeBar MultiTimeframeManager::aggregate_consecutive_bars(
+    const std::deque<MultiTimeframeBar>& source_bars,
+    size_t start_index,
+    size_t end_index,
+    const std::string& target_timestamp) const {
+
+    if (source_bars.empty() || start_index >= end_index || end_index > source_bars.size()) {
+        throw std::runtime_error("Invalid bar range for aggregation");
+    }
+
+    MultiTimeframeBar aggregated_bar;
+    aggregated_bar.timestamp = target_timestamp;
+    aggregated_bar.open_price = source_bars[start_index].open_price;
+    aggregated_bar.close_price = source_bars[end_index - 1].close_price;
+    aggregated_bar.high_price = source_bars[start_index].high_price;
+    aggregated_bar.low_price = source_bars[start_index].low_price;
+    aggregated_bar.volume = 0.0;
+    aggregated_bar.spread = 0.0;
+
+    for (size_t i = start_index; i < end_index; ++i) {
+        aggregated_bar.high_price = std::max(aggregated_bar.high_price, source_bars[i].high_price);
+        aggregated_bar.low_price = std::min(aggregated_bar.low_price, source_bars[i].low_price);
+        aggregated_bar.volume += source_bars[i].volume;
+        aggregated_bar.spread += source_bars[i].spread;
+    }
+    
+    size_t bar_count = end_index - start_index;
+    aggregated_bar.spread = (bar_count > 0) ? (aggregated_bar.spread / bar_count) : 0.0;
+
+    return aggregated_bar;
 }
 
 MultiTimeframeBar MultiTimeframeManager::aggregate_bars_to_timeframe(
@@ -277,571 +241,69 @@ MultiTimeframeBar MultiTimeframeManager::aggregate_bars_to_timeframe(
         size_t bars_to_aggregate = 0;
         switch (target_timeframe) {
             case MthTsTimeframe::MINUTE_1:
-                bars_to_aggregate = 60; // 60 seconds
+                bars_to_aggregate = 60;
                 break;
             case MthTsTimeframe::MINUTE_30:
-                bars_to_aggregate = 30; // 30 minutes
+                bars_to_aggregate = 30;
                 break;
             case MthTsTimeframe::DAILY:
-                bars_to_aggregate = 48; // 48 * 30min = 24 hours (assuming 30-min source)
+                bars_to_aggregate = 48;
                 break;
             default:
                 bars_to_aggregate = source_bars.size();
                 break;
         }
 
-        // Get the last N bars for aggregation
-        size_t start_idx = (source_bars.size() > bars_to_aggregate) ?
+        size_t start_index = (source_bars.size() > bars_to_aggregate) ?
                           source_bars.size() - bars_to_aggregate : 0;
 
-        if (start_idx >= source_bars.size()) {
+        if (start_index >= source_bars.size()) {
             throw std::runtime_error("Insufficient bars for timeframe aggregation");
         }
 
-        MultiTimeframeBar aggregated_bar;
-        aggregated_bar.open_price = source_bars[start_idx].open_price;
-        aggregated_bar.high_price = source_bars[start_idx].high_price;
-        aggregated_bar.low_price = source_bars[start_idx].low_price;
-        aggregated_bar.close_price = source_bars.back().close_price;
-        aggregated_bar.volume = 0.0;
-
-        // Calculate average spread from source bars
-        double total_spread = 0.0;
-        size_t spread_count = 0;
-        for (size_t i = start_idx; i < source_bars.size(); ++i) {
-            if (source_bars[i].spread > 0.0) {  // Only count valid spreads
-                total_spread += source_bars[i].spread;
-                spread_count++;
-            }
-        }
-        aggregated_bar.spread = (spread_count > 0) ? (total_spread / spread_count) : 0.0;
-
-        aggregated_bar.timestamp = target_timestamp;
-
-        // Aggregate OHLC and volume
-        for (size_t i = start_idx; i < source_bars.size(); ++i) {
-            aggregated_bar.high_price = std::max(aggregated_bar.high_price, source_bars[i].high_price);
-            aggregated_bar.low_price = std::min(aggregated_bar.low_price, source_bars[i].low_price);
-            aggregated_bar.volume += source_bars[i].volume;
-            aggregated_bar.spread += source_bars[i].spread;
-        }
-
-        // Average spread
-        if (source_bars.size() > start_idx) {
-            aggregated_bar.spread /= (source_bars.size() - start_idx);
-        }
-
-        return aggregated_bar;
+        return aggregate_consecutive_bars(source_bars, start_index, source_bars.size(), target_timestamp);
 
     } catch (const std::exception& e) {
         std::ostringstream error_stream;
         error_stream << "Error aggregating bars to timeframe: " << e.what();
         log_message(error_stream.str(), "");
-        return MultiTimeframeBar();
+        throw std::runtime_error(error_stream.str());
     }
 }
 
-void MultiTimeframeManager::calculate_daily_indicators() {
+void MultiTimeframeManager::maintain_deque_size(std::deque<MultiTimeframeBar>& bar_deque, size_t maximum_size) {
     try {
-        // Use bars with partial to include unfinished data
-        auto daily_bars_with_partial = get_bars_with_partial(MthTsTimeframe::DAILY);
-
-        if (static_cast<int>(daily_bars_with_partial.size()) < config.strategy.mth_ts_daily_ema_period) {
-            return; // Insufficient data
-        }
-
-        // Calculate daily EMA and track significant changes for diagnostic logging
-        double previous_ema_value = multi_timeframe_data.daily_indicators.ema;
-        double current_price = daily_bars_with_partial.back().close_price;
-        
-        // Calculate daily EMA with configured period
-        multi_timeframe_data.daily_indicators.ema = calculate_ema(
-            daily_bars_with_partial,
-            daily_bars_with_partial.size(),
-            config.strategy.mth_ts_daily_ema_period
-        );
-        
-        // Log significant EMA changes or initial calculation for monitoring
-        double ema_change = std::abs(multi_timeframe_data.daily_indicators.ema - previous_ema_value);
-        if (ema_change > config.strategy.mth_ts_daily_ema_significant_change_threshold || (previous_ema_value == 0.0 && multi_timeframe_data.daily_indicators.ema > 0.0)) {
-            log_message("Daily EMA updated: " + std::to_string(previous_ema_value) + " -> " + 
-                       std::to_string(multi_timeframe_data.daily_indicators.ema) + 
-                       " (current price: " + std::to_string(current_price) + 
-                       ", period: " + std::to_string(config.strategy.mth_ts_daily_ema_period) + ")", "");
-        }
-
-        // Calculate ADX(14)
-        multi_timeframe_data.daily_indicators.adx = calculate_adx(
-            daily_bars_with_partial,
-            config.strategy.mth_ts_daily_adx_period
-        );
-
-        // Calculate ATR
-        multi_timeframe_data.daily_indicators.atr = calculate_atr(
-            daily_bars_with_partial,
-            14 // ATR period
-        );
-
-        // Calculate volume moving average
-        multi_timeframe_data.daily_indicators.volume_ma = calculate_volume_ma(
-            daily_bars_with_partial,
-            config.strategy.mth_ts_daily_volume_ma_period
-        );
-
-        // Calculate average spread
-        multi_timeframe_data.daily_indicators.spread_avg = calculate_average_spread(
-            daily_bars_with_partial,
-            10 // Last 10 days
-        );
-
-        // Determine bullish bias
-        if (!multi_timeframe_data.daily_bars.empty()) {
-            double latest_close = multi_timeframe_data.daily_bars.back().close_price;
-            bool ema_alignment = latest_close > multi_timeframe_data.daily_indicators.ema;
-            bool adx_threshold = multi_timeframe_data.daily_indicators.adx >= config.strategy.mth_ts_daily_adx_threshold;
-            bool spread_ok = multi_timeframe_data.daily_indicators.spread_avg <= config.strategy.mth_ts_daily_avg_spread_threshold;
-
-
-            multi_timeframe_data.daily_bullish_bias = ema_alignment && adx_threshold && spread_ok;
-        }
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error calculating daily indicators: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::calculate_thirty_min_indicators() {
-    try {
-        // Use bars with partial to include unfinished data
-        auto thirty_min_bars_with_partial = get_bars_with_partial(MthTsTimeframe::MINUTE_30);
-
-        if (static_cast<int>(thirty_min_bars_with_partial.size()) < config.strategy.mth_ts_30min_ema_period) {
-            return; // Insufficient data
-        }
-
-        // ENHANCED DIAGNOSTIC: Log 30-min indicator calculation with detailed bar info
-        double previous_ema_value = multi_timeframe_data.thirty_min_indicators.ema;
-        double current_price = thirty_min_bars_with_partial.back().close_price;
-        
-        // Show timestamp range of bars being used
-        std::string oldest_timestamp = thirty_min_bars_with_partial.front().timestamp;
-        std::string newest_timestamp = thirty_min_bars_with_partial.back().timestamp;
-        
-        // Calculate price range of input data
-        double min_price = thirty_min_bars_with_partial.front().close_price;
-        double max_price = thirty_min_bars_with_partial.front().close_price;
-        for (const auto& bar : thirty_min_bars_with_partial) {
-            min_price = std::min(min_price, bar.close_price);
-            max_price = std::max(max_price, bar.close_price);
-        }
-
-        // Calculate 50-EMA
-        multi_timeframe_data.thirty_min_indicators.ema = calculate_ema(
-            thirty_min_bars_with_partial,
-            thirty_min_bars_with_partial.size(),
-            config.strategy.mth_ts_30min_ema_period
-        );
-        
-        // ENHANCED DIAGNOSTIC: Log if EMA changed significantly
-        double ema_change = std::abs(multi_timeframe_data.thirty_min_indicators.ema - previous_ema_value);
-        if (ema_change > 1.0 || (previous_ema_value == 0.0 && multi_timeframe_data.thirty_min_indicators.ema > 0.0)) {
-            log_message("30-min EMA calculation details:", "");
-            log_message("  - Bars used: " + std::to_string(thirty_min_bars_with_partial.size()) + " bars", "");
-            log_message("  - Time range: " + oldest_timestamp + " to " + newest_timestamp, "");
-            log_message("  - Price range: $" + std::to_string(min_price) + " to $" + std::to_string(max_price), "");
-            log_message("  - Previous EMA: $" + std::to_string(previous_ema_value), "");
-            log_message("  - New EMA: $" + std::to_string(multi_timeframe_data.thirty_min_indicators.ema), "");
-            log_message("  - Current price: $" + std::to_string(current_price), "");
-            log_message("  - EMA vs Price gap: $" + std::to_string(multi_timeframe_data.thirty_min_indicators.ema - current_price), "");
-        }
-
-        // Calculate ADX(14)
-        multi_timeframe_data.thirty_min_indicators.adx = calculate_adx(
-            thirty_min_bars_with_partial,
-            config.strategy.mth_ts_30min_adx_period
-        );
-
-        // Calculate ATR
-        multi_timeframe_data.thirty_min_indicators.atr = calculate_atr(
-            thirty_min_bars_with_partial,
-            14 // ATR period
-        );
-
-        // Calculate volume moving average
-        multi_timeframe_data.thirty_min_indicators.volume_ma = calculate_volume_ma(
-            thirty_min_bars_with_partial,
-            config.strategy.mth_ts_30min_volume_ma_period
-        );
-
-        // Calculate average spread
-        multi_timeframe_data.thirty_min_indicators.spread_avg = calculate_average_spread(
-            thirty_min_bars_with_partial,
-            20 // Last 20 bars
-        );
-
-        // Determine 30-min confirmation
-        if (!multi_timeframe_data.thirty_min_bars.empty() && multi_timeframe_data.daily_bullish_bias) {
-            double latest_close = multi_timeframe_data.thirty_min_bars.back().close_price;
-            bool ema_alignment = latest_close > multi_timeframe_data.thirty_min_indicators.ema;
-            bool adx_threshold = multi_timeframe_data.thirty_min_indicators.adx >= config.strategy.mth_ts_30min_adx_threshold;
-            bool spread_ok = multi_timeframe_data.thirty_min_indicators.spread_avg <= config.strategy.mth_ts_30min_avg_spread_threshold;
-
-            multi_timeframe_data.thirty_min_confirmation = ema_alignment && adx_threshold && spread_ok;
-        } else {
-            multi_timeframe_data.thirty_min_confirmation = false;
-        }
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error calculating 30-min indicators: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::calculate_minute_indicators() {
-    try {
-        // Use bars with partial to include unfinished data
-        auto minute_bars_with_partial = get_bars_with_partial(MthTsTimeframe::MINUTE_1);
-
-        if (static_cast<int>(minute_bars_with_partial.size()) < config.strategy.mth_ts_1min_slow_ema_period) {
-            return; // Insufficient data
-        }
-
-        // Calculate 9-EMA and 21-EMA
-        double ema9 = calculate_ema(minute_bars_with_partial,
-                                   minute_bars_with_partial.size(),
-                                   config.strategy.mth_ts_1min_fast_ema_period);
-        double ema21 = calculate_ema(minute_bars_with_partial,
-                                    minute_bars_with_partial.size(),
-                                    config.strategy.mth_ts_1min_slow_ema_period);
-
-        // Store the fast EMA (9-period) as the main EMA for crossover checks
-        multi_timeframe_data.minute_indicators.ema = ema9;
-
-        // Calculate RSI(14)
-        multi_timeframe_data.minute_indicators.rsi = calculate_rsi(
-            minute_bars_with_partial,
-            config.strategy.mth_ts_1min_rsi_period
-        );
-
-        // Calculate ATR
-        multi_timeframe_data.minute_indicators.atr = calculate_atr(
-            minute_bars_with_partial,
-            14 // ATR period
-        );
-
-        // Calculate volume MA(20)
-        multi_timeframe_data.minute_indicators.volume_ma = calculate_volume_ma(
-            minute_bars_with_partial,
-            config.strategy.mth_ts_1min_volume_ma_period
-        );
-
-        // Calculate average spread
-        multi_timeframe_data.minute_indicators.spread_avg = calculate_average_spread(
-            minute_bars_with_partial,
-            20 // Last 20 bars
-        );
-
-        // Determine minute trigger signal
-        if (!multi_timeframe_data.minute_bars.empty() && multi_timeframe_data.thirty_min_confirmation) {
-            bool ema_crossover = ema9 > ema21;
-            double rsi_threshold = (multi_timeframe_data.minute_indicators.spread_avg > config.strategy.mth_ts_1min_spread_threshold) ?
-                                  config.strategy.mth_ts_1min_rsi_threshold_strict :
-                                  config.strategy.mth_ts_1min_rsi_threshold;
-            bool rsi_condition = multi_timeframe_data.minute_indicators.rsi < rsi_threshold;
-            bool volume_condition = multi_timeframe_data.minute_bars.back().volume >
-                                  (multi_timeframe_data.minute_indicators.volume_ma * config.strategy.mth_ts_1min_volume_multiplier);
-
-            multi_timeframe_data.minute_trigger_signal = ema_crossover && rsi_condition && volume_condition;
-        } else {
-            multi_timeframe_data.minute_trigger_signal = false;
-        }
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error calculating minute indicators: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::calculate_second_indicators() {
-    try {
-        if (static_cast<int>(multi_timeframe_data.second_bars.size()) < config.strategy.mth_ts_1sec_ema_period) {
-            return; // Insufficient data
-        }
-
-        // Calculate EMA(5)
-        multi_timeframe_data.second_indicators.ema = calculate_ema(
-            multi_timeframe_data.second_bars,
-            multi_timeframe_data.second_bars.size(),
-            config.strategy.mth_ts_1sec_ema_period
-        );
-
-        // Calculate ATR
-        multi_timeframe_data.second_indicators.atr = calculate_atr(
-            multi_timeframe_data.second_bars,
-            14 // ATR period
-        );
-
-        // Calculate volume MA
-        multi_timeframe_data.second_indicators.volume_ma = calculate_volume_ma(
-            multi_timeframe_data.second_bars,
-            20 // Volume MA period
-        );
-
-        // Calculate average spread
-        multi_timeframe_data.second_indicators.spread_avg = calculate_average_spread(
-            multi_timeframe_data.second_bars,
-            10 // Last 10 seconds
-        );
-
-        // Determine execution readiness
-        if (!multi_timeframe_data.second_bars.empty() && multi_timeframe_data.minute_trigger_signal) {
-            // Check momentum over last 3 bars
-            bool has_momentum = true;
-            size_t bars_to_check = std::min(static_cast<size_t>(config.strategy.mth_ts_1sec_momentum_bars),
-                                          multi_timeframe_data.second_bars.size());
-
-            for (size_t i = multi_timeframe_data.second_bars.size() - bars_to_check;
-                 i < multi_timeframe_data.second_bars.size() - 1; ++i) {
-                if (multi_timeframe_data.second_bars[i+1].close_price <= multi_timeframe_data.second_bars[i].close_price) {
-                    has_momentum = false;
-                    break;
-                }
-            }
-
-            bool spread_ok = multi_timeframe_data.second_indicators.spread_avg <= config.strategy.mth_ts_1sec_spread_threshold;
-
-            multi_timeframe_data.second_execution_ready = has_momentum && spread_ok;
-        } else {
-            multi_timeframe_data.second_execution_ready = false;
-        }
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error calculating second indicators: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::recalculate_all_indicators() {
-    try {
-        // DEPRECATED: This method now simply calls individual indicator calculations
-        // The higher timeframe bars are now maintained incrementally via partial bars
-        // All calculations now use get_bars_with_partial() internally
-
-        calculate_daily_indicators();
-        evaluate_daily_bias();
-
-        calculate_thirty_min_indicators();
-        evaluate_thirty_min_confirmation();
-
-        calculate_minute_indicators();
-        evaluate_minute_trigger();
-
-        calculate_second_indicators();
-        evaluate_second_execution_readiness();
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error recalculating all indicators: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-// Technical indicator calculation implementations
-double MultiTimeframeManager::calculate_ema(const std::deque<MultiTimeframeBar>& bars, int /*period*/, int ema_period) const {
-    try {
-        if (static_cast<int>(bars.size()) < ema_period || ema_period <= 0) return 0.0;
-
-        // Calculate SMA for the first ema_period bars
-        double sma = 0.0;
-        for (int i = 0; i < ema_period; ++i) {
-            sma += bars[bars.size() - ema_period + i].close_price;
-        }
-        sma /= ema_period;
-
-        // If we only have exactly ema_period bars, return the SMA
-        if (static_cast<int>(bars.size()) == ema_period) {
-            return sma;
-        }
-
-        // Start EMA calculation from the SMA
-        double ema = sma;
-        double multiplier = 2.0 / (ema_period + 1.0);
-
-        // Apply EMA formula to subsequent bars
-        for (size_t i = bars.size() - ema_period + 1; i < bars.size(); ++i) {
-            ema = (bars[i].close_price * multiplier) + (ema * (1.0 - multiplier));
-        }
-
-        return ema;
-    } catch (const std::exception& e) {
-        return 0.0;
-    }
-}
-
-double MultiTimeframeManager::calculate_adx(const std::deque<MultiTimeframeBar>& bars, int period) const {
-    try {
-        if (static_cast<int>(bars.size()) < period + 1) return 0.0;
-
-        // Simplified ADX calculation - full implementation would be more complex
-        // This is a basic approximation
-        double adx_sum = 0.0;
-        int count = 0;
-
-        for (size_t i = 1; i < bars.size(); ++i) {  // Start from 1 to access i-1 safely
-            double tr = std::max({bars[i].high_price - bars[i].low_price,
-                                std::abs(bars[i].high_price - bars[i-1].close_price),
-                                std::abs(bars[i].low_price - bars[i-1].close_price)});
-
-            if (tr > 0.0) {
-                double dm_plus = (bars[i].high_price > bars[i-1].high_price) ?
-                               std::max(bars[i].high_price - bars[i-1].high_price, 0.0) : 0.0;
-                double dm_minus = (bars[i-1].low_price > bars[i].low_price) ?
-                                std::max(bars[i-1].low_price - bars[i].low_price, 0.0) : 0.0;
-
-                double di_plus = (dm_plus / tr) * 100.0;
-                double di_minus = (dm_minus / tr) * 100.0;
-
-                // Prevent division by zero in DX calculation
-                double di_sum = di_plus + di_minus;
-                double dx = (di_sum > 0.0) ? (std::abs(di_plus - di_minus) / di_sum) * 100.0 : 0.0;
-
-                // Ensure DX is valid (should be between 0-100)
-                if (!std::isnan(dx) && !std::isinf(dx)) {
-                    adx_sum += dx;
-                    count++;
-                }
-            }
-        }
-
-        return (count > 0) ? adx_sum / count : 0.0;
-    } catch (const std::exception& e) {
-        return 0.0;
-    }
-}
-
-double MultiTimeframeManager::calculate_rsi(const std::deque<MultiTimeframeBar>& bars, int period) const {
-    try {
-        if (static_cast<int>(bars.size()) < period + 1) return 50.0; // Neutral RSI
-
-        double gains = 0.0, losses = 0.0;
-
-        for (size_t i = bars.size() - period; i < bars.size(); ++i) {
-            double change = bars[i].close_price - bars[i-1].close_price;
-            if (change > 0) gains += change;
-            else losses += std::abs(change);
-        }
-
-        if (losses == 0.0) return 100.0;
-        double rs = gains / losses;
-        return 100.0 - (100.0 / (1.0 + rs));
-    } catch (const std::exception& e) {
-        return 50.0;
-    }
-}
-
-double MultiTimeframeManager::calculate_volume_ma(const std::deque<MultiTimeframeBar>& bars, int period) const {
-    try {
-        if (static_cast<int>(bars.size()) < period) return 0.0;
-
-        double volume_sum = 0.0;
-        for (size_t i = bars.size() - period; i < bars.size(); ++i) {
-            volume_sum += bars[i].volume;
-        }
-
-        return volume_sum / period;
-    } catch (const std::exception& e) {
-        return 0.0;
-    }
-}
-
-double MultiTimeframeManager::calculate_average_spread(const std::deque<MultiTimeframeBar>& bars, int period) const {
-    try {
-        if (static_cast<int>(bars.size()) < period) return 0.0;
-
-        double spread_sum = 0.0;
-        for (size_t i = bars.size() - period; i < bars.size(); ++i) {
-            spread_sum += bars[i].spread;
-        }
-
-        return spread_sum / period;
-    } catch (const std::exception& e) {
-        return 0.0;
-    }
-}
-
-double MultiTimeframeManager::calculate_atr(const std::deque<MultiTimeframeBar>& bars, int period) const {
-    try {
-        if (static_cast<int>(bars.size()) < period + 1) return 0.0;
-
-        std::vector<double> true_ranges;
-
-        // Calculate True Range for each bar
-        for (size_t i = 1; i < bars.size(); ++i) {
-            double tr = std::max({
-                bars[i].high_price - bars[i].low_price,  // Current range
-                std::abs(bars[i].high_price - bars[i-1].close_price),  // Gap up
-                std::abs(bars[i].low_price - bars[i-1].close_price)   // Gap down
-            });
-            true_ranges.push_back(tr);
-        }
-
-        if (true_ranges.size() < static_cast<size_t>(period)) return 0.0;
-
-        // Calculate ATR as simple moving average of true ranges
-        double atr_sum = 0.0;
-        for (size_t i = true_ranges.size() - period; i < true_ranges.size(); ++i) {
-            atr_sum += true_ranges[i];
-        }
-
-        return atr_sum / period;
-    } catch (const std::exception& e) {
-        return 0.0;
-    }
-}
-
-void MultiTimeframeManager::maintain_deque_size(std::deque<MultiTimeframeBar>& deque, size_t max_size) {
-    try {
-        while (deque.size() > max_size) {
-            deque.pop_front();
+        while (bar_deque.size() > maximum_size) {
+            bar_deque.pop_front();
         }
     } catch (const std::exception& e) {
         std::cerr << "MTH-TS: Error in maintain_deque_size: " << e.what() << std::endl;
-        // Don't re-throw to prevent memory corruption cascade
-    } catch (...) {
-        std::cerr << "MTH-TS: Unknown error in maintain_deque_size" << std::endl;
-        // Don't re-throw to prevent memory corruption cascade
+        throw std::runtime_error("Failed to maintain deque size: " + std::string(e.what()));
     }
 }
 
 bool MultiTimeframeManager::is_new_timeframe_bar_needed(MthTsTimeframe timeframe, const std::string& current_timestamp) const {
     try {
-        // For daily bars, check if we've crossed UTC midnight
         if (timeframe == MthTsTimeframe::DAILY) {
-            if (multi_timeframe_data.daily_bars.empty()) return true;
+            if (multi_timeframe_data.daily_bars.empty()) {
+                return true;
+            }
 
-            // Parse current timestamp
             std::tm current_tm = {};
             std::istringstream ss_current(current_timestamp);
             ss_current >> std::get_time(&current_tm, "%Y-%m-%dT%H:%M:%S");
 
-            // Parse last daily bar timestamp
-            const auto& last_daily = multi_timeframe_data.daily_bars.back();
+            const auto& last_daily_bar = multi_timeframe_data.daily_bars.back();
             std::tm last_tm = {};
-            std::istringstream ss_last(last_daily.timestamp);
+            std::istringstream ss_last(last_daily_bar.timestamp);
             ss_last >> std::get_time(&last_tm, "%Y-%m-%dT%H:%M:%S");
 
-            // Check if day has changed
             return current_tm.tm_mday != last_tm.tm_mday ||
                    current_tm.tm_mon != last_tm.tm_mon ||
                    current_tm.tm_year != last_tm.tm_year;
         }
 
-        return false; // Other timeframes handled by aggregation logic
+        return false;
 
     } catch (const std::exception& e) {
         return false;
@@ -850,251 +312,78 @@ bool MultiTimeframeManager::is_new_timeframe_bar_needed(MthTsTimeframe timeframe
 
 void MultiTimeframeManager::aggregate_to_minute_bar(const std::string& current_timestamp) {
     try {
-        // Check if we have enough second bars to create a minute bar (60 seconds)
         if (multi_timeframe_data.second_bars.size() < 60) {
             return;
         }
 
-        // Aggregate the last 60 seconds into a minute bar
         MultiTimeframeBar minute_bar = aggregate_bars_to_timeframe(
             multi_timeframe_data.second_bars,
             MthTsTimeframe::MINUTE_1,
             current_timestamp
         );
 
-        // Add to minute bars deque
         multi_timeframe_data.minute_bars.push_back(minute_bar);
-        size_t minute_bars_count = multi_timeframe_data.minute_bars.size();
-        maintain_deque_size(multi_timeframe_data.minute_bars, 1800); // Keep last 30 hours
+        maintain_deque_size(multi_timeframe_data.minute_bars, config.strategy.mth_ts_maintenance_1min_max);
 
-        // DIAGNOSTIC: Log every 30th minute bar to track 30-min aggregation readiness
-        if (minute_bars_count % 30 == 0) {
-            log_message("Minute bars count: " + std::to_string(minute_bars_count) + 
-                       " (ready for 30-min aggregation)", "");
-        }
-
-        // Recalculate minute indicators and evaluate trigger
-        calculate_minute_indicators();
-        evaluate_minute_trigger();
-
-        // Trigger aggregation to higher timeframes if needed
         aggregate_to_thirty_min_bar(current_timestamp);
 
     } catch (const std::exception& e) {
         std::ostringstream error_stream;
         error_stream << "Error aggregating to minute bar: " << e.what();
         log_message(error_stream.str(), "");
+        throw std::runtime_error(error_stream.str());
     }
 }
 
 void MultiTimeframeManager::aggregate_to_thirty_min_bar(const std::string& current_timestamp) {
     try {
-        // Check if we have enough minute bars to create a 30-minute bar (30 minutes)
         if (multi_timeframe_data.minute_bars.size() < 30) {
             return;
         }
 
-        // DIAGNOSTIC: Log when we create a new 30-min bar
-        log_message("Creating new 30-minute bar at " + current_timestamp + 
-                   " (from " + std::to_string(multi_timeframe_data.minute_bars.size()) + " minute bars)", "");
-
-        // Aggregate the last 30 minutes into a 30-minute bar
         MultiTimeframeBar thirty_min_bar = aggregate_bars_to_timeframe(
             multi_timeframe_data.minute_bars,
             MthTsTimeframe::MINUTE_30,
             current_timestamp
         );
 
-        // Add to thirty-minute bars deque
         multi_timeframe_data.thirty_min_bars.push_back(thirty_min_bar);
-        size_t bars_before_maintenance = multi_timeframe_data.thirty_min_bars.size();
-        maintain_deque_size(multi_timeframe_data.thirty_min_bars, 336); // Keep last 7 days
-        
-        // DIAGNOSTIC: Log the result
-        log_message("30-minute bars: " + std::to_string(multi_timeframe_data.thirty_min_bars.size()) + 
-                   " total (added 1, was " + std::to_string(bars_before_maintenance - 1) + ")", "");
+        maintain_deque_size(multi_timeframe_data.thirty_min_bars, config.strategy.mth_ts_maintenance_30min_max);
 
-        // Recalculate thirty-minute indicators
-        calculate_thirty_min_indicators();
-        evaluate_thirty_min_confirmation();
-
-        // Trigger aggregation to daily timeframe if needed
         aggregate_to_daily_bar(current_timestamp);
 
     } catch (const std::exception& e) {
         std::ostringstream error_stream;
         error_stream << "Error aggregating to thirty-minute bar: " << e.what();
         log_message(error_stream.str(), "");
+        throw std::runtime_error(error_stream.str());
     }
 }
 
 void MultiTimeframeManager::aggregate_to_daily_bar(const std::string& current_timestamp) {
     try {
-        // Daily bar aggregation with diagnostic logging for monitoring data flow
-        
-        // For daily bars, we need to check if we've crossed midnight UTC
-        // Note: Partial daily bar updates happen automatically via update_daily_with_new_thirty_min()
-        // called from update_thirty_min_with_new_minute() when a 30-min bar completes
         if (!is_new_timeframe_bar_needed(MthTsTimeframe::DAILY, current_timestamp)) {
             return;
         }
 
-        // DIAGNOSTIC: Log when creating a new daily bar
-        log_message("Checking if ready to create new daily bar at " + current_timestamp, "");
-
-        // Check if we have enough thirty-minute bars for a full day (48 * 30min = 24 hours)
         if (multi_timeframe_data.thirty_min_bars.size() < 48) {
-            log_message("Not enough 30-min bars for daily aggregation. Have " + 
-                       std::to_string(multi_timeframe_data.thirty_min_bars.size()) + ", need 48", "");
             return;
         }
 
-        // DIAGNOSTIC: Log daily bar creation
-        log_message("Creating new daily bar at " + current_timestamp + 
-                   " (from " + std::to_string(multi_timeframe_data.thirty_min_bars.size()) + " thirty-min bars)", "");
-
-        // Aggregate the last 48 thirty-minute bars into a daily bar
         MultiTimeframeBar daily_bar = aggregate_bars_to_timeframe(
             multi_timeframe_data.thirty_min_bars,
             MthTsTimeframe::DAILY,
             current_timestamp
         );
 
-        // Add to daily bars deque
         multi_timeframe_data.daily_bars.push_back(daily_bar);
-        size_t bars_before_maintenance = multi_timeframe_data.daily_bars.size();
-        maintain_deque_size(multi_timeframe_data.daily_bars, 30); // Keep last 30 days
-        
-        // DIAGNOSTIC: Log the result
-        log_message("Daily bars: " + std::to_string(multi_timeframe_data.daily_bars.size()) + 
-                   " total (added 1, was " + std::to_string(bars_before_maintenance - 1) + ")", "");
-
-        // Recalculate daily indicators
-        calculate_daily_indicators();
-        evaluate_daily_bias();
+        maintain_deque_size(multi_timeframe_data.daily_bars, config.strategy.mth_ts_maintenance_daily_max);
 
     } catch (const std::exception& e) {
         std::ostringstream error_stream;
         error_stream << "Error aggregating to daily bar: " << e.what();
         log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::evaluate_daily_bias() {
-    try {
-        // Update the bias flag based on current indicators
-        // This is already done in calculate_daily_indicators()
-        // Just ensure the flag is set correctly
-        multi_timeframe_data.daily_bullish_bias =
-            multi_timeframe_data.daily_bullish_bias; // Already set in calculate_daily_indicators
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error evaluating daily bias: " << e.what();
-        log_message(error_stream.str(), "");
-    }
-}
-
-void MultiTimeframeManager::evaluate_thirty_min_confirmation() {
-    try {
-        // Check if 30-minute timeframe confirms daily bias
-        if (!multi_timeframe_data.daily_bullish_bias) {
-            multi_timeframe_data.thirty_min_confirmation = false;
-            return;
-        }
-
-        // Thirty-minute confirmation requires:
-        // 1. EMA alignment with daily trend
-        // 2. ADX showing sufficient strength
-        // 3. Volume above threshold
-        // 4. Spread within acceptable range
-
-        bool ema_alignment = false;
-        if (!multi_timeframe_data.thirty_min_bars.empty()) {
-            double latest_close = multi_timeframe_data.thirty_min_bars.back().close_price;
-            ema_alignment = latest_close > multi_timeframe_data.thirty_min_indicators.ema;
-        }
-
-        bool adx_strong = multi_timeframe_data.thirty_min_indicators.adx >= config.strategy.mth_ts_30min_adx_threshold;
-        bool volume_ok = multi_timeframe_data.thirty_min_indicators.volume_ma >= config.strategy.mth_ts_30min_volume_multiplier_strict;
-        bool spread_ok = multi_timeframe_data.thirty_min_indicators.spread_avg <= config.strategy.mth_ts_30min_avg_spread_threshold;
-
-        multi_timeframe_data.thirty_min_confirmation = ema_alignment && adx_strong && volume_ok && spread_ok;
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error evaluating thirty-minute confirmation: " << e.what();
-        log_message(error_stream.str(), "");
-        multi_timeframe_data.thirty_min_confirmation = false;
-    }
-}
-
-void MultiTimeframeManager::evaluate_minute_trigger() {
-    try {
-        // Check if 1-minute timeframe shows a valid trigger signal
-        if (!multi_timeframe_data.thirty_min_confirmation) {
-            multi_timeframe_data.minute_trigger_signal = false;
-            return;
-        }
-
-        // One-minute trigger requires:
-        // 1. Fast EMA above slow EMA (bullish crossover)
-        // 2. RSI not overbought (below threshold)
-        // 3. Volume confirmation
-        // 4. Spread acceptable
-
-        bool ema_crossover = false;
-        if (!multi_timeframe_data.minute_bars.empty()) {
-            // Simple check: current close > fast EMA and fast EMA > slow EMA approximation
-            double latest_close = multi_timeframe_data.minute_bars.back().close_price;
-            ema_crossover = latest_close > multi_timeframe_data.minute_indicators.ema;
-        }
-
-        bool rsi_ok = multi_timeframe_data.minute_indicators.rsi <= config.strategy.mth_ts_1min_rsi_threshold;
-        bool volume_ok = multi_timeframe_data.minute_indicators.volume_ma >= config.strategy.mth_ts_1min_volume_multiplier;
-        bool spread_ok = multi_timeframe_data.minute_indicators.spread_avg <= config.strategy.mth_ts_1min_spread_threshold;
-
-        multi_timeframe_data.minute_trigger_signal = ema_crossover && rsi_ok && volume_ok && spread_ok;
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error evaluating minute trigger: " << e.what();
-        log_message(error_stream.str(), "");
-        multi_timeframe_data.minute_trigger_signal = false;
-    }
-}
-
-void MultiTimeframeManager::evaluate_second_execution_readiness() {
-    try {
-        // Check if execution conditions are met at the 1-second level
-        if (!multi_timeframe_data.minute_trigger_signal) {
-            multi_timeframe_data.second_execution_ready = false;
-            return;
-        }
-
-        // Second-level execution requires:
-        // 1. Price momentum in the right direction
-        // 2. Spread within tight threshold
-        // 3. Recent price action confirms trend
-
-        bool spread_tight = multi_timeframe_data.second_indicators.spread_avg <= config.strategy.mth_ts_1sec_spread_threshold;
-
-        // Simple momentum check: recent bars showing upward movement
-        bool momentum_up = false;
-        if (multi_timeframe_data.second_bars.size() >= 3) {
-            const auto& bars = multi_timeframe_data.second_bars;
-            size_t n = bars.size();
-            // Check if last few bars are trending up
-            momentum_up = (bars[n-1].close_price > bars[n-2].close_price) &&
-                         (bars[n-2].close_price > bars[n-3].close_price);
-        }
-
-        multi_timeframe_data.second_execution_ready = spread_tight && momentum_up;
-
-    } catch (const std::exception& e) {
-        std::ostringstream error_stream;
-        error_stream << "Error evaluating second execution readiness: " << e.what();
-        log_message(error_stream.str(), "");
-        multi_timeframe_data.second_execution_ready = false;
+        throw std::runtime_error(error_stream.str());
     }
 }
 
@@ -1116,9 +405,9 @@ std::string MultiTimeframeManager::get_timeframe_start_timestamp(const std::stri
                 break;
             case MthTsTimeframe::DAILY:
                 {
-                    auto tp = std::chrono::system_clock::time_point(std::chrono::milliseconds(timestamp_milliseconds));
-                    auto midnight_tp = get_utc_midnight(tp);
-                    rounded_seconds = std::chrono::duration_cast<std::chrono::seconds>(midnight_tp.time_since_epoch()).count();
+                    auto time_point = std::chrono::system_clock::time_point(std::chrono::milliseconds(timestamp_milliseconds));
+                    auto midnight_time_point = get_utc_midnight(time_point);
+                    rounded_seconds = std::chrono::duration_cast<std::chrono::seconds>(midnight_time_point.time_since_epoch()).count();
                 }
                 break;
             default:
@@ -1129,25 +418,22 @@ std::string MultiTimeframeManager::get_timeframe_start_timestamp(const std::stri
         return std::to_string(rounded_seconds * TimeUtils::MILLISECONDS_PER_SECOND);
     } catch (const std::exception& parse_exception) {
         std::ostringstream error_stream;
-        error_stream << "CRITICAL: Failed to parse timestamp for timeframe rounding. Timestamp: " 
+        error_stream << "Failed to parse timestamp for timeframe rounding. Timestamp: " 
                     << current_timestamp << " Error: " << parse_exception.what();
         log_message(error_stream.str(), "");
         throw std::runtime_error(error_stream.str());
     }
 }
 
-std::string MultiTimeframeManager::format_timestamp(const std::chrono::system_clock::time_point& tp) const {
-    // Polygon.io expects Unix timestamps in milliseconds for historical bars
-    auto duration = tp.time_since_epoch();
+std::string MultiTimeframeManager::format_timestamp(const std::chrono::system_clock::time_point& time_point) const {
+    auto duration = time_point.time_since_epoch();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     return std::to_string(milliseconds);
 }
 
-// Data management helpers
-std::chrono::system_clock::time_point MultiTimeframeManager::parse_timestamp(const std::string& timestamp_str) const {
+std::chrono::system_clock::time_point MultiTimeframeManager::parse_timestamp(const std::string& timestamp_string) const {
     try {
-        // Assume timestamp_str is Unix milliseconds
-        long long milliseconds = std::stoll(timestamp_str);
+        long long milliseconds = std::stoll(timestamp_string);
         auto duration = std::chrono::milliseconds(milliseconds);
         return std::chrono::system_clock::time_point(duration);
     } catch (const std::exception& e) {
@@ -1156,49 +442,40 @@ std::chrono::system_clock::time_point MultiTimeframeManager::parse_timestamp(con
     }
 }
 
-std::chrono::system_clock::time_point MultiTimeframeManager::get_utc_midnight(const std::chrono::system_clock::time_point& tp) const {
-    // Get the time_t representation
-    auto time_t_val = std::chrono::system_clock::to_time_t(tp);
+std::chrono::system_clock::time_point MultiTimeframeManager::get_utc_midnight(const std::chrono::system_clock::time_point& time_point) const {
+    auto time_t_value = std::chrono::system_clock::to_time_t(time_point);
 
-    // Convert to tm structure
-    std::tm tm_val = *std::gmtime(&time_t_val);
+    std::tm tm_value = *std::gmtime(&time_t_value);
 
-    // Set time to midnight
-    tm_val.tm_hour = 0;
-    tm_val.tm_min = 0;
-    tm_val.tm_sec = 0;
+    tm_value.tm_hour = 0;
+    tm_value.tm_min = 0;
+    tm_value.tm_sec = 0;
 
-    // Convert back to time_point
-    return std::chrono::system_clock::from_time_t(std::mktime(&tm_val));
+    return std::chrono::system_clock::from_time_t(std::mktime(&tm_value));
 }
 
-// Utility methods
 bool MultiTimeframeManager::is_timestamp_in_timeframe(const std::string& timestamp, MthTsTimeframe timeframe,
                                                       const std::string& reference_timestamp) const {
     try {
-        auto ts = parse_timestamp(timestamp);
-        auto ref_ts = parse_timestamp(reference_timestamp);
+        auto timestamp_point = parse_timestamp(timestamp);
+        auto reference_point = parse_timestamp(reference_timestamp);
 
         switch (timeframe) {
             case MthTsTimeframe::SECOND_1:
-                // 1-second timeframe: within the same second
-                return std::chrono::duration_cast<std::chrono::seconds>(ts - ref_ts).count() == 0;
+                return std::chrono::duration_cast<std::chrono::seconds>(timestamp_point - reference_point).count() == 0;
 
             case MthTsTimeframe::MINUTE_1:
-                // 1-minute timeframe: within the same minute
-                return std::chrono::duration_cast<std::chrono::minutes>(ts - ref_ts).count() == 0;
+                return std::chrono::duration_cast<std::chrono::minutes>(timestamp_point - reference_point).count() == 0;
 
             case MthTsTimeframe::MINUTE_30:
-                // 30-minute timeframe: within the same 30-minute window
                 {
-                    auto ref_minutes = std::chrono::duration_cast<std::chrono::minutes>(ref_ts.time_since_epoch()).count();
-                    auto ts_minutes = std::chrono::duration_cast<std::chrono::minutes>(ts.time_since_epoch()).count();
-                    return (ref_minutes / 30) == (ts_minutes / 30);
+                    auto reference_minutes = std::chrono::duration_cast<std::chrono::minutes>(reference_point.time_since_epoch()).count();
+                    auto timestamp_minutes = std::chrono::duration_cast<std::chrono::minutes>(timestamp_point.time_since_epoch()).count();
+                    return (reference_minutes / 30) == (timestamp_minutes / 30);
                 }
 
             case MthTsTimeframe::DAILY:
-                // Daily timeframe: same day
-                return get_utc_midnight(ts) == get_utc_midnight(ref_ts);
+                return get_utc_midnight(timestamp_point) == get_utc_midnight(reference_point);
 
             default:
                 return false;
@@ -1209,11 +486,10 @@ bool MultiTimeframeManager::is_timestamp_in_timeframe(const std::string& timesta
     }
 }
 
-// Partial bar access methods
-std::deque<MultiTimeframeBar> MultiTimeframeManager::get_bars_with_partial(MthTsTimeframe tf) const {
+std::deque<MultiTimeframeBar> MultiTimeframeManager::get_bars_with_partial(MthTsTimeframe timeframe) const {
     std::deque<MultiTimeframeBar> result;
 
-    switch (tf) {
+    switch (timeframe) {
         case MthTsTimeframe::DAILY:
             result = multi_timeframe_data.daily_bars;
             if (!current_daily_start_ts.empty()) {
@@ -1240,9 +516,8 @@ std::deque<MultiTimeframeBar> MultiTimeframeManager::get_bars_with_partial(MthTs
     return result;
 }
 
-// Propagation detection methods
-double MultiTimeframeManager::get_propagation_score(MthTsTimeframe lower_tf) const {
-    switch (lower_tf) {
+double MultiTimeframeManager::get_propagation_score(MthTsTimeframe lower_timeframe) const {
+    switch (lower_timeframe) {
         case MthTsTimeframe::MINUTE_1:
             return multi_timeframe_data.minute_to_thirty_min_propagation_score;
         case MthTsTimeframe::SECOND_1:
@@ -1252,14 +527,11 @@ double MultiTimeframeManager::get_propagation_score(MthTsTimeframe lower_tf) con
     }
 }
 
-// Incremental update helpers for partial bars
 void MultiTimeframeManager::update_minute_with_new_second(const MultiTimeframeBar& second_bar) {
     try {
-        std::string minute_start = get_timeframe_start_timestamp(second_bar.timestamp, MthTsTimeframe::MINUTE_1);
+        std::string minute_start_timestamp = get_timeframe_start_timestamp(second_bar.timestamp, MthTsTimeframe::MINUTE_1);
 
-        // Check if we need to start a new minute bar
         if (current_minute_start_ts.empty() || !is_timestamp_in_timeframe(second_bar.timestamp, MthTsTimeframe::MINUTE_1, current_minute_start_ts)) {
-            // Push completed minute bar if it exists
             if (!current_minute_start_ts.empty()) {
                 log_message("Completing 1-minute bar at " + current_minute_bar.timestamp + 
                            " (from " + std::to_string(current_minute_count) + " second bars)", "");
@@ -1269,22 +541,18 @@ void MultiTimeframeManager::update_minute_with_new_second(const MultiTimeframeBa
                 
                 log_message("1-minute bars: " + std::to_string(multi_timeframe_data.minute_bars.size()) + " total", "");
 
-                // Update thirty-minute with new minute
                 update_thirty_min_with_new_minute(current_minute_bar);
             }
 
-            // Initialize new minute bar
             current_minute_bar = second_bar;
-            current_minute_start_ts = minute_start;
+            current_minute_start_ts = minute_start_timestamp;
             current_minute_count = 1;
         } else {
-            // Update existing minute bar
             current_minute_bar.high_price = std::max(current_minute_bar.high_price, second_bar.high_price);
             current_minute_bar.low_price = std::min(current_minute_bar.low_price, second_bar.low_price);
             current_minute_bar.close_price = second_bar.close_price;
             current_minute_bar.volume += second_bar.volume;
 
-            // Running average for spread
             double total_spread = current_minute_bar.spread * current_minute_count;
             total_spread += second_bar.spread;
             current_minute_count++;
@@ -1292,6 +560,7 @@ void MultiTimeframeManager::update_minute_with_new_second(const MultiTimeframeBa
         }
     } catch (const std::exception& e) {
         std::cerr << "MTH-TS: Failed to update minute with new second: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to update minute bar: " + std::string(e.what()));
     }
 }
 
@@ -1303,23 +572,13 @@ void MultiTimeframeManager::update_thirty_min_with_new_minute(const MultiTimefra
             return;
         }
 
-        MultiTimeframeBar rolling_thirty_min_bar;
-        rolling_thirty_min_bar.timestamp = new_minute_bar.timestamp;
-        rolling_thirty_min_bar.open_price = multi_timeframe_data.minute_bars[multi_timeframe_data.minute_bars.size() - required_minute_bars_for_thirty_min].open_price;
-        rolling_thirty_min_bar.close_price = new_minute_bar.close_price;
-        rolling_thirty_min_bar.high_price = new_minute_bar.high_price;
-        rolling_thirty_min_bar.low_price = new_minute_bar.low_price;
-        rolling_thirty_min_bar.volume = 0.0;
-        rolling_thirty_min_bar.spread = 0.0;
-
-        for (size_t i = multi_timeframe_data.minute_bars.size() - required_minute_bars_for_thirty_min; i < multi_timeframe_data.minute_bars.size(); ++i) {
-            const auto& bar = multi_timeframe_data.minute_bars[i];
-            rolling_thirty_min_bar.high_price = std::max(rolling_thirty_min_bar.high_price, bar.high_price);
-            rolling_thirty_min_bar.low_price = std::min(rolling_thirty_min_bar.low_price, bar.low_price);
-            rolling_thirty_min_bar.volume += bar.volume;
-            rolling_thirty_min_bar.spread += bar.spread;
-        }
-        rolling_thirty_min_bar.spread /= required_minute_bars_for_thirty_min;
+        size_t start_index = multi_timeframe_data.minute_bars.size() - required_minute_bars_for_thirty_min;
+        MultiTimeframeBar rolling_thirty_min_bar = aggregate_consecutive_bars(
+            multi_timeframe_data.minute_bars,
+            start_index,
+            multi_timeframe_data.minute_bars.size(),
+            new_minute_bar.timestamp
+        );
 
         multi_timeframe_data.thirty_min_bars.push_back(rolling_thirty_min_bar);
         maintain_deque_size(multi_timeframe_data.thirty_min_bars, config.strategy.mth_ts_maintenance_30min_max);
@@ -1327,16 +586,11 @@ void MultiTimeframeManager::update_thirty_min_with_new_minute(const MultiTimefra
         log_message("Rolling 30-minute bar updated from last " + std::to_string(required_minute_bars_for_thirty_min) + " minute bars", "");
         log_message("30-minute bars: " + std::to_string(multi_timeframe_data.thirty_min_bars.size()) + " total", "");
 
-        calculate_thirty_min_indicators();
-        evaluate_thirty_min_confirmation();
-
-        log_message("30-min EMA recalculated after rolling window update", "");
-
         update_daily_with_new_thirty_min(rolling_thirty_min_bar);
 
     } catch (const std::exception& aggregation_exception) {
         std::ostringstream error_stream;
-        error_stream << "CRITICAL: Failed to update rolling 30-min window: " << aggregation_exception.what();
+        error_stream << "Failed to update rolling 30-min window: " << aggregation_exception.what();
         log_message(error_stream.str(), "");
         throw std::runtime_error(error_stream.str());
     }
@@ -1350,96 +604,67 @@ void MultiTimeframeManager::update_daily_with_new_thirty_min(const MultiTimefram
             return;
         }
 
-        MultiTimeframeBar rolling_daily_bar;
-        rolling_daily_bar.timestamp = new_thirty_min_bar.timestamp;
-        rolling_daily_bar.open_price = multi_timeframe_data.thirty_min_bars[multi_timeframe_data.thirty_min_bars.size() - required_thirty_min_bars_for_daily].open_price;
-        rolling_daily_bar.close_price = new_thirty_min_bar.close_price;
-        rolling_daily_bar.high_price = new_thirty_min_bar.high_price;
-        rolling_daily_bar.low_price = new_thirty_min_bar.low_price;
-        rolling_daily_bar.volume = 0.0;
-        rolling_daily_bar.spread = 0.0;
-
-        for (size_t i = multi_timeframe_data.thirty_min_bars.size() - required_thirty_min_bars_for_daily; i < multi_timeframe_data.thirty_min_bars.size(); ++i) {
-            const auto& bar = multi_timeframe_data.thirty_min_bars[i];
-            rolling_daily_bar.high_price = std::max(rolling_daily_bar.high_price, bar.high_price);
-            rolling_daily_bar.low_price = std::min(rolling_daily_bar.low_price, bar.low_price);
-            rolling_daily_bar.volume += bar.volume;
-            rolling_daily_bar.spread += bar.spread;
-        }
-        rolling_daily_bar.spread /= required_thirty_min_bars_for_daily;
+        size_t start_index = multi_timeframe_data.thirty_min_bars.size() - required_thirty_min_bars_for_daily;
+        MultiTimeframeBar rolling_daily_bar = aggregate_consecutive_bars(
+            multi_timeframe_data.thirty_min_bars,
+            start_index,
+            multi_timeframe_data.thirty_min_bars.size(),
+            new_thirty_min_bar.timestamp
+        );
 
         multi_timeframe_data.daily_bars.push_back(rolling_daily_bar);
         maintain_deque_size(multi_timeframe_data.daily_bars, config.strategy.mth_ts_maintenance_daily_max);
 
         log_message("Rolling daily bar updated from last " + std::to_string(required_thirty_min_bars_for_daily) + " thirty-min bars", "");
 
-        calculate_daily_indicators();
-        evaluate_daily_bias();
-
     } catch (const std::exception& aggregation_exception) {
         std::ostringstream error_stream;
-        error_stream << "CRITICAL: Failed to update rolling daily window: " << aggregation_exception.what();
+        error_stream << "Failed to update rolling daily window: " << aggregation_exception.what();
         log_message(error_stream.str(), "");
         throw std::runtime_error(error_stream.str());
     }
 }
 
-// Propagation detection helpers
-// Note: Simplified propagation scoring uses current indicators directly rather than historical trends
-
 void MultiTimeframeManager::update_propagation_scores() {
     try {
-        // Get bars with partial data for real-time analysis
         auto minute_bars_with_partial = get_bars_with_partial(MthTsTimeframe::MINUTE_1);
         auto thirty_min_bars_with_partial = get_bars_with_partial(MthTsTimeframe::MINUTE_30);
 
-        // Calculate second-to-minute propagation score
-        // Check if minute timeframe shows upward momentum from recent second bars
         double second_to_minute_score = 0.0;
         if (minute_bars_with_partial.size() >= 2) {
             const auto& current_minute = minute_bars_with_partial.back();
-            const auto& prev_minute = minute_bars_with_partial[minute_bars_with_partial.size() - 2];
+            const auto& previous_minute = minute_bars_with_partial[minute_bars_with_partial.size() - 2];
 
-            // Momentum propagation: price and volume moving higher
-            bool price_momentum = current_minute.close_price > prev_minute.close_price;
-            bool volume_momentum = current_minute.volume > prev_minute.volume;
-            // Use current EMA vs previous close as simple upward trend indicator
-            bool ema_trend = multi_timeframe_data.minute_indicators.ema > prev_minute.close_price;
+            bool price_momentum = current_minute.close_price > previous_minute.close_price;
+            bool volume_momentum = current_minute.volume > previous_minute.volume;
 
-            if (price_momentum && volume_momentum && ema_trend) {
-                second_to_minute_score = 0.8; // Strong propagation
-            } else if (price_momentum || (volume_momentum && ema_trend)) {
-                second_to_minute_score = 0.5; // Moderate propagation
+            if (price_momentum && volume_momentum) {
+                second_to_minute_score = 0.8;
+            } else if (price_momentum || volume_momentum) {
+                second_to_minute_score = 0.5;
             }
         }
         multi_timeframe_data.second_to_minute_propagation_score = second_to_minute_score;
 
-        // Calculate minute-to-thirty-minute propagation score
-        // Check if thirty-minute timeframe is showing signs of following minute momentum
         double minute_to_thirty_score = 0.0;
         if (thirty_min_bars_with_partial.size() >= 2) {
             const auto& current_thirty = thirty_min_bars_with_partial.back();
-            const auto& prev_thirty = thirty_min_bars_with_partial[thirty_min_bars_with_partial.size() - 2];
+            const auto& previous_thirty = thirty_min_bars_with_partial[thirty_min_bars_with_partial.size() - 2];
 
-            // Check for emerging bullishness in 30-min timeframe
-            bool price_trend = current_thirty.close_price > prev_thirty.close_price;
-            bool ema_trend = multi_timeframe_data.thirty_min_indicators.ema > prev_thirty.close_price;
-            bool adx_bullish = multi_timeframe_data.thirty_min_indicators.adx > 20.0; // ADX above 20 indicates trending
+            bool price_trend = current_thirty.close_price > previous_thirty.close_price;
 
-            if (ema_trend && adx_bullish) {
-                minute_to_thirty_score = 0.9; // Very strong upward propagation
-            } else if (price_trend && ema_trend) {
-                minute_to_thirty_score = 0.7; // Good propagation
-            } else if (price_trend || ema_trend) {
-                minute_to_thirty_score = 0.4; // Weak propagation
+            if (price_trend) {
+                minute_to_thirty_score = 0.7;
             }
         }
         multi_timeframe_data.minute_to_thirty_min_propagation_score = minute_to_thirty_score;
 
     } catch (const std::exception& e) {
         std::cerr << "MTH-TS: Error updating propagation scores: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to update propagation scores: " + std::string(e.what()));
     }
 }
 
 } // namespace Core
 } // namespace AlpacaTrader
+

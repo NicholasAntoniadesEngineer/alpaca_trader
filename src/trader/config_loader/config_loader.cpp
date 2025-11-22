@@ -221,6 +221,27 @@ bool load_config_from_csv(AlpacaTrader::Config::SystemConfig& cfg, const std::st
         else if (config_key_string == "strategy.mth_ts_propagation_ema_slope_threshold") cfg.strategy.mth_ts_propagation_ema_slope_threshold = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_propagation_min_score") cfg.strategy.mth_ts_propagation_min_score = std::stod(config_value_string);
         else if (config_key_string == "strategy.mth_ts_min_consecutive_min_bars") cfg.strategy.mth_ts_min_consecutive_min_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_adx_threshold") cfg.strategy.mth_ts_propagation_adx_threshold = std::stod(config_value_string);
+
+        // MTH-TS signal strength configuration
+        else if (config_key_string == "strategy.mth_ts_signal_strength_provisional") cfg.strategy.mth_ts_signal_strength_provisional = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_signal_strength_full") cfg.strategy.mth_ts_signal_strength_full = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_signal_strength_medium") cfg.strategy.mth_ts_signal_strength_medium = std::stod(config_value_string);
+
+        // MTH-TS propagation weight configuration
+        else if (config_key_string == "strategy.mth_ts_propagation_weight_minute_to_thirty") cfg.strategy.mth_ts_propagation_weight_minute_to_thirty = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_weight_second_to_minute") cfg.strategy.mth_ts_propagation_weight_second_to_minute = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_weight_minute_only") cfg.strategy.mth_ts_propagation_weight_minute_only = std::stod(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_propagation_weight_second_only") cfg.strategy.mth_ts_propagation_weight_second_only = std::stod(config_value_string);
+
+        // MTH-TS technical indicator configuration
+        else if (config_key_string == "strategy.mth_ts_atr_period") cfg.strategy.mth_ts_atr_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_daily_spread_lookback_bars") cfg.strategy.mth_ts_daily_spread_lookback_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_30min_spread_lookback_bars") cfg.strategy.mth_ts_30min_spread_lookback_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1min_spread_lookback_bars") cfg.strategy.mth_ts_1min_spread_lookback_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_spread_lookback_bars") cfg.strategy.mth_ts_1sec_spread_lookback_bars = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_1sec_volume_ma_period") cfg.strategy.mth_ts_1sec_volume_ma_period = std::stoi(config_value_string);
+        else if (config_key_string == "strategy.mth_ts_spread_debug_log_interval") cfg.strategy.mth_ts_spread_debug_log_interval = std::stoi(config_value_string);
         
         // System monitoring configuration (support both monitoring.* and strategy.* prefixes)
         else if (config_key_string == "strategy.max_failure_rate_pct" || config_key_string == "monitoring.max_failure_rate_pct") cfg.strategy.max_failure_rate_pct = std::stod(config_value_string);
@@ -744,6 +765,66 @@ bool validate_config(const AlpacaTrader::Config::SystemConfig& config, std::stri
     }
     if (config.strategy.mth_ts_min_consecutive_min_bars <= 0) {
         error_message = "strategy.mth_ts_min_consecutive_min_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_adx_threshold <= 0.0) {
+        error_message = "strategy.mth_ts_propagation_adx_threshold must be configured and > 0.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_signal_strength_provisional <= 0.0 || config.strategy.mth_ts_signal_strength_provisional > 1.0) {
+        error_message = "strategy.mth_ts_signal_strength_provisional must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_signal_strength_full <= 0.0 || config.strategy.mth_ts_signal_strength_full > 1.0) {
+        error_message = "strategy.mth_ts_signal_strength_full must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_signal_strength_medium <= 0.0 || config.strategy.mth_ts_signal_strength_medium > 1.0) {
+        error_message = "strategy.mth_ts_signal_strength_medium must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_weight_minute_to_thirty < 0.0 || config.strategy.mth_ts_propagation_weight_minute_to_thirty > 1.0) {
+        error_message = "strategy.mth_ts_propagation_weight_minute_to_thirty must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_weight_second_to_minute < 0.0 || config.strategy.mth_ts_propagation_weight_second_to_minute > 1.0) {
+        error_message = "strategy.mth_ts_propagation_weight_second_to_minute must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_weight_minute_only < 0.0 || config.strategy.mth_ts_propagation_weight_minute_only > 1.0) {
+        error_message = "strategy.mth_ts_propagation_weight_minute_only must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_propagation_weight_second_only < 0.0 || config.strategy.mth_ts_propagation_weight_second_only > 1.0) {
+        error_message = "strategy.mth_ts_propagation_weight_second_only must be between 0.0 and 1.0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_atr_period <= 0) {
+        error_message = "strategy.mth_ts_atr_period must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_daily_spread_lookback_bars <= 0) {
+        error_message = "strategy.mth_ts_daily_spread_lookback_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_30min_spread_lookback_bars <= 0) {
+        error_message = "strategy.mth_ts_30min_spread_lookback_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_1min_spread_lookback_bars <= 0) {
+        error_message = "strategy.mth_ts_1min_spread_lookback_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_1sec_spread_lookback_bars <= 0) {
+        error_message = "strategy.mth_ts_1sec_spread_lookback_bars must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_1sec_volume_ma_period <= 0) {
+        error_message = "strategy.mth_ts_1sec_volume_ma_period must be configured and > 0 (no defaults allowed)";
+        return false;
+    }
+    if (config.strategy.mth_ts_spread_debug_log_interval <= 0) {
+        error_message = "strategy.mth_ts_spread_debug_log_interval must be configured and > 0 (no defaults allowed)";
         return false;
     }
 

@@ -272,12 +272,6 @@ void MarketDataCoordinator::update_shared_market_snapshot(const ProcessedData& p
         return;
     }
 
-    // Handle MTH-TS sentinel values: -1.0 indicates ATR should be calculated by MTH-TS processing
-    if (processed_data_result.atr == -1.0) {
-        // This is expected for MTH-TS - ATR will be set by the MTH-TS processing in trading coordinator
-        // Don't update the snapshot with sentinel values
-        return;
-    }
     
     if (atr_is_zero) {
         // ATR is zero but price data is valid - log warning but proceed (snapshot will update)
@@ -432,7 +426,6 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
                 if (is_new_bar) {
                     std::string bar_timestamp = latest_bar.timestamp.empty() ? current_timestamp : latest_bar.timestamp;
                     
-                    // For MTH-TS, use real-time ATR from multi-timeframe indicators, not historical ATR sentinel value
                     double realtime_atr = computed_data.atr;
                     double realtime_avg_atr = computed_data.avg_atr;
                     
@@ -443,14 +436,13 @@ void MarketDataCoordinator::process_market_data_iteration(const std::string& sym
                         
                         if (mtf_mgr) {
                             const auto& mtf_data = mtf_mgr->get_multi_timeframe_data();
-                            // Use 1-second timeframe ATR for most current volatility measurement
                             if (mtf_data.second_indicators.atr > 0.0) {
                                 realtime_atr = mtf_data.second_indicators.atr;
-                                realtime_avg_atr = mtf_data.second_indicators.atr; // Can calculate moving average if needed
+                                realtime_avg_atr = mtf_data.second_indicators.atr;
                             }
                         }
                     } catch (...) {
-                        // If we can't get MTH-TS ATR, use the historical ATR value
+                        // Fallback to computed_data if MTH-TS ATR unavailable
                     }
                     
                     logging_context->csv_bars_logger->log_bar(

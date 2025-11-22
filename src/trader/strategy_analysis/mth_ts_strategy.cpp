@@ -1,5 +1,6 @@
 #include "mth_ts_strategy.hpp"
 #include "trader/market_data/multi_timeframe_manager.hpp"
+#include "trader/strategy_analysis/indicators.hpp"
 #include "logging/logs/trading_logs.hpp"
 #include <algorithm>
 #include <cmath>
@@ -119,20 +120,17 @@ MthTsAnalysisResult MthTsStrategy::evaluate_mth_ts_strategy() {
             // double propagation_score = compute_propagation_score(one_min_trigger, one_sec_execution);
 
             if (true) { // propagation_score >= config.strategy.mth_ts_propagation_min_score) {
-                // Strong upward propagation detected - provisional signal
                 result.signal_decision.buy = true;
-                result.signal_decision.signal_strength = 0.7; // Reduced strength for provisional signals
+                result.signal_decision.signal_strength = config.strategy.mth_ts_signal_strength_provisional;
                 result.signal_decision.signal_reason = "MTH-TS: Lower timeframes aligned with upward propagation (provisional)";
 
-                // Check thirty-minute for full confirmation
                 if (thirty_min_confirmation) {
-                    result.signal_decision.signal_strength = 1.0; // Full strength with 30-min confirmation
+                    result.signal_decision.signal_strength = config.strategy.mth_ts_signal_strength_full;
                     result.signal_decision.signal_reason = "MTH-TS: All timeframes aligned with propagation - FULL BUY signal";
                 }
             } else if (thirty_min_confirmation) {
-                // No strong propagation but thirty-minute confirms - standard signal
                 result.signal_decision.buy = true;
-                result.signal_decision.signal_strength = 0.8; // Medium strength
+                result.signal_decision.signal_strength = config.strategy.mth_ts_signal_strength_medium;
                 result.signal_decision.signal_reason = "MTH-TS: Thirty-minute confirms lower timeframe signals";
             }
         }
@@ -183,14 +181,12 @@ double MthTsStrategy::compute_propagation_score(bool one_min_aligned, bool one_s
         double combined_score = 0.0;
 
         if (one_min_aligned && one_sec_aligned) {
-            // Both timeframes aligned - weight minute-to-thirty propagation more heavily
-            combined_score = (minute_to_thirty_score * 0.7) + (second_to_minute_score * 0.3);
+            combined_score = (minute_to_thirty_score * config.strategy.mth_ts_propagation_weight_minute_to_thirty) + 
+                           (second_to_minute_score * config.strategy.mth_ts_propagation_weight_second_to_minute);
         } else if (one_min_aligned) {
-            // Only minute aligned - focus on minute-to-thirty propagation
-            combined_score = minute_to_thirty_score * 0.8;
+            combined_score = minute_to_thirty_score * config.strategy.mth_ts_propagation_weight_minute_only;
         } else if (one_sec_aligned) {
-            // Only second aligned - minimal score
-            combined_score = second_to_minute_score * 0.4;
+            combined_score = second_to_minute_score * config.strategy.mth_ts_propagation_weight_second_only;
         }
 
         // Ensure score is within valid range
@@ -225,15 +221,20 @@ bool MthTsStrategy::evaluate_daily_level() {
         const auto& current_bar = daily_bars_with_partial.back();
         const auto& previous_bar = daily_bars_with_partial[daily_bars_with_partial.size() - 2];
 
-        const auto& mtf_data = get_multi_timeframe_data();
+        double daily_ema = calculate_ema(daily_bars_with_partial, config.strategy.mth_ts_daily_ema_period);
+        double daily_adx = calculate_adx(daily_bars_with_partial, config.strategy.mth_ts_daily_adx_period);
+        double daily_atr = calculate_atr(daily_bars_with_partial, config.strategy.mth_ts_atr_period);
+        double daily_spread_avg = calculate_average_spread(daily_bars_with_partial, config.strategy.mth_ts_daily_spread_lookback_bars);
 
-        // Perform comprehensive technical analysis on daily timeframe
-        auto analysis_result = perform_comprehensive_technical_analysis(
-            current_bar, previous_bar,
-            mtf_data.daily_indicators.atr);  // Use daily ATR
+        auto& mtf_data = multi_timeframe_manager->get_multi_timeframe_data();
+        mtf_data.daily_indicators.ema = daily_ema;
+        mtf_data.daily_indicators.adx = daily_adx;
+        mtf_data.daily_indicators.atr = daily_atr;
+        mtf_data.daily_indicators.spread_avg = daily_spread_avg;
 
-        // Daily level requires EMA alignment (price > EMA) + comprehensive analysis
-        bool ema_alignment = current_bar.close_price > mtf_data.daily_indicators.ema;
+        auto analysis_result = perform_comprehensive_technical_analysis(current_bar, previous_bar, daily_atr);
+
+        bool ema_alignment = current_bar.close_price > daily_ema;
 
         return ema_alignment && analysis_result.consolidated_ready;
 
@@ -264,17 +265,24 @@ bool MthTsStrategy::evaluate_thirty_min_level() {
         const auto& current_bar = thirty_min_bars_with_partial.back();
         const auto& previous_bar = thirty_min_bars_with_partial[thirty_min_bars_with_partial.size() - 2];
 
-        const auto& mtf_data = get_multi_timeframe_data();
+        double thirty_min_ema = calculate_ema(thirty_min_bars_with_partial, config.strategy.mth_ts_30min_ema_period);
+        double thirty_min_adx = calculate_adx(thirty_min_bars_with_partial, config.strategy.mth_ts_30min_adx_period);
+        double thirty_min_atr = calculate_atr(thirty_min_bars_with_partial, config.strategy.mth_ts_atr_period);
+        double thirty_min_volume_ma = calculate_volume_ma(thirty_min_bars_with_partial, config.strategy.mth_ts_30min_volume_ma_period);
+        double thirty_min_spread_avg = calculate_average_spread(thirty_min_bars_with_partial, config.strategy.mth_ts_30min_spread_lookback_bars);
 
-        // Perform comprehensive technical analysis on 30-minute timeframe
-        auto analysis_result = perform_comprehensive_technical_analysis(
-            current_bar, previous_bar,
-            mtf_data.thirty_min_indicators.atr);  // Use 30-min ATR
+        auto& mtf_data = multi_timeframe_manager->get_multi_timeframe_data();
+        mtf_data.thirty_min_indicators.ema = thirty_min_ema;
+        mtf_data.thirty_min_indicators.adx = thirty_min_adx;
+        mtf_data.thirty_min_indicators.atr = thirty_min_atr;
+        mtf_data.thirty_min_indicators.volume_ma = thirty_min_volume_ma;
+        mtf_data.thirty_min_indicators.spread_avg = thirty_min_spread_avg;
 
-        // 30-min level requires EMA alignment + ADX strength + spread control + comprehensive analysis
-        bool ema_alignment = current_bar.close_price > mtf_data.thirty_min_indicators.ema;
-        bool adx_strong = mtf_data.thirty_min_indicators.adx >= config.strategy.mth_ts_30min_adx_threshold;
-        bool spread_ok = mtf_data.thirty_min_indicators.spread_avg <= config.strategy.mth_ts_30min_avg_spread_threshold;
+        auto analysis_result = perform_comprehensive_technical_analysis(current_bar, previous_bar, thirty_min_atr);
+
+        bool ema_alignment = current_bar.close_price > thirty_min_ema;
+        bool adx_strong = thirty_min_adx >= config.strategy.mth_ts_30min_adx_threshold;
+        bool spread_ok = thirty_min_spread_avg <= config.strategy.mth_ts_30min_avg_spread_threshold;
 
         return ema_alignment && adx_strong && spread_ok && analysis_result.consolidated_ready;
 
@@ -305,24 +313,26 @@ bool MthTsStrategy::evaluate_one_min_level() {
         const auto& current_bar = minute_bars_with_partial.back();
         const auto& previous_bar = minute_bars_with_partial[minute_bars_with_partial.size() - 2];
 
-        const auto& mtf_data = get_multi_timeframe_data();
+        double minute_ema = calculate_ema(minute_bars_with_partial, config.strategy.mth_ts_1min_fast_ema_period);
+        double minute_rsi = calculate_rsi(minute_bars_with_partial, config.strategy.mth_ts_1min_rsi_period);
+        double minute_atr = calculate_atr(minute_bars_with_partial, config.strategy.mth_ts_atr_period);
+        double minute_volume_ma = calculate_volume_ma(minute_bars_with_partial, config.strategy.mth_ts_1min_volume_ma_period);
+        double minute_spread_avg = calculate_average_spread(minute_bars_with_partial, config.strategy.mth_ts_1min_spread_lookback_bars);
 
-        // Perform comprehensive technical analysis on 1-minute timeframe
-        auto analysis_result = perform_comprehensive_technical_analysis(
-            current_bar, previous_bar,
-            mtf_data.minute_indicators.atr);  // Use 1-min ATR
+        auto& mtf_data = multi_timeframe_manager->get_multi_timeframe_data();
+        mtf_data.minute_indicators.ema = minute_ema;
+        mtf_data.minute_indicators.rsi = minute_rsi;
+        mtf_data.minute_indicators.atr = minute_atr;
+        mtf_data.minute_indicators.volume_ma = minute_volume_ma;
+        mtf_data.minute_indicators.spread_avg = minute_spread_avg;
 
-        // 1-min level requires EMA crossover + RSI control + volume + spread + comprehensive analysis
-        bool ema_crossover = current_bar.close_price > mtf_data.minute_indicators.ema;
-        
-        // RSI validation for long-only strategy
-        // RSI must be above lower threshold (sufficient momentum) AND below upper threshold (not overbought)
-        // This ensures entries during bullish momentum while avoiding overbought conditions
-        bool rsi_ok = mtf_data.minute_indicators.rsi >= config.strategy.mth_ts_1min_rsi_threshold &&
-                      mtf_data.minute_indicators.rsi <= config.strategy.mth_ts_1min_rsi_threshold_high;
-        
-        bool volume_ok = mtf_data.minute_indicators.volume_ma >= config.strategy.mth_ts_1min_volume_multiplier;
-        bool spread_ok = mtf_data.minute_indicators.spread_avg <= config.strategy.mth_ts_1min_spread_threshold;
+        auto analysis_result = perform_comprehensive_technical_analysis(current_bar, previous_bar, minute_atr);
+
+        bool ema_crossover = current_bar.close_price > minute_ema;
+        bool rsi_ok = minute_rsi >= config.strategy.mth_ts_1min_rsi_threshold &&
+                      minute_rsi <= config.strategy.mth_ts_1min_rsi_threshold_high;
+        bool volume_ok = minute_volume_ma >= config.strategy.mth_ts_1min_volume_multiplier;
+        bool spread_ok = minute_spread_avg <= config.strategy.mth_ts_1min_spread_threshold;
 
         return ema_crossover && rsi_ok && volume_ok && spread_ok && analysis_result.consolidated_ready;
 
@@ -441,12 +451,19 @@ bool MthTsStrategy::evaluate_one_sec_level() {
         const auto& current_bar = second_bars_with_partial.back();
         const auto& previous_bar = second_bars_with_partial[second_bars_with_partial.size() - 2];
 
-        // Perform comprehensive technical analysis
+        double second_atr = calculate_atr(second_bars_with_partial, config.strategy.mth_ts_atr_period);
+        double second_spread_avg = calculate_average_spread(second_bars_with_partial, config.strategy.mth_ts_1sec_spread_lookback_bars);
+        double second_volume_ma = calculate_volume_ma(second_bars_with_partial, config.strategy.mth_ts_1sec_volume_ma_period);
+
+        auto& mtf_data_mutable = multi_timeframe_manager->get_multi_timeframe_data();
+        mtf_data_mutable.second_indicators.atr = second_atr;
+        mtf_data_mutable.second_indicators.spread_avg = second_spread_avg;
+        mtf_data_mutable.second_indicators.volume_ma = second_volume_ma;
+
         auto analysis_result = perform_comprehensive_technical_analysis(
             current_bar, previous_bar,
-            processed_data.atr);  // Use processed_data ATR for consistency
+            processed_data.atr);
 
-        // CONSOLIDATED DECISION: MTH-TS execution readiness + comprehensive technical analysis
         bool consolidated_ready = mth_ts_execution_ready && analysis_result.consolidated_ready;
 
         return consolidated_ready;
@@ -538,8 +555,6 @@ PositionClosureResult MthTsStrategy::check_and_close_positions() {
             close_all_positions();
             closure_result.closure_successful = true;
             closure_result.closure_reason = "REVERSAL_SIGNAL_DETECTED";
-            // Note: profit_loss_amount would be calculated from actual position data
-            // This is a simplified implementation
         } else {
             closure_result.closure_successful = true;
             closure_result.closure_reason = "NO_CLOSURE_NEEDED";
@@ -688,14 +703,14 @@ SignalDecision detect_trading_signals(const ProcessedData& processed_data_input,
 
             return mth_ts_result.signal_decision;
         } catch (const std::exception& e) {
-            std::string error_msg = "CRITICAL: MTH-TS strategy evaluation failed - " + std::string(e.what());
+            std::string error_msg = "MTH-TS strategy evaluation failed - " + std::string(e.what());
             log_message(error_msg, "");
             throw std::runtime_error(error_msg);
         }
     }
 
     if (system_config.strategy.is_crypto_asset) {
-        std::string error_msg = "CRITICAL: Crypto asset detected but MTH-TS strategy not enabled. Crypto trading requires MTH-TS strategy.";
+        std::string error_msg = "Crypto asset detected but MTH-TS strategy not enabled. Crypto trading requires MTH-TS strategy.";
         log_message(error_msg, "");
         throw std::runtime_error(error_msg);
     }

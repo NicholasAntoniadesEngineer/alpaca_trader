@@ -335,6 +335,45 @@ struct StrategyConfig {
     double mth_ts_propagation_ema_slope_threshold;  // EMA slope threshold for upward propagation (0.001)
     double mth_ts_propagation_min_score;            // Minimum propagation score for provisional signals (0.7)
     int mth_ts_min_consecutive_min_bars;            // Minimum consecutive aligned minute bars before triggering (2-3)
+    double mth_ts_propagation_adx_threshold;        // ADX threshold for propagation detection trending market (20.0)
+
+    // ========================================================================
+    // MTH-TS TECHNICAL INDICATOR CONFIGURATION
+    // ========================================================================
+
+    // Technical indicator calculation periods
+    int mth_ts_atr_period;                          // ATR calculation period for all timeframes (14)
+    int mth_ts_daily_spread_lookback_bars;          // Number of bars to average spread calculation on daily timeframe (10)
+    int mth_ts_30min_spread_lookback_bars;          // Number of bars to average spread calculation on 30-min timeframe (20)
+    int mth_ts_1min_spread_lookback_bars;           // Number of bars to average spread calculation on 1-min timeframe (20)
+    int mth_ts_1sec_spread_lookback_bars;           // Number of bars to average spread calculation on 1-sec timeframe (10)
+    int mth_ts_1sec_volume_ma_period;               // Volume MA period for 1-sec timeframe (20)
+
+    // ========================================================================
+    // MTH-TS SIGNAL STRENGTH CONFIGURATION
+    // ========================================================================
+
+    // Signal strength values for different confirmation levels
+    double mth_ts_signal_strength_provisional;      // Signal strength for provisional signals without 30-min confirmation (0.7)
+    double mth_ts_signal_strength_full;             // Signal strength for full signals with complete confirmation (1.0)
+    double mth_ts_signal_strength_medium;           // Signal strength for medium signals with partial confirmation (0.8)
+
+    // ========================================================================
+    // MTH-TS PROPAGATION WEIGHT CONFIGURATION
+    // ========================================================================
+
+    // Propagation score calculation weights
+    double mth_ts_propagation_weight_minute_to_thirty;  // Weight for minute-to-thirty propagation when both aligned (0.7)
+    double mth_ts_propagation_weight_second_to_minute;  // Weight for second-to-minute propagation when both aligned (0.3)
+    double mth_ts_propagation_weight_minute_only;       // Weight for minute-to-thirty when only minute aligned (0.8)
+    double mth_ts_propagation_weight_second_only;       // Weight for second-to-minute when only second aligned (0.4)
+
+    // ========================================================================
+    // MTH-TS DIAGNOSTIC CONFIGURATION
+    // ========================================================================
+
+    // Diagnostic logging parameters
+    int mth_ts_spread_debug_log_interval;           // Interval for spread debug logging (every N quotes, e.g., 100)
 
     // ========================================================================
     // PRECISION SETTINGS
